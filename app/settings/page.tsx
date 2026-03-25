@@ -1,19 +1,125 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
+import { getSystemConfig } from '@/lib/org-queries';
 
 export default function SettingsPage() {
-  return (
-    <DashboardShell title="Settings" subtitle="Platform configuration">
-      <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
-        <div className="w-12 h-12 rounded-full bg-sos-accent-50 flex items-center justify-center mx-auto mb-3">
-          <svg className="w-6 h-6 text-sos-accent-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+  const [configs, setConfigs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const data = await getSystemConfig();
+      setConfigs(data);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardShell title="Settings" subtitle="Loading...">
+        <div className="space-y-4">
+          {[1, 2].map(i => (
+            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-40 animate-pulse" />
+          ))}
         </div>
-        <h3 className="text-base font-bold text-sos-blue-800">Configuration</h3>
-        <p className="text-sm text-sos-gray-600 mt-1 max-w-md mx-auto">
-          Match weights, triage factors, system learnings, and platform settings.
-        </p>
+      </DashboardShell>
+    );
+  }
+
+  return (
+    <DashboardShell title="Settings" subtitle="Platform configuration and system weights">
+      <div className="space-y-4">
+        {configs.map((config: any) => (
+          <div key={config.id} className="bg-white rounded-xl border border-sos-gray-300 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-sos-blue-800 capitalize">
+                  {config.config_key?.replace(/_/g, ' ')}
+                </h3>
+                <p className="text-[10px] text-sos-gray-500 mt-0.5">
+                  Version {config.version} · {config.change_reason || 'No reason documented'}
+                </p>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sos-gray-200 text-sos-gray-600">
+                v{config.version}
+              </span>
+            </div>
+
+            {config.config_value && typeof config.config_value === 'object' && (
+              <div className="space-y-2.5">
+                {Object.entries(config.config_value).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-xs text-sos-gray-600 capitalize">{key.replace(/_/g, ' ')}</span>
+                    <div className="flex items-center gap-3">
+                      {/* Visual weight bar */}
+                      <div className="w-24 h-1.5 bg-sos-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-sos-accent-500 rounded-full"
+                          style={{ width: `${Math.min(100, (value as number) * (config.config_key === 'triage_factors' ? 4 : 3.33))}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-bold text-sos-blue-800 w-8 text-right">{value as number}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Platform Info */}
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Platform</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Database</span>
+              <p className="text-xs text-sos-blue-800">Supabase · us-east-2</p>
+              <p className="text-[10px] text-sos-gray-500">rtduqguwhkczexnoawej</p>
+            </div>
+            <div>
+              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Schema</span>
+              <p className="text-xs text-sos-blue-800">SIGNAL V2</p>
+              <p className="text-[10px] text-sos-gray-500">29 intelligence tables + operational</p>
+            </div>
+            <div>
+              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Repo</span>
+              <p className="text-xs text-sos-accent-700">SOS-Help-The-Helper/sos-frontend</p>
+            </div>
+            <div>
+              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Runtime</span>
+              <p className="text-xs text-sos-blue-800">OpenClaw · 12 agents</p>
+              <p className="text-[10px] text-sos-gray-500">7 SOS product agents</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Links */}
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Quick Links</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Supabase Dashboard', href: 'https://supabase.com/dashboard/project/rtduqguwhkczexnoawej' },
+              { label: 'Vercel Dashboard', href: 'https://vercel.com/sos2' },
+              { label: 'GitHub Repo', href: 'https://github.com/SOS-Help-The-Helper/sos-frontend' },
+              { label: 'Figma UI Kit', href: 'https://figma.com/design/zm3th1z8vqPHTZepACCWD5' },
+              { label: 'sosconnect.org', href: 'https://sosconnect.org' },
+              { label: 'Architecture Viz', href: 'https://sos-architecture-viz.vercel.app' },
+            ].map(link => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-sos-accent-700 hover:text-sos-accent-900 py-1.5 px-3 rounded-lg bg-sos-gray-200/50 hover:bg-sos-accent-50 transition-colors"
+              >
+                {link.label} ↗
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </DashboardShell>
   );
