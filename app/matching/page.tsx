@@ -116,8 +116,8 @@ export default function Matching() {
           )}
         </div>
 
-        {/* Detail Panel (1 col) */}
-        <div className="space-y-4">
+        {/* Detail Panel (1 col) — sticky */}
+        <div className="space-y-4 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
           {selectedMatch ? (
             <>
               {/* Match Detail */}

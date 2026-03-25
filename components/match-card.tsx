@@ -7,7 +7,52 @@ interface MatchCardProps {
   onClick?: () => void;
 }
 
+function formatSummary(text: string): string {
+  return text
+    .split(/[,·]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(' · ')
+    .replace(/_/g, ' ')
+    .replace(/food water/gi, 'Food & Water');
+}
+
+function fallbackSummary(match: Match): string {
+  const parts: string[] = [];
+  if (match.match_score) parts.push(`Score ${match.match_score}`);
+  return parts.join(' · ') || 'Match details pending';
+}
+
+function getLifecycleAction(status: string): { label: string; style: string; secondary?: string } | null {
+  switch (status) {
+    case 'proposed':
+    case 'viewed':
+      return { label: 'Accept', style: 'bg-sos-red-500 text-white hover:bg-sos-red-600', secondary: 'Decline' };
+    case 'accepted':
+    case 'citizen_consented':
+    case 'partner_consented':
+      return { label: 'Waiting for consent', style: 'bg-sos-gray-200 text-sos-gray-500 cursor-default' };
+    case 'connected':
+      return { label: 'Mark In Progress', style: 'bg-sos-accent-600 text-white hover:bg-sos-accent-700' };
+    case 'in_progress':
+      return { label: 'Mark Fulfilled', style: 'bg-green-600 text-white hover:bg-green-700' };
+    case 'fulfilled':
+    case 'failed':
+    case 'expired':
+    case 'cancelled':
+      return null; // No action — resolved
+    default:
+      return null;
+  }
+}
+
 export function MatchCard({ match, onClick }: MatchCardProps) {
+  const action = getLifecycleAction(match.status);
+  const summary = match.match_summary_masked
+    ? formatSummary(match.match_summary_masked)
+    : fallbackSummary(match);
+
   return (
     <div
       onClick={onClick}
@@ -30,51 +75,47 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
         </span>
       </div>
 
-      {/* Masked Summary */}
-      {match.match_summary_masked ? (
-        <div className="bg-sos-gray-200/60 rounded-lg p-3 mb-3">
-          <p className="text-sm text-sos-blue-800 leading-relaxed">
-            {match.match_summary_masked}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-sos-gray-200/60 rounded-lg p-3 mb-3">
-          <p className="text-xs text-sos-gray-500 italic">
-            Match details pending — score {match.match_score}
-          </p>
-        </div>
-      )}
+      {/* Masked Summary — bold Deep Blue */}
+      <div className="bg-sos-gray-200/60 rounded-lg p-3 mb-2">
+        <p className="text-sm font-bold text-sos-blue-800 leading-relaxed">
+          {summary}
+        </p>
+      </div>
 
-      {/* Reasoning (truncated) */}
+      {/* Reasoning — Gray 600, lighter weight */}
       {match.match_reasoning && (
         <p className="text-[11px] text-sos-gray-600 mb-3 line-clamp-2 leading-relaxed">
           {match.match_reasoning}
         </p>
       )}
 
-      {/* Footer: Time + Actions */}
+      {/* Footer: Time + Lifecycle Actions */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-sos-gray-500">
           {new Date(match.created_at).toLocaleDateString()} · {timeAgo(match.created_at)}
         </span>
 
-        {(match.status === 'proposed' || match.status === 'viewed') && (
+        {action && (
           <div className="flex gap-1.5">
-            <button className="text-[10px] font-semibold px-3 py-1 rounded-md bg-sos-red-500 text-white hover:bg-sos-red-600 transition-colors">
-              Accept
+            <button className={`text-[10px] font-semibold px-3 py-1 rounded-md transition-colors ${action.style}`}>
+              {action.label}
             </button>
-            <button className="text-[10px] font-semibold px-3 py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
-              Decline
-            </button>
+            {action.secondary && (
+              <button className="text-[10px] font-semibold px-3 py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
+                {action.secondary}
+              </button>
+            )}
           </div>
-        )}
-
-        {match.status === 'connected' && (
-          <span className="text-[10px] font-medium text-green-600">● Connected</span>
         )}
 
         {match.status === 'fulfilled' && (
           <span className="text-[10px] font-medium text-green-600">✓ Fulfilled</span>
+        )}
+        {match.status === 'failed' && (
+          <span className="text-[10px] font-medium text-sos-red-500">✗ Failed</span>
+        )}
+        {match.status === 'expired' && (
+          <span className="text-[10px] font-medium text-sos-gray-500">⏱ Expired</span>
         )}
       </div>
     </div>
