@@ -15,7 +15,7 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
   const supabase = getSupabaseAdmin();
   const { data: existingUser } = await supabase
     .from("users")
-    .select("id, clerk_id, email")
+    .select("id, clerk_id, email, phone_number")
     .eq("clerk_id", clerkId)
     .single();
 
@@ -26,7 +26,7 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
   const { data: newUser, error } = await supabase
     .from("users")
     .insert({ clerk_id: clerkId, email })
-    .select("id, clerk_id, email")
+    .select("id, clerk_id, email, phone_number")
     .single();
 
   if (error) {
@@ -34,4 +34,21 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
   }
 
   return newUser;
+}
+
+// Update user's phone number
+export async function updateUserPhone(clerkId: string, phoneNumber: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("users")
+    .update({ phone_number: phoneNumber })
+    .eq("clerk_id", clerkId)
+    .select("id, clerk_id, email, phone_number")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update phone number: ${error.message}`);
+  }
+
+  return data;
 }
