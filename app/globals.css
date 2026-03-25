@@ -1,26 +1,68 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed&display=swap');
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* SOS Brand Colors — Source: Figma (SOS Match UI Kit) */
+  
+  /* Primary Blue Scale */
+  --color-sos-blue-900: #092538;
+  --color-sos-blue-800: #1A3850;
+  --color-sos-blue-700: #284B66;
+  --color-sos-blue-600: #385E7D;
+  --color-sos-blue-500: #466D8E;
+  --color-sos-blue-400: #5F81A0;
+  --color-sos-blue-300: #7493AF;
+  --color-sos-blue-200: #94ADC5;
+  --color-sos-blue-100: #B0C8DD;
+  --color-sos-blue-50: #D1E0F4;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Secondary Red Scale */
+  --color-sos-red-900: #97100D;
+  --color-sos-red-800: #B11210;
+  --color-sos-red-700: #D01612;
+  --color-sos-red-600: #EB2320;
+  --color-sos-red-500: #EF4E4B;
+  --color-sos-red-400: #F37A78;
+  --color-sos-red-300: #F69B9A;
+  --color-sos-red-200: #F8B4B3;
+  --color-sos-red-100: #FAC7C6;
+  --color-sos-red-50: #FBD5D4;
+
+  /* Accent Blue Scale */
+  --color-sos-accent-900: #167EAF;
+  --color-sos-accent-800: #1A95CD;
+  --color-sos-accent-700: #2CAAE4;
+  --color-sos-accent-600: #57BBEA;
+  --color-sos-accent-500: #89CFF0;
+  --color-sos-accent-400: #A6DBF4;
+  --color-sos-accent-300: #BDE4F7;
+  --color-sos-accent-200: #CDEBF9;
+  --color-sos-accent-100: #DAF0FA;
+  --color-sos-accent-50: #E3F4FB;
+
+  /* Neutral Gray */
+  --color-sos-gray-800: #494949;
+  --color-sos-gray-700: #686868;
+  --color-sos-gray-600: #7C7C7C;
+  --color-sos-gray-500: #A6A6A6;
+  --color-sos-gray-400: #C4C4C4;
+  --color-sos-gray-300: #E8E8E8;
+  --color-sos-gray-200: #F7F7F7;
+  --color-sos-gray-100: #FCFCFC;
+
+  /* Semantic */
+  --color-sos-bg: #0F1E2B;
+  --color-sos-surface: #1A3850;
+  --color-sos-border: rgba(137, 207, 240, 0.15);
+
+  /* Font */
+  --font-sans: 'Roboto', sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-sos-gray-200);
+  color: var(--color-sos-blue-800);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
