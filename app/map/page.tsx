@@ -60,8 +60,6 @@ export default function MapPage() {
           const size = score >= 80 ? 18 : score >= 50 ? 14 : 11;
           const el = document.createElement('div');
           el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.5);box-shadow:0 0 ${size + 4}px rgba(239,78,75,0.6);cursor:pointer;transition:transform 0.15s;`;
-          el.onmouseenter = () => el.style.transform = 'scale(1.3)';
-          el.onmouseleave = () => el.style.transform = 'scale(1)';
           if (score >= 80) el.style.animation = 'pulse 2s infinite';
 
           el.addEventListener('click', (e) => {
@@ -76,9 +74,7 @@ export default function MapPage() {
         resources.forEach(res => {
           if (!res.latitude || !res.longitude) return;
           const el = document.createElement('div');
-          el.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 12px rgba(137,207,240,0.5);cursor:pointer;transition:transform 0.15s;';
-          el.onmouseenter = () => el.style.transform = 'scale(1.3)';
-          el.onmouseleave = () => el.style.transform = 'scale(1)';
+          el.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 12px rgba(137,207,240,0.5);cursor:pointer;cursor:pointer;';
 
           el.addEventListener('click', (e) => {
             e.stopPropagation();
