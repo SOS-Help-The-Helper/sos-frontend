@@ -27,8 +27,21 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Aggressive scroll — use timeout to wait for DOM + keyboard layout shift
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
+
+  // Also scroll when sending (keyboard might shift layout)
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Focus input on mount
   useEffect(() => {
