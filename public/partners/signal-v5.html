@@ -31,11 +31,11 @@
     justify-content: center;
     gap: 0;
     padding: 20px 24px;
-    background: linear-gradient(to bottom, #0F1E2B, transparent);
+    background: #0F1E2B; border-bottom: 1px solid rgba(137,207,240,0.1);
   }
   .nav-dot {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     border: 2px solid rgba(137,207,240,0.15);
     background: transparent;
@@ -44,7 +44,7 @@
     flex-shrink: 0;
   }
   .nav-dot.active { border-color: #89CFF0; background: rgba(137,207,240,0.3); box-shadow: 0 0 8px rgba(137,207,240,0.3); }
-  .nav-dot.current { border-color: #EF4E4B; background: #EF4E4B; box-shadow: 0 0 14px rgba(239,78,75,0.5); width: 14px; height: 14px; }
+  .nav-dot.current { border-color: #EF4E4B; background: #EF4E4B; box-shadow: 0 0 18px rgba(239,78,75,0.6); width: 16px; height: 16px; }
   .nav-wire {
     width: 28px;
     height: 2px;
@@ -60,11 +60,11 @@
     font-weight: 600;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(137,207,240,0.3);
+    color: rgba(137,207,240,0.25);
     transition: all 0.4s;
     white-space: nowrap;
   }
-  .nav-label.active { color: #89CFF0; }
+  .nav-label.active { color: #89CFF0; font-weight: 700; }
   .nav-item { position: relative; display: flex; align-items: center; justify-content: center; }
 
   /* ============ SECTIONS ============ */
@@ -135,7 +135,7 @@
     .overview-inner h1 { font-size: 36px; letter-spacing: 6px; }
     .step-headline { font-size: 21px; }
     .nav-wire { width: 16px; }
-    .nav-label { display: none; }
+    .nav-label { font-size: 7px; }
     .section { padding: 72px 16px 32px; }
   }
 </style>
