@@ -99,7 +99,7 @@ export default function MapPage() {
   return (
     <DashboardShell title="Map" subtitle={`${requests.length} requests · ${resources.length} resources`}>
       <div className="relative rounded-xl overflow-hidden border border-sos-gray-300 -mx-2 md:mx-0">
-        <div ref={mapRef} className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] bg-sos-blue-900" />
+        <div ref={mapRef} className="h-[calc(100vh-7.5rem)] md:h-[calc(100vh-7rem)] -mx-4 md:-mx-6 -mb-20 md:-mb-6 bg-sos-blue-900" />
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 flex gap-2 z-10">
