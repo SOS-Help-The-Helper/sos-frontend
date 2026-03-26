@@ -65,8 +65,8 @@ export default function SOSDetail() {
     return (
       <DashboardShell title="SOS Detail" subtitle="Loading...">
         <div className="animate-pulse space-y-4">
-          <div className="h-20 bg-white rounded-xl border border-sos-gray-300" />
-          <div className="h-64 bg-white rounded-xl border border-sos-gray-300" />
+          <div className="h-20 bg-[#FDFCFA] rounded-xl border border-sos-gray-300" />
+          <div className="h-64 bg-[#FDFCFA] rounded-xl border border-sos-gray-300" />
         </div>
       </DashboardShell>
     );
@@ -83,7 +83,7 @@ export default function SOSDetail() {
         {/* Main Column: Needs + Resources + Thread */}
         <div className="md:col-span-2 space-y-4">
           {/* Needs vs Resources */}
-          <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-xs font-bold text-sos-gray-600 uppercase tracking-wider mb-2">Needs</h3>
@@ -128,7 +128,7 @@ export default function SOSDetail() {
           </div>
 
           {/* Collaboration Thread */}
-          <div className="bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
+          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 overflow-hidden">
             <div className="px-5 py-3 border-b border-sos-gray-300 bg-sos-blue-800">
               <h3 className="text-sm font-bold text-white">Collaboration Thread</h3>
               <p className="text-[10px] text-sos-accent-400">{messages.length} messages · {participants.length} participants</p>
@@ -205,7 +205,7 @@ export default function SOSDetail() {
         {/* Right Column: Participants + Matches */}
         <div className="space-y-4 md:sticky md:top-20 md:self-start">
           {/* Participants */}
-          <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
             <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Participants</h3>
             <div className="space-y-2">
               {participants.length > 0 ? participants.map((p) => (
@@ -237,7 +237,7 @@ export default function SOSDetail() {
 
           {/* Matches for this SOS */}
           {matches.length > 0 && (
-            <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
               <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Matches ({matches.length})</h3>
               <div className="space-y-2">
                 {matches.map((match: any) => (
@@ -262,7 +262,7 @@ export default function SOSDetail() {
           )}
 
           {/* SOS Info */}
-          <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
             <h3 className="text-sm font-bold text-sos-blue-800 mb-3">SOS Info</h3>
             <div className="space-y-2">
               <div>

@@ -12,7 +12,7 @@ export function ChainView({ matches }: ChainViewProps) {
   const sorted = [...matches].sort((a, b) => (a.chain_sequence || 0) - (b.chain_sequence || 0));
 
   return (
-    <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+    <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
       <div className="flex items-center gap-2 mb-4">
         <h3 className="text-sm font-bold text-sos-blue-800">Coordination Chain</h3>
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-sos-blue-50 text-sos-blue-700 border border-sos-blue-200">
