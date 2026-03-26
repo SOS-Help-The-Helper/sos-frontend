@@ -98,7 +98,7 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
     <div className="p-6 min-h-[440px] flex flex-col">
       {/* Top bar: counter + urgency */}
       <div className="flex items-center justify-between mb-8">
-        <span className="text-xs text-sos-gray-500 font-medium">{index + 1} of {total}</span>
+        <span className="text-xs text-white/50 font-medium">{index + 1} of {total}</span>
         {parsed.urgency && (
           <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${urgencyColor}`}>
             {parsed.urgency}
@@ -114,17 +114,17 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
         </div>
 
         {/* Category label */}
-        <h2 className="text-2xl font-bold text-sos-blue-800 mb-3">
+        <h2 className="text-2xl font-bold text-white mb-3">
           {catInfo.label}
         </h2>
 
         {/* Detail lines — each on its own row */}
         <div className="space-y-1.5 mb-5">
           {parsed.details.map((detail, i) => (
-            <p key={i} className="text-base text-sos-gray-600">{detail}</p>
+            <p key={i} className="text-base text-white/70">{detail}</p>
           ))}
           {parsed.distance && (
-            <p className="text-sm text-sos-accent-700 font-medium">📍 {parsed.distance}</p>
+            <p className="text-sm text-sos-accent-400 font-medium">📍 {parsed.distance}</p>
           )}
         </div>
 
@@ -136,18 +136,18 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
         {/* Chain indicator */}
         {match.chain_id && (
           <div className="mt-3 flex items-center gap-1.5">
-            <span className="text-xs text-sos-blue-600 font-medium">
+            <span className="text-xs text-sos-accent-400 font-medium">
               🔗 Chain step {match.chain_sequence}
             </span>
             {match.chain_role && (
-              <span className="text-xs text-sos-gray-500 capitalize">· {match.chain_role}</span>
+              <span className="text-xs text-white/50 capitalize">· {match.chain_role}</span>
             )}
           </div>
         )}
       </div>
 
       {/* Bottom hint */}
-      <p className="text-[10px] text-sos-gray-400 text-center mt-4">{actionHint}</p>
+      <p className="text-[10px] text-white/30 text-center mt-4">{actionHint}</p>
     </div>
   );
 }

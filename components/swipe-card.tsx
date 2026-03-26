@@ -77,7 +77,7 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="bg-[#FDFCFA] rounded-2xl border-2 border-sos-gray-300/80 shadow-lg overflow-hidden transition-all"
+        className="bg-sos-blue-800 rounded-2xl shadow-lg overflow-hidden transition-all"
         style={{
           transform: `translateX(${translateX}px) rotate(${rotation}deg)`,
           opacity,
