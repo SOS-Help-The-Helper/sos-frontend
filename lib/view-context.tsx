@@ -32,9 +32,9 @@ export function useViewContext() {
 export function ViewProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentViewState] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('sos-view') || 'admin';
+      return localStorage.getItem('sos-view') || '43299807-6229-49be-9a6b-0498c9188178';
     }
-    return 'admin';
+    return '43299807-6229-49be-9a6b-0498c9188178';
   });
 
   const setCurrentView = (view: string) => {
