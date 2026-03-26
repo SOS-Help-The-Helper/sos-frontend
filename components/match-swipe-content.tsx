@@ -9,217 +9,145 @@ interface MatchSwipeContentProps {
   total: number;
 }
 
-const CATEGORY_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  housing: { icon: '🏠', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
-  shelter: { icon: '🏠', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
-  emergency_shelter: { icon: '🏠', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
-  rv_housing: { icon: '🚐', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
-  food_water: { icon: '🍽️', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  food: { icon: '🍽️', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  medical: { icon: '🏥', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
-  transport: { icon: '🚛', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
-  transportation: { icon: '🚛', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
-  supplies: { icon: '📦', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
-  debris: { icon: '🌳', color: 'text-green-700', bg: 'bg-green-50' },
-  debris_removal: { icon: '🌳', color: 'text-green-700', bg: 'bg-green-50' },
-  utilities: { icon: '⚡', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  power_generation: { icon: '⚡', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  repairs: { icon: '🔧', color: 'text-sos-gray-700', bg: 'bg-sos-gray-200' },
-  clothing: { icon: '👕', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
-  pet_care: { icon: '🐾', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
-  welfare_check: { icon: '👋', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
-  missing_person: { icon: '🔍', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
+const CATEGORY_ICONS: Record<string, { icon: string; label: string; color: string; bg: string }> = {
+  housing: { icon: '🏠', label: 'Housing', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
+  shelter: { icon: '🏠', label: 'Shelter', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
+  emergency_shelter: { icon: '🏠', label: 'Emergency Shelter', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
+  rv_housing: { icon: '🚐', label: 'RV Housing', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
+  food_water: { icon: '🍽️', label: 'Food & Water', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  food: { icon: '🍽️', label: 'Food', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  medical: { icon: '🏥', label: 'Medical', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
+  transport: { icon: '🚛', label: 'Transport', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
+  transportation: { icon: '🚛', label: 'Transportation', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
+  supplies: { icon: '📦', label: 'Supplies', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
+  debris: { icon: '🌳', label: 'Debris Removal', color: 'text-green-700', bg: 'bg-green-50' },
+  debris_removal: { icon: '🌳', label: 'Debris Removal', color: 'text-green-700', bg: 'bg-green-50' },
+  utilities: { icon: '⚡', label: 'Utilities', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  power_generation: { icon: '⚡', label: 'Power', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  repairs: { icon: '🔧', label: 'Repairs', color: 'text-sos-gray-700', bg: 'bg-sos-gray-200' },
+  clothing: { icon: '👕', label: 'Clothing', color: 'text-sos-blue-700', bg: 'bg-sos-blue-50' },
+  pet_care: { icon: '🐾', label: 'Pet Care', color: 'text-sos-accent-700', bg: 'bg-sos-accent-50' },
+  welfare_check: { icon: '👋', label: 'Welfare Check', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
+  missing_person: { icon: '🔍', label: 'Missing Person', color: 'text-sos-red-700', bg: 'bg-sos-red-50' },
 };
 
-function getCategoryInfo(match: Match) {
-  // Try to extract category from summary or chain_role
-  const category = match.chain_role || '';
-  const summaryFirst = (match.match_summary_masked || '').split('·')[0]?.trim().toLowerCase() || '';
-  const key = Object.keys(CATEGORY_ICONS).find(k => 
-    category.includes(k) || summaryFirst.includes(k)
-  );
-  return CATEGORY_ICONS[key || ''] || { icon: '🆘', color: 'text-sos-red-700', bg: 'bg-sos-red-50' };
+function detectCategory(summary: string): string {
+  const lower = summary.toLowerCase();
+  // Check each keyword
+  if (lower.includes('food') || lower.includes('meal') || lower.includes('feeding')) return 'food';
+  if (lower.includes('housing') || lower.includes('shelter') || lower.includes('rv') || lower.includes('roof')) return 'housing';
+  if (lower.includes('medical') || lower.includes('oxygen') || lower.includes('diabetic') || lower.includes('medication')) return 'medical';
+  if (lower.includes('transport') || lower.includes('ride') || lower.includes('vehicle')) return 'transportation';
+  if (lower.includes('debris') || lower.includes('tree') || lower.includes('chainsaw')) return 'debris';
+  if (lower.includes('supply') || lower.includes('supplies') || lower.includes('generator') || lower.includes('tarp')) return 'supplies';
+  if (lower.includes('power') || lower.includes('electric') || lower.includes('utility')) return 'utilities';
+  if (lower.includes('water') && !lower.includes('food')) return 'food_water';
+  if (lower.includes('cloth') || lower.includes('blanket')) return 'clothing';
+  if (lower.includes('pet') || lower.includes('animal') || lower.includes('dog') || lower.includes('cat')) return 'pet_care';
+  if (lower.includes('repair') || lower.includes('fix')) return 'repairs';
+  return '';
+}
+
+function parseSummary(summary: string) {
+  // Parse "High · Food · 4 people, children · 0.6 mi from Church" into structured parts
+  const parts = summary.split('·').map(s => s.trim()).filter(Boolean);
+  
+  let urgency = '';
+  let category = '';
+  let details: string[] = [];
+  let distance = '';
+  
+  for (const part of parts) {
+    const lower = part.toLowerCase();
+    if (['critical', 'high', 'standard', 'low', 'medium'].includes(lower)) {
+      urgency = part;
+    } else if (['food', 'housing', 'shelter', 'medical', 'transport', 'supplies', 'debris', 'utilities', 'repairs', 'clothing', 'food_water', 'food & water', 'pet care', 'welfare check'].some(c => lower.includes(c))) {
+      category = part;
+    } else if (lower.includes('mi from') || lower.includes('mile')) {
+      distance = part;
+    } else {
+      details.push(part);
+    }
+  }
+  
+  return { urgency, category, details, distance };
 }
 
 export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeContentProps) {
-  const summary = match.match_summary_masked || `Match · Score ${match.match_score}`;
+  const summary = match.match_summary_masked || `Score ${match.match_score}`;
+  const parsed = parseSummary(summary);
+  const detectedCat = detectCategory(summary);
+  const catKey = detectedCat || parsed.category.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_');
+  const catInfo = CATEGORY_ICONS[catKey] || { icon: '🆘', label: parsed.category || 'SOS', color: 'text-sos-red-700', bg: 'bg-sos-red-50' };
 
-  // Vendor card
-  if (orgType === 'vendor') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total} jobs</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700">💼 Job</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {match.chain_role || summary.split('·')[0] || 'Available Job'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        {match.match_score && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-sos-gray-500">Match fit:</span>
-            <span className={`text-sm font-bold px-2 py-0.5 rounded-md border ${getScoreColor(match.match_score)}`}>
-              {match.match_score}
-            </span>
-          </div>
-        )}
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to submit bid · Left to pass</p>
-      </div>
-    );
-  }
+  const urgencyColor = parsed.urgency.toLowerCase() === 'critical' ? 'bg-sos-red-500 text-white' :
+    parsed.urgency.toLowerCase() === 'high' ? 'bg-sos-red-100 text-sos-red-700' :
+    parsed.urgency.toLowerCase() === 'standard' ? 'bg-sos-accent-100 text-sos-accent-700' :
+    'bg-sos-gray-200 text-sos-gray-600';
 
-  // Coordinator card (Aid Arena)
-  if (orgType === 'coordination') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700">📋 Coordination</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {summary.split('·')[0] || 'Coordination Needed'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        {match.chain_id && (
-          <div className="bg-sos-blue-50 rounded-lg p-3 mb-3">
-            <p className="text-xs font-semibold text-sos-blue-800">Chain: Step {match.chain_sequence}</p>
-            <p className="text-[10px] text-sos-blue-600 capitalize">{match.chain_role}</p>
-          </div>
-        )}
-        <div className={`text-sm font-bold px-2 py-0.5 rounded-md border inline-block ${getScoreColor(match.match_score || 0)}`}>
-          Score: {match.match_score}
-        </div>
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to approve · Left to reassign</p>
-      </div>
-    );
-  }
-
-  // Food service card (FHM)
-  if (orgType === 'food_service') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700">🍽️ Food</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {summary.split('·')[0] || 'Food Request'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        <div className={`text-sm font-bold px-2 py-0.5 rounded-md border inline-block ${getScoreColor(match.match_score || 0)}`}>
-          Score: {match.match_score}
-        </div>
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to send to site · Left to skip</p>
-      </div>
-    );
-  }
-
-  // Transport/housing card (ERV)
-  if (orgType === 'transport_housing') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sos-accent-50 text-sos-accent-700">🚐 Housing</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {summary.split('·')[0] || 'Housing Request'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        {match.chain_id && (
-          <div className="bg-sos-accent-50 rounded-lg p-3 mb-3">
-            <p className="text-xs font-semibold text-sos-accent-800">3-Way Match · Step {match.chain_sequence}</p>
-            <p className="text-[10px] text-sos-accent-600 capitalize">Role: {match.chain_role}</p>
-          </div>
-        )}
-        <div className={`text-sm font-bold px-2 py-0.5 rounded-md border inline-block ${getScoreColor(match.match_score || 0)}`}>
-          Score: {match.match_score}
-        </div>
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to assign unit · Left to decline</p>
-      </div>
-    );
-  }
-
-  // Citizen card — warm, simple, no jargon
-  if (orgType === 'citizen') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">Option {index + 1} of {total}</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sos-accent-50 text-sos-accent-700">Help Available</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {summary.split('·')[0] || 'Help Available'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to accept this help · Left to see more options</p>
-      </div>
-    );
-  }
-
-  // Supply warehouse card (Greater Good)
-  if (orgType === 'supply_warehouse') {
-    return (
-      <div className="p-6 min-h-[420px] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sos-blue-50 text-sos-blue-700">📦 Supply</span>
-        </div>
-        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
-          {summary.split('·')[0] || 'Supply Request'}
-        </h2>
-        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
-        <div className={`text-sm font-bold px-2 py-0.5 rounded-md border inline-block ${getScoreColor(match.match_score || 0)}`}>
-          Score: {match.match_score}
-        </div>
-        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to dispatch · Left to skip</p>
-      </div>
-    );
-  }
-
-  // Default card (admin, citizen, supply_warehouse, etc.) — FULL SIZE TINDER STYLE
-  const catInfo = getCategoryInfo(match);
+  // Action label based on org type
+  const actionHint = orgType === 'citizen' ? 'Swipe right to accept help · Left for more options' :
+    orgType === 'vendor' ? 'Swipe right to bid · Left to pass' :
+    orgType === 'coordination' ? 'Swipe right to approve · Left to reassign' :
+    orgType === 'food_service' ? 'Swipe right to send to site · Left to skip' :
+    orgType === 'transport_housing' ? 'Swipe right to assign unit · Left to decline' :
+    orgType === 'supply_warehouse' ? 'Swipe right to dispatch · Left to skip' :
+    'Swipe right to accept · Left to decline';
 
   return (
-    <div className="p-6 min-h-[420px] flex flex-col">
-      {/* Counter */}
-      <div className="flex items-center justify-between mb-6">
-        <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-          match.status === 'proposed' ? 'bg-sos-accent-50 text-sos-accent-700' :
-          match.status === 'fulfilled' ? 'bg-green-50 text-green-700' :
-          'bg-sos-gray-200 text-sos-gray-600'
-        }`}>{match.status}</span>
+    <div className="p-6 min-h-[440px] flex flex-col">
+      {/* Top bar: counter + urgency */}
+      <div className="flex items-center justify-between mb-8">
+        <span className="text-xs text-white/50 font-medium">{index + 1} of {total}</span>
+        {parsed.urgency && (
+          <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${urgencyColor}`}>
+            {parsed.urgency}
+          </span>
+        )}
       </div>
 
-      {/* Big Category Icon */}
+      {/* Centered content */}
       <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <div className={`w-20 h-20 rounded-2xl ${catInfo.bg} flex items-center justify-center mb-5`}>
-          <span className="text-4xl">{catInfo.icon}</span>
+        {/* Big category icon */}
+        <div className={`w-24 h-24 rounded-3xl ${catInfo.bg} flex items-center justify-center mb-6 shadow-sm`}>
+          <span className="text-5xl">{catInfo.icon}</span>
         </div>
 
-        <h2 className="text-2xl font-bold text-sos-blue-800 capitalize mb-3">
-          {summary.split('·')[0]?.trim() || 'Match Proposal'}
+        {/* Category label */}
+        <h2 className="text-2xl font-bold text-white mb-3">
+          {catInfo.label}
         </h2>
 
-        <p className="text-base text-sos-gray-600 leading-relaxed mb-4 max-w-sm">{summary}</p>
+        {/* Detail lines — each on its own row */}
+        <div className="space-y-1.5 mb-5">
+          {parsed.details.map((detail, i) => (
+            <p key={i} className="text-base text-white/70">{detail}</p>
+          ))}
+          {parsed.distance && (
+            <p className="text-sm text-sos-accent-400 font-medium">📍 {parsed.distance}</p>
+          )}
+        </div>
 
-        {match.match_reasoning && (
-          <p className="text-xs text-sos-gray-500 mb-4 max-w-sm line-clamp-2">{match.match_reasoning}</p>
-        )}
-
-        <div className={`text-lg font-bold px-4 py-1.5 rounded-xl border-2 ${getScoreColor(match.match_score || 0)}`}>
+        {/* Score */}
+        <div className={`text-xl font-bold px-5 py-2 rounded-xl border-2 ${getScoreColor(match.match_score || 0)}`}>
           {match.match_score}
         </div>
+
+        {/* Chain indicator */}
+        {match.chain_id && (
+          <div className="mt-3 flex items-center gap-1.5">
+            <span className="text-xs text-sos-accent-400 font-medium">
+              🔗 Chain step {match.chain_sequence}
+            </span>
+            {match.chain_role && (
+              <span className="text-xs text-white/50 capitalize">· {match.chain_role}</span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Hint */}
-      <p className="text-[10px] text-sos-gray-400 text-center mt-4">
-        {orgType === 'citizen' ? 'Swipe right to accept help · Left for more options' :
-         orgType === 'vendor' ? 'Swipe right to bid · Left to pass' :
-         'Swipe right to accept · Left to decline'}
-      </p>
+      {/* Bottom hint */}
+      <p className="text-[10px] text-white/30 text-center mt-4">{actionHint}</p>
     </div>
   );
 }
