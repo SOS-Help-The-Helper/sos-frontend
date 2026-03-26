@@ -28,7 +28,7 @@ export function DashboardShell({ title, subtitle, children, currentView, onViewC
       {/* Content */}
       <div className="md:ml-56">
         <Topbar title={title} subtitle={subtitle} currentView={currentView} onViewChange={onViewChange} />
-        <main className="p-4 md:p-6 pb-20 md:pb-6">
+        <main className="p-2 md:p-6 pb-16 md:pb-6">
           {children}
         </main>
       </div>

@@ -167,7 +167,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const agentName = VIEW_NAMES[currentView] || orgName || 'SOS';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
       {/* Header — hidden when embedded in dashboard shell */}
       {!hideHeader && (
         <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
@@ -186,8 +186,8 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-14 h-14 rounded-full bg-sos-blue-800 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center h-full text-center -mt-16 md:-mt-8">
+            <div className="w-12 h-12 rounded-full bg-sos-blue-800 flex items-center justify-center mb-3">
               <img src="/logomark.svg" alt="SOS" className="h-7 w-7" />
             </div>
             <h3 className="text-base font-bold text-sos-blue-800">
