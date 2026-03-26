@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import {
-  LayoutDashboard,
-  GitCompare,
   MessageSquare,
+  Map,
+  GitCompare,
   MoreHorizontal,
   BarChart3,
+  ClipboardList,
   Building2,
   Settings,
   X,
@@ -16,13 +17,14 @@ import {
 import { useState } from 'react';
 
 const mainTabs = [
-  { path: '/', label: 'Home', icon: LayoutDashboard },
-  { path: '/matching', label: 'Matching', icon: GitCompare },
-  { path: '/agent', label: 'Agent', icon: MessageSquare },
+  { path: '/', label: 'Agent', icon: MessageSquare },
+  { path: '/map', label: 'Map', icon: Map },
+  { path: '/matching', label: 'Matches', icon: GitCompare },
 ];
 
 const moreTabs = [
-  { path: '/reporting', label: 'Reporting', icon: BarChart3 },
+  { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
+  { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
   { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
@@ -42,7 +44,6 @@ export function BottomTabs() {
 
   return (
     <>
-      {/* More Sheet */}
       {moreOpen && (
         <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/30" />
@@ -66,9 +67,7 @@ export function BottomTabs() {
                     href={tab.path}
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                      active
-                        ? 'bg-sos-red-50 text-sos-red-500'
-                        : 'text-sos-gray-700 hover:bg-sos-gray-200'
+                      active ? 'bg-sos-red-50 text-sos-red-500' : 'text-sos-gray-700 hover:bg-sos-gray-200'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -81,7 +80,6 @@ export function BottomTabs() {
         </div>
       )}
 
-      {/* Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-sos-gray-300 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-14">
           {mainTabs.map(tab => {

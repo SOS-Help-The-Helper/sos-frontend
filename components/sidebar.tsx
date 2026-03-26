@@ -4,21 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import {
-  LayoutDashboard,
-  GitCompare,
-  BarChart3,
   MessageSquare,
+  Map,
+  GitCompare,
+  ClipboardList,
+  BarChart3,
   Building2,
   Settings,
   Shield,
 } from 'lucide-react';
 
 const allNavItems = [
-  { path: '/', label: 'Command Center', icon: LayoutDashboard, adminOnly: false },
-  { path: '/matching', label: 'Matching', icon: GitCompare, adminOnly: false },
-  { path: '/reporting', label: 'Reporting', icon: BarChart3, adminOnly: false },
+  { path: '/', label: 'Agent', icon: MessageSquare, adminOnly: false },
+  { path: '/map', label: 'Map', icon: Map, adminOnly: false },
+  { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false },
+  { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
+  { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
   { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
-  { path: '/agent', label: 'SOS Agent', icon: MessageSquare, adminOnly: false },
   { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
 
@@ -26,9 +28,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
 
-  const navItems = allNavItems.filter(item => 
-    isAdmin || !item.adminOnly
-  );
+  const navItems = allNavItems.filter(item => isAdmin || !item.adminOnly);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -37,7 +37,6 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-56 flex flex-col bg-sos-blue-800 z-50">
-      {/* Logo */}
       <div className="p-5 border-b border-white/10">
         <Link href="/" className="flex items-center gap-3">
           <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
@@ -48,7 +47,6 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Org Context Badge */}
       {!loading && (isAdmin || isPartner) && (
         <div className="mx-3 mt-3 mb-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/10">
           {isAdmin ? (
@@ -68,7 +66,6 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -77,14 +74,11 @@ export function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                transition-all duration-150
-                ${active
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                active
                   ? 'bg-sos-red-500 text-white shadow-sm'
                   : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
-                }
-              `}
+              }`}
             >
               <Icon className="h-[18px] w-[18px] flex-shrink-0" />
               {item.label}
@@ -93,11 +87,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="p-4 border-t border-white/10">
-        <p className="text-[10px] text-white/30 font-medium">
-          Everyone Is a Helper
-        </p>
+        <p className="text-[10px] text-white/30 font-medium">Everyone Is a Helper</p>
       </div>
     </aside>
   );
