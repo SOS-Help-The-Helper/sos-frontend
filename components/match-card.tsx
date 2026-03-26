@@ -56,7 +56,7 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 cursor-pointer transition-all hover:shadow-md hover:border-sos-accent-300"
+      className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer transition-all hover:shadow-md hover:border-sos-accent-400 shadow-sm"
     >
       {/* Header: Score + Status */}
       <div className="flex items-center justify-between mb-3">
