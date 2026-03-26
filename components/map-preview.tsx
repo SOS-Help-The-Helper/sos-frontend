@@ -34,9 +34,9 @@ export function MapPreview({ requests = [], resources = [] }: MapPreviewProps) {
 
       const map = new mapboxgl.Map({
         container: mapRef.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: 'mapbox://styles/mapbox/outdoors-v12',
         center: [-82.3, 35.7],
-        zoom: 7,
+        zoom: 9,
         interactive: false,
         attributionControl: false,
       });
