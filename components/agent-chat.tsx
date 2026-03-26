@@ -43,10 +43,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  // Don't auto-focus on mobile — keyboard covers the screen on load
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
