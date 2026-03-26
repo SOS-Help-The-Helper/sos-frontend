@@ -9,7 +9,7 @@ import { useViewContext } from '@/lib/view-context';
 export default function Organizations() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-  const [orgOffers, setOrgOffers] = useState<any[]>([]);
+  const [orgResources, setOrgOffers] = useState<any[]>([]);
   const [orgMembers, setOrgMembers] = useState<any[]>([]);
   const { orgId } = useAuthContext();
   const { effectiveOrgId } = useViewContext();
@@ -147,11 +147,11 @@ export default function Organizations() {
               {/* Offers */}
               <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">
-                  Resources ({orgOffers.length})
+                  Resources ({orgResources.length})
                 </h3>
-                {orgOffers.length > 0 ? (
+                {orgResources.length > 0 ? (
                   <div className="space-y-2">
-                    {orgOffers.slice(0, 8).map((offer: any) => (
+                    {orgResources.slice(0, 8).map((offer: any) => (
                       <div key={offer.id} className="flex items-center justify-between py-1.5 border-b border-sos-gray-200 last:border-0">
                         <span className="text-xs text-sos-blue-800 capitalize">{offer.category?.replace(/_/g, ' ')}</span>
                         <div className="flex items-center gap-2">
