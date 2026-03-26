@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
-import { getCommandCenterStats, getRecentActivity } from '@/lib/queries';
+import { getRecentActivity } from '@/lib/queries';
+import { getScopedStats } from '@/lib/scoped-queries';
+import { useAuthContext } from '@/lib/auth-context';
 
 interface Stats {
   openRequests: number;
@@ -29,11 +31,13 @@ export default function CommandCenter() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { orgId, isAdmin, loading: authLoading } = useAuthContext();
 
   useEffect(() => {
+    if (authLoading) return;
     async function load() {
       const [statsData, activityData] = await Promise.all([
-        getCommandCenterStats(),
+        getScopedStats(orgId),
         getRecentActivity(),
       ]);
       setStats(statsData);
@@ -44,7 +48,7 @@ export default function CommandCenter() {
     // Refresh every 30 seconds
     const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [orgId, authLoading]);
 
   if (loading) {
     return (

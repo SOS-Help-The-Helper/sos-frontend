@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthContext } from '@/lib/auth-context';
 import {
   LayoutDashboard,
   GitCompare,
@@ -9,19 +10,25 @@ import {
   MessageSquare,
   Building2,
   Settings,
+  Shield,
 } from 'lucide-react';
 
-const navItems = [
-  { path: '/', label: 'Command Center', icon: LayoutDashboard },
-  { path: '/matching', label: 'Matching', icon: GitCompare },
-  { path: '/reporting', label: 'Reporting', icon: BarChart3 },
-  { path: '/organizations', label: 'Organizations', icon: Building2 },
-  { path: '/agent', label: 'SOS Agent', icon: MessageSquare },
-  { path: '/settings', label: 'Settings', icon: Settings },
+const allNavItems = [
+  { path: '/', label: 'Command Center', icon: LayoutDashboard, adminOnly: false },
+  { path: '/matching', label: 'Matching', icon: GitCompare, adminOnly: false },
+  { path: '/reporting', label: 'Reporting', icon: BarChart3, adminOnly: false },
+  { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
+  { path: '/agent', label: 'SOS Agent', icon: MessageSquare, adminOnly: false },
+  { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
+
+  const navItems = allNavItems.filter(item => 
+    isAdmin || !item.adminOnly
+  );
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -33,21 +40,33 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-5 border-b border-white/10">
         <Link href="/" className="flex items-center gap-3">
-          <img
-            src="/logomark.svg"
-            alt="SOS"
-            className="h-8 w-8"
-          />
+          <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
           <div>
-            <h1 className="text-white text-base font-bold tracking-tight leading-none">
-              SOS
-            </h1>
-            <p className="text-sos-accent-500 text-[10px] font-medium tracking-wide mt-0.5">
-              CONNECT
-            </p>
+            <h1 className="text-white text-base font-bold tracking-tight leading-none">SOS</h1>
+            <p className="text-sos-accent-500 text-[10px] font-medium tracking-wide mt-0.5">CONNECT</p>
           </div>
         </Link>
       </div>
+
+      {/* Org Context Badge */}
+      {!loading && (isAdmin || isPartner) && (
+        <div className="mx-3 mt-3 mb-1 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/10">
+          {isAdmin ? (
+            <div className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5 text-sos-red-400" />
+              <div>
+                <p className="text-[10px] font-semibold text-white">Admin</p>
+                <p className="text-[9px] text-white/40">All organizations</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-[10px] font-semibold text-white">{orgName}</p>
+              <p className="text-[9px] text-white/40 capitalize">{orgType?.replace(/_/g, ' ')}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5">

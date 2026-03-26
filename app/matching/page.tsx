@@ -5,7 +5,9 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { MatchCard } from '@/components/match-card';
 import { ChainView } from '@/components/chain-view';
 import { MatchTimeline } from '@/components/match-timeline';
-import { getMatches, getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
+import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
+import { getScopedMatches } from '@/lib/scoped-queries';
+import { useAuthContext } from '@/lib/auth-context';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -25,11 +27,13 @@ export default function Matching() {
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [chainMatches, setChainMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const { orgId, loading: authLoading } = useAuthContext();
 
   useEffect(() => {
+    if (authLoading) return;
     async function load() {
       const [matchData, statsData] = await Promise.all([
-        getMatches({ status: filter }),
+        getScopedMatches(orgId, { status: filter }),
         getMatchStats(),
       ]);
       setMatches(matchData);
@@ -37,7 +41,7 @@ export default function Matching() {
       setLoading(false);
     }
     load();
-  }, [filter]);
+  }, [filter, orgId, authLoading]);
 
   async function selectMatch(match: Match) {
     setSelectedMatch(match);
