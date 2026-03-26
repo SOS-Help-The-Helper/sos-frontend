@@ -147,6 +147,14 @@ export default function Matching() {
       {/* SWIPE MODE */}
       {mode === 'swipe' && (
         <div className="flex flex-col items-center py-4">
+          {/* Emergency Auto-Match Banner */}
+          {currentSwipeMatch && (currentSwipeMatch as any).auto_consent_granted && (
+            <div className="w-full max-w-md mb-4 bg-sos-red-500 text-white rounded-xl p-4 text-center">
+              <p className="text-lg font-bold">🚨 Emergency Auto-Match</p>
+              <p className="text-sm mt-1 opacity-90">Critical triage score — we've connected them with the nearest help.</p>
+              <p className="text-xs mt-2 opacity-70">They're on their way.</p>
+            </div>
+          )}
           {currentSwipeMatch ? (
             <SwipeCard
               onAccept={handleSwipeAccept}

@@ -109,7 +109,44 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
     );
   }
 
-  // Default card (citizen, admin, supply_warehouse, etc.)
+  // Citizen card — warm, simple, no jargon
+  if (orgType === 'citizen') {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] text-sos-gray-500">Option {index + 1} of {total}</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sos-accent-50 text-sos-accent-700">Help Available</span>
+        </div>
+        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
+          {summary.split('·')[0] || 'Help Available'}
+        </h2>
+        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
+        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to accept this help · Left to see more options</p>
+      </div>
+    );
+  }
+
+  // Supply warehouse card (Greater Good)
+  if (orgType === 'supply_warehouse') {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] text-sos-gray-500">{index + 1} of {total}</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sos-blue-50 text-sos-blue-700">📦 Supply</span>
+        </div>
+        <h2 className="text-xl font-bold text-sos-blue-800 capitalize mb-2">
+          {summary.split('·')[0] || 'Supply Request'}
+        </h2>
+        <p className="text-sm text-sos-gray-600 leading-relaxed mb-4">{summary}</p>
+        <div className={`text-sm font-bold px-2 py-0.5 rounded-md border inline-block ${getScoreColor(match.match_score || 0)}`}>
+          Score: {match.match_score}
+        </div>
+        <p className="text-[10px] text-sos-gray-400 mt-4">Swipe right to dispatch · Left to skip</p>
+      </div>
+    );
+  }
+
+  // Default card (admin, etc.)
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
