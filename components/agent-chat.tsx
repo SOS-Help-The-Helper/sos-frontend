@@ -198,15 +198,15 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center -mt-16 md:-mt-8">
             <div className="w-12 h-12 rounded-full bg-sos-blue-800 flex items-center justify-center mb-3">
-              <img src="/logomark.svg" alt="SOS" className="h-7 w-7" />
+              <img src="/logomark.svg" alt="SOS" className="h-10 w-10" />
             </div>
-            <h3 className="text-base font-bold text-sos-blue-800">
+            <h3 className="text-xl font-bold text-sos-blue-800">
               {agentName} Agent
             </h3>
-            <p className="text-sm text-sos-gray-600 mt-1 max-w-sm">
+            <p className="text-base text-sos-gray-600 mt-2 max-w-md">
               Your coordination partner. Ask about matches, capacity, situations, or anything else.
             </p>
-            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+            <div className="flex flex-wrap gap-3 mt-6 justify-center">
               {[
                 'Show me open matches',
                 'What\'s our capacity?',
@@ -215,7 +215,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                 <button
                   key={suggestion}
                   onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                  className="text-xs px-3 py-1.5 rounded-full border border-sos-accent-200 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+                  className="text-sm px-4 py-2 rounded-full border-2 border-sos-blue-800 text-sos-blue-800 font-medium hover:bg-sos-blue-800 hover:text-white transition-colors"
                 >
                   {suggestion}
                 </button>
