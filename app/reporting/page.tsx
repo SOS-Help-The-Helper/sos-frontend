@@ -194,7 +194,7 @@ export default function Reporting() {
                     <span className="text-xs text-sos-gray-600 capitalize">{org.type?.replace(/_/g, ' ') || '—'}</span>
                   </td>
                   <td className="py-2.5 text-right">
-                    <span className="text-sm font-medium text-sos-blue-800">{org.offers}</span>
+                    <span className="text-sm font-medium text-sos-blue-800">{org.resources}</span>
                   </td>
                 </tr>
               ))}
@@ -214,7 +214,7 @@ export default function Reporting() {
           </div>
           <div className="p-3 rounded-lg bg-green-50 text-center">
             <p className="text-xl font-bold text-green-700">
-              {data.orgStats.reduce((sum: number, o: any) => sum + o.offers, 0)}
+              {data.orgStats.reduce((sum: number, o: any) => sum + o.resources, 0)}
             </p>
             <p className="text-[10px] text-sos-gray-600">Active Offers</p>
           </div>

@@ -52,7 +52,7 @@ export async function getReportingData() {
       id: org.id,
       name: org.name,
       type: org.org_type,
-      offers: orgResources.length,
+      resources: orgResources.length,
     };
   });
 
