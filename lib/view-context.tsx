@@ -30,7 +30,19 @@ export function useViewContext() {
 }
 
 export function ViewProvider({ children }: { children: React.ReactNode }) {
-  const [currentView, setCurrentView] = useState('admin');
+  const [currentView, setCurrentViewState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sos-view') || 'admin';
+    }
+    return 'admin';
+  });
+
+  const setCurrentView = (view: string) => {
+    setCurrentViewState(view);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sos-view', view);
+    }
+  };
 
   const effectiveOrgId = currentView === 'admin' || currentView === 'citizen' ? null : currentView;
   const effectiveAgentId = VIEW_AGENT_MAP[currentView] || 'sos-citizen';
