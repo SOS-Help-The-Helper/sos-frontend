@@ -12,6 +12,7 @@ const VIEWS = [
   { id: 'da86c92f-d52d-4b13-a474-30e1be8fb808', label: 'Emergency RV', icon: '🚐', type: 'partner' },
   { id: '9d894368-51af-4cf7-9318-444a3c216f5d', label: 'Free Hot Meals', icon: '🍽️', type: 'partner' },
   { id: 'c1e74116-5e12-410a-9b21-dc80c7646d77', label: 'Greater Good', icon: '📦', type: 'partner' },
+  { id: '2d84a5d4-41a6-4817-8c36-37d6f8cd727a', label: 'Endurant', icon: '🔨', type: 'vendor' },
 ] as const;
 
 interface ViewSwitcherProps {
