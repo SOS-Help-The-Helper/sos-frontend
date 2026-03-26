@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
+import { DetailPopup } from '@/components/detail-popup';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export default function Management() {
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   useEffect(() => {
     async function load() {
@@ -212,7 +214,7 @@ export default function Management() {
           const isResolved = ['fulfilled', 'exhausted', 'withdrawn', 'cancelled', 'expired'].includes(item.status);
 
           return (
-            <div key={item.id} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4">
+            <div key={item.id} onClick={() => setSelectedItem({ ...item, _type: tab === 'requests' ? 'request' : 'resource' })} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all"
               {/* Status dot */}
               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                 isActive ? 'bg-green-400' :
@@ -296,6 +298,14 @@ export default function Management() {
         )}
       </div>
       </>
+      )}
+      {/* Detail Popup */}
+      {selectedItem && (
+        <DetailPopup
+          item={selectedItem}
+          type={selectedItem._type}
+          onClose={() => setSelectedItem(null)}
+        />
       )}
     </DashboardShell>
   );
