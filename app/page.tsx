@@ -3,8 +3,8 @@ import { AgentChat } from '@/components/agent-chat';
 
 export default function Home() {
   return (
-    <DashboardShell title="SOS Agent" subtitle="Your coordination partner">
-      <AgentChat />
+    <DashboardShell title="SOS Connect" subtitle="Community coordination platform">
+      <AgentChat hideHeader />
     </DashboardShell>
   );
 }

@@ -12,7 +12,11 @@ interface Message {
   timestamp: Date;
 }
 
-export function AgentChat() {
+interface AgentChatProps {
+  hideHeader?: boolean;
+}
+
+export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const { orgId, orgName, isAdmin } = useAuthContext();
   const { currentView, effectiveAgentId, effectiveOrgId } = useViewContext();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -164,18 +168,20 @@ export function AgentChat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
-      {/* Header */}
-      <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <div>
-            <h3 className="text-sm font-bold text-white">{agentName} Agent</h3>
-            <p className="text-[10px] text-sos-accent-400">
-              {isAdmin ? 'Platform coordination' : 'Your coordination partner'}
-            </p>
+      {/* Header — hidden when embedded in dashboard shell */}
+      {!hideHeader && (
+        <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <div>
+              <h3 className="text-sm font-bold text-white">{agentName} Agent</h3>
+              <p className="text-[10px] text-sos-accent-400">
+                {isAdmin ? 'Platform coordination' : 'Your coordination partner'}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
