@@ -21,17 +21,7 @@
 
   /* ============ TOP NAV: Connected dots ============ */
   .top-nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    padding: 20px 24px;
-    background: #0F1E2B; border-bottom: 1px solid rgba(137,207,240,0.1);
+    display: none;
   }
   .nav-dot {
     width: 12px;
@@ -74,7 +64,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 80px 24px 40px;
+    padding: 40px 24px;
   }
   .section-inner { max-width: 620px; width: 100%; }
 
@@ -272,34 +262,38 @@
 
 <script>
 const sections = document.querySelectorAll('.section');
-function goto(i) { document.getElementById('sec'+i).scrollIntoView({behavior:'smooth'}); }
+const totalSteps = 8; // 0-7
 
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    const step = parseInt(entry.target.dataset.step);
-    
-    for (let i = 0; i <= 7; i++) {
-      const dot = document.getElementById('nd'+i);
-      const wire = document.getElementById('nw'+i);
-      const label = dot?.parentElement.querySelector('.nav-label');
-      dot.classList.remove('active','current');
-      if (wire) wire.classList.remove('active');
-      if (label) label.classList.remove('active');
-      
-      if (i < step) {
-        dot.classList.add('active');
-        if (wire) wire.classList.add('active');
-        if (label) label.classList.add('active');
-      } else if (i === step) {
-        dot.classList.add('current');
-        if (label) label.classList.add('active');
-      }
+// Create progress dots for each section
+sections.forEach(sec => {
+  const step = parseInt(sec.dataset.step);
+  const dotsDiv = document.createElement('div');
+  dotsDiv.className = 'section-dots';
+  dotsDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;';
+  
+  for (let i = 0; i <= 7; i++) {
+    if (i > 0) {
+      const wire = document.createElement('div');
+      wire.style.cssText = 'width:24px;height:2px;background:' + (i <= step ? 'rgba(137,207,240,0.4)' : 'rgba(137,207,240,0.08)') + ';flex-shrink:0;transition:all 0.4s;';
+      dotsDiv.appendChild(wire);
     }
-  });
-}, { threshold: 0.5 });
-
-sections.forEach(s => observer.observe(s));
+    const dot = document.createElement('div');
+    let dotStyle = 'border-radius:50%;flex-shrink:0;transition:all 0.4s;';
+    if (i === step) {
+      dotStyle += 'width:14px;height:14px;border:2px solid #EF4E4B;background:#EF4E4B;box-shadow:0 0 14px rgba(239,78,75,0.5);';
+    } else if (i < step) {
+      dotStyle += 'width:10px;height:10px;border:2px solid #89CFF0;background:rgba(137,207,240,0.3);box-shadow:0 0 8px rgba(137,207,240,0.3);';
+    } else {
+      dotStyle += 'width:10px;height:10px;border:2px solid rgba(137,207,240,0.15);background:transparent;';
+    }
+    dot.style.cssText = dotStyle;
+    dotsDiv.appendChild(dot);
+  }
+  
+  // Insert dots at the top of section content
+  const inner = sec.querySelector('.section-inner') || sec.querySelector('.overview-inner') || sec.querySelector('.finale-inner');
+  if (inner) inner.insertBefore(dotsDiv, inner.firstChild);
+});
 </script>
 </body>
 </html>
