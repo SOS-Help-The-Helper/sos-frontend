@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from "@/lib/auth-context";
+import { ViewProvider } from "@/lib/view-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
         </head>
         <body>
           <AuthProvider>
-            {children}
+            <ViewProvider>
+              {children}
+            </ViewProvider>
           </AuthProvider>
         </body>
       </html>

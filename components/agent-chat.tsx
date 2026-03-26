@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 import { Send } from 'lucide-react';
 
 interface Message {
@@ -13,6 +14,7 @@ interface Message {
 
 export function AgentChat() {
   const { orgId, orgName, isAdmin } = useAuthContext();
+  const { currentView, effectiveAgentId, effectiveOrgId } = useViewContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,7 +52,7 @@ export function AgentChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage.content,
-          orgId: orgId || 'sos-platform',
+          orgId: (typeof window !== 'undefined' ? document.querySelector('[data-view-id]')?.getAttribute('data-view-id') : null) || orgId || 'sos-platform',
           sessionId,
         }),
       });
@@ -150,7 +152,15 @@ export function AgentChat() {
     }
   }
 
-  const agentName = isAdmin ? 'SOS Platform' : orgName || 'SOS';
+  const VIEW_NAMES: Record<string, string> = {
+    'admin': 'SOS Platform',
+    'citizen': 'SOS Citizen',
+    '43299807-6229-49be-9a6b-0498c9188178': 'Aid Arena',
+    'da86c92f-d52d-4b13-a474-30e1be8fb808': 'Emergency RV',
+    '9d894368-51af-4cf7-9318-444a3c216f5d': 'Free Hot Meals',
+    'c1e74116-5e12-410a-9b21-dc80c7646d77': 'Greater Good',
+  };
+  const agentName = VIEW_NAMES[currentView] || orgName || 'SOS';
 
   return (
     <div className="flex flex-col h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">

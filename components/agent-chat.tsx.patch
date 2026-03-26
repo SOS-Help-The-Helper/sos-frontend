@@ -1,0 +1,3 @@
+--- Replace the orgId line in agent-chat.tsx ---
+Old: const { orgId, orgName, isAdmin } = useAuthContext();
+New: Add useViewContext import and use effectiveAgentId

@@ -5,11 +5,15 @@ const GATEWAY_URL = 'https://159.203.70.230/v1/responses';
 const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || '';
 
 const ORG_AGENT_MAP: Record<string, string> = {
-  '43299807-6229-49be-9a6b-0498c9188178': 'sos-aid-arena',
-  'da86c92f-d52d-4b13-a474-30e1be8fb808': 'sos-erv',
-  '9d894368-51af-4cf7-9318-444a3c216f5d': 'sos-fhm',
-  'c1e74116-5e12-410a-9b21-dc80c7646d77': 'sos-partner',
-  'sos-platform': 'sos-citizen',
+  // View toggle IDs
+  'admin': 'sos-platform',
+  'citizen': 'sos-citizen',
+  // Partner org IDs
+  '43299807-6229-49be-9a6b-0498c9188178': 'sos-aid-arena',    // Aid Arena
+  'da86c92f-d52d-4b13-a474-30e1be8fb808': 'sos-erv',          // Emergency RV
+  '9d894368-51af-4cf7-9318-444a3c216f5d': 'sos-fhm',          // Free Hot Meals
+  'c1e74116-5e12-410a-9b21-dc80c7646d77': 'sos-partner',      // Greater Good (generic)
+  'sos-platform': 'sos-platform',
 };
 
 export async function POST(req: NextRequest) {
