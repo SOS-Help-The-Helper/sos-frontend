@@ -23,13 +23,13 @@ export async function getScopedMatches(orgId: string | null, filter?: { status?:
   if (!orgId || !data) return data || [];
 
   // Get org's offer IDs
-  const { data: orgOffers } = await supabase
+  const { data: orgResources } = await supabase
     .from('resources')
     .select('id')
     .eq('org_id', orgId);
 
-  const orgOfferIds = new Set((orgOffers || []).map((o: any) => o.id));
-  return data.filter((m: any) => orgOfferIds.has(m.resource_id));
+  const orgResourceIds = new Set((orgResources || []).map((o: any) => o.id));
+  return data.filter((m: any) => orgResourceIds.has(m.resource_id));
 }
 
 export async function getScopedRequests(orgId: string | null) {
