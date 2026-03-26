@@ -216,7 +216,7 @@ export default function Management() {
           const isResolved = ['fulfilled', 'exhausted', 'withdrawn', 'cancelled', 'expired'].includes(item.status);
 
           return (
-            <div key={item.id} onClick={() => setSelectedItem({ ...item, _type: tab === 'requests' ? 'request' : 'resource' })} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all"
+            <div key={item.id} onClick={() => setSelectedItem({ ...item, _type: tab === 'requests' ? 'request' : 'resource' })} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all">
               {/* Status dot */}
               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                 isActive ? 'bg-green-400' :
