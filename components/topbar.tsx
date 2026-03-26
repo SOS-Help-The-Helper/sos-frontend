@@ -12,13 +12,13 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle, currentView, onViewChange }: TopbarProps) {
   return (
-    <header className="h-14 border-b border-sos-gray-300 bg-white flex items-center justify-between px-6 pt-[env(safe-area-inset-top)]">
+    <header className="h-14 border-b border-white/10 bg-sos-blue-800 flex items-center justify-between px-6">
       <div>
-        <h2 className="text-base font-bold text-sos-blue-800 leading-none">
+        <h2 className="text-base font-bold text-white leading-none">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-xs text-sos-gray-600 mt-0.5">{subtitle}</p>
+          <p className="text-xs text-sos-accent-400 mt-0.5">{subtitle}</p>
         )}
       </div>
       <div className="flex items-center gap-3">

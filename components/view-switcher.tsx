@@ -41,13 +41,13 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sos-gray-200 hover:bg-sos-gray-300 border border-sos-gray-300 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition-colors"
       >
-        <span className="text-xs text-sos-gray-600">Viewing as:</span>
-        <span className="text-xs font-semibold text-sos-blue-800">
+        <span className="text-xs text-white/60">Viewing as:</span>
+        <span className="text-xs font-semibold text-white">
           {'icon' in current! ? current!.icon : ''} {'label' in current! ? current!.label : 'Admin'}
         </span>
-        <ChevronDown className={`h-3 w-3 text-sos-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-3 w-3 text-white/60 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (

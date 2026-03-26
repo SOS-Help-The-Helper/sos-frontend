@@ -163,9 +163,9 @@ export function AgentChat() {
   const agentName = VIEW_NAMES[currentView] || orgName || 'SOS';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800 pt-[max(0.875rem,env(safe-area-inset-top))]">
+      <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <div>
