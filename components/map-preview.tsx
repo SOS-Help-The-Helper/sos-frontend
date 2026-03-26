@@ -45,14 +45,14 @@ export function MapPreview({ requests = [], resources = [] }: MapPreviewProps) {
         requests.forEach(req => {
           if (req.latitude && req.longitude) {
             const el = document.createElement('div');
-            el.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.3);box-shadow:0 0 8px rgba(239,78,75,0.4);';
+            el.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.5);box-shadow:0 0 12px rgba(239,78,75,0.6);';
             new mapboxgl.Marker({ element: el }).setLngLat([req.longitude, req.latitude]).addTo(map);
           }
         });
         resources.forEach(res => {
           if (res.latitude && res.longitude) {
             const el = document.createElement('div');
-            el.style.cssText = 'width:8px;height:8px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.3);';
+            el.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 10px rgba(137,207,240,0.4);';
             new mapboxgl.Marker({ element: el }).setLngLat([res.longitude, res.latitude]).addTo(map);
           }
         });
