@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -240,34 +241,8 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                 : 'bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
             }`}>
               {msg.role === 'assistant' ? (
-                <div className="text-sm leading-relaxed space-y-2">
-                  {msg.content.split('\n\n').map((block, i) => (
-                    <div key={i}>
-                      {block.startsWith('- ') || block.startsWith('• ') ? (
-                        <ul className="list-none space-y-1">
-                          {block.split('\n').map((line, j) => (
-                            <li key={j} className="flex gap-2">
-                              <span className="text-sos-red-500 font-bold mt-0.5">→</span>
-                              <span>{line.replace(/^[-•] /, '')}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : block.match(/^\d+\./) ? (
-                        <ol className="list-none space-y-1">
-                          {block.split('\n').map((line, j) => (
-                            <li key={j} className="flex gap-2">
-                              <span className="text-sos-accent-600 font-bold text-xs bg-sos-accent-50 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">{j+1}</span>
-                              <span>{line.replace(/^\d+\.\s*/, '')}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : (
-                        <p className="whitespace-pre-wrap">{block.split('\n').map((line, j) => (
-                          <span key={j}>{line.replace(/\*\*(.+?)\*\*/g, (_, t) => t)}{j < block.split('\n').length - 1 && <br />}</span>
-                        ))}</p>
-                      )}
-                    </div>
-                  ))}
+                <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-sos-blue-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1 prose-h1:text-base prose-h2:text-sm prose-h3:text-sm prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-strong:text-sos-blue-800 prose-li:marker:text-sos-red-500">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
               ) : (
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
