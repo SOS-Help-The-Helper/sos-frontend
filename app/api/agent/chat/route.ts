@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         input: message,
+        model: 'anthropic/claude-sonnet-4-20250514',
         user: userId,
         stream: true,
         ...(sessionId && { previous_response_id: sessionId }),
