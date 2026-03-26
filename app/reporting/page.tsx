@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
+import { useAuthContext } from '@/lib/auth-context';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { isAdmin, orgType } = useAuthContext();
+  const showPartnerTable = isAdmin || orgType === 'coordination';
 
   useEffect(() => {
     async function load() {
@@ -166,7 +169,8 @@ export default function Reporting() {
         </div>
       </div>
 
-      {/* Per-Org Stats */}
+      {/* Per-Org Stats — Admin + Coordinators only */}
+      {showPartnerTable && (
       <div className="bg-white rounded-xl border border-sos-gray-300 p-5 mb-4">
         <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Partner Performance</h3>
         <div className="overflow-x-auto">
@@ -194,6 +198,34 @@ export default function Reporting() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+      )}
+
+      {/* All Resources Summary */}
+      <div className="bg-white rounded-xl border border-sos-gray-300 p-5 mb-4">
+        <h3 className="text-sm font-bold text-sos-blue-800 mb-3">All Resources</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 rounded-lg bg-sos-accent-50 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">{data.totalOffers}</p>
+            <p className="text-[10px] text-sos-gray-600">Total Resources</p>
+          </div>
+          <div className="p-3 rounded-lg bg-green-50 text-center">
+            <p className="text-xl font-bold text-green-700">
+              {data.orgStats.reduce((sum: number, o: any) => sum + o.offers, 0)}
+            </p>
+            <p className="text-[10px] text-sos-gray-600">Active Offers</p>
+          </div>
+          <div className="p-3 rounded-lg bg-sos-blue-50 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">{data.orgStats.length}</p>
+            <p className="text-[10px] text-sos-gray-600">Partner Orgs</p>
+          </div>
+          <div className="p-3 rounded-lg bg-sos-gray-200 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">
+              {Object.keys(data.categoryDist).length}
+            </p>
+            <p className="text-[10px] text-sos-gray-600">Categories Covered</p>
+          </div>
         </div>
       </div>
 
