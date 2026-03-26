@@ -77,7 +77,7 @@ export default function Management() {
       <DashboardShell title="Management" subtitle="Loading...">
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-20 animate-pulse" />
+            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-20 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -142,7 +142,7 @@ export default function Management() {
           const isResolved = ['fulfilled', 'exhausted', 'withdrawn', 'cancelled', 'expired'].includes(item.status);
 
           return (
-            <div key={item.id} className="bg-white rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4">
+            <div key={item.id} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 flex items-center gap-4">
               {/* Status dot */}
               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                 isActive ? 'bg-green-400' :
@@ -217,7 +217,7 @@ export default function Management() {
             </div>
           );
         }) : (
-          <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
+          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
             <p className="text-sm text-sos-gray-500">
               No {tab === 'requests' ? 'requests' : 'resources'} found
               {filter !== 'all' ? ` with status "${filter}"` : ''}

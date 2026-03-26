@@ -177,7 +177,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const agentName = VIEW_NAMES[currentView] || orgName || 'SOS';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">
       {/* Header — hidden when embedded in dashboard shell */}
       {!hideHeader && (
         <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
@@ -289,7 +289,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="px-4 py-3 border-t border-sos-gray-300 bg-sos-gray-200/50">
+      <form onSubmit={sendMessage} className="px-4 py-3 border-t border-sos-gray-300 bg-[#F0EDE8]">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}

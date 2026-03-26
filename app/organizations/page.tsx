@@ -35,7 +35,7 @@ export default function Organizations() {
       <DashboardShell title="Organizations" subtitle="Loading...">
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-24 animate-pulse" />
+            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-24 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -51,7 +51,7 @@ export default function Organizations() {
             <div
               key={org.id}
               onClick={() => selectOrg(org)}
-              className={`bg-white rounded-xl border p-5 cursor-pointer transition-all hover:shadow-md ${
+              className={`bg-[#FDFCFA] rounded-xl border p-5 cursor-pointer transition-all hover:shadow-md ${
                 selectedOrg?.id === org.id
                   ? 'border-sos-accent-400 shadow-sm'
                   : 'border-sos-gray-300 hover:border-sos-accent-300'
@@ -106,7 +106,7 @@ export default function Organizations() {
           {selectedOrg ? (
             <>
               {/* Org Detail */}
-              <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">{selectedOrg.name}</h3>
                 <div className="space-y-2.5">
                   {selectedOrg.website && (
@@ -141,7 +141,7 @@ export default function Organizations() {
               </div>
 
               {/* Offers */}
-              <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">
                   Resources ({orgOffers.length})
                 </h3>
@@ -171,7 +171,7 @@ export default function Organizations() {
               </div>
 
               {/* Members */}
-              <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">
                   Members ({orgMembers.length})
                 </h3>
@@ -201,7 +201,7 @@ export default function Organizations() {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
               <p className="text-xs text-sos-gray-500">Select an organization to view details</p>
             </div>
           )}

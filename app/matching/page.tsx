@@ -61,7 +61,7 @@ export default function Matching() {
       <DashboardShell title="Matching" subtitle="Loading...">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-4 h-40 animate-pulse" />
+            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 h-40 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -114,7 +114,7 @@ export default function Matching() {
               />
             ))
           ) : (
-            <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
               <p className="text-sm text-sos-gray-500">No matches found for this filter</p>
             </div>
           )}
@@ -125,7 +125,7 @@ export default function Matching() {
           {selectedMatch ? (
             <>
               {/* Match Detail */}
-              <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Match Detail</h3>
 
                 <div className="space-y-2.5">
@@ -194,13 +194,13 @@ export default function Matching() {
               )}
 
               {/* Event Timeline */}
-              <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
                 <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Event Timeline</h3>
                 <MatchTimeline events={matchEvents} />
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
               <p className="text-xs text-sos-gray-500">Select a match to view details</p>
             </div>
           )}

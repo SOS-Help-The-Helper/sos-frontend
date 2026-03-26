@@ -22,7 +22,7 @@ export default function SettingsPage() {
       <DashboardShell title="Settings" subtitle="Loading...">
         <div className="space-y-4">
           {[1, 2].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-40 animate-pulse" />
+            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-40 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -33,7 +33,7 @@ export default function SettingsPage() {
     <DashboardShell title="Settings" subtitle="Platform configuration and system weights">
       <div className="space-y-4">
         {configs.map((config: any) => (
-          <div key={config.id} className="bg-white rounded-xl border border-sos-gray-300 p-5">
+          <div key={config.id} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-bold text-sos-blue-800 capitalize">
@@ -71,7 +71,7 @@ export default function SettingsPage() {
         ))}
 
         {/* Platform Info */}
-        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Platform</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
@@ -97,7 +97,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Links */}
-        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Quick Links</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {[

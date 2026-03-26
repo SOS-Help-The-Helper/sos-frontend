@@ -14,7 +14,7 @@ interface DashboardShellProps {
 
 export function DashboardShell({ title, subtitle, children, currentView, onViewChange }: DashboardShellProps) {
   return (
-    <div className="min-h-screen bg-sos-gray-200">
+    <div className="min-h-screen bg-[#F7F5F0]">
       {/* Desktop sidebar */}
       <div className="hidden md:block">
         <Sidebar />
