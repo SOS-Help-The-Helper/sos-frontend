@@ -18,10 +18,14 @@
   
   .header {
     background: #1A3850;
-    padding: 40px 48px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 48px 48px;
+    text-align: center;
+  }
+  
+  .header img {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
   }
   
   .header h1 {
@@ -37,6 +41,7 @@
     color: #89CFF0;
     font-size: 14px;
     font-weight: 400;
+    margin-top: 4px;
   }
   
   .container {
@@ -258,10 +263,9 @@
 <body>
 
 <div class="header">
-  <div>
-    <h1><span>SOS</span> × Aid Arena</h1>
-    <div class="tagline">Partnership Scope — March 2026</div>
-  </div>
+  <img src="/logomark.svg" alt="SOS">
+  <h1><span>SOS</span> × Aid Arena</h1>
+  <div class="tagline">Partnership Scope — March 2026</div>
 </div>
 
 <div class="container">
@@ -291,6 +295,8 @@
     </div>
   </div>
 
+  <div style="height: 1px; background: #e8e8e8; margin: 40px 0;"></div>
+
   <div class="two-col" style="margin-bottom: 40px;">
     <div class="card">
       <h3>SOS Today (MVP)</h3>
@@ -315,6 +321,8 @@
       </ul>
     </div>
   </div>
+
+  <div style="height: 1px; background: #e8e8e8; margin: 40px 0;"></div>
 
   <div class="section">
     <h2>How It Works</h2>
