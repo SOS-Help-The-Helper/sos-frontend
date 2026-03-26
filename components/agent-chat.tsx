@@ -230,21 +230,61 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
         {messages.map(msg => (
           <div
             key={msg.id}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+            {msg.role === 'assistant' && (
+              <div className="w-7 h-7 rounded-full bg-sos-blue-800 flex items-center justify-center flex-shrink-0 mt-1">
+                <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
+              </div>
+            )}
+            <div className={`max-w-[80%] md:max-w-[75%] ${
               msg.role === 'user'
-                ? 'bg-sos-blue-800 text-white rounded-br-md'
-                : 'bg-sos-gray-200 text-sos-blue-800 rounded-bl-md'
+                ? 'bg-sos-blue-800 text-white rounded-2xl rounded-br-md px-4 py-2.5'
+                : 'bg-white border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
             }`}>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              {msg.role === 'assistant' ? (
+                <div className="text-sm leading-relaxed space-y-2">
+                  {msg.content.split('\n\n').map((block, i) => (
+                    <div key={i}>
+                      {block.startsWith('- ') || block.startsWith('• ') ? (
+                        <ul className="list-none space-y-1">
+                          {block.split('\n').map((line, j) => (
+                            <li key={j} className="flex gap-2">
+                              <span className="text-sos-red-500 font-bold mt-0.5">→</span>
+                              <span>{line.replace(/^[-•] /, '')}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : block.match(/^\d+\./) ? (
+                        <ol className="list-none space-y-1">
+                          {block.split('\n').map((line, j) => (
+                            <li key={j} className="flex gap-2">
+                              <span className="text-sos-accent-600 font-bold text-xs bg-sos-accent-50 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">{j+1}</span>
+                              <span>{line.replace(/^\d+\.\s*/, '')}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{block.split('\n').map((line, j) => (
+                          <span key={j}>{line.replace(/\*\*(.+?)\*\*/g, (_, t) => t)}{j < block.split('\n').length - 1 && <br />}</span>
+                        ))}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              )}
               {msg.content === '' && loading && (
-                <div className="flex gap-1 py-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-sos-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-sos-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-sos-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="flex gap-1.5 py-1">
+                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               )}
+              <div className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-white/40' : 'text-sos-gray-400'}`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
           </div>
         ))}
