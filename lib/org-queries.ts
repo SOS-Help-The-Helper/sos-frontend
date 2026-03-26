@@ -27,7 +27,18 @@ export interface Affiliation {
   created_at: string;
 }
 
-export async function getOrganizations() {
+export async function getOrganizations(scopeOrgId?: string | null) {
+  // If scoped to a coordinator org, show their network members
+  if (scopeOrgId) {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .or(`id.eq.${scopeOrgId},parent_org_id.eq.${scopeOrgId}`)
+      .order('name');
+    if (error) console.error('Error:', error);
+    return (data || []) as Organization[];
+  }
+
   const { data, error } = await supabase
     .from('organizations')
     .select('*')

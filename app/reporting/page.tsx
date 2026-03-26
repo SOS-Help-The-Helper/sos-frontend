@@ -5,11 +5,13 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { isAdmin, orgType } = useAuthContext();
+  const { effectiveOrgId } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
 
   useEffect(() => {

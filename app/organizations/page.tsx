@@ -13,7 +13,7 @@ export default function Organizations() {
 
   useEffect(() => {
     async function load() {
-      const data = await getOrganizations();
+      const data = await getOrganizations(effectiveOrgId ?? orgId);
       setOrgs(data);
       setLoading(false);
     }

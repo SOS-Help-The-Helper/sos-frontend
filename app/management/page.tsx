@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Management() {
   const { orgId, isAdmin } = useAuthContext();
+  const { effectiveOrgId } = useViewContext();
   const [tab, setTab] = useState<Tab>('organizations');
   const [orgs, setOrgs] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);

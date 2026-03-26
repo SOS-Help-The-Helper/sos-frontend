@@ -8,6 +8,7 @@ import { MatchTimeline } from '@/components/match-timeline';
 import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
 import { getScopedMatches } from '@/lib/scoped-queries';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -28,12 +29,13 @@ export default function Matching() {
   const [chainMatches, setChainMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const { orgId, loading: authLoading } = useAuthContext();
+  const { effectiveOrgId } = useViewContext();
 
   useEffect(() => {
     if (authLoading) return;
     async function load() {
       const [matchData, statsData] = await Promise.all([
-        getScopedMatches(orgId, { status: filter }),
+        getScopedMatches(effectiveOrgId ?? orgId, { status: filter }),
         getMatchStats(),
       ]);
       setMatches(matchData);
