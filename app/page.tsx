@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
-import { NervousSystem } from '@/components/nervous-system';
+import { MapPreview } from '@/components/map-preview';
 import { PartnerHome } from '@/components/partner-home';
 import { getRecentActivity } from '@/lib/queries';
 import { getScopedStats } from '@/lib/scoped-queries';
 import { useAuthContext } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase-client';
 
 interface Stats {
   openRequests: number;
@@ -32,6 +33,8 @@ interface ActivityItem {
 export default function CommandCenter() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [mapRequests, setMapRequests] = useState<any[]>([]);
+  const [mapOffers, setMapOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('admin');
   const { orgId, isAdmin, isPartner, loading: authLoading } = useAuthContext();
@@ -49,6 +52,15 @@ export default function CommandCenter() {
       ]);
       setStats(statsData);
       setActivity(activityData);
+
+      // Fetch map data
+      const [reqGeo, offGeo] = await Promise.all([
+        supabase.from('requests').select('id, latitude, longitude, category, urgency, triage_score').not('latitude', 'is', null),
+        supabase.from('offers').select('id, latitude, longitude, category').not('latitude', 'is', null),
+      ]);
+      setMapRequests(reqGeo.data || []);
+      setMapOffers(offGeo.data || []);
+
       setLoading(false);
     }
     load();
@@ -123,12 +135,7 @@ export default function CommandCenter() {
       {/* Nervous System + Activity */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         <div className="col-span-1 md:col-span-2">
-          <NervousSystem metrics={{
-            intakesToday: stats?.totalRequests ?? 0,
-            matchesProposed: stats?.totalMatches ?? 0,
-            matchesFulfilled: stats?.fulfilledMatches ?? 0,
-            avgResponseMin: 0,
-          }} />
+          <MapPreview requests={mapRequests} offers={mapOffers} />
         </div>
 
         {/* Recent Activity */}
