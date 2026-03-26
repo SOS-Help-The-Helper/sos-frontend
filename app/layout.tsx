@@ -9,13 +9,13 @@ export const metadata: Metadata = {
   description: "Everyone is a helper. A free public platform connecting people in need with helpers during disasters.",
   metadataBase: new URL('https://sosconnect.org'),
   openGraph: {
-    title: "SOS | Community Coordination Platform",
+    title: "SOS | Community Coordination",
     description: "Everyone is a helper. We help the helpers.",
     url: "https://sosconnect.org",
     siteName: "SOS",
     type: "website",
     images: [{
-      url: "/og-image.png",
+      url: "/opengraph-image",
       width: 1200,
       height: 630,
       alt: "SOS — Everyone is a helper",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SOS | Community Coordination Platform",
+    title: "SOS | Community Coordination",
     description: "Everyone is a helper. We help the helpers.",
-    images: ["/og-image.png"],
+    images: ["/opengraph-image"],
   },
   icons: {
     icon: "/logomark.png",

@@ -1,4 +1,6 @@
 import { ImageResponse } from 'next/og';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 export const runtime = 'edge';
 export const alt = 'SOS — Everyone is a helper';
@@ -6,6 +8,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
+  // Read the logomark as base64 for embedding
+  const logoData = await fetch(new URL('/logomark.png', 'https://sosconnect.org')).then(r => r.arrayBuffer());
+  const logoBase64 = `data:image/png;base64,${Buffer.from(logoData).toString('base64')}`;
+
   return new ImageResponse(
     (
       <div
@@ -20,25 +26,16 @@ export default async function Image() {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {/* Logomark — large and centered */}
-        <div
-          style={{
-            width: 140,
-            height: 140,
-            borderRadius: '50%',
-            background: '#EF4E4B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 40,
-            boxShadow: '0 0 60px rgba(239,78,75,0.3)',
-          }}
-        >
-          <span style={{ color: 'white', fontSize: 72, fontWeight: 800, letterSpacing: -2 }}>SOS</span>
-        </div>
+        {/* Actual logomark */}
+        <img
+          src={logoBase64}
+          width={160}
+          height={160}
+          style={{ marginBottom: 36 }}
+        />
 
         {/* Core tagline */}
-        <div style={{ color: 'white', fontSize: 44, fontWeight: 700, letterSpacing: -0.5 }}>
+        <div style={{ color: 'white', fontSize: 48, fontWeight: 700 }}>
           Everyone Is a Helper
         </div>
 
