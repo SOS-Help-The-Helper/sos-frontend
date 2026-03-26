@@ -3,12 +3,16 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { getOrganizations, getOrgOffers, getOrgAffiliations, getOrgTypeColor, Organization } from '@/lib/org-queries';
+import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 
 export default function Organizations() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [orgOffers, setOrgOffers] = useState<any[]>([]);
   const [orgMembers, setOrgMembers] = useState<any[]>([]);
+  const { orgId } = useAuthContext();
+  const { effectiveOrgId } = useViewContext();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

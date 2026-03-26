@@ -66,85 +66,7 @@ export default function Reporting() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
-        {
-      /* All Resources Summary */}
-      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 mb-4">
-        <h3 className="text-sm font-bold text-sos-blue-800 mb-3">All Resources</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-3 rounded-lg bg-sos-accent-50 text-center">
-            <p className="text-xl font-bold text-sos-blue-800">{data.totalOffers}</p>
-            <p className="text-[10px] text-sos-gray-600">Total Resources</p>
-          </div>
-          <div className="p-3 rounded-lg bg-green-50 text-center">
-            <p className="text-xl font-bold text-green-700">
-              {data.orgStats.reduce((sum: number, o: any) => sum + o.offers, 0)}
-            </p>
-            <p className="text-[10px] text-sos-gray-600">Active Offers</p>
-          </div>
-          <div className="p-3 rounded-lg bg-sos-blue-50 text-center">
-            <p className="text-xl font-bold text-sos-blue-800">{data.orgStats.length}</p>
-            <p className="text-[10px] text-sos-gray-600">Partner Orgs</p>
-          </div>
-          <div className="p-3 rounded-lg bg-sos-gray-200 text-center">
-            <p className="text-xl font-bold text-sos-blue-800">
-              {Object.keys(data.categoryDist).length}
-            </p>
-            <p className="text-[10px] text-sos-gray-600">Categories Covered</p>
-          </div>
-        </div>
-      </div>
-
-      {
-      /* Category Distribution */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Requests by Category</h3>
-          <div className="space-y-2">
-            {Object.entries(data.categoryDist)
-              .sort(([, a], [, b]) => (b as number) - (a as number))
-              .map(([category, count]) => {
-                const pct = Math.round(((count as number) / data.totalRequests) * 100);
-                return (
-                  <div key={category} className="flex items-center justify-between py-1.5 border-b border-sos-gray-200 last:border-0">
-                    <span className="text-xs text-sos-blue-800 capitalize">{category.replace(/_/g, ' ')}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-sos-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-sos-accent-500 rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-[10px] font-medium text-sos-gray-600 w-8 text-right">{count as number}</span>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-
-        {
-      /* Urgency Distribution */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Urgency Breakdown</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(data.urgencyDist)
-              .sort(([a], [b]) => {
-                const order: Record<string, number> = { critical: 0, high: 1, standard: 2, low: 3 };
-                return (order[a] ?? 4) - (order[b] ?? 4);
-              })
-              .map(([urgency, count]) => (
-                <div key={urgency} className={`p-3 rounded-lg border ${
-                  urgency === 'critical' ? 'bg-sos-red-50 border-sos-red-100' :
-                  urgency === 'high' ? 'bg-yellow-50 border-yellow-100' :
-                  urgency === 'standard' ? 'bg-sos-accent-50 border-sos-accent-100' :
-                  'bg-sos-gray-200 border-sos-gray-300'
-                }`}>
-                  <p className="text-2xl font-bold text-sos-blue-800">{count as number}</p>
-                  <p className="text-[10px] font-medium text-sos-gray-600 uppercase tracking-wider capitalize">{urgency}</p>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
-
-      {
-      /* Match Score Distribution */}
+        {/* Match Score Distribution */}
         <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Score Distribution</h3>
           <div className="space-y-3">
@@ -174,8 +96,7 @@ export default function Reporting() {
           </div>
         </div>
 
-        {
-      /* Match Outcome Breakdown */}
+        {/* Match Outcome Breakdown */}
         <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Outcomes</h3>
           <div className="space-y-3">
@@ -203,8 +124,54 @@ export default function Reporting() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
-        {
-      /* Per-Org Stats — Admin + Coordinators only */}
+        {/* Category Distribution */}
+        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Requests by Category</h3>
+          <div className="space-y-2">
+            {Object.entries(data.categoryDist)
+              .sort(([, a], [, b]) => (b as number) - (a as number))
+              .map(([category, count]) => {
+                const pct = Math.round(((count as number) / data.totalRequests) * 100);
+                return (
+                  <div key={category} className="flex items-center justify-between py-1.5 border-b border-sos-gray-200 last:border-0">
+                    <span className="text-xs text-sos-blue-800 capitalize">{category.replace(/_/g, ' ')}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-sos-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-sos-accent-500 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-[10px] font-medium text-sos-gray-600 w-8 text-right">{count as number}</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Urgency Distribution */}
+        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Urgency Breakdown</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(data.urgencyDist)
+              .sort(([a], [b]) => {
+                const order: Record<string, number> = { critical: 0, high: 1, standard: 2, low: 3 };
+                return (order[a] ?? 4) - (order[b] ?? 4);
+              })
+              .map(([urgency, count]) => (
+                <div key={urgency} className={`p-3 rounded-lg border ${
+                  urgency === 'critical' ? 'bg-sos-red-50 border-sos-red-100' :
+                  urgency === 'high' ? 'bg-yellow-50 border-yellow-100' :
+                  urgency === 'standard' ? 'bg-sos-accent-50 border-sos-accent-100' :
+                  'bg-sos-gray-200 border-sos-gray-300'
+                }`}>
+                  <p className="text-2xl font-bold text-sos-blue-800">{count as number}</p>
+                  <p className="text-[10px] font-medium text-sos-gray-600 uppercase tracking-wider capitalize">{urgency}</p>
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Per-Org Stats — Admin + Coordinators only */}
       {showPartnerTable && (
       <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 mb-4">
         <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Partner Performance</h3>
@@ -237,8 +204,34 @@ export default function Reporting() {
       </div>
       )}
 
-      {
-      /* System Intelligence */}
+      {/* All Resources Summary */}
+      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 mb-4">
+        <h3 className="text-sm font-bold text-sos-blue-800 mb-3">All Resources</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 rounded-lg bg-sos-accent-50 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">{data.totalOffers}</p>
+            <p className="text-[10px] text-sos-gray-600">Total Resources</p>
+          </div>
+          <div className="p-3 rounded-lg bg-green-50 text-center">
+            <p className="text-xl font-bold text-green-700">
+              {data.orgStats.reduce((sum: number, o: any) => sum + o.offers, 0)}
+            </p>
+            <p className="text-[10px] text-sos-gray-600">Active Offers</p>
+          </div>
+          <div className="p-3 rounded-lg bg-sos-blue-50 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">{data.orgStats.length}</p>
+            <p className="text-[10px] text-sos-gray-600">Partner Orgs</p>
+          </div>
+          <div className="p-3 rounded-lg bg-sos-gray-200 text-center">
+            <p className="text-xl font-bold text-sos-blue-800">
+              {Object.keys(data.categoryDist).length}
+            </p>
+            <p className="text-[10px] text-sos-gray-600">Categories Covered</p>
+          </div>
+        </div>
+      </div>
+
+      {/* System Intelligence */}
       {data.learnings.length > 0 && (
         <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">System Intelligence — {data.learnings.length} Active Learnings</h3>
