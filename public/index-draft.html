@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS — Everyone Is a Helper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+  body { font-family: 'Roboto', sans-serif; background: #0F1E2B; color: white; overflow-x: hidden; }
+
+  .grid-bg {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(137,207,240,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(137,207,240,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .section {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    position: relative;
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    text-align: center;
+    position: relative;
+  }
+  .hero-logo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 24px;
+    opacity: 0.9;
+  }
+  .hero h1 {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    max-width: 700px;
+    margin-bottom: 20px;
+  }
+  .hero h1 .accent { color: #89CFF0; }
+  .hero .sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 300;
+    max-width: 520px;
+    line-height: 1.6;
+    margin: 0 auto 36px;
+  }
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #EF4E4B;
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .hero-cta:hover { background: #d93c39; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(239,78,75,0.3); }
+  .scroll-line {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, rgba(137,207,240,0.3));
+  }
+
+  /* ============ THE MOMENT ============ */
+  .moment-inner { max-width: 640px; text-align: center; }
+  .moment-inner h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 32px;
+    line-height: 1.3;
+  }
+  .moment-stats {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 700;
+    color: #EF4E4B;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 6px;
+    max-width: 140px;
+    line-height: 1.4;
+  }
+  .moment-card {
+    background: rgba(137,207,240,0.03);
+    border: 1px solid rgba(137,207,240,0.1);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    text-align: left;
+  }
+  .moment-card strong { color: rgba(255,255,255,0.8); }
+
+  /* ============ THE GAP ============ */
+  .gap-inner { max-width: 700px; text-align: center; }
+  .gap-inner h2 { font-size: 28px; font-weight: 700; margin-bottom: 40px; }
+  .gap-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .gap-side {
+    background: rgba(137,207,240,0.04);
+    border: 1px solid rgba(137,207,240,0.12);
+    border-radius: 12px;
+    padding: 20px 28px;
+    text-align: center;
+    min-width: 200px;
+  }
+  .gap-side h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #89CFF0; }
+  .gap-side p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+  .gap-bridge {
+    font-size: 24px;
+    color: rgba(137,207,240,0.25);
+    font-weight: 300;
+    letter-spacing: 4px;
+  }
+  .gap-bottom {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+  .gap-bottom strong { color: white; }
+
+  /* ============ SIGNAL SECTIONS ============ */
+  .signal-inner { max-width: 620px; width: 100%; }
+  .step-headline {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .step-card {
+    background: rgba(137,207,240,0.03);
+    border: 1px solid rgba(137,207,240,0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    position: relative;
+    overflow: hidden;
+    margin-top: 40px;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: #89CFF0;
+    border-radius: 3px 0 0 3px;
+  }
+  .step-card .hl { color: #89CFF0; }
+  .step-card .red { color: #EF4E4B; }
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #EF4E4B;
+    margin-bottom: 8px;
+  }
+
+  /* ============ VALUES ============ */
+  .values-inner { max-width: 640px; text-align: center; }
+  .values-inner h2 { font-size: 28px; font-weight: 700; margin-bottom: 36px; }
+  .values-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    text-align: left;
+  }
+  .value-card {
+    background: rgba(137,207,240,0.03);
+    border: 1px solid rgba(137,207,240,0.08);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .value-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #89CFF0; }
+  .value-card p { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+  /* ============ CTA ============ */
+  .cta-inner { text-align: center; max-width: 500px; }
+  .cta-inner h2 { font-size: 32px; font-weight: 700; margin-bottom: 12px; }
+  .cta-inner p { font-size: 15px; color: rgba(255,255,255,0.45); margin-bottom: 32px; line-height: 1.6; }
+
+  /* ============ FINALE (SIGNAL) ============ */
+  .finale-inner { text-align: center; max-width: 560px; }
+  .finale-chain { display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 28px; }
+  .fd { width: 14px; height: 14px; border-radius: 50%; background: #89CFF0; box-shadow: 0 0 10px rgba(137,207,240,0.4); }
+  .fd.red { background: #EF4E4B; box-shadow: 0 0 10px rgba(239,78,75,0.4); }
+  .fl { width: 24px; height: 2px; background: rgba(137,207,240,0.35); }
+  .finale-inner h2 { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 12px; }
+  .finale-inner p { font-size: 14px; color: #89CFF0; }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    text-align: center;
+    padding: 40px 24px;
+    background: #1A3850;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+  }
+  .footer a { color: #89CFF0; text-decoration: none; }
+
+  /* Dots */
+  .section-dots { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 40px; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 32px; }
+    .moment-stats { gap: 20px; }
+    .stat-num { font-size: 28px; }
+    .gap-visual { flex-direction: column; gap: 12px; }
+    .gap-bridge { transform: rotate(90deg); }
+    .values-grid { grid-template-columns: 1fr; }
+    .step-headline { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- HERO -->
+<div class="section hero">
+  <img src="/logomark.svg" alt="SOS" class="hero-logo">
+  <h1>Communities coordinate faster<br>than institutions.<br><span class="accent">They just need the tools.</span></h1>
+  <p class="sub">SOS is coordination infrastructure for disaster response. AI-powered. Community-facing. Built to compound.</p>
+  <a href="#signal" class="hero-cta">See How It Works ↓</a>
+  <div class="scroll-line"></div>
+</div>
+
+<!-- THE MOMENT -->
+<div class="section">
+  <div class="moment-inner">
+    <h2>Three things converged.</h2>
+    <div class="moment-stats">
+      <div class="stat"><div class="stat-num">79%</div><div class="stat-label">of state agencies want AI coordination</div></div>
+      <div class="stat"><div class="stat-num">0%</div><div class="stat-label">currently use it</div></div>
+      <div class="stat"><div class="stat-num">85%</div><div class="stat-label">of survivors get help from neighbors first</div></div>
+    </div>
+    <div class="moment-card">
+      <strong>Federal capacity is declining.</strong> States are absorbing disaster responsibility without infrastructure.<br><br>
+      <strong>AI makes it possible.</strong> Conversational intake, real-time matching, compounding intelligence — none of this was feasible two years ago.<br><br>
+      <strong>Communities are ready.</strong> The public isn't a liability. They're the first responder.
+    </div>
+  </div>
+</div>
+
+<!-- THE GAP -->
+<div class="section">
+  <div class="gap-inner">
+    <h2>Nobody connects the two sides.</h2>
+    <div class="gap-visual">
+      <div class="gap-side">
+        <h3>Communities</h3>
+        <p>Facebook groups<br>WhatsApp threads<br>Phone trees</p>
+      </div>
+      <div class="gap-bridge">← gap →</div>
+      <div class="gap-side">
+        <h3>Agencies</h3>
+        <p>WebEOC · ArcGIS<br>Spreadsheets<br>Radio</p>
+      </div>
+    </div>
+    <p class="gap-bottom"><strong>SOS bridges this gap.</strong> Not by replacing either side — by giving both sides a coordination layer underneath what they already use.</p>
+  </div>
+</div>
+
+<!-- SIGNAL OVERVIEW -->
+<div class="section" id="signal">
+  <div class="finale-inner">
+    <h1 style="font-size:48px;letter-spacing:12px;margin-bottom:20px;"><span style="color:#EF4E4B;">S</span>IGNAL</h1>
+    <p style="font-size:16px;color:rgba(255,255,255,0.4);margin-bottom:0;">Six layers of coordination intelligence.<br>Each builds on the last. Watch it work.</p>
+  </div>
+</div>
+
+<!-- SIGNAL 1: Signal -->
+<div class="section" data-step="1">
+  <div class="signal-inner">
+    <div class="step-headline">Maria texts: "My house flooded.<br>I have two kids. We need shelter and food."</div>
+    <div class="step-card">
+      <div class="card-label">Signal</div>
+      Any channel. No forms. SOS extracts what's needed <span class="hl">from a conversation, not a spreadsheet</span>.
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL 2: Intelligence -->
+<div class="section" data-step="2">
+  <div class="signal-inner">
+    <div class="step-headline">Available partners scored instantly.<br>Red Cross shelter matched. Free Hot Meals notified.</div>
+    <div class="step-card">
+      <div class="card-label">Intelligence</div>
+      Two needs, two partners, <span class="hl">one coordinated response</span>. Every decision traced. Auditable by anyone who asks.
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL 3: Graph -->
+<div class="section" data-step="3">
+  <div class="signal-inner">
+    <div class="step-headline">At the shelter, Maria sees a pin on the map:<br>"Translation services needed nearby."<br>She speaks three languages.</div>
+    <div class="step-card">
+      <div class="card-label">Graph</div>
+      The system sees what people can offer — <span class="hl">not just what they need</span>. Connections form in real-time.
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL 4: Network -->
+<div class="section" data-step="4">
+  <div class="signal-inner">
+    <div class="step-headline">Maria matches as a translator.<br>She helps three ERV families who only speak Creole.<br>A survivor became a helper.</div>
+    <div class="step-card">
+      <div class="card-label">Network</div>
+      <span class="red">Everyone is a helper.</span> Trust is earned through outcomes. Maria's trust score rises with every family she helps.
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL 5: Adaptive -->
+<div class="section" data-step="5">
+  <div class="signal-inner">
+    <div class="step-headline">Shelter: 47 of 200 beds filled.<br>Free Hot Meals: 83 dinners served tonight.<br>Translation queue: clear.</div>
+    <div class="step-card">
+      <div class="card-label">Adaptive</div>
+      The whole network updates in real-time. <span class="hl">The next match already knows what changed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL 6: Learning -->
+<div class="section" data-step="6">
+  <div class="signal-inner">
+    <div class="step-headline">"Bilingual citizens matched as translators<br>resolve intakes 40% faster."<br>The system learned that. Automatically.</div>
+    <div class="step-card">
+      <div class="card-label">Learning</div>
+      Patterns no human could track. <span class="red">The intelligence compounds.</span> Every disaster makes the next one smarter.
+    </div>
+  </div>
+</div>
+
+<!-- SIGNAL FINALE -->
+<div class="section">
+  <div class="finale-inner">
+    <div class="finale-chain">
+      <div class="fd red"></div><div class="fl"></div>
+      <div class="fd"></div><div class="fl"></div>
+      <div class="fd"></div><div class="fl"></div>
+      <div class="fd"></div><div class="fl"></div>
+      <div class="fd"></div><div class="fl"></div>
+      <div class="fd red"></div>
+    </div>
+    <h2>Maria found shelter and food in 45 minutes.<br>Then she helped three families who only spoke Creole.<br>The system learned from all of it.</h2>
+    <p>This is SIGNAL. It doesn't just coordinate — it compounds.</p>
+  </div>
+</div>
+
+<!-- VALUES -->
+<div class="section">
+  <div class="values-inner">
+    <h2>Built on principles.</h2>
+    <div class="values-grid">
+      <div class="value-card">
+        <h3>🔒 Privacy by design</h3>
+        <p>Personal data encrypted. Masked until both sides consent. Partners own their data.</p>
+      </div>
+      <div class="value-card">
+        <h3>🔍 Accountability by design</h3>
+        <p>Every AI decision traced. Every match has a reason. Auditable by anyone.</p>
+      </div>
+      <div class="value-card">
+        <h3>🌐 Open coordination</h3>
+        <p>We show up in your tools — Slack, WhatsApp, iMessage, web, voice. Your workflow, our intelligence.</p>
+      </div>
+      <div class="value-card">
+        <h3>🧠 Compounding intelligence</h3>
+        <p>Every outcome trains the next decision. A competitor can copy the code. They can't copy the intelligence.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section">
+  <div class="cta-inner">
+    <h2>Want to help?</h2>
+    <p>SOS is in active development with partners across disaster coordination, food distribution, housing, and vendor services. Join the early access list.</p>
+    <a href="/app" class="hero-cta">Get Early Access →</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Everyone is a helper. We help the helpers.<br>
+  <a href="/about" style="margin-top:8px;display:inline-block;">About SOS</a> · <a href="/aa">Aid Arena Partnership</a> · <a href="/app">Dashboard</a>
+</div>
+
+<script>
+// Add SIGNAL dots to sections 1-6
+document.querySelectorAll('.section[data-step]').forEach(sec => {
+  const step = parseInt(sec.dataset.step);
+  if (step < 1 || step > 6) return;
+  const dots = document.createElement('div');
+  dots.className = 'section-dots';
+  for (let i = 1; i <= 6; i++) {
+    if (i > 1) {
+      const w = document.createElement('div');
+      w.style.cssText = 'width:24px;height:2px;background:' + (i <= step ? 'rgba(137,207,240,0.4)' : 'rgba(137,207,240,0.08)') + ';flex-shrink:0;';
+      dots.appendChild(w);
+    }
+    const d = document.createElement('div');
+    let s = 'border-radius:50%;flex-shrink:0;';
+    if (i === step) s += 'width:14px;height:14px;border:2px solid #EF4E4B;background:#EF4E4B;box-shadow:0 0 14px rgba(239,78,75,0.5);';
+    else if (i < step) s += 'width:10px;height:10px;border:2px solid #89CFF0;background:rgba(137,207,240,0.3);box-shadow:0 0 8px rgba(137,207,240,0.3);';
+    else s += 'width:10px;height:10px;border:2px solid rgba(137,207,240,0.15);background:transparent;';
+    d.style.cssText = s;
+    dots.appendChild(d);
+  }
+  const inner = sec.querySelector('.signal-inner');
+  if (inner) inner.insertBefore(dots, inner.firstChild);
+});
+</script>
+</body>
+</html>
