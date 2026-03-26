@@ -6,7 +6,7 @@ import { useAuthContext } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
-type Tab = 'requests' | 'resources';
+type Tab = 'organizations' | 'requests' | 'resources';
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-50 text-green-700',
@@ -25,7 +25,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Management() {
   const { orgId, isAdmin } = useAuthContext();
-  const [tab, setTab] = useState<Tab>('requests');
+  const [tab, setTab] = useState<Tab>('organizations');
+  const [orgs, setOrgs] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,9 +49,15 @@ export default function Management() {
         offQuery = offQuery.eq('org_id', orgId);
       }
 
-      const [reqData, offData] = await Promise.all([reqQuery, offQuery]);
+      const orgQuery = supabase
+        .from('organizations')
+        .select('id, name, org_type, domain, verified_domain, trust_score, capabilities, network_role, created_at')
+        .order('name');
+
+      const [reqData, offData, orgData] = await Promise.all([reqQuery, offQuery, orgQuery]);
       setRequests(reqData.data || []);
       setResources(offData.data || []);
+      setOrgs(orgData.data || []);
       setLoading(false);
     }
     load();
@@ -87,10 +94,20 @@ export default function Management() {
   return (
     <DashboardShell title="Management" subtitle="Manage your requests and resources">
       {/* Tab Toggle */}
-      <div className="flex gap-1 mb-5 bg-sos-gray-200 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-5 bg-sos-gray-200 rounded-xl p-1 w-fit overflow-x-auto">
+        <button
+          onClick={() => { setTab('organizations'); setFilter('all'); }}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            tab === 'organizations'
+              ? 'bg-white text-sos-blue-800 shadow-sm'
+              : 'text-sos-gray-600 hover:text-sos-blue-800'
+          }`}
+        >
+          Organizations ({orgs.length})
+        </button>
         <button
           onClick={() => { setTab('requests'); setFilter('all'); }}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
             tab === 'requests'
               ? 'bg-white text-sos-blue-800 shadow-sm'
               : 'text-sos-gray-600 hover:text-sos-blue-800'
@@ -100,7 +117,7 @@ export default function Management() {
         </button>
         <button
           onClick={() => { setTab('resources'); setFilter('all'); }}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
             tab === 'resources'
               ? 'bg-white text-sos-blue-800 shadow-sm'
               : 'text-sos-gray-600 hover:text-sos-blue-800'
@@ -110,7 +127,60 @@ export default function Management() {
         </button>
       </div>
 
-      {/* Status Filter */}
+      {/* Organizations Tab */}
+      {tab === 'organizations' && (
+        <div className="space-y-2">
+          {orgs.map((org: any) => (
+            <a key={org.id} href={`/organizations`} className="block bg-white rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                    org.org_type === 'coordination' ? 'bg-green-50' :
+                    org.org_type === 'transport_housing' ? 'bg-sos-accent-50' :
+                    org.org_type === 'food_service' ? 'bg-yellow-50' :
+                    org.org_type === 'supply_warehouse' ? 'bg-sos-blue-50' :
+                    'bg-sos-gray-200'
+                  }`}>
+                    {org.org_type === 'coordination' ? '🤝' :
+                     org.org_type === 'transport_housing' ? '🚐' :
+                     org.org_type === 'food_service' ? '🍽️' :
+                     org.org_type === 'supply_warehouse' ? '📦' : '🏢'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-sos-blue-800">{org.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-sos-gray-500 capitalize">{org.org_type?.replace(/_/g, ' ')}</span>
+                      {org.domain && <span className="text-[10px] text-sos-gray-400">{org.domain}</span>}
+                      {org.network_role && org.network_role !== 'independent' && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600">{org.network_role}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {org.trust_score != null && (
+                  <div className="text-right">
+                    <p className={`text-lg font-bold ${
+                      org.trust_score >= 0.7 ? 'text-green-600' : org.trust_score >= 0.5 ? 'text-sos-accent-700' : 'text-sos-red-500'
+                    }`}>{Math.round(org.trust_score * 100)}</p>
+                    <p className="text-[9px] text-sos-gray-500">Trust</p>
+                  </div>
+                )}
+              </div>
+              {org.capabilities && org.capabilities.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {(org.capabilities as string[]).slice(0, 5).map((cap: string, i: number) => (
+                    <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full bg-sos-gray-200 text-sos-gray-600 capitalize">{cap.replace(/_/g, ' ')}</span>
+                  ))}
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Status Filter + Items List (requests/resources only) */}
+      {tab !== 'organizations' && (<>
+
       <div className="flex gap-1.5 mb-4 overflow-x-auto">
         <button
           onClick={() => setFilter('all')}
@@ -225,6 +295,8 @@ export default function Management() {
           </div>
         )}
       </div>
+      </>
+      )}
     </DashboardShell>
   );
 }
