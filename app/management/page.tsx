@@ -27,7 +27,7 @@ export default function Management() {
   const { orgId, isAdmin } = useAuthContext();
   const [tab, setTab] = useState<Tab>('requests');
   const [requests, setRequests] = useState<any[]>([]);
-  const [offers, setOffers] = useState<any[]>([]);
+  const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
@@ -39,7 +39,7 @@ export default function Management() {
         .order('created_at', { ascending: false });
 
       let offQuery = supabase
-        .from('offers')
+        .from('resources')
         .select('id, category, status, capacity_available, details_sanitized, created_at')
         .order('created_at', { ascending: false });
 
@@ -50,13 +50,13 @@ export default function Management() {
 
       const [reqData, offData] = await Promise.all([reqQuery, offQuery]);
       setRequests(reqData.data || []);
-      setOffers(offData.data || []);
+      setResources(offData.data || []);
       setLoading(false);
     }
     load();
   }, [orgId, isAdmin]);
 
-  const items = tab === 'requests' ? requests : offers;
+  const items = tab === 'requests' ? requests : resources;
   const filtered = filter === 'all' ? items : items.filter((i: any) => i.status === filter);
 
   const statuses = [...new Set(items.map((i: any) => i.status))].filter(Boolean);
@@ -67,7 +67,7 @@ export default function Management() {
       if (table === 'requests') {
         setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
       } else {
-        setOffers(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+        setResources(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
       }
     }
   }
@@ -106,7 +106,7 @@ export default function Management() {
               : 'text-sos-gray-600 hover:text-sos-blue-800'
           }`}
         >
-          Resources ({offers.length})
+          Resources ({resources.length})
         </button>
       </div>
 
@@ -136,7 +136,7 @@ export default function Management() {
       {/* Items List */}
       <div className="space-y-2">
         {filtered.length > 0 ? filtered.map((item: any) => {
-          const tableName = tab === 'requests' ? 'requests' : 'offers';
+          const tableName = tab === 'requests' ? 'requests' : 'resources';
           const isPaused = item.status === 'paused';
           const isActive = ['open', 'active', 'available', 'matched', 'deployed'].includes(item.status);
           const isResolved = ['fulfilled', 'exhausted', 'withdrawn', 'cancelled', 'expired'].includes(item.status);

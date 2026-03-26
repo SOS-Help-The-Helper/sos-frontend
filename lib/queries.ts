@@ -1,7 +1,7 @@
 import { supabase } from './supabase-client';
 
 export async function getCommandCenterStats() {
-  const [requests, offers, matches, orgs, disasters, learnings] = await Promise.all([
+  const [requests, resources, matches, orgs, disasters, learnings] = await Promise.all([
     supabase.from('requests').select('id, status, category, urgency, created_at', { count: 'exact' }),
     supabase.from('resources').select('id, status, category, created_at', { count: 'exact' }),
     supabase.from('matches').select('id, status, match_score, created_at', { count: 'exact' }),
@@ -27,7 +27,7 @@ export async function getCommandCenterStats() {
     partnersOnline: orgs.data?.length || 0,
     partnerNames: orgs.data?.map(o => o.name).join(', ') || '',
     activeDisasters,
-    totalOffers: offers.count || 0,
+    totalOffers: resources.count || 0,
     learnings: learnings.data || [],
     recentRequests: requests.data?.sort((a: any, b: any) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -69,7 +69,7 @@ export async function getRecentActivity() {
     activity.push({
       time: timeAgo(o.created_at),
       text: `Offer: ${o.category} (${o.status})`,
-      type: 'offer',
+      type: 'resource',
       created_at: o.created_at,
     });
   });

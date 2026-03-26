@@ -10,7 +10,7 @@ export default function FullMap() {
   const mapInstance = useRef<any>(null);
   const router = useRouter();
   const [requests, setRequests] = useState<any[]>([]);
-  const [offers, setOffers] = useState<any[]>([]);
+  const [resources, setResources] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -19,7 +19,7 @@ export default function FullMap() {
         supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized').not('latitude', 'is', null),
       ]);
       setRequests(reqData.data || []);
-      setOffers(offData.data || []);
+      setResources(offData.data || []);
     }
     loadData();
   }, []);
@@ -89,7 +89,7 @@ export default function FullMap() {
         });
 
         // Offer pins
-        offers.forEach(offer => {
+        resources.forEach(offer => {
           if (!offer.latitude || !offer.longitude) return;
           const el = document.createElement('div');
           el.style.cssText = `
@@ -127,7 +127,7 @@ export default function FullMap() {
         mapInstance.current = null;
       }
     };
-  }, [requests, offers]);
+  }, [requests, resources]);
 
   return (
     <div className="fixed inset-0 z-50 bg-sos-blue-900">
@@ -149,7 +149,7 @@ export default function FullMap() {
         </span>
         <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-sos-accent-500" />
-          {offers.length} offers
+          {resources.length} resources
         </span>
       </div>
 

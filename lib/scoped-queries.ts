@@ -61,7 +61,7 @@ export async function getScopedOffers(orgId: string | null) {
 }
 
 export async function getScopedStats(orgId: string | null) {
-  const [requests, offers, matchData, orgs, disasters, learnings] = await Promise.all([
+  const [requests, resources, matchData, orgs, disasters, learnings] = await Promise.all([
     getScopedRequests(orgId),
     getScopedOffers(orgId),
     getScopedMatches(orgId),
@@ -94,7 +94,7 @@ export async function getScopedStats(orgId: string | null) {
       ? orgs.data?.find((o: any) => o.id === orgId)?.name || ''
       : orgs.data?.map((o: any) => o.name).join(', ') || '',
     activeDisasters,
-    totalOffers: offers.data?.length || 0,
+    totalOffers: resources.data?.length || 0,
     learnings: learnings.data || [],
   };
 }

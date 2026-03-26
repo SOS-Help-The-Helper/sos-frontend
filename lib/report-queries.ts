@@ -1,7 +1,7 @@
 import { supabase } from './supabase-client';
 
 export async function getReportingData() {
-  const [matches, requests, offers, orgs, learnings] = await Promise.all([
+  const [matches, requests, resources, orgs, learnings] = await Promise.all([
     supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id'),
     supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id'),
     supabase.from('resources').select('id, status, category, org_id, created_at'),
@@ -11,7 +11,7 @@ export async function getReportingData() {
 
   const allMatches = matches.data || [];
   const allRequests = requests.data || [];
-  const allOffers = offers.data || [];
+  const allResources = resources.data || [];
   const allOrgs = orgs.data || [];
   const allLearnings = learnings.data || [];
 
@@ -47,12 +47,12 @@ export async function getReportingData() {
 
   // Per-org stats
   const orgStats = allOrgs.map((org: any) => {
-    const orgOffers = allOffers.filter((o: any) => o.org_id === org.id);
+    const orgResources = allResources.filter((o: any) => o.org_id === org.id);
     return {
       id: org.id,
       name: org.name,
       type: org.org_type,
-      offers: orgOffers.length,
+      offers: orgResources.length,
     };
   });
 
@@ -68,7 +68,7 @@ export async function getReportingData() {
     // Headline stats
     totalMatches: allMatches.length,
     totalRequests: allRequests.length,
-    totalOffers: allOffers.length,
+    totalOffers: allResources.length,
     fulfilled: fulfilled.length,
     failed: failed.length,
     expired: expired.length,
