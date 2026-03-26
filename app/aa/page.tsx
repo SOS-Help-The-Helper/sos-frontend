@@ -1,5 +1,9 @@
-import { redirect } from 'next/navigation';
-
 export default function AA() {
-  redirect('/partners/aa.html');
+  return (
+    <iframe
+      src="/partners/aa.html"
+      className="w-full h-screen border-0"
+      title="SOS × Aid Arena"
+    />
+  );
 }
