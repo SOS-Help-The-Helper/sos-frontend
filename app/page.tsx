@@ -68,8 +68,8 @@ export default function CommandCenter() {
     );
   }
 
-  // Partner view: simpler home widget
-  if (isPartner && !isAdmin) {
+  // Partner view: simpler home widget (only when explicitly a partner, not unauthenticated)
+  if (isPartner && !isAdmin && orgId) {
     return (
       <DashboardShell title="Command Center" subtitle="Your coordination hub">
         <PartnerHome stats={{

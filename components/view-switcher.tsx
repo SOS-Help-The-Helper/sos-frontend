@@ -33,7 +33,7 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  if (!isAdmin) return null;
+  // Always show toggle — for demos and admin review without auth
 
   const current = VIEWS.find(v => 'id' in v && v.id === currentView) || VIEWS[0];
 
