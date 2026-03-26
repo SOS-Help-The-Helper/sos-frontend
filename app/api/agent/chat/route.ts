@@ -82,15 +82,15 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
       
       const [org, offers, matches, fulfilled] = await Promise.all([
         supabase.from('organizations').select('name, org_type, capabilities, service_area_description, trust_score').eq('id', orgId).single(),
-        supabase.from('offers').select('id, category, description, capacity_available, status').eq('org_id', orgId).eq('status', 'active'),
-        supabase.from('matches').select('id, match_score, match_summary_masked, status, created_at, offer_id')
+        supabase.from('resources').select('id, category, description, capacity_available, status').eq('org_id', orgId).eq('status', 'active'),
+        supabase.from('matches').select('id, match_score, match_summary_masked, status, created_at, resource_id')
           .order('created_at', { ascending: false }).limit(10),
         supabase.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
       ]);
 
       // Filter matches to this org's offers
       const orgOfferIds = new Set((offers.data || []).map(o => o.id));
-      const orgMatches = (matches.data || []).filter(m => orgOfferIds.has(m.offer_id));
+      const orgMatches = (matches.data || []).filter(m => orgOfferIds.has(m.resource_id));
       const proposed = orgMatches.filter(m => m.status === 'proposed');
       const active = orgMatches.filter(m => ['accepted', 'connected', 'in_progress'].includes(m.status));
       const done = orgMatches.filter(m => m.status === 'fulfilled');

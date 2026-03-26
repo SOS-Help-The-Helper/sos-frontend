@@ -3,7 +3,7 @@ import { supabase } from './supabase-client';
 export async function getCommandCenterStats() {
   const [requests, offers, matches, orgs, disasters, learnings] = await Promise.all([
     supabase.from('requests').select('id, status, category, urgency, created_at', { count: 'exact' }),
-    supabase.from('offers').select('id, status, category, created_at', { count: 'exact' }),
+    supabase.from('resources').select('id, status, category, created_at', { count: 'exact' }),
     supabase.from('matches').select('id, status, match_score, created_at', { count: 'exact' }),
     supabase.from('organizations').select('id, name, org_type'),
     supabase.from('disasters').select('id, name, status, slug'),
@@ -42,7 +42,7 @@ export async function getRecentActivity() {
   const [recentRequests, recentMatches, recentOffers] = await Promise.all([
     supabase.from('requests').select('id, category, urgency, status, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('matches').select('id, match_score, status, created_at').order('created_at', { ascending: false }).limit(5),
-    supabase.from('offers').select('id, category, status, created_at').order('created_at', { ascending: false }).limit(5),
+    supabase.from('resources').select('id, category, status, created_at').order('created_at', { ascending: false }).limit(5),
   ]);
 
   const activity: Array<{ time: string; text: string; type: string; created_at: string }> = [];

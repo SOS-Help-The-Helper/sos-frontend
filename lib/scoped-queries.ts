@@ -24,12 +24,12 @@ export async function getScopedMatches(orgId: string | null, filter?: { status?:
 
   // Get org's offer IDs
   const { data: orgOffers } = await supabase
-    .from('offers')
+    .from('resources')
     .select('id')
     .eq('org_id', orgId);
 
   const orgOfferIds = new Set((orgOffers || []).map((o: any) => o.id));
-  return data.filter((m: any) => orgOfferIds.has(m.offer_id));
+  return data.filter((m: any) => orgOfferIds.has(m.resource_id));
 }
 
 export async function getScopedRequests(orgId: string | null) {
@@ -48,7 +48,7 @@ export async function getScopedRequests(orgId: string | null) {
 
 export async function getScopedOffers(orgId: string | null) {
   let query = supabase
-    .from('offers')
+    .from('resources')
     .select('id, status, category, org_id, capacity_available, created_at')
     .order('created_at', { ascending: false });
 

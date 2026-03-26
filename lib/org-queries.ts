@@ -50,7 +50,7 @@ export async function getOrgAffiliations(orgId: string) {
 
 export async function getOrgOffers(orgId: string) {
   const { data, error } = await supabase
-    .from('offers')
+    .from('resources')
     .select('id, category, capacity_available, status, created_at')
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });

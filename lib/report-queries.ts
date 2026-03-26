@@ -4,7 +4,7 @@ export async function getReportingData() {
   const [matches, requests, offers, orgs, learnings] = await Promise.all([
     supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id'),
     supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id'),
-    supabase.from('offers').select('id, status, category, org_id, created_at'),
+    supabase.from('resources').select('id, status, category, org_id, created_at'),
     supabase.from('organizations').select('id, name, org_type'),
     supabase.from('system_learnings').select('id, pattern, confidence, category, status, evidence_count'),
   ]);

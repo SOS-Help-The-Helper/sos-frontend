@@ -16,7 +16,7 @@ export default function FullMap() {
     async function loadData() {
       const [reqData, offData] = await Promise.all([
         supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score').not('latitude', 'is', null),
-        supabase.from('offers').select('id, category, latitude, longitude, status, capacity_available, details_sanitized').not('latitude', 'is', null),
+        supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized').not('latitude', 'is', null),
       ]);
       setRequests(reqData.data || []);
       setOffers(offData.data || []);

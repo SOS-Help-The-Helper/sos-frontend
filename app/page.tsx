@@ -56,7 +56,7 @@ export default function CommandCenter() {
       // Fetch map data
       const [reqGeo, offGeo] = await Promise.all([
         supabase.from('requests').select('id, latitude, longitude, category, urgency, triage_score').not('latitude', 'is', null),
-        supabase.from('offers').select('id, latitude, longitude, category').not('latitude', 'is', null),
+        supabase.from('resources').select('id, latitude, longitude, category').not('latitude', 'is', null),
       ]);
       setMapRequests(reqGeo.data || []);
       setMapOffers(offGeo.data || []);

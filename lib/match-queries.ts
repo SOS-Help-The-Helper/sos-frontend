@@ -3,7 +3,7 @@ import { supabase } from './supabase-client';
 export interface Match {
   id: string;
   request_id: string;
-  offer_id: string;
+  resource_id: string;
   disaster_id: string;
   match_score: number;
   match_summary_masked: string | null;
