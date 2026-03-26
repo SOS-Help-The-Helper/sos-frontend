@@ -88,6 +88,20 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
         supabase.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
       ]);
 
+      // Get network members (if coordinator org)
+      const { data: networkMembers } = await supabase
+        .from('organizations')
+        .select('name, org_type, network_role, service_area_description')
+        .eq('parent_org_id', orgId)
+        .eq('status', 'active');
+
+      if (networkMembers?.length) {
+        lines.push(`\nNetwork members (${networkMembers.length}):`);
+        for (const m of networkMembers) {
+          lines.push(`- ${m.name} (${m.org_type || 'partner'}${m.service_area_description ? ', ' + m.service_area_description : ''})`);
+        }
+      }
+
       // Filter matches to this org's offers
       const orgOfferIds = new Set((offers.data || []).map(o => o.id));
       const orgMatches = (matches.data || []).filter(m => orgOfferIds.has(m.resource_id));
@@ -144,7 +158,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Inject context into the message
-    const enrichedInput = `${context}\n\n[User message]: ${message}`;
+    const enrichedInput = `${context}\n\n[INSTRUCTION: Use the data above to answer directly. Do not say you need database access — the data is already provided. Format answers clearly with names and details.]\n\n[User message]: ${message}`;
 
     const response = await fetch(GATEWAY_URL, {
       method: 'POST',
