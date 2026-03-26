@@ -59,7 +59,7 @@ export default function Matching() {
   if (loading) {
     return (
       <DashboardShell title="Matching" subtitle="Loading...">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-4 h-40 animate-pulse" />
           ))}
@@ -102,9 +102,9 @@ export default function Matching() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Match Cards (2 cols) */}
-        <div className="col-span-2 space-y-3">
+        <div className="col-span-1 md:col-span-2 space-y-3">
           {matches.length > 0 ? (
             matches.map(match => (
               <MatchCard
@@ -121,7 +121,7 @@ export default function Matching() {
         </div>
 
         {/* Detail Panel (1 col) — sticky */}
-        <div className="space-y-4 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <div className="space-y-4 md:sticky md:top-20 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
           {selectedMatch ? (
             <>
               {/* Match Detail */}

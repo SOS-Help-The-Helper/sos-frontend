@@ -97,11 +97,11 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
 
         {action && (
           <div className="flex gap-1.5">
-            <button className={`text-[10px] font-semibold px-3 py-1 rounded-md transition-colors ${action.style}`}>
+            <button className={`text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md transition-colors ${action.style}`}>
               {action.label}
             </button>
             {action.secondary && (
-              <button className="text-[10px] font-semibold px-3 py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
+              <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
                 {action.secondary}
               </button>
             )}

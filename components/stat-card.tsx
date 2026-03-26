@@ -20,7 +20,7 @@ export function StatCard({ label, value, subtitle, trend, trendValue, accent = '
         {label}
       </p>
       <div className="flex items-end gap-2 mt-2">
-        <p className="text-3xl font-bold text-sos-blue-800 leading-none">
+        <p className="text-2xl md:text-3xl font-bold text-sos-blue-800 leading-none">
           {value}
         </p>
         {trendValue && (

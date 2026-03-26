@@ -73,7 +73,7 @@ export default function SettingsPage() {
         {/* Platform Info */}
         <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Platform</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Database</span>
               <p className="text-xs text-sos-blue-800">Supabase · us-east-2</p>
@@ -99,7 +99,7 @@ export default function SettingsPage() {
         {/* Links */}
         <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Quick Links</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {[
               { label: 'Supabase Dashboard', href: 'https://supabase.com/dashboard/project/rtduqguwhkczexnoawej' },
               { label: 'Vercel Dashboard', href: 'https://vercel.com/sos2' },

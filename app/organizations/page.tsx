@@ -44,9 +44,9 @@ export default function Organizations() {
 
   return (
     <DashboardShell title="Organizations" subtitle={`${orgs.length} partners in the network`}>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Org List (2 cols) */}
-        <div className="col-span-2 space-y-3">
+        <div className="col-span-1 md:col-span-2 space-y-3">
           {orgs.map(org => (
             <div
               key={org.id}

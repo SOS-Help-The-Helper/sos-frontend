@@ -59,7 +59,7 @@ export default function CommandCenter() {
   if (loading) {
     return (
       <DashboardShell title="Command Center" subtitle="Loading...">
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-28 animate-pulse" />
           ))}
@@ -93,7 +93,7 @@ export default function CommandCenter() {
       onViewChange={setCurrentView}
     >
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <StatCard
           label="Open Requests"
           value={stats?.openRequests ?? 0}
@@ -121,8 +121,8 @@ export default function CommandCenter() {
       </div>
 
       {/* Nervous System + Activity */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="col-span-1 md:col-span-2">
           <NervousSystem metrics={{
             intakesToday: stats?.totalRequests ?? 0,
             matchesProposed: stats?.totalMatches ?? 0,
@@ -158,7 +158,7 @@ export default function CommandCenter() {
       {stats?.activeDisasters && stats.activeDisasters.length > 0 && (
         <div className="mt-4 bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Active Disasters</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {stats.activeDisasters.map((disaster, i) => (
               <div key={disaster.id} className={`flex items-center gap-3 p-3 rounded-lg ${
                 i === 0 ? 'bg-sos-red-50 border border-sos-red-100' : 'bg-sos-accent-50 border border-sos-accent-100'

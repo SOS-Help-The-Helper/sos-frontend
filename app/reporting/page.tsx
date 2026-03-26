@@ -21,7 +21,7 @@ export default function Reporting() {
   if (loading) {
     return (
       <DashboardShell title="Reporting" subtitle="Loading...">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-28 animate-pulse" />
           ))}
@@ -33,7 +33,7 @@ export default function Reporting() {
   return (
     <DashboardShell title="Reporting" subtitle="Impact metrics and coordination analytics">
       {/* Headline Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <StatCard
           label="Fulfillment Rate"
           value={data.fulfillmentRate ? `${data.fulfillmentRate}%` : '—'}
@@ -60,7 +60,7 @@ export default function Reporting() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
         {/* Match Score Distribution */}
         <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Score Distribution</h3>
@@ -118,7 +118,7 @@ export default function Reporting() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
         {/* Category Distribution */}
         <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Requests by Category</h3>

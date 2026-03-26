@@ -232,7 +232,7 @@ export function AgentChat() {
             onChange={e => setInput(e.target.value)}
             placeholder="Message your SOS agent..."
             disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-sos-gray-300 text-sm text-sos-blue-800 placeholder:text-sos-gray-500 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 disabled:opacity-50 transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-sos-gray-300 text-base md:text-sm text-sos-blue-800 placeholder:text-sos-gray-500 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 disabled:opacity-50 transition-colors"
           />
           <button
             type="submit"
