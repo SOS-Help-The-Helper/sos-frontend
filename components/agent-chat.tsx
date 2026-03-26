@@ -237,7 +237,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             <div className={`max-w-[80%] md:max-w-[75%] ${
               msg.role === 'user'
                 ? 'bg-sos-blue-800 text-white rounded-2xl rounded-br-md px-4 py-2.5'
-                : 'bg-white border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
+                : 'bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="text-sm leading-relaxed space-y-2">
