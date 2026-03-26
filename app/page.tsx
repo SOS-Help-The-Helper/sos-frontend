@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
+import { NervousSystem } from '@/components/nervous-system';
+import { PartnerHome } from '@/components/partner-home';
 import { getRecentActivity } from '@/lib/queries';
 import { getScopedStats } from '@/lib/scoped-queries';
 import { useAuthContext } from '@/lib/auth-context';
@@ -31,13 +33,18 @@ export default function CommandCenter() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { orgId, isAdmin, loading: authLoading } = useAuthContext();
+  const [currentView, setCurrentView] = useState('admin');
+  const { orgId, isAdmin, isPartner, loading: authLoading } = useAuthContext();
+
+  // Determine effective orgId based on view switcher
+  const effectiveOrgId = currentView === 'admin' || currentView === 'citizen' ? null : currentView;
 
   useEffect(() => {
     if (authLoading) return;
     async function load() {
+      const queryOrgId = isAdmin ? effectiveOrgId : orgId;
       const [statsData, activityData] = await Promise.all([
-        getScopedStats(orgId),
+        getScopedStats(queryOrgId),
         getRecentActivity(),
       ]);
       setStats(statsData);
@@ -45,10 +52,9 @@ export default function CommandCenter() {
       setLoading(false);
     }
     load();
-    // Refresh every 30 seconds
     const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
-  }, [orgId, authLoading]);
+  }, [orgId, effectiveOrgId, authLoading, isAdmin]);
 
   if (loading) {
     return (
@@ -62,10 +68,29 @@ export default function CommandCenter() {
     );
   }
 
+  // Partner view: simpler home widget
+  if (isPartner && !isAdmin) {
+    return (
+      <DashboardShell title="Command Center" subtitle="Your coordination hub">
+        <PartnerHome stats={{
+          openMatches: stats?.activeMatches ?? 0,
+          inProgress: 0,
+          completed: stats?.fulfilledMatches ?? 0,
+          avgTimeMin: 0,
+          familiesServed: stats?.fulfilledMatches ?? 0,
+          peopleServed: (stats?.fulfilledMatches ?? 0) * 3,
+          fastestMin: 35,
+        }} />
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell
       title="Command Center"
       subtitle="Real-time coordination overview"
+      currentView={currentView}
+      onViewChange={setCurrentView}
     >
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-4 mb-6">
@@ -95,32 +120,15 @@ export default function CommandCenter() {
         />
       </div>
 
-      {/* Map + Activity */}
+      {/* Nervous System + Activity */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Map Placeholder */}
-        <div className="col-span-2 bg-white rounded-xl border border-sos-gray-300 overflow-hidden">
-          <div className="h-[420px] bg-sos-blue-900 flex items-center justify-center relative">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-sos-blue-800 flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-sos-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
-              </div>
-              <p className="text-white/60 text-sm font-medium">Mapbox Integration</p>
-              <p className="text-white/30 text-xs mt-1">
-                {stats?.totalRequests ?? 0} requests · {stats?.totalOffers ?? 0} offers · Heat layer + pins
-              </p>
-            </div>
-            {/* Data indicator */}
-            <div className="absolute bottom-3 left-3 flex gap-2">
-              <span className="text-[10px] bg-sos-red-500/20 text-sos-red-400 px-2 py-0.5 rounded-full">
-                {stats?.openRequests ?? 0} needs
-              </span>
-              <span className="text-[10px] bg-sos-accent-500/20 text-sos-accent-400 px-2 py-0.5 rounded-full">
-                {stats?.totalOffers ?? 0} offers
-              </span>
-            </div>
-          </div>
+        <div className="col-span-2">
+          <NervousSystem metrics={{
+            intakesToday: stats?.totalRequests ?? 0,
+            matchesProposed: stats?.totalMatches ?? 0,
+            matchesFulfilled: stats?.fulfilledMatches ?? 0,
+            avgResponseMin: 0,
+          }} />
         </div>
 
         {/* Recent Activity */}
