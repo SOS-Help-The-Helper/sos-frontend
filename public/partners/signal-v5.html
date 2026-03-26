@@ -270,12 +270,17 @@ const totalSteps = 8; // 0-7
 // Create progress dots for each section
 sections.forEach(sec => {
   const step = parseInt(sec.dataset.step);
+  
+  // Only show dots on SIGNAL sections (1-6), not overview or finale
+  if (step < 1 || step > 6) return;
+  
   const dotsDiv = document.createElement('div');
   dotsDiv.className = 'section-dots';
   dotsDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;';
   
-  for (let i = 0; i <= 7; i++) {
-    if (i > 0) {
+  // 6 dots for 6 SIGNAL layers (steps 1-6)
+  for (let i = 1; i <= 6; i++) {
+    if (i > 1) {
       const wire = document.createElement('div');
       wire.style.cssText = 'width:24px;height:2px;background:' + (i <= step ? 'rgba(137,207,240,0.4)' : 'rgba(137,207,240,0.08)') + ';flex-shrink:0;transition:all 0.4s;';
       dotsDiv.appendChild(wire);
@@ -293,8 +298,7 @@ sections.forEach(sec => {
     dotsDiv.appendChild(dot);
   }
   
-  // Insert dots at the top of section content
-  const inner = sec.querySelector('.section-inner') || sec.querySelector('.overview-inner') || sec.querySelector('.finale-inner');
+  const inner = sec.querySelector('.section-inner');
   if (inner) inner.insertBefore(dotsDiv, inner.firstChild);
 });
 </script>
