@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS × Aid Arena</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Roboto', sans-serif;
+    color: #1A3850;
+    background: #ffffff;
+    line-height: 1.6;
+  }
+  
+  .header {
+    background: #1A3850;
+    padding: 40px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header h1 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  
+  .header h1 span { color: #EF4E4B; }
+  
+  .header .tagline {
+    color: #89CFF0;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+  
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A3850;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #EF4E4B;
+    display: inline-block;
+  }
+  
+  .section { margin-bottom: 40px; }
+  
+  .intro {
+    font-size: 18px;
+    color: #385E7D;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+  
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+  
+  .card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+    border-left: 4px solid #89CFF0;
+  }
+  
+  .card.red { border-left-color: #EF4E4B; }
+  
+  .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #1A3850;
+  }
+  
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .card li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: #385E7D;
+    padding-left: 20px;
+    position: relative;
+  }
+  
+  .card li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #89CFF0;
+    font-weight: 700;
+  }
+  
+  .card.red li::before { color: #EF4E4B; }
+  
+  .video-embed {
+    background: #0F1E2B;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .video-embed p {
+    color: #89CFF0;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+  
+  .video-embed .placeholder {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  
+  .flow {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+  }
+  
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 10px 0;
+  }
+  
+  .flow-step .num {
+    background: #1A3850;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  
+  .flow-step .text {
+    font-size: 14px;
+    color: #385E7D;
+    padding-top: 3px;
+  }
+  
+  .flow-step .text strong { color: #1A3850; }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+    font-size: 14px;
+  }
+  
+  th {
+    background: #1A3850;
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+  }
+  
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #e8e8e8;
+    color: #385E7D;
+  }
+  
+  tr:nth-child(even) { background: #f8fafc; }
+  
+  .timeline-row {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    align-items: baseline;
+  }
+  
+  .timeline-date {
+    font-weight: 700;
+    color: #EF4E4B;
+    font-size: 13px;
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+  
+  .timeline-text {
+    font-size: 14px;
+    color: #385E7D;
+  }
+  
+  .cost-box {
+    background: #1A3850;
+    color: white;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .cost-box .big {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .cost-box .sub {
+    color: #89CFF0;
+    font-size: 14px;
+  }
+  
+  .footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid #e8e8e8;
+    margin-top: 40px;
+  }
+  
+  .footer .mission {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1A3850;
+    margin-bottom: 4px;
+  }
+  
+  .footer .url {
+    color: #89CFF0;
+    font-size: 14px;
+  }
+  
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    .header { padding: 24px; }
+    .container { padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1><span>SOS</span> × Aid Arena</h1>
+    <div class="tagline">Partnership Scope — March 2026</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <p class="intro">
+    Aid Arena has built a trusted network of 30,000 disaster response nonprofits. SOS has built AI-powered coordination infrastructure that makes every action measurable. Together, we solve engagement and scale — at the same time.
+  </p>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>What SOS Brings</h3>
+      <ul>
+        <li><strong>Measurable coordination</strong> — every match, deployment, and referral produces data funders can see</li>
+        <li><strong>AI agents in Slack</strong> — no new platform to learn, the agent meets you where you work</li>
+        <li><strong>Privacy by design</strong> — each partner's data stays separate, PII encrypted and masked</li>
+        <li><strong>Intelligence that compounds</strong> — every disaster makes the system smarter</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3>What Aid Arena Brings</h3>
+      <ul>
+        <li><strong>Vetted network</strong> — 12+ active organizations from Team Rubicon to ToolBank</li>
+        <li><strong>Coordination hub</strong> — where responders already go to connect</li>
+        <li><strong>Real-world validation</strong> — active partners, real workflows, board-level backing</li>
+        <li><strong>Training backbone</strong> — Collab Ops Academy gets real data to center around</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>How It Works</h2>
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><div class="text"><strong>Partner signs up</strong> through Aid Arena — one-click authentication</div></div>
+      <div class="flow-step"><div class="num">2</div><div class="text"><strong>Gets their own SOS agent</strong> in Slack or on the web dashboard</div></div>
+      <div class="flow-step"><div class="num">3</div><div class="text"><strong>Agent onboards them</strong> — confirms capabilities, coverage area, capacity</div></div>
+      <div class="flow-step"><div class="num">4</div><div class="text"><strong>When a disaster hits</strong> — citizens submit needs through any channel</div></div>
+      <div class="flow-step"><div class="num">5</div><div class="text"><strong>SOS matches automatically</strong> — scores proximity, capability, urgency, trust</div></div>
+      <div class="flow-step"><div class="num">6</div><div class="text"><strong>Partner accepts in one message</strong> — "Accept" in Slack or the dashboard</div></div>
+      <div class="flow-step"><div class="num">7</div><div class="text"><strong>Coordination happens</strong> in a shared thread — all participants visible</div></div>
+      <div class="flow-step"><div class="num">8</div><div class="text"><strong>Impact report generated</strong> — Aid Arena sees their entire network's performance</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Product Demo</h2>
+    <div class="video-embed">
+      <p class="placeholder">📹 Demo Video</p>
+      <p>Live dashboard at sosconnect.org — agent chat, matching, reporting, partner management</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Active Network</h2>
+    <table>
+      <tr><th>Organization</th><th>Capability</th><th>Contact</th></tr>
+      <tr><td>Fill The Needs</td><td>Rapid supply deployment (first 14 days)</td><td>—</td></tr>
+      <tr><td>Team Rubicon</td><td>Veteran-led response + debris removal</td><td>Tracie Rankin</td></tr>
+      <tr><td>ToolBank</td><td>Tool lending for recovery (11 locations)</td><td>Matt Saunders</td></tr>
+      <tr><td>Grounded Boots Relief</td><td>On-ground relief operations</td><td>—</td></tr>
+      <tr><td>Humane World for Animals</td><td>Animal rescue + sheltering</td><td>—</td></tr>
+      <tr><td>SynDG</td><td>Disaster coordination consulting</td><td>George Davis</td></tr>
+      <tr><td>Crisis Cognition</td><td>Crisis intelligence</td><td>Evert Bopp</td></tr>
+      <tr><td>TX Gulf Coast VOAD</td><td>Regional coordination (13 TX counties)</td><td>—</td></tr>
+      <tr><td>Skippy Taylor</td><td>Needs broker — Cajun Navy, Hearts & Hands</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Timeline</h2>
+    <div class="timeline-row"><div class="timeline-date">This week</div><div class="timeline-text">Aid Arena portal live with demo data</div></div>
+    <div class="timeline-row"><div class="timeline-date">Week of Mar 31</div><div class="timeline-text">Demo shared with AA leadership</div></div>
+    <div class="timeline-row"><div class="timeline-date">Week of Apr 6</div><div class="timeline-text">Onboarding calls with active members</div></div>
+    <div class="timeline-row"><div class="timeline-date">April</div><div class="timeline-text">Members coordinating through SOS in training exercises</div></div>
+    <div class="timeline-row"><div class="timeline-date">May</div><div class="timeline-text">First live disaster deployment with AA network</div></div>
+    <div class="timeline-row"><div class="timeline-date">June</div><div class="timeline-text">Measurable impact data across network for funders</div></div>
+  </div>
+
+  <div class="cost-box">
+    <div class="big">$0</div>
+    <div class="sub">SOS is free for nonprofits. Aid Arena gets a coordinator dashboard,<br>their members get agents, and every action produces measurable data.</div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="mission">Everyone is a helper. We help the helpers.</div>
+  <div class="url">sosconnect.org</div>
+</div>
+
+</body>
+</html>
