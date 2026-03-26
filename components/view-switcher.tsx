@@ -51,7 +51,7 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border border-sos-gray-300 shadow-lg py-1 z-50">
+        <div className="absolute right-0 top-full mt-1 w-52 bg-[#FDFCFA] rounded-xl border border-sos-gray-300 shadow-lg py-1 z-50">
           {VIEWS.map((view, i) => {
             if ('divider' in view) {
               return <div key={i} className="h-px bg-sos-gray-300 my-1" />;

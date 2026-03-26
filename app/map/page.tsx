@@ -114,7 +114,7 @@ export default function MapPage() {
         {/* Selected Pin Detail Card */}
         {selected && (
           <div className="absolute bottom-4 right-4 left-4 md:left-auto md:w-80 z-10">
-            <div className="bg-white rounded-xl border border-sos-gray-300 shadow-xl overflow-hidden">
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 shadow-xl overflow-hidden">
               {/* Header */}
               <div className={`px-4 py-2.5 flex items-center justify-between ${
                 selected.type === 'request' ? 'bg-sos-red-500' : 'bg-sos-accent-600'

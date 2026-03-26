@@ -135,7 +135,7 @@ export default function Management() {
       {tab === 'organizations' && (
         <div className="space-y-2">
           {orgs.map((org: any) => (
-            <a key={org.id} href={`/organizations`} className="block bg-white rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
+            <a key={org.id} href={`/organizations`} className="block bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${

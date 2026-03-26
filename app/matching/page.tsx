@@ -71,21 +71,7 @@ export default function Matching() {
   }
 
   return (
-    <DashboardShell title="Matching" subtitle={`${stats?.total || 0} matches · Avg score ${stats?.avgScore || 0}`}>
-      {/* Stats Bar */}
-      <div className="flex items-center gap-4 mb-5">
-        {stats && Object.entries(stats.byStatus).map(([status, count]) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-sos-gray-600 capitalize">{status.replace(/_/g, ' ')}</span>
-            <span className="text-xs font-bold text-sos-blue-800">{count as number}</span>
-          </div>
-        ))}
-        {stats?.chains > 0 && (
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-xs font-medium text-sos-blue-600">🔗 {stats.chains} coordination chains</span>
-          </div>
-        )}
-      </div>
+    <DashboardShell title="Matching" subtitle={`${stats?.total || 0} matches${stats ? ` · ${stats.byStatus['proposed'] || 0} proposed · ${stats.byStatus['fulfilled'] || 0} fulfilled · Avg ${stats.avgScore}` : ''}`}>
 
       {/* Filter Bar */}
       <div className="flex gap-1.5 mb-5">

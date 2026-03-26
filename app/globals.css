@@ -60,7 +60,7 @@
 }
 
 body {
-  background: var(--color-sos-gray-200);
+  background: #F0EEEB;
   color: var(--color-sos-blue-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

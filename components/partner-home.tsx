@@ -21,7 +21,7 @@ export function PartnerHome({ stats }: PartnerHomeProps) {
   return (
     <div className="space-y-4">
       {/* Welcome */}
-      <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
         <h2 className="text-lg font-bold text-sos-blue-800">
           Welcome back{orgName ? `, ${orgName}` : ''}
         </h2>
@@ -61,7 +61,7 @@ export function PartnerHome({ stats }: PartnerHomeProps) {
       </div>
 
       {/* Agent Status */}
-      <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
           <h3 className="text-sm font-bold text-sos-blue-800">SOS Agent Online</h3>
@@ -78,7 +78,7 @@ export function PartnerHome({ stats }: PartnerHomeProps) {
       </div>
 
       {/* Impact Summary */}
-      <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
         <h3 className="text-sm font-bold text-sos-blue-800 mb-3">📊 Your Impact</h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-3 rounded-lg bg-sos-accent-50">

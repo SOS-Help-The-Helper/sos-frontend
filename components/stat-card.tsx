@@ -15,7 +15,7 @@ const accentStyles = {
 
 export function StatCard({ label, value, subtitle, trend, trendValue, accent = 'blue' }: StatCardProps) {
   return (
-    <div className={`bg-white rounded-xl border border-sos-gray-300 border-l-4 ${accentStyles[accent]} p-5 transition-shadow hover:shadow-sm`}>
+    <div className={`bg-[#FDFCFA] rounded-xl border border-sos-gray-300 border-l-4 ${accentStyles[accent]} p-5 transition-shadow hover:shadow-sm`}>
       <p className="text-xs font-medium text-sos-gray-600 uppercase tracking-wider">
         {label}
       </p>
