@@ -4,24 +4,29 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
+import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [disasters, setDisasters] = useState<any[]>([]);
+  const [disasterFilter, setDisasterFilter] = useState('all');
   const { isAdmin, orgType } = useAuthContext();
   const { effectiveOrgId } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
 
   useEffect(() => {
     async function load() {
-      const reportData = await getReportingData(effectiveOrgId);
+      const reportData = await getReportingData(effectiveOrgId, disasterFilter !== 'all' ? disasterFilter : undefined);
+      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      setDisasters(disData || []);
       setData(reportData);
       setLoading(false);
     }
     load();
-  }, [effectiveOrgId]);
+  }, [effectiveOrgId, disasterFilter]);
 
   if (loading) {
     return (
@@ -37,6 +42,19 @@ export default function Reporting() {
 
   return (
     <DashboardShell title="Reporting" subtitle="Impact metrics and coordination analytics">
+      {/* Disaster Filter */}
+      <div className="flex items-center gap-3 mb-5">
+        <select
+          value={disasterFilter}
+          onChange={e => setDisasterFilter(e.target.value)}
+          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-blue-800 font-medium"
+        >
+          <option value="all">All Disasters</option>
+          {disasters.map(d => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </div>
       {/* Headline Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <StatCard

@@ -1,9 +1,10 @@
 import { supabase } from './supabase-client';
 
-export async function getReportingData(orgId?: string | null) {
+export async function getReportingData(orgId?: string | null, disasterId?: string) {
   let reqQ = supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id, org_id');
   let resQ = supabase.from('resources').select('id, status, category, org_id, created_at');
   if (orgId) { reqQ = reqQ.eq('org_id', orgId); resQ = resQ.eq('org_id', orgId); }
+  if (disasterId) { reqQ = reqQ.eq('disaster_id', disasterId); }
   const [matches, requests, resources, orgs, learnings] = await Promise.all([
     supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id'),
     reqQ,

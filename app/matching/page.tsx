@@ -9,6 +9,7 @@ import { ChainView } from '@/components/chain-view';
 import { MatchTimeline } from '@/components/match-timeline';
 import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
 import { getScopedMatches } from '@/lib/scoped-queries';
+import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
@@ -34,6 +35,8 @@ export default function Matching() {
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [chainMatches, setChainMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [disasters, setDisasters] = useState<any[]>([]);
+  const [disasterFilter, setDisasterFilter] = useState('all');
   const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]);
   const [vendorSwipeIndex, setVendorSwipeIndex] = useState(0);
   const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null);
@@ -48,9 +51,17 @@ export default function Matching() {
         getScopedMatches(effectiveOrgId ?? orgId, { status: filter }),
         getMatchStats(),
       ]);
-      setMatches(matchData);
+      // Filter by disaster if selected
+      const filtered = disasterFilter !== 'all' 
+        ? matchData.filter((m: any) => m.disaster_id === disasterFilter)
+        : matchData;
+      setMatches(filtered);
       setStats(statsData);
       setSwipeIndex(0);
+
+      // Load disasters
+      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      setDisasters(disData || []);
 
       // Load vendor jobs if viewing as vendor
       if (effectiveOrgType === 'vendor') {
@@ -62,7 +73,7 @@ export default function Matching() {
       setLoading(false);
     }
     load();
-  }, [filter, orgId, effectiveOrgId, authLoading]);
+  }, [filter, orgId, effectiveOrgId, authLoading, disasterFilter]);
 
   const pendingMatches = matches.filter(m => 
     ['proposed', 'viewed', 'accepted'].includes(m.status)
@@ -140,6 +151,18 @@ export default function Matching() {
             <List className="h-3.5 w-3.5" /> List
           </button>
         </div>
+
+        {/* Disaster filter */}
+        <select
+          value={disasterFilter}
+          onChange={e => setDisasterFilter(e.target.value)}
+          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-blue-800 font-medium"
+        >
+          <option value="all">All Disasters</option>
+          {disasters.map(d => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
 
         {/* Filter (list mode only) */}
         {mode === 'list' && (
