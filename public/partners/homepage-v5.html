@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS — Everyone Is a Helper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Roboto', sans-serif; background: #0d1a26; color: #c8d6e0; }
+  .page { height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; position: relative; }
+  .page::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; background-image: linear-gradient(rgba(137,207,240,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(137,207,240,.02) 1px,transparent 1px); background-size:48px 48px; }
+  
+  .s { min-height: 100vh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; padding: 60px 28px; position: relative; z-index: 1; }
+  .w { max-width: 740px; width: 100%; }
+
+  /* Typography */
+  h1 { font-size: 44px; font-weight: 900; color: white; line-height: 1.12; letter-spacing: -1.5px; }
+  h2 { font-size: 32px; font-weight: 700; color: white; line-height: 1.2; }
+  .sub { font-size: 16px; color: rgba(255,255,255,.35); font-weight: 300; line-height: 1.6; }
+  .body { font-size: 15px; color: rgba(255,255,255,.45); line-height: 1.7; }
+  .accent { color: #89CFF0; }
+  .red { color: #EF4E4B; }
+
+  /* Buttons */
+  .btn { display:inline-block; background:#EF4E4B; color:white; padding:14px 36px; border-radius:8px; font-size:15px; font-weight:600; text-decoration:none; transition:all .2s; }
+  .btn:hover { background:#d93c39; transform:translateY(-1px); box-shadow:0 12px 32px rgba(239,78,75,.25); }
+  .btn-ghost { display:inline-block; color:#89CFF0; padding:14px 20px; font-size:14px; font-weight:500; text-decoration:none; }
+
+  /* Cards */
+  .glass { background:linear-gradient(135deg,rgba(26,56,80,.4),rgba(15,30,43,.7)); border:1px solid rgba(137,207,240,.08); border-radius:14px; padding:24px 28px; backdrop-filter:blur(8px); }
+  .glass-sm { background:rgba(26,56,80,.3); border:1px solid rgba(137,207,240,.06); border-radius:12px; padding:18px 20px; }
+  .glass h3 { font-size:15px; font-weight:700; color:white; margin-bottom:6px; }
+  .glass p, .glass-sm p { font-size:13px; color:rgba(255,255,255,.45); line-height:1.6; }
+
+  /* Stat callout */
+  .stat-inline { font-size:32px; font-weight:900; color:#EF4E4B; }
+  
+  /* Divider */
+  .div { height:1px; background:rgba(137,207,240,.06); margin:0 28px; }
+
+  /* Pull quote */
+  .pq { font-size:22px; font-weight:300; color:rgba(255,255,255,.55); font-style:italic; line-height:1.45; border-left:3px solid #EF4E4B; padding-left:24px; margin:32px 0; max-width:560px; }
+  .pq strong { color:white; font-weight:500; font-style:normal; }
+
+  /* Specific layouts */
+  .hero-logo { width:48px; height:48px; margin-bottom:24px; opacity:.7; }
+  .stats-row { display:flex; gap:40px; margin:28px 0; flex-wrap:wrap; }
+  .stat-block { text-align:center; }
+  .stat-block .num { font-size:48px; font-weight:900; color:white; line-height:1; letter-spacing:-2px; }
+  .stat-block .num.red { color:#EF4E4B; }
+  .stat-block .label { font-size:10px; color:rgba(255,255,255,.3); margin-top:4px; text-transform:uppercase; letter-spacing:1px; }
+  
+  .cards-row { display:flex; gap:16px; margin-top:24px; }
+  .cards-row .glass { flex:1; }
+  
+  .side-by-side { display:flex; gap:28px; align-items:center; }
+  .side-by-side .glass-sm { flex:1; }
+  .bridge { flex-shrink:0; text-align:center; }
+  .bridge img { width:28px; height:28px; opacity:.4; }
+  .bridge span { display:block; font-size:9px; color:#89CFF0; font-weight:700; letter-spacing:2px; margin-top:4px; }
+
+  .helper-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:24px 0; }
+  
+  .values-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px; }
+  .values-row .glass-sm h3 { font-size:13px; font-weight:700; color:white; margin-bottom:4px; }
+
+  .pill-row { display:flex; gap:10px; flex-wrap:wrap; margin:20px 0; }
+  .pill { font-size:11px; color:rgba(137,207,240,.4); padding:5px 14px; border:1px solid rgba(137,207,240,.1); border-radius:20px; letter-spacing:1px; }
+
+  @media(max-width:640px) {
+    h1 { font-size:30px; }
+    h2 { font-size:24px; }
+    .cards-row, .side-by-side { flex-direction:column; }
+    .stats-row { gap:20px; }
+    .stat-block .num { font-size:36px; }
+    .helper-grid, .values-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- 1. HERO — the concept at a glance -->
+<div class="s">
+  <div class="w" style="text-align:center;">
+    <img src="/logomark.svg" alt="SOS" class="hero-logo">
+    <h1>Communities self-organize within hours.<br><span class="accent">What they lack is tools.</span></h1>
+    <p class="sub" style="margin:16px auto 36px; max-width:480px;">SOS is coordination infrastructure that connects what people need with what people can offer — powered by AI that gets smarter with every disaster.</p>
+    <a href="#storm" class="btn">The Perfect Storm ↓</a>
+    <a href="/app" class="btn-ghost">Early Access →</a>
+  </div>
+</div>
+
+<!-- 2. THE PERFECT STORM -->
+<div class="s" id="storm">
+  <div class="w">
+    <h2>The Perfect Storm</h2>
+    <p class="body" style="margin:12px 0 4px;">Three forces are converging right now. The result: a coordination vacuum that no existing system can fill.</p>
+    
+    <div class="stats-row">
+      <div class="stat-block"><div class="num red">79%</div><div class="label">Want AI Coordination</div></div>
+      <div class="stat-block"><div class="num">0%</div><div class="label">Currently Use It</div></div>
+      <div class="stat-block"><div class="num red">85%</div><div class="label">Neighbors Help First</div></div>
+    </div>
+
+    <div class="cards-row">
+      <div class="glass">
+        <h3>Federal capacity is shrinking.</h3>
+        <p>FEMA restructuring. $600M in grants clawed back. States are absorbing disaster responsibility — without the tools to handle it.</p>
+      </div>
+      <div class="glass">
+        <h3>AI just made it possible.</h3>
+        <p>Conversational intake. Real-time matching. Intelligence that compounds. None of this was feasible two years ago.</p>
+      </div>
+      <div class="glass">
+        <h3>Communities are already doing it.</h3>
+        <p>85% of survivors get help from neighbors first. The public is the first responder — they just don't have infrastructure.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. CURRENT LANDSCAPE — coordination is siloed -->
+<div class="s">
+  <div class="w">
+    <h2>Coordination is siloed.</h2>
+    <p class="body" style="margin:12px 0 24px;">The same coordination failures documented after Katrina, Sandy, Harvey, and Maria — repeating two decades later. Communities organize on one side. Agencies operate on the other. Nobody connects the two.</p>
+    
+    <div class="side-by-side">
+      <div class="glass-sm">
+        <h3 style="color:#89CFF0;font-size:13px;">Communities</h3>
+        <p>Facebook groups. WhatsApp threads. Phone trees. Neighbors knocking on doors.</p>
+      </div>
+      <div class="bridge">
+        <img src="/logomark.svg" alt="SOS">
+        <span>SOS</span>
+      </div>
+      <div class="glass-sm">
+        <h3 style="color:#89CFF0;font-size:13px;">Agencies</h3>
+        <p>WebEOC. ArcGIS. Spreadsheets. Radio dispatch. Manual tracking.</p>
+      </div>
+    </div>
+
+    <div class="pq">"It's not that help doesn't exist.<br><strong>It's that help can't find the people who need it.</strong>"</div>
+  </div>
+</div>
+
+<!-- 4. COMMUNITY-LED — our approach framed against the storm -->
+<div class="s">
+  <div class="w">
+    <h2>Community-led coordination.<br><span class="accent">Not another government system.</span></h2>
+    <p class="body" style="margin:12px 0 24px;">The first 72 hours of a disaster are the most critical and the least coordinated. Formal systems take days to activate. The people doing life-saving work in those hours are community members with no tools and no institutional support.</p>
+    <p class="body" style="margin-bottom:24px;">SOS doesn't wait for a federal declaration. It doesn't ask communities to adopt a new platform. It shows up in the tools they already use — WhatsApp, Slack, iMessage, Facebook — and gives them a coordination layer underneath.</p>
+    
+    <div class="glass" style="border-left:3px solid #EF4E4B;">
+      <h3>The 72-Hour Gap</h3>
+      <p>FEMA's own SAR tool requires internet connectivity. Communities in the first 72 hours often have none. SOS is designed for the gap between when the disaster hits and when the institutions arrive — because that's when the most lives are saved and lost.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 5. EVERYONE IS A HELPER — the thesis -->
+<div class="s">
+  <div class="w" style="text-align:center;">
+    <h2 style="font-size:38px;">Everyone is a helper.</h2>
+    <p class="body" style="margin:12px auto 28px; max-width:520px;">There is no survivor/helper binary. Needs and offers coexist on the same person. A person who receives help in the morning can provide it in the afternoon.</p>
+    
+    <div class="helper-grid" style="text-align:left;">
+      <div class="glass-sm"><p><strong style="color:white;">A displaced family with a truck</strong> can clear roads for their neighbors.</p></div>
+      <div class="glass-sm"><p><strong style="color:white;">A retired nurse in a flood zone</strong> can triage injuries while waiting for her own evacuation.</p></div>
+      <div class="glass-sm"><p><strong style="color:white;">A teenager who speaks three languages</strong> can run comms for families who don't speak English.</p></div>
+      <div class="glass-sm"><p><strong style="color:white;">A rancher 500 miles away</strong> has a semi-truck and 20 tons of hay — and wants to help.</p></div>
+    </div>
+    
+    <p class="accent" style="font-size:16px;font-weight:500;">The public isn't a liability. They're the first responder.</p>
+  </div>
+</div>
+
+<!-- 6. THE PLATFORM — SIGNAL teaser -->
+<div class="s">
+  <div class="w" style="text-align:center;">
+    <h2>We built the infrastructure.</h2>
+    <p class="body" style="margin:12px auto 28px; max-width:520px;">Six layers of coordination intelligence. Every signal captured. Every match scored. Every decision traced. Every outcome feeds the next disaster.</p>
+    
+    <h1 style="font-size:52px;letter-spacing:12px;margin-bottom:16px;"><span class="red">S</span>IGNAL</h1>
+    
+    <div class="pill-row" style="justify-content:center;">
+      <div class="pill">Signal</div><div class="pill">Intelligence</div><div class="pill">Graph</div>
+      <div class="pill">Network</div><div class="pill">Adaptive</div><div class="pill">Learning</div>
+    </div>
+    
+    <div style="margin-top:28px;">
+      <a href="/partners/signal-v5.html" class="btn">See How It Works →</a>
+    </div>
+    
+    <div class="values-row" style="margin-top:40px; text-align:left;">
+      <div class="glass-sm"><h3>🔒 Privacy by Design</h3><p>Data encrypted. Masked until consent. Partners own their data.</p></div>
+      <div class="glass-sm"><h3>🔍 Every Decision Traced</h3><p>Auditable by partners, funders, and government. Ask why — the answer exists.</p></div>
+      <div class="glass-sm"><h3>🌐 Your Tools, Our Intelligence</h3><p>Slack. WhatsApp. iMessage. Web. Voice. We show up where you already work.</p></div>
+      <div class="glass-sm"><h3>🧠 The Moat Compounds</h3><p>Copy the code. You can't copy 10,000 decision traces with outcomes.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. CLOSE -->
+<div class="s">
+  <div class="w" style="text-align:center;">
+    <h2 style="font-size:36px;">We help the helpers.</h2>
+    <p class="body" style="margin:12px auto 32px; max-width:440px;">SOS is in active development with partners across disaster coordination, food distribution, temporary housing, and vendor services.</p>
+    <a href="/app" class="btn">Get Early Access →</a>
+    <br><br>
+    <a href="/aa" class="btn-ghost">Aid Arena Partnership →</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center; padding:24px; font-size:11px; color:rgba(255,255,255,.2); scroll-snap-align:end;">
+  Everyone is a helper. We help the helpers.<br>
+  <a href="/about" style="color:#89CFF0;text-decoration:none;">About</a> · <a href="/aa" style="color:#89CFF0;text-decoration:none;">Aid Arena</a> · <a href="/app" style="color:#89CFF0;text-decoration:none;">Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>
