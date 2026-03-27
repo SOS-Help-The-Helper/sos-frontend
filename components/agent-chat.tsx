@@ -190,15 +190,45 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     }
   }
 
-  const VIEW_NAMES: Record<string, string> = {
-    'admin': 'SOS Platform',
-    'citizen': 'SOS Citizen',
-    '43299807-6229-49be-9a6b-0498c9188178': 'Aid Arena',
-    'da86c92f-d52d-4b13-a474-30e1be8fb808': 'Emergency RV',
-    '9d894368-51af-4cf7-9318-444a3c216f5d': 'Free Hot Meals',
-    'c1e74116-5e12-410a-9b21-dc80c7646d77': 'Greater Good',
+  const VIEW_CONFIG: Record<string, { name: string; welcome: string; suggestions: string[] }> = {
+    'admin': {
+      name: 'SOS Platform',
+      welcome: 'You\'re connected to the SOS Platform agent. Full access to all coordination data, matches, and system intelligence.',
+      suggestions: ['System status', 'Show all open matches', 'Partner performance'],
+    },
+    'citizen': {
+      name: 'SOS',
+      welcome: 'We\'re here to help. Tell us what you need or what you can offer — we\'ll connect you with the right people.',
+      suggestions: ['I need help', 'I can help', 'What\'s available near me?'],
+    },
+    '43299807-6229-49be-9a6b-0498c9188178': {
+      name: 'Aid Arena',
+      welcome: 'Welcome to Aid Arena coordination. Manage your volunteer network, approve match chains, and track multi-partner deployments.',
+      suggestions: ['Open coordination tasks', 'Network status', 'Assign a partner'],
+    },
+    'da86c92f-d52d-4b13-a474-30e1be8fb808': {
+      name: 'Emergency RV',
+      welcome: 'Hey Woody — your ERV fleet dashboard. Check unit availability, assign drivers, and manage housing deployments.',
+      suggestions: ['Fleet status', 'Open housing matches', 'Assign a unit'],
+    },
+    '9d894368-51af-4cf7-9318-444a3c216f5d': {
+      name: 'Free Hot Meals',
+      welcome: 'Free Hot Meals coordination. Manage your meal sites, track serving capacity, and match hungry families to events.',
+      suggestions: ['Today\'s meal schedule', 'Site capacity', 'Open food matches'],
+    },
+    'c1e74116-5e12-410a-9b21-dc80c7646d77': {
+      name: 'Greater Good',
+      welcome: 'Greater Good supply chain. Track warehouse inventory, dispatch supplies, and manage distribution to disaster zones.',
+      suggestions: ['Inventory levels', 'Pending dispatch', 'Supply matches'],
+    },
+    '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': {
+      name: 'Endurant',
+      welcome: 'Endurant vendor portal. Browse available restoration jobs, submit bids, and track your active projects.',
+      suggestions: ['Available jobs', 'My active bids', 'Job history'],
+    },
   };
-  const agentName = VIEW_NAMES[currentView] || orgName || 'SOS';
+  const viewConfig = VIEW_CONFIG[currentView] || VIEW_CONFIG['admin'];
+  const agentName = viewConfig.name;
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">
@@ -225,13 +255,21 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
               <img src="/logomark.svg" alt="SOS" className="h-10 w-10" />
             </div>
             <h3 className="text-xl font-bold text-sos-blue-800">
-              {agentName} Agent
+              {agentName}
             </h3>
             <p className="text-base text-sos-gray-600 mt-2 max-w-md">
-              Your coordination partner. Ask about matches, capacity, situations, or anything else.
+              {viewConfig.welcome}
             </p>
             <div className="flex flex-wrap gap-3 mt-6 justify-center">
-              {[
+              {viewConfig.suggestions.length > 0 ? viewConfig.suggestions.map(suggestion => (
+                <button
+                  key={suggestion}
+                  onClick={() => { setInput(suggestion); }}
+                  className="text-sm px-4 py-2 rounded-full border-2 border-sos-accent-200 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              )) : [
                 'Show me open matches',
                 'What\'s our capacity?',
                 'Situation brief',

@@ -29,7 +29,9 @@ export default function MapPage() {
   }, [effectiveOrgId]);
 
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
+    if (!mapRef.current) return;
+    // Destroy existing map when data changes (view toggle)
+    if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
     if (!token) return;
