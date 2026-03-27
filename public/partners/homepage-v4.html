@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS — Everyone Is a Helper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Roboto', sans-serif; background: #0d1a26; color: #c8d6e0; line-height: 1.6; }
+
+  /* One continuous canvas — no section breaks visible */
+  .page { position: relative; overflow: hidden; }
+  
+  /* Subtle grid across the whole page */
+  .page::before { 
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: linear-gradient(rgba(137,207,240,0.02) 1px,transparent 1px), linear-gradient(90deg,rgba(137,207,240,0.02) 1px,transparent 1px);
+    background-size: 48px 48px;
+  }
+  
+  /* Faint SOS watermark */
+  .page::after {
+    content: 'SOS'; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 40vw; font-weight: 900; color: rgba(137,207,240,0.008); pointer-events: none; z-index: 0;
+    letter-spacing: 8vw;
+  }
+
+  .z { position: relative; z-index: 1; }
+  .container { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 40px 28px;
+  }
+  .hero-mark { width: 48px; height: 48px; margin-bottom: 24px; opacity: 0.7; }
+  .hero h1 { font-size: 46px; font-weight: 900; color: white; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 16px; }
+  .hero h1 em { font-style: normal; color: #89CFF0; }
+  .hero .tag { font-size: 15px; color: rgba(255,255,255,0.3); font-weight: 300; letter-spacing: 0.5px; margin-bottom: 40px; }
+  .btn-primary { display: inline-block; background: #EF4E4B; color: white; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: all .2s; }
+  .btn-primary:hover { background: #d93c39; transform: translateY(-1px); box-shadow: 0 12px 32px rgba(239,78,75,.25); }
+  .btn-ghost { display: inline-block; color: #89CFF0; padding: 14px 24px; font-size: 14px; font-weight: 500; text-decoration: none; transition: color .2s; }
+  .btn-ghost:hover { color: white; }
+
+  /* ============ STATS — floating ribbon ============ */
+  .stats-ribbon {
+    display: flex; justify-content: center; gap: 48px; padding: 48px 0;
+    border-top: 1px solid rgba(137,207,240,0.06);
+    border-bottom: 1px solid rgba(137,207,240,0.06);
+    margin: 0 28px;
+    flex-wrap: wrap;
+  }
+  .sr-item { text-align: center; }
+  .sr-num { font-size: 48px; font-weight: 900; color: white; line-height: 1; letter-spacing: -2px; }
+  .sr-num.red { color: #EF4E4B; }
+  .sr-label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ============ NARRATIVE BLOCKS ============ */
+  .narrative { padding: 100px 0; }
+  .n-head { font-size: 30px; font-weight: 700; color: white; margin-bottom: 24px; line-height: 1.25; }
+  .n-body { font-size: 15px; color: rgba(255,255,255,0.45); max-width: 580px; line-height: 1.7; margin-bottom: 32px; }
+  
+  /* Callout card — glass feel */
+  .callout {
+    background: linear-gradient(135deg, rgba(26,56,80,0.5), rgba(15,30,43,0.8));
+    border: 1px solid rgba(137,207,240,0.08);
+    border-radius: 16px; padding: 28px 32px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    margin-bottom: 24px; max-width: 580px;
+  }
+  .callout-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 6px; }
+  .callout-text { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+  .callout-accent { border-left: 3px solid #EF4E4B; padding-left: 20px; }
+
+  /* Inline stat */
+  .inline-stat { display: inline-block; font-size: 28px; font-weight: 900; color: #EF4E4B; margin: 0 4px; }
+
+  /* ============ THE GAP — side by side ============ */
+  .gap-flex { display: flex; gap: 32px; align-items: stretch; margin-bottom: 32px; }
+  .gap-card {
+    flex: 1; background: rgba(26,56,80,0.3); border: 1px solid rgba(137,207,240,0.06);
+    border-radius: 14px; padding: 24px;
+  }
+  .gap-card h3 { font-size: 14px; font-weight: 700; color: #89CFF0; margin-bottom: 10px; }
+  .gap-card li { font-size: 13px; color: rgba(255,255,255,0.4); padding: 3px 0; list-style: none; }
+  .gap-bridge {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0; width: 60px;
+  }
+  .gap-bridge img { width: 32px; height: 32px; opacity: 0.5; margin-bottom: 6px; }
+  .gap-bridge span { font-size: 9px; color: #89CFF0; font-weight: 700; letter-spacing: 2px; }
+
+  /* Pull quote */
+  .pull-quote {
+    font-size: 20px; font-weight: 300; color: rgba(255,255,255,0.5); font-style: italic;
+    max-width: 520px; line-height: 1.5; padding: 20px 0;
+    border-left: 3px solid #EF4E4B; padding-left: 24px; margin: 40px 0;
+  }
+  .pull-quote strong { color: white; font-weight: 500; font-style: normal; }
+
+  /* ============ SIGNAL TEASER ============ */
+  .signal-teaser {
+    text-align: center; padding: 120px 0 80px;
+    border-top: 1px solid rgba(137,207,240,0.06);
+  }
+  .signal-teaser h2 { font-size: 56px; font-weight: 900; color: white; letter-spacing: 10px; margin-bottom: 12px; }
+  .signal-teaser h2 span { color: #EF4E4B; }
+  .signal-teaser p { font-size: 15px; color: rgba(255,255,255,0.3); margin-bottom: 32px; }
+  .signal-teaser .pills { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+  .pill { font-size: 11px; font-weight: 500; color: rgba(137,207,240,0.4); padding: 6px 16px; border: 1px solid rgba(137,207,240,0.1); border-radius: 20px; letter-spacing: 1px; }
+  
+  /* ============ VALUES — grid of small cards ============ */
+  .values-section { padding: 80px 0; }
+  .values-section h2 { font-size: 28px; font-weight: 700; color: white; margin-bottom: 32px; }
+  .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .vcard {
+    background: rgba(26,56,80,0.3); border: 1px solid rgba(137,207,240,0.06);
+    border-radius: 14px; padding: 22px;
+  }
+  .vcard h3 { font-size: 14px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .vcard p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+
+  /* ============ HELPER — emotional center ============ */
+  .helper-section {
+    padding: 100px 0; text-align: center;
+    border-top: 1px solid rgba(137,207,240,0.06);
+  }
+  .helper-section h2 { font-size: 36px; font-weight: 900; color: white; margin-bottom: 28px; }
+  .helper-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px; margin: 0 auto 28px; text-align: left; }
+  .helper-item {
+    background: rgba(137,207,240,0.03); border: 1px solid rgba(137,207,240,0.06);
+    border-radius: 10px; padding: 14px 16px; font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5;
+  }
+  .helper-item strong { color: white; font-weight: 500; }
+  .helper-punch { font-size: 16px; color: #89CFF0; font-weight: 500; }
+
+  /* ============ CTA ============ */
+  .cta-section {
+    padding: 100px 0 120px; text-align: center;
+    border-top: 1px solid rgba(137,207,240,0.06);
+  }
+  .cta-section h2 { font-size: 32px; font-weight: 700; color: white; margin-bottom: 12px; }
+  .cta-section p { font-size: 15px; color: rgba(255,255,255,0.35); margin-bottom: 32px; }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    text-align: center; padding: 32px; font-size: 12px; color: rgba(255,255,255,0.2);
+    border-top: 1px solid rgba(137,207,240,0.04);
+  }
+  .footer a { color: #89CFF0; text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 30px; }
+    .stats-ribbon { gap: 24px; }
+    .sr-num { font-size: 36px; }
+    .gap-flex { flex-direction: column; }
+    .gap-bridge { flex-direction: row; width: auto; gap: 8px; }
+    .vgrid, .helper-grid { grid-template-columns: 1fr; }
+    .signal-teaser h2 { font-size: 36px; letter-spacing: 4px; }
+    .n-head { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero z">
+    <div>
+      <img src="/logomark.svg" alt="SOS" class="hero-mark">
+      <h1>Coordination infrastructure<br>for <em>disaster response.</em></h1>
+      <div class="tag">Community-first. Built to compound. AI-powered.</div>
+      <a href="#signal" class="btn-primary">See How It Works</a>
+      <a href="/app" class="btn-ghost">Early Access →</a>
+    </div>
+  </div>
+
+  <!-- STATS RIBBON -->
+  <div class="stats-ribbon z">
+    <div class="sr-item"><div class="sr-num red">79%</div><div class="sr-label">Want AI Coordination</div></div>
+    <div class="sr-item"><div class="sr-num">0%</div><div class="sr-label">Currently Use It</div></div>
+    <div class="sr-item"><div class="sr-num red">85%</div><div class="sr-label">Help from Neighbors First</div></div>
+  </div>
+
+  <!-- NARRATIVE: THE MOMENT -->
+  <div class="container z">
+    <div class="narrative">
+      <div class="n-head">Three things converged.</div>
+      <div class="n-body">Federal disaster capacity is declining — states are absorbing responsibility without infrastructure. AI makes real-time coordination possible for the first time. And communities have always been the real first responders.</div>
+      
+      <div class="callout">
+        <div class="callout-title">📉 Federal Decline</div>
+        <div class="callout-text">FEMA restructuring. $600M in grants clawed back. 12 senior leaders departed. States need tools they don't have.</div>
+      </div>
+      <div class="callout">
+        <div class="callout-title">🧠 AI Is Ready</div>
+        <div class="callout-text">Conversational intake, real-time matching, compounding intelligence. None of this was feasible two years ago.</div>
+      </div>
+      <div class="callout">
+        <div class="callout-title">🤝 Communities Lead</div>
+        <div class="callout-text">The public isn't a liability. <span class="inline-stat">85%</span> of survivors get help from neighbors before any agency arrives.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NARRATIVE: THE GAP -->
+  <div class="container z">
+    <div class="narrative" style="padding-top:0;">
+      <div class="n-head">Nobody connects the two sides.</div>
+
+      <div class="gap-flex">
+        <div class="gap-card">
+          <h3>Communities</h3>
+          <ul>
+            <li>Facebook groups</li>
+            <li>WhatsApp threads</li>
+            <li>Phone trees</li>
+            <li>Neighbors with trucks</li>
+          </ul>
+        </div>
+        <div class="gap-bridge">
+          <img src="/logomark.svg" alt="SOS">
+          <span>SOS</span>
+        </div>
+        <div class="gap-card">
+          <h3>Agencies</h3>
+          <ul>
+            <li>WebEOC / PRATUS</li>
+            <li>ArcGIS + spreadsheets</li>
+            <li>Radio dispatch</li>
+            <li>Manual tracking</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pull-quote">
+        "It's not that help doesn't exist.<br><strong>It's that help can't find the people who need it.</strong>"
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAL TEASER -->
+  <div class="container z">
+    <div class="signal-teaser" id="signal">
+      <h2><span>S</span>IGNAL</h2>
+      <p>Six layers of coordination intelligence. Each builds on the last.</p>
+      <div class="pills">
+        <div class="pill">Signal</div><div class="pill">Intelligence</div><div class="pill">Graph</div>
+        <div class="pill">Network</div><div class="pill">Adaptive</div><div class="pill">Learning</div>
+      </div>
+      <a href="/partners/signal-v5.html" class="btn-primary">Watch It Work →</a>
+    </div>
+  </div>
+
+  <!-- VALUES -->
+  <div class="container z">
+    <div class="values-section">
+      <h2>Built on principles.</h2>
+      <div class="vgrid">
+        <div class="vcard"><h3>🔒 Privacy by Design</h3><p>Data encrypted. Masked until both sides consent. Partners own their data. We own the intelligence — never the PII.</p></div>
+        <div class="vcard"><h3>🔍 Accountability by Design</h3><p>Every AI decision has a trace. Every match has a reason. Auditable by partners, funders, and government.</p></div>
+        <div class="vcard"><h3>🌐 Open Coordination</h3><p>We show up in your tools — Slack, WhatsApp, iMessage, web, voice. Your workflow, our intelligence.</p></div>
+        <div class="vcard"><h3>🧠 Compounding Intelligence</h3><p>Every outcome trains the next decision. The architecture is reproducible. The intelligence is not.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVERYONE IS A HELPER -->
+  <div class="container z">
+    <div class="helper-section">
+      <h2>Everyone is a helper.</h2>
+      <div class="helper-grid">
+        <div class="helper-item"><strong>A displaced family with a truck</strong> can clear roads for someone else.</div>
+        <div class="helper-item"><strong>A retired nurse in a flood zone</strong> can triage injuries while waiting for evacuation.</div>
+        <div class="helper-item"><strong>A teenager who speaks three languages</strong> can run comms for families who don't speak English.</div>
+        <div class="helper-item"><strong>A rancher 500 miles away</strong> has a semi-truck and 20 tons of hay.</div>
+      </div>
+      <div class="helper-punch">Needs and offers coexist on the same person.<br>The public isn't a liability. They're the first responder.</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="container z">
+    <div class="cta-section">
+      <h2>We help the helpers.</h2>
+      <p>Join the organizations and communities already building with SOS.</p>
+      <a href="/app" class="btn-primary">Get Early Access →</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer z">
+    Everyone is a helper. We help the helpers.<br><br>
+    <a href="/about">About</a> · <a href="/aa">Aid Arena</a> · <a href="/app">Dashboard</a>
+  </div>
+
+</div>
+</body>
+</html>
