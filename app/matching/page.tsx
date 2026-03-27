@@ -14,9 +14,11 @@ import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
 import { BidForm } from '@/components/bid-form';
+import { AdminMatchView } from '@/components/admin-match-view';
+import { LayoutGrid } from 'lucide-react';
 import { Layers, Map, List } from 'lucide-react';
 
-type MatchMode = 'swipe' | 'map' | 'list';
+type MatchMode = 'swipe' | 'map' | 'list' | 'admin';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -152,6 +154,16 @@ export default function Matching() {
           >
             <List className="h-3.5 w-3.5" /> List
           </button>
+          {effectiveOrgType === 'admin' && (
+            <button
+              onClick={() => setMode('admin')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                mode === 'admin' ? 'bg-sos-blue-800 text-white' : 'text-sos-gray-600 hover:text-sos-blue-800'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" /> Assign
+            </button>
+          )}
         </div>
 
         {/* Disaster filter */}
@@ -406,6 +418,11 @@ export default function Matching() {
         </div>
         </div>
       )}
+      {/* ADMIN ASSIGN MODE */}
+      {mode === 'admin' && (
+        <AdminMatchView disasterFilter={disasterFilter} />
+      )}
+
       {/* Bid Form Modal */}
       {showBidForm && (
         <BidForm
