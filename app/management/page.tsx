@@ -5,6 +5,7 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { DetailPopup } from '@/components/detail-popup';
+import { BidReview } from '@/components/bid-review';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
@@ -37,6 +38,7 @@ export default function Management() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -156,7 +158,7 @@ export default function Management() {
           {vendorJobs.map((job: any) => {
             const jobBids = bids.filter((b: any) => b.request_id === job.id);
             return (
-              <div key={job.id} onClick={() => setSelectedItem({ ...job, _type: 'request' })} className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all">
+              <div key={job.id} onClick={() => setReviewJobId(job.id)} className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">🔧</span>
@@ -367,6 +369,11 @@ export default function Management() {
       </div>
       </>
       )}
+      {/* Bid Review Modal */}
+      {reviewJobId && (
+        <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} />
+      )}
+
       {/* Detail Popup */}
       {selectedItem && (
         <DetailPopup
