@@ -1,3 +1,5 @@
+'use client';
+
 import { DashboardShell } from '@/components/dashboard-shell';
 import { AgentChat } from '@/components/agent-chat';
 import { useViewContext } from '@/lib/view-context';
