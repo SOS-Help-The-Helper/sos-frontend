@@ -44,6 +44,13 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     return () => clearTimeout(timer);
   }, [loading]);
 
+  // Reset conversation when view changes
+  useEffect(() => {
+    setMessages([]);
+    setSessionId(null);
+    setLoading(false);
+  }, [currentView, effectiveAgentId]);
+
   // Don't auto-focus on mobile — keyboard covers the screen on load
 
   async function sendMessage(e: React.FormEvent) {

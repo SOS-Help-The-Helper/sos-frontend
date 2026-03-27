@@ -3,25 +3,30 @@
 import { useEffect, useRef, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { supabase } from '@/lib/supabase-client';
+import { useViewContext } from '@/lib/view-context';
 
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const { effectiveOrgId } = useViewContext();
   const [requests, setRequests] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
-      const [reqData, resData] = await Promise.all([
-        supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id').not('latitude', 'is', null),
-        supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id').not('latitude', 'is', null),
-      ]);
+      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id').not('latitude', 'is', null);
+      let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id').not('latitude', 'is', null);
+      if (effectiveOrgId) {
+        reqQuery = reqQuery.eq('org_id', effectiveOrgId);
+        resQuery = resQuery.eq('org_id', effectiveOrgId);
+      }
+      const [reqData, resData] = await Promise.all([reqQuery, resQuery]);
       setRequests(reqData.data || []);
       setResources(resData.data || []);
     }
     loadData();
-  }, []);
+  }, [effectiveOrgId]);
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;

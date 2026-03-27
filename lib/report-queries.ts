@@ -1,10 +1,13 @@
 import { supabase } from './supabase-client';
 
-export async function getReportingData() {
+export async function getReportingData(orgId?: string | null) {
+  let reqQ = supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id, org_id');
+  let resQ = supabase.from('resources').select('id, status, category, org_id, created_at');
+  if (orgId) { reqQ = reqQ.eq('org_id', orgId); resQ = resQ.eq('org_id', orgId); }
   const [matches, requests, resources, orgs, learnings] = await Promise.all([
     supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id'),
-    supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id'),
-    supabase.from('resources').select('id, status, category, org_id, created_at'),
+    reqQ,
+    resQ,
     supabase.from('organizations').select('id, name, org_type'),
     supabase.from('system_learnings').select('id, pattern, confidence, category, status, evidence_count'),
   ]);

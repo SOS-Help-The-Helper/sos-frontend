@@ -141,13 +141,13 @@ export async function POST(req: NextRequest) {
     } catch {}
 
     const body = await req.json();
-    const { message, orgId, sessionId } = body;
+    const { message, orgId, agentId: clientAgentId, sessionId } = body;
 
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message required' }), { status: 400 });
     }
 
-    const agentId = ORG_AGENT_MAP[orgId] || 'sos-citizen';
+    const agentId = clientAgentId || ORG_AGENT_MAP[orgId] || 'sos-citizen';
     const viewType = orgId === 'admin' || orgId === 'sos-platform' ? 'admin' 
                    : orgId === 'citizen' ? 'citizen' : 'partner';
 

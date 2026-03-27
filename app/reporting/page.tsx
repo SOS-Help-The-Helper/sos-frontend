@@ -16,12 +16,12 @@ export default function Reporting() {
 
   useEffect(() => {
     async function load() {
-      const reportData = await getReportingData();
+      const reportData = await getReportingData(effectiveOrgId);
       setData(reportData);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [effectiveOrgId]);
 
   if (loading) {
     return (
