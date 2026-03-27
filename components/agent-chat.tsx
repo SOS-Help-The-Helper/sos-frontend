@@ -20,7 +20,15 @@ interface AgentChatProps {
 export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const { orgId, orgName, isAdmin } = useAuthContext();
   const { currentView, effectiveAgentId, effectiveOrgId } = useViewContext();
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Persist messages per agent in localStorage
+  const storageKey = `sos-chat-${effectiveAgentId}`;
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -28,6 +36,10 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Save messages to localStorage
+    if (messages.length > 0) {
+      try { localStorage.setItem(storageKey, JSON.stringify(messages)); } catch {}
+    }
     // Aggressive scroll — use timeout to wait for DOM + keyboard layout shift
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -44,9 +56,13 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // Reset conversation when view changes
+  // Load persisted conversation when view changes
   useEffect(() => {
-    setMessages([]);
+    const key = `sos-chat-${effectiveAgentId}`;
+    try {
+      const saved = localStorage.getItem(key);
+      setMessages(saved ? JSON.parse(saved) : []);
+    } catch { setMessages([]); }
     setSessionId(null);
     setLoading(false);
   }, [currentView, effectiveAgentId]);
