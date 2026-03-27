@@ -8,7 +8,7 @@ import { DetailPopup } from '@/components/detail-popup';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
-type Tab = 'organizations' | 'requests' | 'resources';
+type Tab = 'organizations' | 'requests' | 'resources' | 'vendor_jobs';
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-50 text-green-700',
@@ -30,6 +30,8 @@ export default function Management() {
   const { effectiveOrgId } = useViewContext();
   const [tab, setTab] = useState<Tab>('organizations');
   const [orgs, setOrgs] = useState<any[]>([]);
+  const [vendorJobs, setVendorJobs] = useState<any[]>([]);
+  const [bids, setBids] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,13 @@ export default function Management() {
       setRequests(reqData.data || []);
       setResources(offData.data || []);
       setOrgs(orgData.data || []);
+
+      // Vendor jobs + bids
+      const { data: vjData } = await supabase.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
+      setVendorJobs(vjData || []);
+      const { data: bidData } = await supabase.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, created_at').order('created_at', { ascending: false });
+      setBids(bidData || []);
+
       setLoading(false);
     }
     load();
@@ -129,7 +138,59 @@ export default function Management() {
         >
           Resources ({resources.length})
         </button>
+        <button
+          onClick={() => { setTab('vendor_jobs'); setFilter('all'); }}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            tab === 'vendor_jobs'
+              ? 'bg-white text-sos-blue-800 shadow-sm'
+              : 'text-sos-gray-600 hover:text-sos-blue-800'
+          }`}
+        >
+          💼 Vendor Jobs ({vendorJobs.length})
+        </button>
       </div>
+
+      {/* Vendor Jobs Tab */}
+      {tab === 'vendor_jobs' && (
+        <div className="space-y-2">
+          {vendorJobs.map((job: any) => {
+            const jobBids = bids.filter((b: any) => b.request_id === job.id);
+            return (
+              <div key={job.id} onClick={() => setSelectedItem({ ...job, _type: 'request' })} className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer hover:shadow-md hover:border-sos-accent-300 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🔧</span>
+                    <div>
+                      <p className="text-sm font-bold text-sos-blue-800 capitalize">{job.category?.replace(/_/g, ' ')}</p>
+                      {job.details_sanitized && (
+                        <p className="text-xs text-sos-gray-600 mt-0.5 truncate max-w-sm">{job.details_sanitized}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {job.vendor_budget > 0 && (
+                      <p className="text-sm font-bold text-green-600">${job.vendor_budget.toLocaleString()}</p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sos-accent-50 text-sos-accent-700">
+                        {jobBids.length} bid{jobBids.length !== 1 ? 's' : ''}
+                      </span>
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        job.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-sos-gray-200 text-sos-gray-600'
+                      }`}>{job.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {vendorJobs.length === 0 && (
+            <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
+              <p className="text-sm text-sos-gray-500">No vendor jobs found</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Organizations Tab */}
       {tab === 'organizations' && (

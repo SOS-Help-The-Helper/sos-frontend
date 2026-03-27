@@ -1,11 +1,12 @@
 import { supabase } from './supabase-client';
 
-export async function getReportingData(orgId?: string | null) {
+export async function getReportingData(orgId?: string | null, disasterId?: string) {
   let reqQ = supabase.from('requests').select('id, status, category, urgency, created_at, disaster_id, org_id');
   let resQ = supabase.from('resources').select('id, status, category, org_id, created_at');
   if (orgId) { reqQ = reqQ.eq('org_id', orgId); resQ = resQ.eq('org_id', orgId); }
+  if (disasterId) { reqQ = reqQ.eq('disaster_id', disasterId); }
   const [matches, requests, resources, orgs, learnings] = await Promise.all([
-    supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id'),
+    supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id, resource_id'),
     reqQ,
     resQ,
     supabase.from('organizations').select('id, name, org_type'),
@@ -49,13 +50,37 @@ export async function getReportingData(orgId?: string | null) {
   });
 
   // Per-org stats
+  // Build resource→org mapping for match scoping
+  const resourceOrgMap = new Map(allResources.map((r: any) => [r.id, r.org_id]));
+
   const orgStats = allOrgs.map((org: any) => {
     const orgResources = allResources.filter((o: any) => o.org_id === org.id);
+    const orgResourceIds = new Set(orgResources.map((r: any) => r.id));
+    const orgMatches = allMatches.filter((m: any) => resourceOrgMap.get(m.resource_id) === org.id);
+    const orgFulfilled = orgMatches.filter((m: any) => m.status === 'fulfilled');
+    const orgFailed = orgMatches.filter((m: any) => m.status === 'failed');
+    const orgResolved = [...orgFulfilled, ...orgFailed, ...orgMatches.filter((m: any) => m.status === 'expired')];
+
+    // Avg response time for this org
+    const orgConnected = orgMatches.filter((m: any) => m.connected_at);
+    const orgResponseTimes = orgConnected.map((m: any) => {
+      const created = new Date(m.created_at).getTime();
+      const connected = new Date(m.connected_at).getTime();
+      return (connected - created) / (1000 * 60);
+    });
+    const orgAvgResponse = orgResponseTimes.length > 0
+      ? Math.round(orgResponseTimes.reduce((a: number, b: number) => a + b, 0) / orgResponseTimes.length)
+      : 0;
+
     return {
       id: org.id,
       name: org.name,
       type: org.org_type,
       resources: orgResources.length,
+      matches: orgMatches.length,
+      fulfilled: orgFulfilled.length,
+      fulfillmentRate: orgResolved.length > 0 ? Math.round((orgFulfilled.length / orgResolved.length) * 100) : 0,
+      avgResponseMin: orgAvgResponse,
     };
   });
 

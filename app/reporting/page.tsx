@@ -4,24 +4,29 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
+import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [disasters, setDisasters] = useState<any[]>([]);
+  const [disasterFilter, setDisasterFilter] = useState('all');
   const { isAdmin, orgType } = useAuthContext();
   const { effectiveOrgId } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
 
   useEffect(() => {
     async function load() {
-      const reportData = await getReportingData(effectiveOrgId);
+      const reportData = await getReportingData(effectiveOrgId, disasterFilter !== 'all' ? disasterFilter : undefined);
+      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      setDisasters(disData || []);
       setData(reportData);
       setLoading(false);
     }
     load();
-  }, [effectiveOrgId]);
+  }, [effectiveOrgId, disasterFilter]);
 
   if (loading) {
     return (
@@ -37,6 +42,19 @@ export default function Reporting() {
 
   return (
     <DashboardShell title="Reporting" subtitle="Impact metrics and coordination analytics">
+      {/* Disaster Filter */}
+      <div className="flex items-center gap-3 mb-5">
+        <select
+          value={disasterFilter}
+          onChange={e => setDisasterFilter(e.target.value)}
+          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-blue-800 font-medium"
+        >
+          <option value="all">All Disasters</option>
+          {disasters.map(d => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </div>
       {/* Headline Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <StatCard
@@ -181,11 +199,14 @@ export default function Reporting() {
               <tr className="border-b border-sos-gray-300">
                 <th className="text-left text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Organization</th>
                 <th className="text-left text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Type</th>
-                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Offers</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Matches</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Fulfilled</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Rate</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Avg Time</th>
               </tr>
             </thead>
             <tbody>
-              {data.orgStats.map((org: any) => (
+              {data.orgStats.filter((org: any) => org.matches > 0 || org.resources > 0).map((org: any) => (
                 <tr key={org.id} className="border-b border-sos-gray-200 last:border-0">
                   <td className="py-2.5 pr-4">
                     <span className="text-sm font-medium text-sos-blue-800">{org.name}</span>
@@ -193,8 +214,19 @@ export default function Reporting() {
                   <td className="py-2.5 pr-4">
                     <span className="text-xs text-sos-gray-600 capitalize">{org.type?.replace(/_/g, ' ') || '—'}</span>
                   </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className="text-sm font-medium text-sos-blue-800">{org.matches}</span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className="text-sm font-medium text-green-600">{org.fulfilled}</span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className={`text-sm font-bold ${org.fulfillmentRate >= 80 ? 'text-green-600' : org.fulfillmentRate >= 50 ? 'text-sos-accent-700' : 'text-sos-red-500'}`}>
+                      {org.fulfillmentRate}%
+                    </span>
+                  </td>
                   <td className="py-2.5 text-right">
-                    <span className="text-sm font-medium text-sos-blue-800">{org.resources}</span>
+                    <span className="text-sm text-sos-gray-600">{org.avgResponseMin ? `${org.avgResponseMin}m` : '—'}</span>
                   </td>
                 </tr>
               ))}
