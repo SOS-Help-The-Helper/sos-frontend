@@ -7,6 +7,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
   body { font-family: 'Roboto', sans-serif; background: #0d1a26; color: #c8d6e0; line-height: 1.6; }
 
   /* One continuous canvas — no section breaks visible */
@@ -31,7 +32,7 @@
 
   /* ============ HERO ============ */
   .hero {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 100vh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; text-align: center;
     padding: 40px 28px;
   }
   .hero-mark { width: 48px; height: 48px; margin-bottom: 24px; opacity: 0.7; }
@@ -44,7 +45,7 @@
   .btn-ghost:hover { color: white; }
 
   /* ============ STATS — floating ribbon ============ */
-  .stats-ribbon {
+  .stats-ribbon { scroll-snap-align: start; scroll-snap-stop: always; min-height: 30vh; align-items: center;
     display: flex; justify-content: center; gap: 48px; padding: 48px 0;
     border-top: 1px solid rgba(137,207,240,0.06);
     border-bottom: 1px solid rgba(137,207,240,0.06);
@@ -57,7 +58,7 @@
   .sr-label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
 
   /* ============ NARRATIVE BLOCKS ============ */
-  .narrative { padding: 100px 0; }
+  .narrative { padding: 100px 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; scroll-snap-stop: always; }
   .n-head { font-size: 30px; font-weight: 700; color: white; margin-bottom: 24px; line-height: 1.25; }
   .n-body { font-size: 15px; color: rgba(255,255,255,0.45); max-width: 580px; line-height: 1.7; margin-bottom: 32px; }
   
@@ -100,7 +101,7 @@
   .pull-quote strong { color: white; font-weight: 500; font-style: normal; }
 
   /* ============ SIGNAL TEASER ============ */
-  .signal-teaser {
+  .signal-teaser { scroll-snap-align: start; scroll-snap-stop: always; min-height: 80vh; display: flex; flex-direction: column; justify-content: center;
     text-align: center; padding: 120px 0 80px;
     border-top: 1px solid rgba(137,207,240,0.06);
   }
@@ -111,7 +112,7 @@
   .pill { font-size: 11px; font-weight: 500; color: rgba(137,207,240,0.4); padding: 6px 16px; border: 1px solid rgba(137,207,240,0.1); border-radius: 20px; letter-spacing: 1px; }
   
   /* ============ VALUES — grid of small cards ============ */
-  .values-section { padding: 80px 0; }
+  .values-section { padding: 80px 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; scroll-snap-stop: always; }
   .values-section h2 { font-size: 28px; font-weight: 700; color: white; margin-bottom: 32px; }
   .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .vcard {
@@ -122,7 +123,7 @@
   .vcard p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
 
   /* ============ HELPER — emotional center ============ */
-  .helper-section {
+  .helper-section { scroll-snap-align: start; scroll-snap-stop: always; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
     padding: 100px 0; text-align: center;
     border-top: 1px solid rgba(137,207,240,0.06);
   }
@@ -136,7 +137,7 @@
   .helper-punch { font-size: 16px; color: #89CFF0; font-weight: 500; }
 
   /* ============ CTA ============ */
-  .cta-section {
+  .cta-section { scroll-snap-align: start; scroll-snap-stop: always; min-height: 80vh; display: flex; flex-direction: column; justify-content: center;
     padding: 100px 0 120px; text-align: center;
     border-top: 1px solid rgba(137,207,240,0.06);
   }
@@ -152,7 +153,7 @@
 
   @media (max-width: 640px) {
     .hero h1 { font-size: 30px; }
-    .stats-ribbon { gap: 24px; }
+    .stats-ribbon { scroll-snap-align: start; scroll-snap-stop: always; min-height: 30vh; align-items: center; gap: 24px; }
     .sr-num { font-size: 36px; }
     .gap-flex { flex-direction: column; }
     .gap-bridge { flex-direction: row; width: auto; gap: 8px; }
