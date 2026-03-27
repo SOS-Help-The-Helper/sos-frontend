@@ -35,6 +35,8 @@ export default function Matching() {
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [chainMatches, setChainMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<'score' | 'date' | 'urgency'>('score');
   const [disasters, setDisasters] = useState<any[]>([]);
   const [disasterFilter, setDisasterFilter] = useState('all');
   const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]);
@@ -283,15 +285,76 @@ export default function Matching() {
 
       {/* LIST MODE */}
       {mode === 'list' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          {/* Batch toolbar */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (selectedIds.size === matches.length) setSelectedIds(new Set());
+                  else setSelectedIds(new Set(matches.map(m => m.id)));
+                }}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-gray-600 hover:bg-sos-gray-200"
+              >
+                {selectedIds.size === matches.length ? 'Deselect All' : 'Select All'}
+              </button>
+              {selectedIds.size > 0 && (
+                <>
+                  <span className="text-xs text-sos-gray-500">{selectedIds.size} selected</span>
+                  <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700">
+                    Accept Selected
+                  </button>
+                  <button
+                    onClick={() => {
+                      const highScore = matches.filter(m => m.match_score >= 80 && ['proposed','viewed'].includes(m.status));
+                      setSelectedIds(new Set(highScore.map(m => m.id)));
+                    }}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    Select 80+ Scores ({matches.filter(m => m.match_score >= 80 && ['proposed','viewed'].includes(m.status)).length})
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-sos-gray-500">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as any)}
+                className="text-xs px-2 py-1 rounded-lg border border-sos-gray-300 bg-[#FDFCFA] text-sos-blue-800"
+              >
+                <option value="score">Score ↓</option>
+                <option value="date">Newest</option>
+                <option value="urgency">Urgency</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 space-y-3">
-            {matches.length > 0 ? matches.map(match => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                onClick={() => selectMatch(match)}
-              />
-            )) : (
+            {[...matches].sort((a, b) => {
+              if (sortBy === 'score') return (b.match_score || 0) - (a.match_score || 0);
+              if (sortBy === 'date') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              return 0; // urgency handled elsewhere
+            }).map(match => (
+              <div key={match.id} className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(match.id)}
+                  onChange={() => {
+                    const next = new Set(selectedIds);
+                    if (next.has(match.id)) next.delete(match.id);
+                    else next.add(match.id);
+                    setSelectedIds(next);
+                  }}
+                  className="mt-4 h-4 w-4 rounded border-sos-gray-300 text-sos-red-500 flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <MatchCard match={match} onClick={() => selectMatch(match)} />
+                </div>
+              </div>
+            ))}
+            {matches.length === 0 && (
               <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
                 <p className="text-sm text-sos-gray-500">No matches found</p>
               </div>
@@ -340,6 +403,7 @@ export default function Matching() {
               </div>
             )}
           </div>
+        </div>
         </div>
       )}
       {/* Bid Form Modal */}
