@@ -199,11 +199,14 @@ export default function Reporting() {
               <tr className="border-b border-sos-gray-300">
                 <th className="text-left text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Organization</th>
                 <th className="text-left text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Type</th>
-                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Offers</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Matches</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Fulfilled</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Rate</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Avg Time</th>
               </tr>
             </thead>
             <tbody>
-              {data.orgStats.map((org: any) => (
+              {data.orgStats.filter((org: any) => org.matches > 0 || org.resources > 0).map((org: any) => (
                 <tr key={org.id} className="border-b border-sos-gray-200 last:border-0">
                   <td className="py-2.5 pr-4">
                     <span className="text-sm font-medium text-sos-blue-800">{org.name}</span>
@@ -211,8 +214,19 @@ export default function Reporting() {
                   <td className="py-2.5 pr-4">
                     <span className="text-xs text-sos-gray-600 capitalize">{org.type?.replace(/_/g, ' ') || '—'}</span>
                   </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className="text-sm font-medium text-sos-blue-800">{org.matches}</span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className="text-sm font-medium text-green-600">{org.fulfilled}</span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <span className={`text-sm font-bold ${org.fulfillmentRate >= 80 ? 'text-green-600' : org.fulfillmentRate >= 50 ? 'text-sos-accent-700' : 'text-sos-red-500'}`}>
+                      {org.fulfillmentRate}%
+                    </span>
+                  </td>
                   <td className="py-2.5 text-right">
-                    <span className="text-sm font-medium text-sos-blue-800">{org.resources}</span>
+                    <span className="text-sm text-sos-gray-600">{org.avgResponseMin ? `${org.avgResponseMin}m` : '—'}</span>
                   </td>
                 </tr>
               ))}
