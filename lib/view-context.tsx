@@ -17,7 +17,6 @@ const VIEW_AGENT_MAP: Record<string, string> = {
   '9d894368-51af-4cf7-9318-444a3c216f5d': 'sos-fhm',
   'c1e74116-5e12-410a-9b21-dc80c7646d77': 'sos-partner',
   '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': 'sos-partner',
-  '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': 'sos-partner',  // Endurant (vendor)
 };
 
 const ViewCtx = createContext<ViewContext>({
