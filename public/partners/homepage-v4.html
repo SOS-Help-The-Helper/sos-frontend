@@ -7,11 +7,11 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+  html { scroll-behavior: smooth; }
   body { font-family: 'Roboto', sans-serif; background: #0d1a26; color: #c8d6e0; line-height: 1.6; }
 
   /* One continuous canvas — no section breaks visible */
-  .page { position: relative; overflow: hidden; }
+  .page { position: relative; overflow-y: auto; height: 100vh; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
   
   /* Subtle grid across the whole page */
   .page::before { 
@@ -177,14 +177,14 @@
     </div>
   </div>
 
-  <!-- STATS RIBBON -->
+  <!-- STATS RIBBON --><div style="scroll-snap-align:start;scroll-snap-stop:always;">
   <div class="stats-ribbon z">
     <div class="sr-item"><div class="sr-num red">79%</div><div class="sr-label">Want AI Coordination</div></div>
     <div class="sr-item"><div class="sr-num">0%</div><div class="sr-label">Currently Use It</div></div>
     <div class="sr-item"><div class="sr-num red">85%</div><div class="sr-label">Help from Neighbors First</div></div>
   </div>
 
-  <!-- NARRATIVE: THE MOMENT -->
+  </div><!-- NARRATIVE: THE MOMENT --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;">
   <div class="container z">
     <div class="narrative">
       <div class="n-head">Three things converged.</div>
@@ -205,7 +205,7 @@
     </div>
   </div>
 
-  <!-- NARRATIVE: THE GAP -->
+  </div><!-- NARRATIVE: THE GAP --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;">
   <div class="container z">
     <div class="narrative" style="padding-top:0;">
       <div class="n-head">Nobody connects the two sides.</div>
@@ -241,7 +241,7 @@
     </div>
   </div>
 
-  <!-- SIGNAL TEASER -->
+  </div><!-- SIGNAL TEASER --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;justify-content:center;">
   <div class="container z">
     <div class="signal-teaser" id="signal">
       <h2><span>S</span>IGNAL</h2>
@@ -254,7 +254,7 @@
     </div>
   </div>
 
-  <!-- VALUES -->
+  </div><!-- VALUES --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;">
   <div class="container z">
     <div class="values-section">
       <h2>Built on principles.</h2>
@@ -267,7 +267,7 @@
     </div>
   </div>
 
-  <!-- EVERYONE IS A HELPER -->
+  </div><!-- EVERYONE IS A HELPER --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;justify-content:center;">
   <div class="container z">
     <div class="helper-section">
       <h2>Everyone is a helper.</h2>
@@ -281,7 +281,7 @@
     </div>
   </div>
 
-  <!-- CTA -->
+  </div><!-- CTA --><div style="scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;display:flex;align-items:center;justify-content:center;">
   <div class="container z">
     <div class="cta-section">
       <h2>We help the helpers.</h2>
@@ -290,7 +290,7 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
+  </div><!-- FOOTER -->
   <div class="footer z">
     Everyone is a helper. We help the helpers.<br><br>
     <a href="/about">About</a> · <a href="/aa">Aid Arena</a> · <a href="/app">Dashboard</a>
