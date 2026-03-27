@@ -122,8 +122,8 @@ export default function Matching() {
 
   return (
     <DashboardShell
-      title="Matches"
-      subtitle={`${stats?.total || 0} matches${stats?.byStatus?.fulfilled ? ` · ${stats.byStatus.fulfilled} fulfilled` : ''}`}
+      title={isVendorView ? "Available Jobs" : effectiveOrgType === 'citizen' ? "Your Options" : "Matches"}
+      subtitle={isVendorView ? `${vendorJobs.length} jobs available` : effectiveOrgType === 'citizen' ? "Help available for you" : `${stats?.total || 0} matches${stats?.byStatus?.fulfilled ? ` · ${stats.byStatus.fulfilled} fulfilled` : ''}`}
     >
       {/* Mode Toggle */}
       <div className="flex items-center justify-between mb-5">

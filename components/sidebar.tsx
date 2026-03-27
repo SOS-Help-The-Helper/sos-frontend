@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 import {
   MessageSquare,
   Map,
@@ -29,8 +30,24 @@ const allNavItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
+  const { currentView } = useViewContext();
+  const isCitizen = currentView === 'citizen';
 
-  const navItems = allNavItems.filter(item => isAdmin || !item.adminOnly);
+  const CITIZEN_LABELS: Record<string, string> = {
+    '/': 'Help',
+    '/map': 'Near Me',
+    '/matching': 'My Options',
+    '/management': 'My SOS',
+    '/reporting': 'My Impact',
+    '/view': 'View As',
+  };
+
+  const navItems = allNavItems
+    .filter(item => isAdmin || !item.adminOnly)
+    .map(item => isCitizen && CITIZEN_LABELS[item.path]
+      ? { ...item, label: CITIZEN_LABELS[item.path] }
+      : item
+    );
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';

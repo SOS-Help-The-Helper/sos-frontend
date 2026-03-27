@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 import {
   MessageSquare,
   Map,
@@ -34,6 +35,9 @@ const moreTabs = [
 export function BottomTabs() {
   const pathname = usePathname();
   const { isAdmin } = useAuthContext();
+  const { currentView } = useViewContext();
+  const isCitizen = currentView === 'citizen';
+  const citizenLabels: Record<string, string> = { '/': 'Help', '/map': 'Near Me', '/matching': 'Options' };
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -96,7 +100,7 @@ export function BottomTabs() {
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-[10px] font-medium">{isCitizen && citizenLabels[tab.path] ? citizenLabels[tab.path] : tab.label}</span>
               </Link>
             );
           })}
