@@ -77,6 +77,7 @@ export async function submitBid(bid: {
       bid_currency: 'USD',
       platform_fee_percent: 10,
       platform_fee_amount: Math.round(bid.bid_amount * 0.10),
+      gouging_flagged: false, // Server-side detection will override if needed
     })
     .select()
     .single();

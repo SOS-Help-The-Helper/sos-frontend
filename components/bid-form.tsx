@@ -99,7 +99,10 @@ export function BidForm({ job, onClose, onSubmitted }: BidFormProps) {
               />
             </div>
             {overBudget && (
-              <p className="text-[10px] text-sos-red-500 mt-1">⚠️ Bid is 2× over budget — may be flagged for review</p>
+              <div className="mt-2 p-2.5 rounded-lg bg-sos-red-50 border border-sos-red-200">
+                <p className="text-xs font-bold text-sos-red-700">🚨 Gouging Alert</p>
+                <p className="text-[10px] text-sos-red-600 mt-0.5">This bid exceeds 2× the estimated budget. It will be flagged for review and may be rejected.</p>
+              </div>
             )}
             {platformFee > 0 && (
               <p className="text-[10px] text-sos-gray-500 mt-1">Platform fee (10%): ${platformFee.toLocaleString()}</p>

@@ -68,7 +68,7 @@ export default function Management() {
       // Vendor jobs + bids
       const { data: vjData } = await supabase.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
       setVendorJobs(vjData || []);
-      const { data: bidData } = await supabase.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, created_at').order('created_at', { ascending: false });
+      const { data: bidData } = await supabase.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, gouging_flagged, created_at').order('created_at', { ascending: false });
       setBids(bidData || []);
 
       setLoading(false);
@@ -175,6 +175,11 @@ export default function Management() {
                       <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sos-accent-50 text-sos-accent-700">
                         {jobBids.length} bid{jobBids.length !== 1 ? 's' : ''}
                       </span>
+                      {jobBids.some((b: any) => b.gouging_flagged) && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sos-red-50 text-sos-red-700">
+                          🚨 Gouging
+                        </span>
+                      )}
                       <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                         job.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-sos-gray-200 text-sos-gray-600'
                       }`}>{job.status}</span>
