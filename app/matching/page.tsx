@@ -11,6 +11,8 @@ import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } fro
 import { getScopedMatches } from '@/lib/scoped-queries';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
+import { BidForm } from '@/components/bid-form';
 import { Layers, Map, List } from 'lucide-react';
 
 type MatchMode = 'swipe' | 'map' | 'list';
@@ -32,6 +34,9 @@ export default function Matching() {
   const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [chainMatches, setChainMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]);
+  const [vendorSwipeIndex, setVendorSwipeIndex] = useState(0);
+  const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null);
 
   const { orgId, orgType, loading: authLoading } = useAuthContext();
   const { effectiveOrgId } = useViewContext();
@@ -46,6 +51,14 @@ export default function Matching() {
       setMatches(matchData);
       setStats(statsData);
       setSwipeIndex(0);
+
+      // Load vendor jobs if viewing as vendor
+      if (effectiveOrgType === 'vendor') {
+        const jobs = await getVendorJobs();
+        setVendorJobs(jobs);
+        setVendorSwipeIndex(0);
+      }
+
       setLoading(false);
     }
     load();
@@ -88,7 +101,11 @@ export default function Matching() {
   }
 
   const currentSwipeMatch = pendingMatches[swipeIndex];
-  const effectiveOrgType = orgType || 'admin';
+  // Determine org type from view context or auth
+  const viewOrgId = effectiveOrgId;
+  const effectiveOrgType = viewOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a' ? 'vendor' : (orgType || 'admin');
+  const isVendorView = effectiveOrgType === 'vendor';
+  const currentVendorJob = vendorJobs[vendorSwipeIndex];
 
   return (
     <DashboardShell
@@ -155,7 +172,52 @@ export default function Matching() {
               <p className="text-xs mt-2 opacity-70">They're on their way.</p>
             </div>
           )}
-          {currentSwipeMatch ? (
+          {/* Vendor Job Swipe */}
+          {isVendorView && currentVendorJob ? (
+            <SwipeCard
+              onAccept={() => { setShowBidForm(currentVendorJob); }}
+              onDecline={() => setVendorSwipeIndex(prev => prev + 1)}
+              acceptLabel="Bid"
+              declineLabel="Pass"
+            >
+              <div className="p-6 min-h-[440px] flex flex-col">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-xs text-white/50 font-medium">{vendorSwipeIndex + 1} of {vendorJobs.length} jobs</span>
+                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 uppercase">💼 Job</span>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="w-24 h-24 rounded-3xl bg-yellow-500/10 flex items-center justify-center mb-6">
+                    <span className="text-5xl">🔧</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white capitalize mb-3">
+                    {currentVendorJob.category?.replace(/_/g, ' ') || 'Job Available'}
+                  </h2>
+                  <p className="text-base text-white/70 leading-relaxed mb-4">{currentVendorJob.details_sanitized}</p>
+                  {currentVendorJob.vendor_budget > 0 && (
+                    <div className="text-xl font-bold text-green-400 mb-2">
+                      Budget: ${currentVendorJob.vendor_budget.toLocaleString()}
+                    </div>
+                  )}
+                  {currentVendorJob.urgency && (
+                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${
+                      currentVendorJob.urgency === 'critical' ? 'bg-sos-red-500/20 text-sos-red-300' :
+                      currentVendorJob.urgency === 'high' ? 'bg-sos-red-500/10 text-sos-red-400' :
+                      'bg-white/10 text-white/50'
+                    }`}>{currentVendorJob.urgency}</span>
+                  )}
+                </div>
+                <p className="text-[10px] text-white/30 text-center mt-4">Swipe right to bid · Left to pass</p>
+              </div>
+            </SwipeCard>
+          ) : isVendorView ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">✓</span>
+              </div>
+              <h3 className="text-lg font-bold text-sos-blue-800">No More Jobs</h3>
+              <p className="text-sm text-sos-gray-600 mt-1">You've reviewed all available jobs</p>
+            </div>
+          ) : currentSwipeMatch ? (
             <SwipeCard
               onAccept={handleSwipeAccept}
               onDecline={handleSwipeDecline}
@@ -256,6 +318,17 @@ export default function Matching() {
             )}
           </div>
         </div>
+      )}
+      {/* Bid Form Modal */}
+      {showBidForm && (
+        <BidForm
+          job={showBidForm}
+          onClose={() => setShowBidForm(null)}
+          onSubmitted={() => {
+            setShowBidForm(null);
+            setVendorSwipeIndex(prev => prev + 1);
+          }}
+        />
       )}
     </DashboardShell>
   );

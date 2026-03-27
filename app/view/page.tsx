@@ -12,6 +12,8 @@ const VIEWS = [
   { id: 'da86c92f-d52d-4b13-a474-30e1be8fb808', label: 'Emergency RV', description: 'Transport & housing — RV fleet deployment', icon: '🚐', color: 'border-sos-accent-300 bg-sos-accent-50' },
   { id: '9d894368-51af-4cf7-9318-444a3c216f5d', label: 'Free Hot Meals', description: 'Food service — meal distribution events', icon: '🍽️', color: 'border-yellow-300 bg-yellow-50' },
   { id: 'c1e74116-5e12-410a-9b21-dc80c7646d77', label: 'Greater Good', description: 'Supply warehouse — emergency supplies & equipment', icon: '📦', color: 'border-sos-blue-200 bg-sos-blue-50' },
+  { divider: true, label: 'Vendor Views' },
+  { id: '2d84a5d4-41a6-4817-8c36-37d6f8cd727a', label: 'Endurant', description: 'Vendor — restoration, debris removal, heavy equipment', icon: '🔨', color: 'border-yellow-300 bg-yellow-50' },
 ];
 
 export default function ViewAs() {
