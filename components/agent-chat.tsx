@@ -6,6 +6,7 @@ import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
 import { shrinkWrapWidth } from '@/lib/text-measure';
 import { MeasuredBubble } from './measured-bubble';
+import { TextReveal } from './text-reveal';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -225,9 +226,9 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             <h3 className="text-xl font-bold text-sos-blue-800">
               {agentName}
             </h3>
-            <p className="text-base text-sos-gray-600 mt-2 max-w-md">
-              {viewConfig.welcome}
-            </p>
+            <div className="mt-2 max-w-md text-base text-sos-gray-600">
+              <TextReveal text={viewConfig.welcome} mode="spotlight" maxWidth={448} stagger={60} delay={300} />
+            </div>
             <div className="flex flex-wrap gap-3 mt-6 justify-center">
               {viewConfig.suggestions.length > 0 ? viewConfig.suggestions.map(suggestion => (
                 <button

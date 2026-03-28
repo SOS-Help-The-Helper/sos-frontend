@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { autoFitFontSize } from '@/lib/text-measure';
+import { CountingNumber } from './counting-number';
 
 interface StatCardProps {
   label: string;
@@ -41,7 +42,14 @@ export function StatCard({ label, value, subtitle, trend, trendValue, accent = '
       </p>
       <div className="flex items-end gap-2 mt-2">
         <p className="text-2xl md:text-3xl font-bold text-sos-blue-800 leading-none">
-          {value}
+          {typeof value === 'number' ? (
+            <CountingNumber
+              value={value}
+              duration={800}
+              prefix={String(value).startsWith('$') ? '$' : ''}
+              suffix={String(value).endsWith('%') ? '%' : ''}
+            />
+          ) : value}
         </p>
         {trendValue && (
           <span className={`text-xs font-medium pb-0.5 ${

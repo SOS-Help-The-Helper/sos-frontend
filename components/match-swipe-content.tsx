@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Match, getScoreColor } from '@/lib/match-queries';
 import { measureText } from '@/lib/text-measure';
+import { TextReveal } from './text-reveal';
+import { BalancedText } from './balanced-text';
 
 interface MatchSwipeContentProps {
   match: Match;
@@ -128,18 +130,20 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
         </div>
 
         {/* Category label */}
-        <h2 className="text-2xl font-bold text-white mb-3">
+        <BalancedText as="h2" className="text-2xl font-bold text-white mb-3" font="700 24px Roboto, sans-serif" maxWidth={280}>
           {catInfo.label}
-        </h2>
+        </BalancedText>
 
-        {/* Detail lines — each on its own row */}
-        <div className="space-y-1.5 mb-5">
-          {parsed.details.map((detail, i) => (
-            <p key={i} className="text-base text-white/70">{detail}</p>
-          ))}
-          {parsed.distance && (
-            <p className="text-sm text-sos-accent-400 font-medium">📍 {parsed.distance}</p>
-          )}
+        {/* Detail lines — cascade reveal */}
+        <div className="mb-5 text-base text-white/70">
+          <TextReveal
+            text={parsed.details.join('. ') + (parsed.distance ? `. 📍 ${parsed.distance}` : '')}
+            mode="cascade"
+            maxWidth={280}
+            stagger={60}
+            delay={150}
+            font="16px Roboto, sans-serif"
+          />
         </div>
 
         {/* Score */}
