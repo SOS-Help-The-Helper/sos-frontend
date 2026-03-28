@@ -86,7 +86,7 @@ export function BottomTabs() {
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-sos-gray-300 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-sos-blue-800 border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-16">
           {mainTabs.map(tab => {
             const Icon = tab.icon;
@@ -96,7 +96,7 @@ export function BottomTabs() {
                 key={tab.path}
                 href={tab.path}
                 className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-                  active ? 'text-sos-red-500' : 'text-sos-gray-500'
+                  active ? 'text-sos-red-400' : 'text-white/50'
                 }`}
               >
                 <Icon className="h-5.5 w-5.5" />
@@ -112,7 +112,7 @@ export function BottomTabs() {
           <button
             onClick={() => setMoreOpen(!moreOpen)}
             className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-              isMoreActive || moreOpen ? 'text-sos-red-500' : 'text-sos-gray-500'
+              isMoreActive || moreOpen ? 'text-sos-red-400' : 'text-white/50'
             }`}
           >
             <MoreHorizontal className="h-5 w-5" />
