@@ -31,8 +31,8 @@ const allNavItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
-  const { currentView } = useViewContext();
-  const portalConfig = getPortalConfig(currentView === 'admin' ? 'admin' : currentView === 'citizen' ? 'citizen' : orgType);
+  const { effectiveOrgType } = useViewContext();
+  const portalConfig = getPortalConfig(effectiveOrgType);
 
   const LABEL_MAP: Record<string, keyof typeof portalConfig.labels> = {
     '/': 'agent',

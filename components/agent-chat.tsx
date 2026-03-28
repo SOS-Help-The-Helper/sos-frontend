@@ -20,7 +20,7 @@ interface AgentChatProps {
 
 export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const { orgId, orgName, orgType, isAdmin } = useAuthContext();
-  const { currentView, effectiveAgentId, effectiveOrgId } = useViewContext();
+  const { currentView, effectiveAgentId, effectiveOrgId, effectiveOrgType, effectiveOrgName } = useViewContext();
   // Persist messages per agent in localStorage
   const storageKey = `sos-chat-${effectiveAgentId}`;
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -192,9 +192,9 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   }
 
   // Portal config drives all per-org content
-  const portalConfig = getPortalConfig(currentView === 'admin' ? 'admin' : currentView === 'citizen' ? 'citizen' : orgType);
+  const portalConfig = getPortalConfig(effectiveOrgType);
   const viewConfig = { welcome: portalConfig.agent.welcome, suggestions: portalConfig.agent.suggestions };
-  const agentName = orgName || portalConfig.labels.agent;
+  const agentName = effectiveOrgName;
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">

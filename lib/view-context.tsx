@@ -6,8 +6,30 @@ interface ViewContext {
   currentView: string;
   setCurrentView: (view: string) => void;
   effectiveOrgId: string | null;
+  effectiveOrgType: string;
+  effectiveOrgName: string;
   effectiveAgentId: string;
 }
+
+const VIEW_ORG_TYPE_MAP: Record<string, string> = {
+  'admin': 'admin',
+  'citizen': 'citizen',
+  '43299807-6229-49be-9a6b-0498c9188178': 'coordination',
+  'da86c92f-d52d-4b13-a474-30e1be8fb808': 'transport_housing',
+  '9d894368-51af-4cf7-9318-444a3c216f5d': 'food_service',
+  'c1e74116-5e12-410a-9b21-dc80c7646d77': 'supply_warehouse',
+  '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': 'vendor',
+};
+
+const VIEW_ORG_NAME_MAP: Record<string, string> = {
+  'admin': 'SOS Platform',
+  'citizen': 'SOS',
+  '43299807-6229-49be-9a6b-0498c9188178': 'Aid Arena',
+  'da86c92f-d52d-4b13-a474-30e1be8fb808': 'Emergency RV',
+  '9d894368-51af-4cf7-9318-444a3c216f5d': 'Free Hot Meals',
+  'c1e74116-5e12-410a-9b21-dc80c7646d77': 'Greater Good',
+  '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': 'Endurant',
+};
 
 const VIEW_AGENT_MAP: Record<string, string> = {
   'admin': 'sos-platform',
@@ -23,6 +45,8 @@ const ViewCtx = createContext<ViewContext>({
   currentView: 'admin',
   setCurrentView: () => {},
   effectiveOrgId: null,
+  effectiveOrgType: 'admin',
+  effectiveOrgName: 'SOS Platform',
   effectiveAgentId: 'sos-platform',
 });
 
@@ -46,10 +70,12 @@ export function ViewProvider({ children }: { children: React.ReactNode }) {
   };
 
   const effectiveOrgId = currentView === 'admin' || currentView === 'citizen' ? null : currentView;
+  const effectiveOrgType = VIEW_ORG_TYPE_MAP[currentView] || 'admin';
+  const effectiveOrgName = VIEW_ORG_NAME_MAP[currentView] || 'SOS Platform';
   const effectiveAgentId = VIEW_AGENT_MAP[currentView] || 'sos-citizen';
 
   return (
-    <ViewCtx.Provider value={{ currentView, setCurrentView, effectiveOrgId, effectiveAgentId }}>
+    <ViewCtx.Provider value={{ currentView, setCurrentView, effectiveOrgId, effectiveOrgType, effectiveOrgName, effectiveAgentId }}>
       {children}
     </ViewCtx.Provider>
   );
