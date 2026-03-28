@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { getPortalConfig } from '@/lib/portal-config';
 import {
   MessageSquare,
   Map,
@@ -31,23 +32,25 @@ export function Sidebar() {
   const pathname = usePathname();
   const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
   const { currentView } = useViewContext();
-  const isCitizen = currentView === 'citizen';
+  const portalConfig = getPortalConfig(currentView === 'admin' ? 'admin' : currentView === 'citizen' ? 'citizen' : orgType);
 
-  const CITIZEN_LABELS: Record<string, string> = {
-    '/': 'Help',
-    '/map': 'Near Me',
-    '/matching': 'My Options',
-    '/management': 'My SOS',
-    '/reporting': 'My Impact',
-    '/view': 'View As',
+  const LABEL_MAP: Record<string, keyof typeof portalConfig.labels> = {
+    '/': 'agent',
+    '/map': 'map',
+    '/matching': 'matching',
+    '/management': 'management',
+    '/reporting': 'reporting',
   };
 
   const navItems = allNavItems
     .filter(item => isAdmin || !item.adminOnly)
-    .map(item => isCitizen && CITIZEN_LABELS[item.path]
-      ? { ...item, label: CITIZEN_LABELS[item.path] }
-      : item
-    );
+    .map(item => {
+      const configKey = LABEL_MAP[item.path];
+      if (configKey && portalConfig.labels[configKey]) {
+        return { ...item, label: portalConfig.labels[configKey] };
+      }
+      return item;
+    });
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';

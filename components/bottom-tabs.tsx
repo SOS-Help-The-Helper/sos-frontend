@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { getPortalConfig } from '@/lib/portal-config';
 import {
   MessageSquare,
   Map,
@@ -34,10 +35,9 @@ const moreTabs = [
 
 export function BottomTabs() {
   const pathname = usePathname();
-  const { isAdmin } = useAuthContext();
+  const { isAdmin, orgType } = useAuthContext();
   const { currentView } = useViewContext();
-  const isCitizen = currentView === 'citizen';
-  const citizenLabels: Record<string, string> = { '/': 'Help', '/map': 'Near Me', '/matching': 'Options' };
+  const portalConfig = getPortalConfig(currentView === 'admin' ? 'admin' : currentView === 'citizen' ? 'citizen' : orgType);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -100,7 +100,12 @@ export function BottomTabs() {
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{isCitizen && citizenLabels[tab.path] ? citizenLabels[tab.path] : tab.label}</span>
+                <span className="text-[10px] font-medium">{
+                  tab.path === '/' ? portalConfig.labels.agent :
+                  tab.path === '/map' ? portalConfig.labels.map :
+                  tab.path === '/matching' ? portalConfig.labels.matching :
+                  tab.label
+                }</span>
               </Link>
             );
           })}

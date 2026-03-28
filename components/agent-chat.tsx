@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { getPortalConfig } from '@/lib/portal-config';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -18,7 +19,7 @@ interface AgentChatProps {
 }
 
 export function AgentChat({ hideHeader = false }: AgentChatProps) {
-  const { orgId, orgName, isAdmin } = useAuthContext();
+  const { orgId, orgName, orgType, isAdmin } = useAuthContext();
   const { currentView, effectiveAgentId, effectiveOrgId } = useViewContext();
   // Persist messages per agent in localStorage
   const storageKey = `sos-chat-${effectiveAgentId}`;
@@ -190,45 +191,10 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     }
   }
 
-  const VIEW_CONFIG: Record<string, { name: string; welcome: string; suggestions: string[] }> = {
-    'admin': {
-      name: 'SOS Platform',
-      welcome: 'You\'re connected to the SOS Platform agent. Full access to all coordination data, matches, and system intelligence.',
-      suggestions: ['System status', 'Show all open matches', 'Partner performance'],
-    },
-    'citizen': {
-      name: 'SOS',
-      welcome: 'We\'re here to help. Tell us what you need or what you can offer — we\'ll connect you with the right people.',
-      suggestions: ['I need help', 'I can help', 'What\'s available near me?'],
-    },
-    '43299807-6229-49be-9a6b-0498c9188178': {
-      name: 'Aid Arena',
-      welcome: 'Welcome to Aid Arena coordination. Manage your volunteer network, approve match chains, and track multi-partner deployments.',
-      suggestions: ['Open coordination tasks', 'Network status', 'Assign a partner'],
-    },
-    'da86c92f-d52d-4b13-a474-30e1be8fb808': {
-      name: 'Emergency RV',
-      welcome: 'Hey Woody — your ERV fleet dashboard. Check unit availability, assign drivers, and manage housing deployments.',
-      suggestions: ['Fleet status', 'Open housing matches', 'Assign a unit'],
-    },
-    '9d894368-51af-4cf7-9318-444a3c216f5d': {
-      name: 'Free Hot Meals',
-      welcome: 'Free Hot Meals coordination. Manage your meal sites, track serving capacity, and match hungry families to events.',
-      suggestions: ['Today\'s meal schedule', 'Site capacity', 'Open food matches'],
-    },
-    'c1e74116-5e12-410a-9b21-dc80c7646d77': {
-      name: 'Greater Good',
-      welcome: 'Greater Good supply chain. Track warehouse inventory, dispatch supplies, and manage distribution to disaster zones.',
-      suggestions: ['Inventory levels', 'Pending dispatch', 'Supply matches'],
-    },
-    '2d84a5d4-41a6-4817-8c36-37d6f8cd727a': {
-      name: 'Endurant',
-      welcome: 'Endurant vendor portal. Browse available restoration jobs, submit bids, and track your active projects.',
-      suggestions: ['Available jobs', 'My active bids', 'Job history'],
-    },
-  };
-  const viewConfig = VIEW_CONFIG[currentView] || VIEW_CONFIG['admin'];
-  const agentName = viewConfig.name;
+  // Portal config drives all per-org content
+  const portalConfig = getPortalConfig(currentView === 'admin' ? 'admin' : currentView === 'citizen' ? 'citizen' : orgType);
+  const viewConfig = { welcome: portalConfig.agent.welcome, suggestions: portalConfig.agent.suggestions };
+  const agentName = orgName || portalConfig.labels.agent;
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">
