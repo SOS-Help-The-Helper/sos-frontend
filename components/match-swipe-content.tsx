@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Match, getScoreColor } from '@/lib/match-queries';
+import { measureText } from '@/lib/text-measure';
 
 interface MatchSwipeContentProps {
   match: Match;
@@ -80,6 +82,18 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
   const catKey = detectedCat || parsed.category.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_');
   const catInfo = CATEGORY_ICONS[catKey] || { icon: '🆘', label: parsed.category || 'SOS', color: 'text-sos-red-700', bg: 'bg-sos-red-50' };
 
+  // Pretext: content-aware card sizing
+  const [cardMinH, setCardMinH] = useState(380);
+  useEffect(() => {
+    const allText = [summary, match.match_reasoning || ''].join(' ');
+    measureText(allText, '16px Roboto, sans-serif', 280, 24).then(result => {
+      if (result) {
+        const computed = 264 + result.height;
+        setCardMinH(Math.max(340, Math.min(520, computed)));
+      }
+    });
+  }, [summary, match.match_reasoning]);
+
   const urgencyColor = parsed.urgency.toLowerCase() === 'critical' ? 'bg-sos-red-500 text-white' :
     parsed.urgency.toLowerCase() === 'high' ? 'bg-sos-red-100 text-sos-red-700' :
     parsed.urgency.toLowerCase() === 'standard' ? 'bg-sos-accent-100 text-sos-accent-700' :
@@ -95,7 +109,7 @@ export function MatchSwipeContent({ match, orgType, index, total }: MatchSwipeCo
     'Swipe right to accept · Left to decline';
 
   return (
-    <div className="p-6 min-h-[440px] flex flex-col">
+    <div className="p-6 flex flex-col" style={{ minHeight: `${cardMinH}px` }}>
       {/* Top bar: counter + urgency */}
       <div className="flex items-center justify-between mb-8">
         <span className="text-xs text-white/50 font-medium">{index + 1} of {total}</span>

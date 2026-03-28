@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase-client';
 import { useViewContext } from '@/lib/view-context';
 import { getMatchLines } from '@/lib/map-queries';
 import { MapPin, Link2, Flame } from 'lucide-react';
+import { measureText } from '@/lib/text-measure';
 
 type MapTab = 'all' | 'matches' | 'disasters';
 
@@ -85,8 +86,20 @@ export default function MapPage() {
           const score = req.triage_score || 50;
           const size = score >= 80 ? 16 : score >= 50 ? 12 : 9;
           const el = document.createElement('div');
-          el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.5);box-shadow:0 0 ${size+4}px rgba(239,78,75,0.6);cursor:pointer;`;
-          if (score >= 80) el.style.animation = 'pulse 2s infinite';
+          el.style.cssText = `display:flex;flex-direction:column;align-items:center;cursor:pointer;`;
+          const dot = document.createElement('div');
+          dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.5);box-shadow:0 0 ${size+4}px rgba(239,78,75,0.6);`;
+          if (score >= 80) dot.style.animation = 'pulse 2s infinite';
+          el.appendChild(dot);
+          // Pretext-measured label
+          const labelText = (req as any).category || 'SOS';
+          const lbl = document.createElement('div');
+          lbl.textContent = labelText;
+          lbl.style.cssText = 'font:500 9px Roboto,sans-serif;color:#1B2A4A;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px);';
+          measureText(labelText, '500 9px Roboto, sans-serif', 80, 11).then(m => {
+            if (m && m.lineCount > 1) lbl.style.fontSize = '8px';
+          });
+          el.appendChild(lbl);
           el.onclick = (e) => { e.stopPropagation(); setSelected({ type: 'request', ...req }); };
           const marker = new mapboxgl.Marker({ element: el }).setLngLat([req.longitude, req.latitude]).addTo(map);
           markersRef.current.push(marker);
@@ -96,7 +109,18 @@ export default function MapPage() {
         resources.forEach(res => {
           if (!res.latitude || !res.longitude) return;
           const el = document.createElement('div');
-          el.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 12px rgba(137,207,240,0.5);cursor:pointer;';
+          el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
+          const dot = document.createElement('div');
+          dot.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 12px rgba(137,207,240,0.5);';
+          el.appendChild(dot);
+          const labelText = (res as any).category || 'Resource';
+          const lbl = document.createElement('div');
+          lbl.textContent = labelText;
+          lbl.style.cssText = 'font:500 9px Roboto,sans-serif;color:#1B2A4A;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px);';
+          measureText(labelText, '500 9px Roboto, sans-serif', 80, 11).then(m => {
+            if (m && m.lineCount > 1) lbl.style.fontSize = '8px';
+          });
+          el.appendChild(lbl);
           el.onclick = (e) => { e.stopPropagation(); setSelected({ type: 'resource', ...res }); };
           const marker = new mapboxgl.Marker({ element: el }).setLngLat([res.longitude, res.latitude]).addTo(map);
           markersRef.current.push(marker);

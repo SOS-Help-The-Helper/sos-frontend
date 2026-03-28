@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase-client';
+import { measureText } from '@/lib/text-measure';
 
 interface AgentNode {
   id: string;
@@ -101,6 +102,24 @@ interface NervousSystemProps {
 export function NervousSystem({ metrics }: NervousSystemProps) {
   const [pulses, setPulses] = useState<PulseEvent[]>([]);
   const [nodes, setNodes] = useState(NODES);
+  const [labelWidths, setLabelWidths] = useState<Record<string, number>>({});
+
+  // Pretext: measure all SVG label widths for precise box sizing
+  useEffect(() => {
+    const measureAll = async () => {
+      const widths: Record<string, number> = {};
+      for (const node of NODES) {
+        const m = await measureText(node.label, '600 9px Roboto, sans-serif', 200, 12);
+        if (m) {
+          // Use shrinkWrap for tighter fit
+          const { shrinkWrapWidth } = await import('@/lib/text-measure');
+          widths[node.id] = await shrinkWrapWidth(node.label, '600 9px Roboto, sans-serif', 200, 12);
+        }
+      }
+      setLabelWidths(widths);
+    };
+    measureAll();
+  }, []);
 
   // Simulate periodic pulses for demo (replace with Supabase Realtime)
   useEffect(() => {
@@ -229,7 +248,8 @@ export function NervousSystem({ metrics }: NervousSystemProps) {
 
         {/* Agent Nodes */}
         {nodes.filter(n => n.type === 'agent').map(node => {
-          const w = node.isBrain ? 110 : 85;
+          const measuredW = labelWidths[node.id] ? labelWidths[node.id] + 36 : 0;
+          const w = measuredW > 0 ? Math.max(measuredW, node.isBrain ? 110 : 85) : (node.isBrain ? 110 : 85);
           const h = node.isBrain ? 44 : 36;
           return (
             <g key={node.id}>

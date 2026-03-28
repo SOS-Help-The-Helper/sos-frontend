@@ -1,3 +1,8 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { autoFitFontSize } from '@/lib/text-measure';
+
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -14,9 +19,24 @@ const accentStyles = {
 };
 
 export function StatCard({ label, value, subtitle, trend, trendValue, accent = 'blue' }: StatCardProps) {
+  const labelRef = useRef<HTMLParagraphElement>(null);
+  const [labelSize, setLabelSize] = useState(12); // default xs = 12px
+
+  useEffect(() => {
+    if (!labelRef.current) return;
+    const width = labelRef.current.offsetWidth;
+    if (width > 0) {
+      autoFitFontSize(label, width, 1, 12, 9, 'Roboto, sans-serif').then(setLabelSize);
+    }
+  }, [label]);
+
   return (
     <div className={`bg-[#FDFCFA] rounded-xl border border-sos-gray-300 border-l-4 ${accentStyles[accent]} p-5 transition-shadow hover:shadow-sm`}>
-      <p className="text-xs font-medium text-sos-gray-600 uppercase tracking-wider">
+      <p
+        ref={labelRef}
+        className="font-medium text-sos-gray-600 uppercase tracking-wider whitespace-nowrap"
+        style={{ fontSize: `${labelSize}px` }}
+      >
         {label}
       </p>
       <div className="flex items-end gap-2 mt-2">

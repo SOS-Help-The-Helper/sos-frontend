@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
+import { shrinkWrapWidth } from '@/lib/text-measure';
+import { MeasuredBubble } from './measured-bubble';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -262,28 +264,24 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                 <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
               </div>
             )}
-            <div className={`max-w-[80%] md:max-w-[75%] ${
-              msg.role === 'user'
-                ? 'bg-sos-blue-800 text-white rounded-2xl rounded-br-md px-4 py-2.5'
-                : 'bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
-            }`}>
-              {msg.role === 'assistant' ? (
+            {msg.role === 'user' ? (
+              <MeasuredBubble
+                text={msg.content}
+                isOwn={true}
+                className="bg-sos-blue-800 text-white rounded-br-md"
+              >
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              </MeasuredBubble>
+            ) : (
+              <div className="max-w-[80%] md:max-w-[75%] bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                 <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-sos-blue-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1 prose-h1:text-base prose-h2:text-sm prose-h3:text-sm prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-strong:text-sos-blue-800 prose-li:marker:text-sos-red-500">
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
-              ) : (
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              )}
-              {msg.content === '' && loading && (
-                <div className="flex gap-1.5 py-1">
-                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              )}
-              <div className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-white/40' : 'text-sos-gray-400'}`}>
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
+            )}
+            {/* Timestamp */}
+            <div className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-sos-gray-400 text-right' : 'text-sos-gray-400'}`}>
+              {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
         ))}
