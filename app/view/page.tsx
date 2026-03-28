@@ -2,6 +2,7 @@
 
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
+import { useViewContext } from '@/lib/view-context';
 import { Shield, User, Building2, Check } from 'lucide-react';
 
 const VIEWS = [
@@ -18,10 +19,11 @@ const VIEWS = [
 
 export default function ViewAs() {
   // For now, store view selection in localStorage and read from auth context
-  const currentView = typeof window !== 'undefined' ? localStorage.getItem('sos-view-as') || 'admin' : 'admin';
+  const { currentView: activeView, setCurrentView } = useViewContext();
+  const currentView = activeView;
 
   function selectView(viewId: string) {
-    localStorage.setItem('sos-view-as', viewId);
+    setCurrentView(viewId);
     // Reload to apply the new view across all pages
     window.location.href = '/';
   }
