@@ -6,6 +6,7 @@ import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { DetailPopup } from '@/components/detail-popup';
 import { BidReview } from '@/components/bid-review';
+import { VendorManagement } from '@/components/vendor-management';
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3 } from 'lucide-react';
 
@@ -92,6 +93,16 @@ export default function Management() {
         setResources(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
       }
     }
+  }
+
+  // Vendor-specific management
+  const isVendorView = effectiveOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a';
+  if (isVendorView) {
+    return (
+      <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
+        <VendorManagement vendorOrgId={effectiveOrgId!} />
+      </DashboardShell>
+    );
   }
 
   if (loading) {

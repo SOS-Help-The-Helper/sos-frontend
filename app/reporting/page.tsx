@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
+import { VendorReporting } from '@/components/vendor-reporting';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
@@ -27,6 +28,16 @@ export default function Reporting() {
     }
     load();
   }, [effectiveOrgId, disasterFilter]);
+
+  // Vendor-specific reporting
+  const isVendorView = effectiveOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a';
+  if (isVendorView) {
+    return (
+      <DashboardShell title="Vendor Dashboard" subtitle="Jobs, revenue, and performance">
+        <VendorReporting vendorOrgId={effectiveOrgId!} />
+      </DashboardShell>
+    );
+  }
 
   if (loading) {
     return (
