@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface SwipeCardProps {
   children: React.ReactNode;
@@ -43,9 +43,12 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
     }
   }, [offset, onAccept, onDecline]);
 
-  // Touch events
+  // Touch events — preventDefault on move to stop page scroll during swipe
   const handleTouchStart = useCallback((e: React.TouchEvent) => handleStart(e.touches[0].clientX), [handleStart]);
-  const handleTouchMove = useCallback((e: React.TouchEvent) => handleMove(e.touches[0].clientX), [handleMove]);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (swiping) e.preventDefault();
+    handleMove(e.touches[0].clientX);
+  }, [swiping, handleMove]);
   const handleTouchEnd = useCallback(() => handleEnd(), [handleEnd]);
 
   // Mouse events (desktop drag)
@@ -59,6 +62,17 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
     if (e.key === 'ArrowRight') { setExiting('right'); setTimeout(onAccept, 300); }
     if (e.key === 'ArrowLeft') { setExiting('left'); setTimeout(onDecline, 300); }
   }, [onAccept, onDecline]);
+
+  // Attach non-passive touchmove to prevent page scroll during swipe
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const handler = (e: TouchEvent) => {
+      if (swiping) e.preventDefault();
+    };
+    el.addEventListener('touchmove', handler, { passive: false });
+    return () => el.removeEventListener('touchmove', handler);
+  }, [swiping]);
 
   const rotation = offset * 0.05;
   const opacity = exiting ? 0 : 1;
@@ -92,11 +106,12 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        className="bg-sos-blue-800 rounded-2xl shadow-lg overflow-hidden transition-all"
+        className="bg-sos-blue-800 rounded-2xl shadow-lg overflow-hidden transition-all select-none"
         style={{
           transform: `translateX(${translateX}px) rotate(${rotation}deg)`,
           opacity,
           transition: swiping ? 'none' : 'all 0.3s ease-out',
+          touchAction: 'pan-y',
         }}
       >
         {children}
