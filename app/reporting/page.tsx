@@ -15,7 +15,7 @@ export default function Reporting() {
   const [disasters, setDisasters] = useState<any[]>([]);
   const [disasterFilter, setDisasterFilter] = useState('all');
   const { isAdmin, orgType } = useAuthContext();
-  const { effectiveOrgId } = useViewContext();
+  const { effectiveOrgId, effectiveOrgType } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function Reporting() {
   }, [effectiveOrgId, disasterFilter]);
 
   // Vendor-specific reporting
-  const isVendorView = effectiveOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a';
+  const isVendorView = effectiveOrgType === 'vendor';
   if (isVendorView) {
     return (
       <DashboardShell title="Vendor Dashboard" subtitle="Jobs, revenue, and performance">

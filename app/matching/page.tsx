@@ -46,7 +46,7 @@ export default function Matching() {
   const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null);
 
   const { orgId, orgType, loading: authLoading } = useAuthContext();
-  const { effectiveOrgId } = useViewContext();
+  const { effectiveOrgId, effectiveOrgType } = useViewContext();
 
   useEffect(() => {
     if (authLoading) return;
@@ -117,8 +117,6 @@ export default function Matching() {
 
   const currentSwipeMatch = pendingMatches[swipeIndex];
   // Determine org type from view context or auth
-  const viewOrgId = effectiveOrgId;
-  const effectiveOrgType = viewOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a' ? 'vendor' : (orgType || 'admin');
   const isVendorView = effectiveOrgType === 'vendor';
   const currentVendorJob = vendorJobs[vendorSwipeIndex];
 

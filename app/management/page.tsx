@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function Management() {
   const { orgId, isAdmin } = useAuthContext();
-  const { effectiveOrgId } = useViewContext();
+  const { effectiveOrgId, effectiveOrgType } = useViewContext();
   const [tab, setTab] = useState<Tab>('organizations');
   const [orgs, setOrgs] = useState<any[]>([]);
   const [vendorJobs, setVendorJobs] = useState<any[]>([]);
@@ -96,7 +96,7 @@ export default function Management() {
   }
 
   // Vendor-specific management
-  const isVendorView = effectiveOrgId === '2d84a5d4-41a6-4817-8c36-37d6f8cd727a';
+  const isVendorView = effectiveOrgType === 'vendor';
   if (isVendorView) {
     return (
       <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
