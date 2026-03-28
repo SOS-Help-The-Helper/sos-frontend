@@ -19,18 +19,18 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
 
   const SWIPE_THRESHOLD = 100;
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
+  const handleStart = useCallback((clientX: number) => {
+    startX.current = clientX;
     setSwiping(true);
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleMove = useCallback((clientX: number) => {
     if (!swiping) return;
-    const diff = e.touches[0].clientX - startX.current;
+    const diff = clientX - startX.current;
     setOffset(diff);
   }, [swiping]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleEnd = useCallback(() => {
     setSwiping(false);
     if (offset > SWIPE_THRESHOLD) {
       setExiting('right');
@@ -42,6 +42,17 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
       setOffset(0);
     }
   }, [offset, onAccept, onDecline]);
+
+  // Touch events
+  const handleTouchStart = useCallback((e: React.TouchEvent) => handleStart(e.touches[0].clientX), [handleStart]);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => handleMove(e.touches[0].clientX), [handleMove]);
+  const handleTouchEnd = useCallback(() => handleEnd(), [handleEnd]);
+
+  // Mouse events (desktop drag)
+  const handleMouseDown = useCallback((e: React.MouseEvent) => { e.preventDefault(); handleStart(e.clientX); }, [handleStart]);
+  const handleMouseMove = useCallback((e: React.MouseEvent) => handleMove(e.clientX), [handleMove]);
+  const handleMouseUp = useCallback(() => handleEnd(), [handleEnd]);
+  const handleMouseLeave = useCallback(() => { if (swiping) handleEnd(); }, [swiping, handleEnd]);
 
   // Keyboard support
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -77,6 +88,10 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         className="bg-sos-blue-800 rounded-2xl shadow-lg overflow-hidden transition-all"
         style={{
           transform: `translateX(${translateX}px) rotate(${rotation}deg)`,

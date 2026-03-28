@@ -210,6 +210,7 @@ export default function Matching() {
           {/* Vendor Job Swipe */}
           {isVendorView && currentVendorJob ? (
             <SwipeCard
+              key={`vendor-${vendorSwipeIndex}`}
               onAccept={() => { setShowBidForm(currentVendorJob); }}
               onDecline={() => setVendorSwipeIndex(prev => prev + 1)}
               acceptLabel="Bid"
@@ -254,6 +255,7 @@ export default function Matching() {
             </div>
           ) : currentSwipeMatch ? (
             <SwipeCard
+              key={`match-${swipeIndex}`}
               onAccept={handleSwipeAccept}
               onDecline={handleSwipeDecline}
               acceptLabel={effectiveOrgType === 'vendor' ? 'Bid' : 'Accept'}
