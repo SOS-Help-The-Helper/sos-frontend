@@ -27,8 +27,10 @@ export function DashboardShell({ title, subtitle, children, currentView, onViewC
 
       {/* Content */}
       <div className="md:ml-56">
-        <Topbar title={title} subtitle={subtitle} currentView={currentView} onViewChange={onViewChange} />
-        <main className="p-2 md:p-6 pb-24 md:pb-6">
+        <div className="hidden md:block">
+          <Topbar title={title} subtitle={subtitle} currentView={currentView} onViewChange={onViewChange} />
+        </div>
+        <main className="pt-[env(safe-area-inset-top)] p-2 md:p-6 pb-24 md:pb-6">
           {children}
         </main>
       </div>
