@@ -87,7 +87,7 @@ export function BottomTabs() {
       )}
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-sos-gray-300 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-14">
+        <div className="flex items-center justify-around h-16">
           {mainTabs.map(tab => {
             const Icon = tab.icon;
             const active = isActive(tab.path);
@@ -99,8 +99,8 @@ export function BottomTabs() {
                   active ? 'text-sos-red-500' : 'text-sos-gray-500'
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{
+                <Icon className="h-5.5 w-5.5" />
+                <span className="text-[11px] font-medium mt-0.5">{
                   tab.path === '/' ? portalConfig.labels.agent :
                   tab.path === '/map' ? portalConfig.labels.map :
                   tab.path === '/matching' ? portalConfig.labels.matching :

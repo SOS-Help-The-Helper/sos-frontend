@@ -12,9 +12,9 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle, currentView, onViewChange }: TopbarProps) {
   return (
-    <header className="min-h-[44px] md:min-h-[56px] pt-[env(safe-area-inset-top)] border-b border-white/10 bg-sos-blue-800 flex items-center justify-between px-4 md:px-6 pb-2">
+    <header className="min-h-[56px] md:min-h-[56px] pt-[env(safe-area-inset-top)] border-b border-white/10 bg-sos-blue-800 flex items-center justify-between px-4 md:px-6 py-3">
       <div>
-        <h2 className="text-base font-bold text-white leading-none">
+        <h2 className="text-lg font-bold text-white leading-tight">
           {title}
         </h2>
         {subtitle && (

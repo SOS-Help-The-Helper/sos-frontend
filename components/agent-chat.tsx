@@ -200,7 +200,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const agentName = effectiveOrgName;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-12rem)] md:h-[calc(100vh-7.5rem)] bg-[#F7F5F0] rounded-xl border border-sos-gray-300 overflow-hidden">
       {/* Header — hidden when embedded in dashboard shell */}
       {!hideHeader && (
         <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
