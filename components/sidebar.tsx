@@ -16,17 +16,23 @@ import {
   Settings,
   Shield,
   Eye,
+  Briefcase,
+  Wrench,
+  DollarSign,
 } from 'lucide-react';
 
 const allNavItems = [
-  { path: '/', label: 'Agent', icon: MessageSquare, adminOnly: false },
-  { path: '/map', label: 'Map', icon: Map, adminOnly: false },
-  { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false },
-  { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
-  { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
-  { path: '/view', label: 'View As', icon: Eye, adminOnly: true },
-  { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
-  { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
+  { path: '/', label: 'Agent', icon: MessageSquare, adminOnly: false, vendorOnly: false },
+  { path: '/map', label: 'Map', icon: Map, adminOnly: false, vendorOnly: false },
+  { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false, vendorOnly: false },
+  { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false, vendorOnly: false },
+  { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false, vendorOnly: false },
+  { path: '/jobs', label: 'Job Queue', icon: Briefcase, adminOnly: false, vendorOnly: true },
+  { path: '/capabilities', label: 'Capabilities', icon: Wrench, adminOnly: false, vendorOnly: true },
+  { path: '/revenue', label: 'Revenue', icon: DollarSign, adminOnly: false, vendorOnly: true },
+  { path: '/view', label: 'View As', icon: Eye, adminOnly: true, vendorOnly: false },
+  { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true, vendorOnly: false },
+  { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true, vendorOnly: false },
 ];
 
 export function Sidebar() {
@@ -44,8 +50,9 @@ export function Sidebar() {
     '/reporting': 'reporting',
   };
 
+  const isVendor = effectiveOrgType === 'vendor';
   const navItems = allNavItems
-    .filter(item => isAdmin || !item.adminOnly)
+    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin))
     .map(item => {
       const configKey = LABEL_MAP[item.path];
       if (configKey && portalConfig.labels[configKey]) {
