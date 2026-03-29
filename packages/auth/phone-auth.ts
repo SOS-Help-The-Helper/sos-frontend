@@ -24,7 +24,7 @@ export async function verifyOTP(phone: string, token: string): Promise<{ success
   const { data: existing } = await supabase
     .from('persons')
     .select('id')
-    .eq('auth_id', userId)
+    .eq('auth_user_id', userId)
     .single();
 
   if (existing) {
@@ -35,7 +35,7 @@ export async function verifyOTP(phone: string, token: string): Promise<{ success
   const { data: newPerson, error: createError } = await supabase
     .from('persons')
     .insert({
-      auth_id: userId,
+      auth_user_id: userId,
       phone_hash: await hashPhone(phone),
       created_at: new Date().toISOString(),
     })
