@@ -46,13 +46,34 @@ export default function CitizenMatches() {
   };
 
   async function handleAccept(matchId: string) {
-    await supabase.from('matches').update({ status: 'connected', connected_at: new Date().toISOString() }).eq('id', matchId);
+    // Use consent-flow edge function (writes signal_trace, updates trust)
+    await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/consent-flow`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ match_id: matchId, action: 'accept', channel: 'citizen_pwa' }),
+      }
+    );
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status: 'connected', connected_at: new Date().toISOString() } : m));
     setSelected(null);
   }
 
   async function handleDecline(matchId: string) {
-    await supabase.from('matches').update({ status: 'declined' }).eq('id', matchId);
+    await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/match-respond`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ match_id: matchId, action: 'decline', channel: 'citizen_pwa' }),
+      }
+    );
     setMatches(prev => prev.filter(m => m.id !== matchId));
     setSelected(null);
   }

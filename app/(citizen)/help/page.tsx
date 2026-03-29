@@ -48,25 +48,41 @@ export default function HelpIntake() {
     setLoading(true);
     const personId = localStorage.getItem('sos-person-id');
 
-    const { error } = await supabase.from('requests').insert({
-      person_id: personId,
-      category,
-      urgency,
-      latitude: location.lat || null,
-      longitude: location.lng || null,
-      location_name: location.name || null,
-      details_sanitized: details,
-      household_size: household.size,
-      has_children: household.children,
-      has_elderly: household.elderly,
-      has_disabled: household.disabled,
-      has_pets: household.pets,
-      pet_count: household.petCount,
-      status: 'open',
-      source: 'citizen_intake',
-    });
+    // Call intake-write edge function (not direct DB insert)
+    // This ensures: signal_trace written, PII sanitized, person enriched, match triggered
+    const resp = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/intake-write`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          person_id: personId,
+          channel: 'citizen_pwa',
+          agent_id: 'sos-citizen',
+          needs: [{
+            category,
+            urgency,
+            details: details,
+          }],
+          location: {
+            lat: location.lat,
+            lng: location.lng,
+            name: location.name,
+          },
+          household_size: household.size,
+          has_children: household.children,
+          has_elderly: household.elderly,
+          has_disabled: household.disabled,
+          has_pets: household.pets,
+          pet_count: household.petCount,
+        }),
+      }
+    );
 
-    if (!error) {
+    if (resp.ok) {
       setStep('submitted');
     }
     setLoading(false);
