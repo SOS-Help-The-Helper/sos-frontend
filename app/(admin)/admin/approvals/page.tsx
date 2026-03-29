@@ -67,6 +67,12 @@ export default function ApprovalsPage() {
   async function handleLearning(id: string, action: 'active' | 'rejected') {
     setActing(id);
     await supabase.from('system_learnings').update({ status: action }).eq('id', id);
+    // Audit trail
+    await supabase.from('audit_log').insert({
+      action: `learning_${action}`,
+      actor_type: 'admin',
+      details: `Learning ${id} → ${action}`,
+    }).then(() => {});
     setLearnings(prev => prev.filter(l => l.id !== id));
     setActing(null);
   }
@@ -78,6 +84,12 @@ export default function ApprovalsPage() {
     } else {
       await supabase.from('organizations').update({ trust_score: 0.5 }).eq('id', orgId);
     }
+    // Audit trail
+    await supabase.from('audit_log').insert({
+      action: `trust_${action}`,
+      actor_type: 'admin',
+      details: `Org ${orgId} → ${action}`,
+    }).then(() => {});
     setTrustFlags(prev => prev.filter(f => f.id !== orgId));
     setActing(null);
   }
