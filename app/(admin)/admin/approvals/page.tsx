@@ -167,6 +167,7 @@ export default function ApprovalsPage() {
                       onClick={async () => {
                         setActing(org.id);
                         await supabase.from('organizations').update({ status: 'active', trust_score: 0.7 }).eq('id', org.id);
+                        await supabase.from('audit_log').insert({ action: 'org_approved', actor_type: 'admin', details: `Org ${org.name} (${org.id}) approved, trust set to 0.7` }).then(() => {});
                         setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
                         setActing(null);
                       }}
@@ -178,6 +179,7 @@ export default function ApprovalsPage() {
                       onClick={async () => {
                         setActing(org.id);
                         await supabase.from('organizations').update({ status: 'rejected' }).eq('id', org.id);
+                        await supabase.from('audit_log').insert({ action: 'org_rejected', actor_type: 'admin', details: `Org ${org.name} (${org.id}) rejected` }).then(() => {});
                         setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
                         setActing(null);
                       }}
