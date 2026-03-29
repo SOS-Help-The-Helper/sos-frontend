@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
+import { useNotifications } from '@/lib/notification-context';
 import {
   MessageSquare,
   Map,
@@ -37,6 +38,7 @@ export function BottomTabs() {
   const pathname = usePathname();
   const { isAdmin, orgType } = useAuthContext();
   const { effectiveOrgType } = useViewContext();
+  const { unreadCount } = useNotifications();
   const portalConfig = getPortalConfig(effectiveOrgType);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -95,11 +97,18 @@ export function BottomTabs() {
               <Link
                 key={tab.path}
                 href={tab.path}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
                   active ? 'text-sos-red-400' : 'text-white/50'
                 }`}
               >
-                <Icon className="h-5.5 w-5.5" />
+                <div className="relative">
+                  <Icon className="h-5.5 w-5.5" />
+                  {tab.path === '/matching' && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-sos-red-500 text-white text-[8px] font-bold px-1 py-0 rounded-full min-w-[14px] text-center leading-[14px]">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[11px] font-medium mt-0.5">{
                   tab.path === '/' ? portalConfig.labels.agent :
                   tab.path === '/map' ? portalConfig.labels.map :

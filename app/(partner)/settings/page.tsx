@@ -3,19 +3,37 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { getSystemConfig } from '@/lib/org-queries';
+import { useAuthContext } from '@/lib/auth-context';
+import { getNotificationPreferences, saveNotificationPreferences, type NotificationPreferences } from '@/lib/notifications';
 
 export default function SettingsPage() {
+  const { orgId } = useAuthContext();
   const [configs, setConfigs] = useState<any[]>([]);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({ slack: true, email: false, sms: false });
+  const [savingNotif, setSavingNotif] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       const data = await getSystemConfig();
       setConfigs(data);
+      if (orgId) {
+        const prefs = await getNotificationPreferences(orgId);
+        setNotifPrefs(prefs);
+      }
       setLoading(false);
     }
     load();
-  }, []);
+  }, [orgId]);
+
+  async function toggleNotifPref(key: keyof NotificationPreferences) {
+    if (!orgId) return;
+    const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(updated);
+    setSavingNotif(true);
+    await saveNotificationPreferences(orgId, updated);
+    setSavingNotif(false);
+  }
 
   if (loading) {
     return (
@@ -69,6 +87,41 @@ export default function SettingsPage() {
             )}
           </div>
         ))}
+
+        {/* Notification Preferences */}
+        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Notifications</h3>
+          <p className="text-xs text-sos-gray-600 mb-4">Get notified when new matches are found for your organization.</p>
+          <div className="space-y-3">
+            {[
+              { key: 'slack' as const, icon: '💬', label: 'Slack', desc: 'Notifications in your Slack workspace' },
+              { key: 'email' as const, icon: '📧', label: 'Email', desc: 'Notifications to your org email' },
+              { key: 'sms' as const, icon: '📱', label: 'SMS', desc: 'Text message alerts (coordinator phone)' },
+            ].map(channel => (
+              <div key={channel.key} className="flex items-center justify-between p-3 rounded-lg border border-sos-gray-300">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{channel.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-sos-blue-800">{channel.label}</p>
+                    <p className="text-[10px] text-sos-gray-500">{channel.desc}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleNotifPref(channel.key)}
+                  disabled={savingNotif}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    notifPrefs[channel.key] ? 'bg-green-500' : 'bg-sos-gray-300'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    notifPrefs[channel.key] ? 'translate-x-5' : 'translate-x-0.5'
+                  }`} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-sos-gray-400 mt-3">Browser notifications are also shown when the dashboard is open.</p>
+        </div>
 
         {/* Platform Info */}
         <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
