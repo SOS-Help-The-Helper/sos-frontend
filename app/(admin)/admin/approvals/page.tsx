@@ -23,12 +23,13 @@ interface TrustFlag {
   reason: string;
 }
 
-type Tab = 'learnings' | 'trust' | 'skills';
+type Tab = 'learnings' | 'trust' | 'skills' | 'orgs';
 
 export default function ApprovalsPage() {
   const [tab, setTab] = useState<Tab>('learnings');
   const [learnings, setLearnings] = useState<PendingLearning[]>([]);
   const [trustFlags, setTrustFlags] = useState<TrustFlag[]>([]);
+  const [pendingOrgs, setPendingOrgs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
 
@@ -58,6 +59,16 @@ export default function ApprovalsPage() {
         trust_score: o.trust_score,
         reason: o.trust_score < 0.2 ? 'Critical: trust below 20%' : 'Warning: trust below 40%',
       })));
+
+      // Pending org registrations
+      try {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id, name, org_type, capabilities, coverage_radius_km, created_at')
+          .eq('status', 'pending_verification')
+          .order('created_at', { ascending: false });
+        setPendingOrgs(orgData || []);
+      } catch { /* table may not have status column yet */ }
 
       setLoading(false);
     }
@@ -95,6 +106,7 @@ export default function ApprovalsPage() {
   }
 
   const tabs: { id: Tab; label: string; count: number }[] = [
+    { id: 'orgs', label: 'Pending Orgs', count: pendingOrgs.length },
     { id: 'learnings', label: 'System Learnings', count: learnings.length },
     { id: 'trust', label: 'Trust Flags', count: trustFlags.length },
     { id: 'skills', label: 'Skill Alerts', count: 0 },
@@ -121,6 +133,64 @@ export default function ApprovalsPage() {
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-3 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <>
+          {/* Pending Orgs tab */}
+          {tab === 'orgs' && (
+            <div className="space-y-3">
+              {pendingOrgs.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl border border-sos-gray-300">
+                  <span className="text-3xl">✓</span>
+                  <h3 className="text-base font-bold text-sos-blue-800 mt-2">No Pending Applications</h3>
+                  <p className="text-sm text-sos-gray-600">All org registrations have been reviewed.</p>
+                </div>
+              ) : pendingOrgs.map(org => (
+                <div key={org.id} className={`bg-white rounded-xl border border-sos-gray-300 overflow-hidden ${acting === org.id ? 'opacity-50' : ''}`}>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-bold text-sos-blue-800">{org.name}</h4>
+                      <span className="text-[10px] text-sos-gray-400">{new Date(org.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div><span className="text-sos-gray-500">Type</span><p className="font-medium text-sos-blue-800 capitalize">{org.org_type?.replace(/_/g, ' ')}</p></div>
+                      
+                      {org.coverage_radius_km && <div><span className="text-sos-gray-500">Coverage</span><p className="font-medium text-sos-blue-800">{org.coverage_radius_km} km</p></div>}
+                    </div>
+                    {org.capabilities?.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {org.capabilities.map((c: string) => (
+                          <span key={c} className="text-[9px] bg-sos-accent-50 text-sos-accent-700 px-1.5 py-0.5 rounded-full">{c.replace(/_/g, ' ')}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex border-t border-sos-gray-300">
+                    <button
+                      onClick={async () => {
+                        setActing(org.id);
+                        await supabase.from('organizations').update({ status: 'active', trust_score: 0.7 }).eq('id', org.id);
+                        setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
+                        setActing(null);
+                      }}
+                      className="flex-1 py-3 text-center text-sm font-bold text-green-600 hover:bg-green-50 transition-colors border-r border-sos-gray-300"
+                    >
+                      ✓ Approve
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setActing(org.id);
+                        await supabase.from('organizations').update({ status: 'rejected' }).eq('id', org.id);
+                        setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
+                        setActing(null);
+                      }}
+                      className="flex-1 py-3 text-center text-sm font-bold text-sos-red-500 hover:bg-sos-red-50 transition-colors"
+                    >
+                      ✗ Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Learnings tab */}
           {tab === 'learnings' && (
             <div className="space-y-3">
