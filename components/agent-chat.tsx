@@ -234,12 +234,12 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             <div className="mt-2 max-w-md text-base text-sos-gray-600">
               <TextReveal text={viewConfig.welcome} mode="spotlight" maxWidth={448} stagger={60} delay={300} />
             </div>
-            <div className="flex flex-wrap gap-3 mt-6 justify-center">
+            <div className="flex flex-wrap gap-2.5 mt-6 justify-center max-w-sm">
               {viewConfig.suggestions.length > 0 ? viewConfig.suggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   onClick={() => { setInput(suggestion); }}
-                  className="text-sm px-4 py-2 rounded-full border-2 border-sos-accent-200 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+                  className="text-sm px-4 py-2.5 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -251,7 +251,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                 <button
                   key={suggestion}
                   onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                  className="text-sm px-4 py-2 rounded-full border-2 border-sos-blue-800 text-sos-blue-800 font-medium hover:bg-sos-blue-800 hover:text-white transition-colors"
+                  className="text-sm px-4 py-2.5 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -295,7 +295,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="px-4 py-3 border-t border-sos-gray-300 bg-[#F0EDE8]">
+      <form onSubmit={sendMessage} className="px-4 py-3 border-t border-white/10 bg-sos-blue-800">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -304,7 +304,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             onChange={e => setInput(e.target.value)}
             placeholder="Message your SOS agent..."
             disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-sos-gray-300 text-base md:text-sm text-sos-blue-800 placeholder:text-sos-gray-500 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 disabled:opacity-50 transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-base md:text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 disabled:opacity-50 transition-colors"
           />
           <button
             type="submit"

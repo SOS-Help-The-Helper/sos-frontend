@@ -75,7 +75,7 @@ const PORTAL_CONFIGS: Record<string, PortalConfig> = {
 
   citizen: {
     labels: { agent: 'Help', map: 'Near Me', matching: 'My Options', management: 'My SOS', reporting: 'My Impact' },
-    agent: { welcome: 'We\'re here to help. Tell us what you need or what you can offer — we\'ll connect you with the right people.', suggestions: ['I need help', 'I can help', 'What\'s available near me?'] },
+    agent: { welcome: 'Everyone is a helper. Need something? We\'ll match you. Have something to offer? We\'ll connect you. Most people do both.', suggestions: ['🆘 I need help', '🤝 I can help', '🔄 I need AND can give help', 'What\'s near me?'] },
     matchCard: { type: 'citizen', acceptLabel: 'Accept Help', declineLabel: 'See More' },
     managementTabs: ['requests', 'resources'],
     reportingType: 'citizen',
