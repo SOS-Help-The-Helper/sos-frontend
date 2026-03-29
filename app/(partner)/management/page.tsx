@@ -321,10 +321,25 @@ export default function Management() {
                       {item.urgency}
                     </span>
                   )}
-                  {tab === 'resources' && item.capacity_available && (
-                    <span className="text-[10px] text-sos-gray-500">
-                      Capacity: {item.capacity_available}
-                    </span>
+                  {tab === 'resources' && (
+                    <div className="flex items-center gap-2">
+                      {item.capacity_available != null && (
+                        <span className="text-[10px] text-sos-gray-500">
+                          Capacity: {item.capacity_available}
+                        </span>
+                      )}
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                        item.status === 'available' ? 'bg-green-50 text-green-700' :
+                        item.status === 'limited' ? 'bg-yellow-50 text-yellow-700' :
+                        item.status === 'at_capacity' ? 'bg-sos-red-50 text-sos-red-700' :
+                        'bg-sos-gray-200 text-sos-gray-500'
+                      }`}>
+                        {item.status === 'available' ? '🟢 Available' :
+                         item.status === 'limited' ? '🟡 Limited' :
+                         item.status === 'at_capacity' ? '🔴 At Capacity' :
+                         item.status?.replace(/_/g, ' ')}
+                      </span>
+                    </div>
                   )}
                 </div>
                 {item.details_sanitized && (

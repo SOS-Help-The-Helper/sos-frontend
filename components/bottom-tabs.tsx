@@ -28,7 +28,7 @@ const mainTabs = [
 const moreTabs = [
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
   { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
-  { path: '/view', label: 'View As', icon: Eye, adminOnly: false },
+  { path: '/view', label: 'View As', icon: Eye, adminOnly: true },
   { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
