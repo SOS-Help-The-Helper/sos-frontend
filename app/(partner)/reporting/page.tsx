@@ -8,6 +8,9 @@ import { VendorReporting } from '@/components/vendor-reporting';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { LineChart, HorizontalBars, DonutChart } from '@/components/charts';
+import { ImpactCertificate } from '@/components/impact-certificate';
+import { getResponseTimeTrend, getCategoryBreakdown, getCommunityImpact, getPlatformComparison, type ResponseTimeTrend, type CategoryBreakdown, type CommunityImpact, type PlatformComparison } from '@/lib/partner-report-queries';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);
@@ -17,6 +20,11 @@ export default function Reporting() {
   const { isAdmin, orgType } = useAuthContext();
   const { effectiveOrgId, effectiveOrgType } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
+  const [responseTrend, setResponseTrend] = useState<ResponseTimeTrend[]>([]);
+  const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
+  const [communityImpact, setCommunityImpact] = useState<CommunityImpact | null>(null);
+  const [comparison, setComparison] = useState<PlatformComparison | null>(null);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -24,10 +32,54 @@ export default function Reporting() {
       const { data: disData } = await supabase.from('disasters').select('id, name, status');
       setDisasters(disData || []);
       setData(reportData);
+
+      // Load enhanced partner reporting
+      const currentOrg = effectiveOrgId;
+      if (currentOrg) {
+        const [trend, cats, impact, comp] = await Promise.all([
+          getResponseTimeTrend(currentOrg),
+          getCategoryBreakdown(currentOrg),
+          getCommunityImpact(currentOrg),
+          isAdmin ? getPlatformComparison(currentOrg) : Promise.resolve(null),
+        ]);
+        setResponseTrend(trend);
+        setCategoryBreakdown(cats);
+        setCommunityImpact(impact);
+        setComparison(comp);
+      }
+
       setLoading(false);
     }
     load();
   }, [effectiveOrgId, disasterFilter]);
+
+  // CSV export
+  function downloadCSV() {
+    if (!data) return;
+    supabase.from('audit_log').insert({ action: 'partner_report_export', actor_type: 'partner', details: `CSV export: ${new Date().toISOString()}` }).then(() => {});
+    const rows = [
+      ['Partner Impact Report'],
+      ['Generated', new Date().toISOString()],
+      [''],
+      ['SUMMARY'],
+      ['Fulfillment Rate', `${data.fulfillmentRate}%`],
+      ['Avg Response Time', `${communityImpact?.avgResponseHrs || 0}hrs`],
+      ['Families Helped', String(communityImpact?.familiesHelped || 0)],
+      ['Trust Score', String(communityImpact?.trustScore || 0)],
+      [''],
+      ['CATEGORY BREAKDOWN'],
+      ...categoryBreakdown.map(c => [c.category, String(c.count)]),
+      [''],
+      ['RESPONSE TIME TREND'],
+      ...responseTrend.map(t => [t.label, `${t.value}hrs`]),
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `SOS_Partner_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
 
   // Vendor-specific reporting
   const isVendorView = effectiveOrgType === 'vendor';
@@ -310,6 +362,94 @@ export default function Reporting() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Enhanced Partner Reporting */}
+      {communityImpact && (
+        <>
+          {/* Community Impact Hero */}
+          <div className="bg-sos-blue-800 text-white rounded-xl p-5 mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold">Community Impact</h3>
+              <div className="flex gap-2">
+                <button onClick={downloadCSV} className="text-[10px] px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors">📥 Export CSV</button>
+                <button onClick={() => setShowCertificate(true)} className="text-[10px] px-3 py-1 rounded-lg bg-sos-red-500 hover:bg-sos-red-600 font-bold transition-colors">🏆 Impact Certificate</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div><p className="text-2xl font-bold">{communityImpact.familiesHelped}</p><p className="text-[10px] text-white/60">Families Helped</p></div>
+              <div><p className="text-2xl font-bold">{communityImpact.avgResponseHrs}<span className="text-sm">h</span></p><p className="text-[10px] text-white/60">Avg Response</p></div>
+              <div><p className="text-2xl font-bold">{communityImpact.coverageMi}<span className="text-sm">mi</span></p><p className="text-[10px] text-white/60">Coverage</p></div>
+              <div><p className="text-2xl font-bold">{Math.round(communityImpact.trustScore * 100)}<span className="text-sm">%</span></p><p className="text-[10px] text-white/60">Trust Score</p></div>
+            </div>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Response time trend */}
+            <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              <LineChart data={responseTrend} label="Response Time (hours)" color="#89CFF0" height={140} />
+            </div>
+
+            {/* Category breakdown */}
+            <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
+              {categoryBreakdown.length > 0 ? (
+                <DonutChart
+                  data={categoryBreakdown.map((c, i) => ({
+                    label: c.category,
+                    value: c.count,
+                    color: ['#EF4E4B', '#89CFF0', '#22C55E', '#EDB200', '#8B5CF6', '#EC4899', '#06B6D4'][i % 7],
+                  }))}
+                  label="Fulfillments by Category"
+                />
+              ) : (
+                <HorizontalBars data={[]} label="Fulfillments by Category" />
+              )}
+            </div>
+          </div>
+
+          {/* Platform comparison (admin only) */}
+          {comparison && (
+            <div className="bg-white rounded-xl border border-sos-gray-300 p-5 mb-4">
+              <h3 className="text-sm font-bold text-sos-blue-800 mb-4">vs Platform Average</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <p className="text-xs text-sos-gray-500 mb-1">Response Time</p>
+                  <p className={`text-lg font-bold ${comparison.orgAvgResponse <= comparison.platformAvgResponse ? 'text-green-600' : 'text-sos-red-500'}`}>
+                    {comparison.orgAvgResponse}h
+                  </p>
+                  <p className="text-[10px] text-sos-gray-400">Platform: {comparison.platformAvgResponse}h</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-sos-gray-500 mb-1">Fulfillment Rate</p>
+                  <p className={`text-lg font-bold ${comparison.orgFulfillmentRate >= comparison.platformFulfillmentRate ? 'text-green-600' : 'text-sos-red-500'}`}>
+                    {comparison.orgFulfillmentRate}%
+                  </p>
+                  <p className="text-[10px] text-sos-gray-400">Platform: {comparison.platformFulfillmentRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-sos-gray-500 mb-1">Trust Score</p>
+                  <p className={`text-lg font-bold ${comparison.orgTrustScore >= comparison.platformAvgTrust ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {Math.round(comparison.orgTrustScore * 100)}%
+                  </p>
+                  <p className="text-[10px] text-sos-gray-400">Platform: {Math.round(comparison.platformAvgTrust * 100)}%</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Impact Certificate Modal */}
+      {showCertificate && communityImpact && (
+        <ImpactCertificate
+          orgName={data?.orgStats?.[0]?.name || 'Your Organization'}
+          disasterName={disasters.find(d => d.id === disasterFilter)?.name || 'All Operations'}
+          familiesHelped={communityImpact.familiesHelped}
+          avgResponseHrs={communityImpact.avgResponseHrs}
+          fulfillmentRate={communityImpact.fulfillmentRate}
+          onClose={() => setShowCertificate(false)}
+        />
       )}
     </DashboardShell>
   );
