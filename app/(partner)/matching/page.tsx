@@ -17,6 +17,8 @@ import { BidForm } from '@/components/bid-form';
 import { AdminMatchView } from '@/components/admin-match-view';
 import { LayoutGrid } from 'lucide-react';
 import { Layers, Map, List } from 'lucide-react';
+import { getUnreadNotifications, markMatchAsRead, type PartnerNotification } from '@/lib/notifications';
+import { useNotifications } from '@/lib/notification-context';
 
 type MatchMode = 'swipe' | 'map' | 'list' | 'admin';
 
@@ -47,6 +49,8 @@ export default function Matching() {
 
   const { orgId, orgType, loading: authLoading } = useAuthContext();
   const { effectiveOrgId, effectiveOrgType } = useViewContext();
+  const { refreshCount: refreshNotifications } = useNotifications();
+  const [unreadMatchIds, setUnreadMatchIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (authLoading) return;
@@ -74,6 +78,13 @@ export default function Matching() {
         setVendorSwipeIndex(0);
       }
 
+      // Load unread notification match IDs
+      const currentOrg = effectiveOrgId || orgId;
+      if (currentOrg) {
+        const unread = await getUnreadNotifications(currentOrg);
+        setUnreadMatchIds(new Set(unread.map(n => n.match_id)));
+      }
+
       setLoading(false);
     }
     load();
@@ -95,6 +106,17 @@ export default function Matching() {
 
   async function selectMatch(match: Match) {
     setSelectedMatch(match);
+
+    // Mark as read if unread
+    if (unreadMatchIds.has(match.id)) {
+      const currentOrg = effectiveOrgId || orgId;
+      if (currentOrg) {
+        await markMatchAsRead(currentOrg, match.id);
+        setUnreadMatchIds(prev => { const next = new Set(prev); next.delete(match.id); return next; });
+        refreshNotifications();
+      }
+    }
+
     const events = await getMatchEvents(match.id);
     setMatchEvents(events);
     if (match.chain_id) {
@@ -362,7 +384,7 @@ export default function Matching() {
                   className="mt-4 h-4 w-4 rounded border-sos-gray-300 text-sos-red-500 flex-shrink-0"
                 />
                 <div className="flex-1">
-                  <MatchCard match={match} onClick={() => selectMatch(match)} />
+                  <MatchCard match={match} onClick={() => selectMatch(match)} isNew={unreadMatchIds.has(match.id)} />
                 </div>
               </div>
             ))}

@@ -5,6 +5,7 @@ import { Match, getStatusColor, getScoreColor, getChainRoleIcon } from '@/lib/ma
 interface MatchCardProps {
   match: Match;
   onClick?: () => void;
+  isNew?: boolean;
 }
 
 function formatSummary(text: string): string {
@@ -47,7 +48,7 @@ function getLifecycleAction(status: string): { label: string; style: string; sec
   }
 }
 
-export function MatchCard({ match, onClick }: MatchCardProps) {
+export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
   const action = getLifecycleAction(match.status);
   const summary = match.match_summary_masked
     ? formatSummary(match.match_summary_masked)
@@ -70,9 +71,16 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
             </span>
           )}
         </div>
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${getStatusColor(match.status)}`}>
-          {match.status.replace(/_/g, ' ')}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {isNew && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-sos-red-500 text-white animate-pulse">
+              NEW
+            </span>
+          )}
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${getStatusColor(match.status)}`}>
+            {match.status.replace(/_/g, ' ')}
+          </span>
+        </div>
       </div>
 
       {/* Masked Summary — bold Deep Blue */}

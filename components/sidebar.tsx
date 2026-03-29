@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
+import { useNotifications } from '@/lib/notification-context';
 import {
   MessageSquare,
   Map,
@@ -32,6 +33,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { orgName, orgType, isAdmin, isPartner, loading } = useAuthContext();
   const { effectiveOrgType } = useViewContext();
+  const { unreadCount } = useNotifications();
   const portalConfig = getPortalConfig(effectiveOrgType);
 
   const LABEL_MAP: Record<string, keyof typeof portalConfig.labels> = {
@@ -104,6 +106,11 @@ export function Sidebar() {
             >
               <Icon className="h-[18px] w-[18px] flex-shrink-0" />
               {item.label}
+              {item.path === '/matching' && unreadCount > 0 && (
+                <span className="ml-auto bg-sos-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
