@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { MatchSwipeContent } from '@/components/match-swipe-content';
@@ -29,7 +30,15 @@ const STATUS_FILTERS = [
   { value: 'fulfilled', label: 'Fulfilled' },
 ];
 
-export default function Matching() {
+export default function MatchingPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="w-10 h-10 border-3 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <Matching />
+    </Suspense>
+  );
+}
+
+function Matching() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [filter, setFilter] = useState('all');
@@ -50,7 +59,11 @@ export default function Matching() {
   const { orgId, orgType, loading: authLoading } = useAuthContext();
   const { effectiveOrgId, effectiveOrgType } = useViewContext();
   const { refreshCount: refreshNotifications } = useNotifications();
+  const searchParams = useSearchParams();
+  const deepLinkMatchId = searchParams.get('match');
   const [unreadMatchIds, setUnreadMatchIds] = useState<Set<string>>(new Set());
+  const [highlightedMatchId, setHighlightedMatchId] = useState<string | null>(null);
+  const matchRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (authLoading) return;
@@ -89,6 +102,24 @@ export default function Matching() {
     }
     load();
   }, [filter, orgId, effectiveOrgId, authLoading, disasterFilter]);
+
+  // Deep link: auto-select and scroll to match from URL param
+  useEffect(() => {
+    if (!deepLinkMatchId || loading || matches.length === 0) return;
+    const match = matches.find(m => m.id === deepLinkMatchId);
+    if (match) {
+      setMode('list');
+      setHighlightedMatchId(deepLinkMatchId);
+      selectMatch(match);
+      // Scroll to the match card
+      setTimeout(() => {
+        const el = matchRefs.current[deepLinkMatchId];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+      // Remove highlight after 3 seconds
+      setTimeout(() => setHighlightedMatchId(null), 3000);
+    }
+  }, [deepLinkMatchId, loading, matches.length]);
 
   const pendingMatches = matches.filter(m => 
     ['proposed', 'viewed', 'accepted'].includes(m.status)
@@ -383,7 +414,10 @@ export default function Matching() {
                   }}
                   className="mt-4 h-4 w-4 rounded border-sos-gray-300 text-sos-red-500 flex-shrink-0"
                 />
-                <div className="flex-1">
+                <div
+                  className={`flex-1 transition-all duration-500 ${highlightedMatchId === match.id ? 'ring-2 ring-sos-accent-400 rounded-xl' : ''}`}
+                  ref={(el) => { matchRefs.current[match.id] = el; }}
+                >
                   <MatchCard match={match} onClick={() => selectMatch(match)} isNew={unreadMatchIds.has(match.id)} />
                 </div>
               </div>
@@ -425,6 +459,37 @@ export default function Matching() {
                     )}
                   </div>
                 </div>
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      // Share to Slack via agent chat API
+                      const summary = selectedMatch.match_summary_masked || `Match score: ${selectedMatch.match_score}`;
+                      const deepLink = `${window.location.origin}/matching?match=${selectedMatch.id}`;
+                      await fetch('/api/agent/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          message: `Share this match to our Slack channel: ${summary}\n\nDashboard link: ${deepLink}`,
+                        }),
+                      });
+                      alert('Match shared to Slack');
+                    }}
+                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors"
+                  >
+                    💬 Share to Slack
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/matching?match=${selectedMatch.id}`);
+                      alert('Link copied!');
+                    }}
+                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors"
+                  >
+                    🔗 Copy Link
+                  </button>
+                </div>
+
                 {chainMatches.length > 1 && <ChainView matches={chainMatches} />}
                 <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-5">
                   <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Timeline</h3>
