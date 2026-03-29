@@ -65,7 +65,7 @@ export default function ApprovalsPage() {
         const { data: orgData } = await supabase
           .from('organizations')
           .select('id, name, org_type, capabilities, coverage_radius_km, created_at')
-          .eq('status', 'pending_verification')
+          .eq('status', 'pending')
           .order('created_at', { ascending: false });
         setPendingOrgs(orgData || []);
       } catch { /* table may not have status column yet */ }

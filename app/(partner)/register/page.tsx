@@ -224,7 +224,7 @@ export default function RegisterPage() {
       description: description || null,
       min_budget: minBudget ? parseFloat(minBudget) : null,
       max_budget: maxBudget ? parseFloat(maxBudget) : null,
-      status: 'pending_verification',
+      status: 'pending',
     });
 
     if (!error) setStep('submitted');
