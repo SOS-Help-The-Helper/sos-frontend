@@ -106,7 +106,23 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
               </button>
             )}
             {action.tertiary && (
-              <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors">
+              <button
+                onClick={async () => {
+                  await fetch(
+                    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/partner-referral`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+                      },
+                      body: JSON.stringify({ match_id: match.id, action: 'refer', channel: 'partner_dashboard' }),
+                    }
+                  );
+                  if (onAction) onAction(match.id, 'refer');
+                }}
+                className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+              >
                 {action.tertiary}
               </button>
             )}
