@@ -126,7 +126,7 @@ export default function Matching() {
       subtitle={isVendorView ? `${vendorJobs.length} jobs available` : effectiveOrgType === 'citizen' ? "Help available for you" : `${stats?.total || 0} matches${stats?.byStatus?.fulfilled ? ` · ${stats.byStatus.fulfilled} fulfilled` : ''}`}
     >
       {/* Mode Toggle */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-1">
           <button
             onClick={() => setMode('swipe')}

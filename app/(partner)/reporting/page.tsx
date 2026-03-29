@@ -213,6 +213,7 @@ export default function Reporting() {
                 <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Matches</th>
                 <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Fulfilled</th>
                 <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2 pr-4">Rate</th>
+                <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Trust</th>
                 <th className="text-right text-[10px] font-semibold text-sos-gray-600 uppercase tracking-wider py-2">Avg Time</th>
               </tr>
             </thead>
@@ -234,6 +235,11 @@ export default function Reporting() {
                   <td className="py-2.5 pr-4 text-right">
                     <span className={`text-sm font-bold ${org.fulfillmentRate >= 80 ? 'text-green-600' : org.fulfillmentRate >= 50 ? 'text-sos-accent-700' : 'text-sos-red-500'}`}>
                       {org.fulfillmentRate}%
+                    </span>
+                  </td>
+                  <td className="py-2.5 text-right">
+                    <span className={`text-sm font-medium ${org.trustScore >= 0.8 ? 'text-green-600' : org.trustScore >= 0.5 ? 'text-sos-accent-700' : org.trustScore ? 'text-yellow-600' : 'text-sos-gray-400'}`}>
+                      {org.trustScore ? `${(org.trustScore * 100).toFixed(0)}%` : '—'}
                     </span>
                   </td>
                   <td className="py-2.5 text-right">

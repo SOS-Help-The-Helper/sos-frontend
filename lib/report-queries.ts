@@ -9,7 +9,7 @@ export async function getReportingData(orgId?: string | null, disasterId?: strin
     supabase.from('matches').select('id, status, match_score, created_at, connected_at, resolved_at, resolution_type, disaster_id, resource_id'),
     reqQ,
     resQ,
-    supabase.from('organizations').select('id, name, org_type'),
+    supabase.from('organizations').select('id, name, org_type, trust_score'),
     supabase.from('system_learnings').select('id, pattern, confidence, category, status, evidence_count'),
   ]);
 
@@ -76,6 +76,7 @@ export async function getReportingData(orgId?: string | null, disasterId?: strin
       id: org.id,
       name: org.name,
       type: org.org_type,
+      trustScore: org.trust_score || null,
       resources: orgResources.length,
       matches: orgMatches.length,
       fulfilled: orgFulfilled.length,

@@ -24,11 +24,11 @@ function fallbackSummary(match: Match): string {
   return parts.join(' · ') || 'Match details pending';
 }
 
-function getLifecycleAction(status: string): { label: string; style: string; secondary?: string } | null {
+function getLifecycleAction(status: string): { label: string; style: string; secondary?: string; tertiary?: string } | null {
   switch (status) {
     case 'proposed':
     case 'viewed':
-      return { label: 'Accept', style: 'bg-sos-red-500 text-white hover:bg-sos-red-600', secondary: 'Decline' };
+      return { label: 'Accept', style: 'bg-sos-red-500 text-white hover:bg-sos-red-600', secondary: 'Decline', tertiary: 'Refer' };
     case 'accepted':
     case 'citizen_consented':
     case 'partner_consented':
@@ -103,6 +103,11 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
             {action.secondary && (
               <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
                 {action.secondary}
+              </button>
+            )}
+            {action.tertiary && (
+              <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors">
+                {action.tertiary}
               </button>
             )}
           </div>
