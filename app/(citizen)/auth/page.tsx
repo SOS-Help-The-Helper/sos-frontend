@@ -14,11 +14,20 @@ export default function CitizenAuth() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  function formatPhoneForAPI(input: string): string {
+    const digits = input.replace(/\D/g, '');
+    if (digits.startsWith('1') && digits.length === 11) return '+' + digits;
+    if (digits.length === 10) return '+1' + digits;
+    if (input.startsWith('+')) return input;
+    return '+1' + digits;
+  }
+
   async function handleSendOTP(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const result = await sendOTP(phone);
+    const formattedPhone = formatPhoneForAPI(phone);
+    const result = await sendOTP(formattedPhone);
     setLoading(false);
     if (result.success) {
       setStep('otp');
@@ -32,7 +41,7 @@ export default function CitizenAuth() {
     setError('');
     setLoading(true);
     setStep('verifying');
-    const result = await verifyOTP(phone, otp);
+    const result = await verifyOTP(formatPhoneForAPI(phone), otp);
     setLoading(false);
     if (result.success) {
       // Store person ID in localStorage for citizen context
@@ -60,7 +69,7 @@ export default function CitizenAuth() {
               type="tel"
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              placeholder="(555) 000-0000"
               className="w-full mt-1 px-4 py-3 rounded-xl border-2 border-sos-gray-300 text-lg text-sos-blue-800 text-center focus:outline-none focus:border-sos-accent-400"
               autoFocus
             />
