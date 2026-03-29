@@ -140,13 +140,17 @@ export default function MapPage() {
           markersRef.current.push(marker);
         });
 
-        // Resource pins
+        // Resource pins — color-coded by capacity status
         resources.forEach(res => {
           if (!res.latitude || !res.longitude) return;
+          const pinColor = res.status === 'available' ? '#22C55E' :
+                           res.status === 'limited' ? '#EDB200' :
+                           res.status === 'at_capacity' ? '#EF4E4B' :
+                           res.status === 'paused' ? '#888888' : '#89CFF0';
           const el = document.createElement('div');
           el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
           const dot = document.createElement('div');
-          dot.style.cssText = 'width:12px;height:12px;border-radius:50%;background:#89CFF0;border:2px solid rgba(137,207,240,0.5);box-shadow:0 0 12px rgba(137,207,240,0.5);';
+          dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${pinColor};border:2px solid ${pinColor}80;box-shadow:0 0 12px ${pinColor}50;`;
           el.appendChild(dot);
           const labelText = res.category || 'Resource';
           const lbl = document.createElement('div');

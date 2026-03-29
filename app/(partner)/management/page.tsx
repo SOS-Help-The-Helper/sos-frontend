@@ -8,9 +8,10 @@ import { DetailPopup } from '@/components/detail-popup';
 import { BidReview } from '@/components/bid-review';
 import { VendorManagement } from '@/components/vendor-management';
 import { supabase } from '@/lib/supabase-client';
-import { Pause, Play, X, Edit3 } from 'lucide-react';
+import { Pause, Play, X, Edit3, BarChart3 } from 'lucide-react';
+import { CapacityEditor } from '@/components/capacity-editor';
 
-type Tab = 'organizations' | 'requests' | 'resources' | 'vendor_jobs';
+type Tab = 'organizations' | 'requests' | 'resources' | 'capacity' | 'vendor_jobs';
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-50 text-green-700',
@@ -39,6 +40,7 @@ export default function Management() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [editingCapacity, setEditingCapacity] = useState<any>(null);
   const [reviewJobId, setReviewJobId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function Management() {
 
       let offQuery = supabase
         .from('resources')
-        .select('id, category, status, capacity_available, details_sanitized, created_at')
+        .select('id, category, status, capacity_available, capacity_total, details_sanitized, created_at, org_id')
         .order('created_at', { ascending: false });
 
       if (orgId && !isAdmin) {
@@ -150,6 +152,16 @@ export default function Management() {
           }`}
         >
           Resources ({resources.length})
+        </button>
+        <button
+          onClick={() => { setTab('capacity'); setFilter('all'); }}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            tab === 'capacity'
+              ? 'bg-white text-sos-blue-800 shadow-sm'
+              : 'text-sos-gray-600 hover:text-sos-blue-800'
+          }`}
+        >
+          <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Capacity</span>
         </button>
         <button
           onClick={() => { setTab('vendor_jobs'); setFilter('all'); }}
@@ -341,6 +353,14 @@ export default function Management() {
                       </span>
                     </div>
                   )}
+                  {tab === 'resources' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingCapacity(item); }}
+                      className="text-[10px] text-sos-accent-700 hover:text-sos-accent-900 font-medium mt-1"
+                    >
+                      ✏️ Edit Capacity
+                    </button>
+                  )}
                 </div>
                 {item.details_sanitized && (
                   <p className="text-xs text-sos-gray-600 mt-0.5 truncate">{item.details_sanitized}</p>
@@ -395,9 +415,89 @@ export default function Management() {
       </div>
       </>
       )}
+      {/* Capacity Tab */}
+      {tab === 'capacity' && (
+        <div className="space-y-4">
+          {/* Summary stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-xl font-bold text-green-700">{resources.filter(r => r.status === 'available').length}</p>
+              <p className="text-[10px] text-green-600">Available</p>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+              <p className="text-xl font-bold text-yellow-700">{resources.filter(r => r.status === 'limited').length}</p>
+              <p className="text-[10px] text-yellow-600">Limited</p>
+            </div>
+            <div className="bg-sos-red-50 border border-sos-red-100 rounded-xl p-4 text-center">
+              <p className="text-xl font-bold text-sos-red-700">{resources.filter(r => r.status === 'at_capacity').length}</p>
+              <p className="text-[10px] text-sos-red-600">At Capacity</p>
+            </div>
+            <div className="bg-sos-gray-200 border border-sos-gray-300 rounded-xl p-4 text-center">
+              <p className="text-xl font-bold text-sos-gray-600">{resources.filter(r => r.status === 'paused').length}</p>
+              <p className="text-[10px] text-sos-gray-500">Paused</p>
+            </div>
+          </div>
+
+          {/* Resource capacity bars */}
+          <div className="space-y-2">
+            {resources.map(resource => {
+              const total = resource.capacity_total || 0;
+              const avail = resource.capacity_available || 0;
+              const pct = total > 0 ? Math.round((avail / total) * 100) : 0;
+              const barColor = pct > 50 ? 'bg-green-500' : pct > 20 ? 'bg-yellow-500' : 'bg-sos-red-500';
+              const statusBadge = resource.status === 'available' ? '🟢' : resource.status === 'limited' ? '🟡' : resource.status === 'at_capacity' ? '🔴' : '⏸️';
+
+              return (
+                <div key={resource.id} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span>{statusBadge}</span>
+                      <span className="text-sm font-bold text-sos-blue-800 capitalize">{resource.category?.replace(/_/g, ' ')}</span>
+                    </div>
+                    <button
+                      onClick={() => setEditingCapacity(resource)}
+                      className="text-xs text-sos-accent-700 hover:text-sos-accent-900 font-medium"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  {resource.details_sanitized && (
+                    <p className="text-xs text-sos-gray-600 mb-2">{resource.details_sanitized}</p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-3 bg-sos-gray-200 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: total > 0 ? `${100 - pct}%` : '0%' }} />
+                    </div>
+                    <span className="text-xs font-bold text-sos-blue-800 w-20 text-right">
+                      {total > 0 ? `${avail}/${total}` : 'Not set'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            {resources.length === 0 && (
+              <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
+                <p className="text-sm text-sos-gray-600">No resources to manage.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Bid Review Modal */}
       {reviewJobId && (
         <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} />
+      )}
+
+      {/* Capacity Editor Modal */}
+      {editingCapacity && (
+        <CapacityEditor
+          resource={editingCapacity}
+          onClose={() => setEditingCapacity(null)}
+          onSaved={(updated) => {
+            setResources(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
+          }}
+        />
       )}
 
       {/* Detail Popup */}
