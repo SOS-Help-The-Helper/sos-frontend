@@ -119,7 +119,7 @@ export function MatchCard({ match, onClick }: MatchCardProps) {
                       body: JSON.stringify({ match_id: match.id, action: 'refer', channel: 'partner_dashboard' }),
                     }
                   );
-                  if (onAction) onAction(match.id, 'refer');
+                  // Refresh handled by parent re-fetch
                 }}
                 className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
               >
