@@ -2,9 +2,12 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { getAlerts, getSOSScore, getCommunityPreview, getExternalResources, type Alert, type SOSScore, type CommunityMessage, type ExternalResource } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { PWAInstallPrompt } from '@/components/pwa-install';
+import { DEMO_ALERTS, DEMO_SCORE, DEMO_COMMUNITY, DEMO_PARTNERS, DEMO_EXTERNAL_RESOURCES } from '@/lib/demo-data';
 
 // --- Constants ---
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -16,8 +19,18 @@ const STATUS_MAP: Record<string, { emoji: string; label: string; color: string }
 
 type MapFilter = 'all' | 'partners' | 'community';
 
-export default function CitizenHome() {
+export default function CitizenHomePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-10 h-10 border-3 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <CitizenHome />
+    </Suspense>
+  );
+}
+
+function CitizenHome() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isAdminPreview = searchParams.get('admin') === 'true';
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -56,6 +69,19 @@ export default function CitizenHome() {
   // Load all data once GPS ready
   useEffect(() => {
     if (!gpsReady) return;
+
+    // Admin preview: use seeded demo data
+    if (isAdminPreview) {
+      setAlerts(DEMO_ALERTS);
+      setScore(DEMO_SCORE);
+      setCommunity(DEMO_COMMUNITY);
+      setExtResources(DEMO_EXTERNAL_RESOURCES);
+      setPartners(DEMO_PARTNERS);
+      setLocationName('Asheville, NC');
+      setLoading(false);
+      return;
+    }
+
     async function loadAll() {
       const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
@@ -75,7 +101,7 @@ export default function CitizenHome() {
       setLoading(false);
     }
     loadAll();
-  }, [gpsReady, lat, lng]);
+  }, [gpsReady, lat, lng, isAdminPreview]);
 
   // Initialize map
   useEffect(() => {
@@ -210,6 +236,13 @@ export default function CitizenHome() {
 
   return (
     <div className="min-h-screen bg-[#F7F5F0] flex flex-col max-w-lg mx-auto md:max-w-2xl">
+      {/* Admin preview banner */}
+      {isAdminPreview && (
+        <div className="bg-yellow-500 text-yellow-900 text-center py-1.5 text-[10px] font-bold">
+          👁️ ADMIN PREVIEW — Demo data · <button onClick={() => router.push('/admin/config')} className="underline">Exit Preview</button>
+        </div>
+      )}
+
       {/* HEADER — dark navy */}
       <header className="bg-sos-blue-800 text-white px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center justify-between">
         <div className="flex items-center gap-2">
