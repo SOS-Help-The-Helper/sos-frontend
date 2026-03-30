@@ -17,6 +17,8 @@ export interface Match {
   consent_offer_at: string | null;
   connected_at: string | null;
   resolved_at: string | null;
+  fulfillment_chain: Array<{ role: string; name: string; org?: string }> | null;
+  price_tier: string | null;
   resolution_type: string | null;
 }
 

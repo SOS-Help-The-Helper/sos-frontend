@@ -97,6 +97,38 @@ export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
         </p>
       )}
 
+      {/* Fulfillment chain — multi-contributor display */}
+      {match.fulfillment_chain && match.fulfillment_chain.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {match.fulfillment_chain.map((contributor, i) => (
+            <span key={i} className="text-[10px] bg-sos-accent-50 text-sos-accent-800 px-2 py-1 rounded-full font-medium inline-flex items-center gap-1">
+              <span className="text-sos-gray-500">{contributor.role}:</span> {contributor.name}{contributor.org ? ` · ${contributor.org}` : ''}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Price tier badge */}
+      {match.price_tier && (
+        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full mb-3 inline-block ${
+          match.price_tier === 'free' ? 'bg-green-100 text-green-700' :
+          match.price_tier === 'donated' ? 'bg-green-50 text-green-600' :
+          match.price_tier === 'subsidized' ? 'bg-sos-accent-50 text-sos-accent-700' :
+          match.price_tier === 'discounted' ? 'bg-yellow-50 text-yellow-700' :
+          match.price_tier === 'market' ? 'bg-sos-gray-200 text-sos-gray-600' :
+          match.price_tier === 'insured' ? 'bg-sos-blue-50 text-sos-blue-800' :
+          'bg-sos-gray-200 text-sos-gray-500'
+        }`}>
+          {match.price_tier === 'free' ? '🆓 Free' :
+           match.price_tier === 'donated' ? '🎁 Donated' :
+           match.price_tier === 'subsidized' ? '💚 Subsidized' :
+           match.price_tier === 'discounted' ? '💲 Discounted' :
+           match.price_tier === 'market' ? '💰 Market Rate' :
+           match.price_tier === 'insured' ? '🛡️ Insured' :
+           match.price_tier}
+        </span>
+      )}
+
       {/* Footer: Time + Lifecycle Actions */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-sos-gray-500">
