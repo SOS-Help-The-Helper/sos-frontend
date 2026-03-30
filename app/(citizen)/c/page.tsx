@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAlerts, getSOSScore, getCommunityPreview, getExternalResources, type Alert, type SOSScore, type CommunityMessage, type ExternalResource } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
+import { PWAInstallPrompt } from '@/components/pwa-install';
 
 // --- Constants ---
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -353,6 +354,9 @@ export default function CitizenHome() {
           </button>
         </form>
       </div>
+
+      {/* PWA install prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }

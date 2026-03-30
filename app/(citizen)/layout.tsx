@@ -36,6 +36,19 @@ export default function CitizenLayout({ children }: { children: React.ReactNode 
         }}
       />
       {children}
+      {/* PWA install prompt — loaded client-side */}
+      <div id="pwa-install" />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            // Apple splash screen meta tags
+            var meta = document.createElement('meta');
+            meta.name = 'apple-mobile-web-app-capable';
+            meta.content = 'yes';
+            document.head.appendChild(meta);
+          `,
+        }}
+      />
     </div>
   );
 }
