@@ -306,17 +306,22 @@ function CitizenHome() {
       {/* CONTENT */}
       <div className="flex-1 px-4 py-3 space-y-3">
 
-        {/* ACTION BUTTONS — above fold, full width, prominent */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* ACTION BUTTONS — above fold, 3 columns */}
+        <div className="grid grid-cols-3 gap-2">
           <button onClick={() => router.push('/help')}
-            className="bg-sos-red-500 text-white rounded-xl py-4 text-center font-bold text-sm shadow-sm hover:bg-sos-red-600 active:scale-[0.98] transition-all">
+            className="bg-sos-red-500 text-white rounded-xl py-3.5 text-center font-bold text-xs shadow-sm hover:bg-sos-red-600 active:scale-[0.98] transition-all">
             <span className="text-lg block mb-0.5">🔴</span>
             I Need Help
           </button>
           <button onClick={() => router.push('/offer')}
-            className="bg-green-600 text-white rounded-xl py-4 text-center font-bold text-sm shadow-sm hover:bg-green-700 active:scale-[0.98] transition-all">
+            className="bg-green-600 text-white rounded-xl py-3.5 text-center font-bold text-xs shadow-sm hover:bg-green-700 active:scale-[0.98] transition-all">
             <span className="text-lg block mb-0.5">🤝</span>
             I Can Help
+          </button>
+          <button onClick={() => router.push('/report')}
+            className="bg-sos-blue-800 text-white rounded-xl py-3.5 text-center font-bold text-xs shadow-sm hover:bg-sos-blue-700 active:scale-[0.98] transition-all">
+            <span className="text-lg block mb-0.5">📢</span>
+            Report
           </button>
         </div>
 
