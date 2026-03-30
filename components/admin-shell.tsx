@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, CheckCircle, Radio, Settings, Eye, Cpu } from 'lucide-react';
+import { Activity, CheckCircle, Radio, Settings, Eye, MonitorPlay } from 'lucide-react';
 
 const NAV = [
   { path: '/admin/health', label: 'Health', icon: Activity },
   { path: '/admin/approvals', label: 'Approvals', icon: CheckCircle },
   { path: '/admin/intelligence', label: 'Intelligence', icon: Radio },
   { path: '/admin/config', label: 'Config', icon: Settings },
+  { path: '/admin/preview', label: 'Preview', icon: MonitorPlay },
   { path: '/view', label: 'View As', icon: Eye },
 ];
 
