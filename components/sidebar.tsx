@@ -19,6 +19,7 @@ import {
   Briefcase,
   Wrench,
   DollarSign,
+  Truck,
 } from 'lucide-react';
 
 const allNavItems = [
@@ -27,6 +28,7 @@ const allNavItems = [
   { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false, vendorOnly: false },
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false, vendorOnly: false },
   { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false, vendorOnly: false },
+  { path: '/runs', label: 'Delivery Runs', icon: Truck, adminOnly: false, vendorOnly: false, logisticsOnly: true },
   { path: '/jobs', label: 'Job Queue', icon: Briefcase, adminOnly: false, vendorOnly: true },
   { path: '/capabilities', label: 'Capabilities', icon: Wrench, adminOnly: false, vendorOnly: true },
   { path: '/revenue', label: 'Revenue', icon: DollarSign, adminOnly: false, vendorOnly: true },
@@ -51,8 +53,9 @@ export function Sidebar() {
   };
 
   const isVendor = effectiveOrgType === 'vendor';
+  const isLogistics = effectiveOrgType === 'transport_housing';
   const navItems = allNavItems
-    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin))
+    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin) && (!(item as any).logisticsOnly || isLogistics || isAdmin))
     .map(item => {
       const configKey = LABEL_MAP[item.path];
       if (configKey && portalConfig.labels[configKey]) {

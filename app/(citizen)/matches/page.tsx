@@ -36,6 +36,7 @@ export default function CitizenMatches() {
   const [matches, setMatches] = useState<CitizenMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<CitizenMatch | null>(null);
+  const [deliveryTracking, setDeliveryTracking] = useState<Record<string, { status: string; driver_name?: string; eta?: string }>>({});
 
   useEffect(() => {
     const personId = localStorage.getItem('sos-person-id');
@@ -47,7 +48,26 @@ export default function CitizenMatches() {
         .select('id, status, match_score, match_summary_masked, match_reasoning, created_at, connected_at, price_tier, fulfillment_chain')
         .eq('person_id', personId)
         .order('created_at', { ascending: false });
-      setMatches(data || []);
+
+      const matchList = data || [];
+      setMatches(matchList);
+
+      // Query delivery assignments for active matches
+      const activeMatchIds = matchList.filter(m => ['connected', 'in_progress'].includes(m.status)).map(m => m.id);
+      if (activeMatchIds.length > 0) {
+        const { data: deliveries } = await supabase
+          .from('delivery_assignments')
+          .select('id, run_id, match_id, status, driver_name, eta')
+          .in('match_id', activeMatchIds)
+          .not('status', 'eq', 'docs_uploaded');
+
+        const trackingMap: typeof deliveryTracking = {};
+        (deliveries || []).forEach(d => {
+          trackingMap[d.match_id] = { status: d.status, driver_name: d.driver_name, eta: d.eta };
+        });
+        setDeliveryTracking(trackingMap);
+      }
+
       setLoading(false);
     }
     load();
@@ -151,6 +171,27 @@ export default function CitizenMatches() {
                 </div>
                 <span className="text-[10px] font-bold text-sos-blue-800">{match.match_score}%</span>
               </div>
+              {/* Delivery tracking */}
+              {deliveryTracking[match.id] && (
+                <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-sos-accent-50 border border-sos-accent-200">
+                  <span className="text-sm">
+                    {deliveryTracking[match.id].status === 'assigned' ? '📋' :
+                     deliveryTracking[match.id].status === 'picked_up' ? '📦' :
+                     deliveryTracking[match.id].status === 'en_route' ? '🚗' :
+                     deliveryTracking[match.id].status === 'arrived' ? '📍' :
+                     deliveryTracking[match.id].status === 'delivered' ? '✅' : '🚐'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-sos-blue-800 capitalize">
+                      {deliveryTracking[match.id].status.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[9px] text-sos-gray-500">
+                      {deliveryTracking[match.id].driver_name ? `Driver: ${deliveryTracking[match.id].driver_name}` : 'Driver assigned'}
+                      {deliveryTracking[match.id].eta ? ` · ETA ${deliveryTracking[match.id].eta}` : ''}
+                    </p>
+                  </div>
+                </div>
+              )}
             </button>
           ))}
         </div>
