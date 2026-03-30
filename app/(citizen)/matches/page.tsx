@@ -14,7 +14,22 @@ interface CitizenMatch {
   connected_at: string | null;
   org_name?: string;
   category?: string;
+  price_tier?: string;
+  fulfillment_chain?: Array<{ role: string; name: string; org?: string }>;
 }
+
+const PRICE_TIER_ORDER: Record<string, number> = {
+  free: 0, donated: 1, subsidized: 2, discounted: 3, market: 4, insured: 5,
+};
+
+const PRICE_TIER_BADGE: Record<string, { label: string; color: string }> = {
+  free: { label: '🆓 Free', color: 'bg-green-100 text-green-700' },
+  donated: { label: '🎁 Donated', color: 'bg-green-50 text-green-600' },
+  subsidized: { label: '💚 Subsidized', color: 'bg-sos-accent-50 text-sos-accent-700' },
+  discounted: { label: '💲 Discounted', color: 'bg-yellow-50 text-yellow-700' },
+  market: { label: '💰 Market', color: 'bg-sos-gray-200 text-sos-gray-600' },
+  insured: { label: '🛡️ Insured', color: 'bg-sos-blue-50 text-sos-blue-800' },
+};
 
 export default function CitizenMatches() {
   const router = useRouter();
@@ -29,7 +44,7 @@ export default function CitizenMatches() {
     async function load() {
       const { data } = await supabase
         .from('matches')
-        .select('id, status, match_score, match_summary_masked, match_reasoning, created_at, connected_at')
+        .select('id, status, match_score, match_summary_masked, match_reasoning, created_at, connected_at, price_tier, fulfillment_chain')
         .eq('person_id', personId)
         .order('created_at', { ascending: false });
       setMatches(data || []);
@@ -96,7 +111,13 @@ export default function CitizenMatches() {
         </div>
       ) : (
         <div className="space-y-3">
-          {matches.map(match => (
+          {[...matches].sort((a, b) => {
+            // Sort by price tier: free first, then by score
+            const tierA = PRICE_TIER_ORDER[a.price_tier || 'market'] ?? 5;
+            const tierB = PRICE_TIER_ORDER[b.price_tier || 'market'] ?? 5;
+            if (tierA !== tierB) return tierA - tierB;
+            return (b.match_score || 0) - (a.match_score || 0);
+          }).map(match => (
             <button
               key={match.id}
               onClick={() => setSelected(match)}
@@ -111,6 +132,19 @@ export default function CitizenMatches() {
                 </span>
               </div>
               <p className="text-sm text-sos-blue-800 leading-snug">{match.match_summary_masked || 'Match details'}</p>
+              {/* Price tier + fulfillment chain */}
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                {match.price_tier && PRICE_TIER_BADGE[match.price_tier] && (
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${PRICE_TIER_BADGE[match.price_tier].color}`}>
+                    {PRICE_TIER_BADGE[match.price_tier].label}
+                  </span>
+                )}
+                {match.fulfillment_chain?.map((c, i) => (
+                  <span key={i} className="text-[9px] bg-sos-gray-200 text-sos-gray-600 px-1.5 py-0.5 rounded-full">
+                    {c.role}: {c.name}
+                  </span>
+                ))}
+              </div>
               <div className="flex items-center gap-2 mt-2">
                 <div className="h-1.5 flex-1 bg-sos-gray-200 rounded-full overflow-hidden">
                   <div className="h-full bg-sos-accent-500 rounded-full" style={{ width: `${match.match_score}%` }} />
