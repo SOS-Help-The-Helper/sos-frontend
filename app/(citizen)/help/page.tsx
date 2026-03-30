@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 type Step = 'triage' | 'domain' | 'refine' | 'who' | 'where' | 'when' | 'submitting' | 'done';
 
 // 6 need domains — tap cards
+// Ordered by disaster journey: immediate safety → shelter → sustenance → recovery
 const DOMAINS = [
+  { id: 'safety', icon: '🆘', label: 'Safety' },
   { id: 'housing', icon: '🏠', label: 'Housing' },
   { id: 'food', icon: '🍽️', label: 'Food' },
   { id: 'health', icon: '💊', label: 'Health' },
-  { id: 'transport', icon: '🚗', label: 'Transport' },
   { id: 'utilities', icon: '⚡', label: 'Utilities' },
   { id: 'supplies', icon: '📦', label: 'Supplies' },
 ];
@@ -18,6 +19,12 @@ const DOMAINS = [
 // Taxonomy refinements per domain — agent would normally handle this conversationally
 // but we show a quick-tap second level for speed
 const TAXONOMY: Record<string, Array<{ code: string; label: string; flat: string }>> = {
+  safety: [
+    { code: 'SAFETY.RESCUE', label: 'Need rescue — trapped or stranded', flat: 'safety' },
+    { code: 'SAFETY.EVACUATION', label: 'Need to evacuate', flat: 'safety' },
+    { code: 'SAFETY.MISSING', label: 'Someone is missing', flat: 'safety' },
+    { code: 'SAFETY.THREAT', label: 'Immediate safety threat', flat: 'safety' },
+  ],
   housing: [
     { code: 'HOUSING.EMERGENCY_SHELTER', label: 'Emergency shelter tonight', flat: 'shelter' },
     { code: 'HOUSING.TEMPORARY', label: 'Temporary housing (days/weeks)', flat: 'shelter' },
@@ -78,9 +85,11 @@ export default function HelpIntake() {
   const [step, setStep] = useState<Step>('triage');
   const [isEmergency, setIsEmergency] = useState<boolean | null>(null);
 
-  // Domain + taxonomy
-  const [domain, setDomain] = useState('');
+  // Domain + taxonomy (multi-select)
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [domain, setDomain] = useState(''); // current domain being refined
   const [taxonomyCode, setTaxonomyCode] = useState('');
+  const [taxonomyCodes, setTaxonomyCodes] = useState<Array<{ code: string; flat: string }>>([]);
   const [flatCategory, setFlatCategory] = useState('');
   const [freeText, setFreeText] = useState('');
 
@@ -132,26 +141,46 @@ export default function HelpIntake() {
     const personId = localStorage.getItem('sos-person-id');
     const urgencyMap: Record<string, string> = { now: 'critical', today: 'urgent', week: 'can_wait' };
 
+    const basePayload = {
+      person_id: personId,
+      urgency: urgencyMap[when] || 'urgent',
+      latitude: lat || null,
+      longitude: lng || null,
+      location_name: locationName || null,
+      details_sanitized: freeText || null,
+      household_size: who === 'group' ? count : 1,
+      source: 'citizen_intake',
+      is_emergency: isEmergency,
+      on_behalf: who === 'someone',
+      on_behalf_name: who === 'someone' ? onBehalfName : null,
+    };
+
     try {
-      await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          person_id: personId,
-          category: flatCategory || domain, // backward-compat flat category
-          taxonomy_code: taxonomyCode || null, // structured taxonomy
-          urgency: urgencyMap[when] || 'urgent',
-          latitude: lat || null,
-          longitude: lng || null,
-          location_name: locationName || null,
-          details_sanitized: freeText || null,
-          household_size: who === 'group' ? count : 1,
-          source: 'citizen_intake',
-          is_emergency: isEmergency,
-          on_behalf: who === 'someone',
-          on_behalf_name: who === 'someone' ? onBehalfName : null,
-        }),
-      });
+      if (taxonomyCodes.length > 1) {
+        // Multi-select: one request per domain
+        await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...basePayload,
+            multi_requests: taxonomyCodes.map(tc => ({
+              category: tc.flat,
+              taxonomy_code: tc.code,
+            })),
+          }),
+        });
+      } else {
+        // Single domain
+        await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...basePayload,
+            category: flatCategory || domain,
+            taxonomy_code: taxonomyCode || null,
+          }),
+        });
+      }
       setStep('done');
     } catch { setStep('done'); }
   }
@@ -204,21 +233,52 @@ export default function HelpIntake() {
           </div>
         )}
 
-        {/* DOMAIN — 6 quick-tap cards + free text option */}
+        {/* DOMAIN — 6 multi-select cards + free text, ordered by disaster journey */}
         {step === 'domain' && (
           <div>
-            <h2 className="text-base font-bold text-sos-blue-800 mb-4">What do you need help with?</h2>
-            <div className="grid grid-cols-3 gap-2.5 mb-5">
-              {DOMAINS.map(d => (
-                <button key={d.id} onClick={() => { setDomain(d.id); setStep('refine'); }}
-                  className={`flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 transition-all active:scale-[0.96] ${
-                    domain === d.id ? 'border-sos-red-400 bg-sos-red-50' : 'border-sos-gray-300 bg-white'
-                  }`}>
-                  <span className="text-3xl">{d.icon}</span>
-                  <span className="text-xs font-bold text-sos-blue-800">{d.label}</span>
-                </button>
-              ))}
+            <h2 className="text-base font-bold text-sos-blue-800 mb-1">What do you need help with?</h2>
+            <p className="text-xs text-sos-gray-600 mb-4">Tap all that apply</p>
+            <div className="grid grid-cols-3 gap-2.5 mb-3">
+              {DOMAINS.map(d => {
+                const isSelected = selectedDomains.includes(d.id);
+                return (
+                  <button key={d.id} onClick={() => {
+                    setSelectedDomains(prev => prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]);
+                  }}
+                    className={`relative flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 transition-all active:scale-[0.96] ${
+                      isSelected ? 'border-sos-red-400 bg-sos-red-50' : 'border-sos-gray-300 bg-white'
+                    }`}>
+                    {isSelected && <span className="absolute top-1.5 right-1.5 text-sos-red-500 text-xs">✓</span>}
+                    <span className="text-3xl">{d.icon}</span>
+                    <span className="text-xs font-bold text-sos-blue-800">{d.label}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Selection counter + continue */}
+            {selectedDomains.length > 0 && (
+              <button onClick={() => {
+                if (selectedDomains.length === 1) {
+                  setDomain(selectedDomains[0]);
+                  setStep('refine');
+                } else {
+                  // Multi-select: skip refine, set general taxonomy for each
+                  const codes = selectedDomains.map(d => ({
+                    code: `${d.toUpperCase()}.GENERAL`,
+                    flat: d === 'health' ? 'medical' : d === 'transport' ? 'transportation' : d,
+                  }));
+                  setTaxonomyCodes(codes);
+                  setDomain(selectedDomains[0]);
+                  setFlatCategory(codes[0].flat);
+                  setTaxonomyCode(codes[0].code);
+                  setStep('who');
+                }
+              }}
+                className="w-full py-3.5 rounded-xl bg-sos-red-500 text-white font-bold transition-colors mb-4">
+                Continue · {selectedDomains.length} selected
+              </button>
+            )}
 
             {/* Free text alternative */}
             <div className="bg-white rounded-xl border border-sos-gray-300 p-4">
@@ -229,18 +289,18 @@ export default function HelpIntake() {
                   className="flex-1 px-3 py-2.5 rounded-lg border border-sos-gray-300 text-sm text-sos-blue-800 focus:outline-none focus:border-sos-accent-400" />
                 <button onClick={() => {
                   if (!freeText.trim()) return;
-                  // Agent will classify from natural language — for now set domain from keywords
                   const text = freeText.toLowerCase();
-                  const detected = text.includes('shelter') || text.includes('hous') || text.includes('roof') ? 'housing' :
+                  const detected = text.includes('trapped') || text.includes('rescue') || text.includes('danger') ? 'safety' :
+                    text.includes('shelter') || text.includes('hous') || text.includes('roof') ? 'housing' :
                     text.includes('food') || text.includes('hungry') || text.includes('water') || text.includes('meal') ? 'food' :
                     text.includes('medic') || text.includes('hurt') || text.includes('prescri') || text.includes('doctor') ? 'health' :
-                    text.includes('ride') || text.includes('car') || text.includes('evacuat') || text.includes('transport') ? 'transport' :
                     text.includes('power') || text.includes('electric') || text.includes('generator') || text.includes('internet') ? 'utilities' :
                     text.includes('supply') || text.includes('tool') || text.includes('sandbag') || text.includes('cloth') ? 'supplies' : 'housing';
                   setDomain(detected);
+                  setSelectedDomains([detected]);
                   setTaxonomyCode(`${detected.toUpperCase()}.GENERAL`);
-                  setFlatCategory(detected === 'health' ? 'medical' : detected === 'transport' ? 'transportation' : detected);
-                  setStep('who'); // skip refine — agent handles from text
+                  setFlatCategory(detected === 'health' ? 'medical' : detected);
+                  setStep('who');
                 }}
                   disabled={!freeText.trim()}
                   className="px-4 py-2.5 rounded-lg bg-sos-blue-800 text-white text-xs font-bold disabled:opacity-40 transition-colors flex-shrink-0">
