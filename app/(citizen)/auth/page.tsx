@@ -47,6 +47,17 @@ export default function CitizenAuth() {
       // Store person ID in localStorage for citizen context
       if (result.personId) {
         localStorage.setItem('sos-person-id', result.personId);
+        // Convert referral if one was stored
+        const refCode = localStorage.getItem('sos-referral-code');
+        if (refCode) {
+          const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+          const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+          fetch(`${SB_URL}/functions/v1/referral-track`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'convert', referral_code: refCode, new_person_id: result.personId }),
+          }).then(() => localStorage.removeItem('sos-referral-code')).catch(() => {});
+        }
       }
       router.push('/c');
     } else {
