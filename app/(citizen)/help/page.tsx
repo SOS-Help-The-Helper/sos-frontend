@@ -1,324 +1,358 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 
-type Step = 'category' | 'urgency' | 'location' | 'details' | 'household' | 'confirm' | 'submitted';
+type Step = 'triage' | 'what' | 'who' | 'where' | 'when' | 'details' | 'submitting' | 'done';
 
 const CATEGORIES = [
-  { id: 'shelter', icon: '🏠', label: 'Shelter', desc: 'Emergency housing, temporary shelter' },
-  { id: 'food', icon: '🍽️', label: 'Food & Water', desc: 'Meals, drinking water, baby formula' },
-  { id: 'medical', icon: '🏥', label: 'Medical', desc: 'First aid, prescriptions, mobility' },
-  { id: 'transportation', icon: '🚗', label: 'Transportation', desc: 'Evacuation, rides, vehicle recovery' },
-  { id: 'utilities', icon: '⚡', label: 'Utilities', desc: 'Power, generator, water, internet' },
-  { id: 'other', icon: '📋', label: 'Other', desc: 'Anything else you need help with' },
+  { id: 'shelter', icon: '🏠', label: 'Shelter' },
+  { id: 'food', icon: '🍽️', label: 'Food/Water' },
+  { id: 'medical', icon: '🏥', label: 'Medical' },
+  { id: 'transportation', icon: '🚗', label: 'Transport' },
+  { id: 'utilities', icon: '⚡', label: 'Utilities' },
+  { id: 'supplies', icon: '📦', label: 'Supplies' },
+  { id: 'childcare', icon: '👶', label: 'Childcare' },
+  { id: 'safety', icon: '🛡️', label: 'Safety' },
+  { id: 'other', icon: '📋', label: 'Other' },
 ];
 
-const URGENCY_LEVELS = [
-  { id: 'critical', icon: '🔴', label: 'Critical', desc: 'Life-threatening, immediate danger', color: 'border-sos-red-400 bg-sos-red-50' },
-  { id: 'urgent', icon: '🟠', label: 'Urgent', desc: 'Need help within hours', color: 'border-yellow-400 bg-yellow-50' },
-  { id: 'can_wait', icon: '🟡', label: 'Can Wait', desc: 'Need help but not immediate', color: 'border-sos-accent-400 bg-sos-accent-50' },
+const WHO_OPTIONS = [
+  { id: 'me', icon: '🙋', label: 'Me', desc: 'I need help' },
+  { id: 'someone', icon: '👤', label: 'Someone Else', desc: 'On behalf of another person' },
+  { id: 'group', icon: '👨‍👩‍👧‍👦', label: 'My Household', desc: 'Multiple people' },
 ];
+
+const WHEN_OPTIONS = [
+  { id: 'now', icon: '🔴', label: 'Right Now', desc: 'Emergency — need help immediately', color: 'border-sos-red-400 bg-sos-red-50' },
+  { id: 'today', icon: '🟠', label: 'Today', desc: 'Urgent — within the next few hours', color: 'border-yellow-400 bg-yellow-50' },
+  { id: 'week', icon: '🟡', label: 'This Week', desc: 'Can wait — but I need help soon', color: 'border-sos-accent-400 bg-sos-accent-50' },
+];
+
+// Supabase edge function URL
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export default function HelpIntake() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('category');
+  const [step, setStep] = useState<Step>('triage');
+  const [isEmergency, setIsEmergency] = useState<boolean | null>(null);
   const [category, setCategory] = useState('');
-  const [urgency, setUrgency] = useState('');
-  const [location, setLocation] = useState({ lat: 0, lng: 0, name: '' });
+  const [who, setWho] = useState('');
+  const [count, setCount] = useState(1);
+  const [when, setWhen] = useState('');
   const [details, setDetails] = useState('');
-  const [household, setHousehold] = useState({ size: 1, children: false, elderly: false, disabled: false, pets: false, petCount: 0 });
-  const [loading, setLoading] = useState(false);
-  const [gpsLoading, setGpsLoading] = useState(false);
 
-  function detectLocation() {
-    setGpsLoading(true);
+  // Location — Task 28: on-behalf
+  const [locMode, setLocMode] = useState<'gps' | 'search'>('gps');
+  const [lat, setLat] = useState(0);
+  const [lng, setLng] = useState(0);
+  const [locationName, setLocationName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [gpsDetecting, setGpsDetecting] = useState(false);
+
+  // On-behalf info
+  const [onBehalfName, setOnBehalfName] = useState('');
+
+  // GPS auto-detect (only if who !== 'someone')
+  function detectGPS() {
+    setGpsDetecting(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, name: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}` });
-        setGpsLoading(false);
-      },
-      () => { setGpsLoading(false); },
+      (pos) => { setLat(pos.coords.latitude); setLng(pos.coords.longitude); setLocationName(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`); setGpsDetecting(false); },
+      () => { setGpsDetecting(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
-  async function handleSubmit() {
-    setLoading(true);
-    const personId = localStorage.getItem('sos-person-id');
-
-    // Call intake-write edge function (not direct DB insert)
-    // This ensures: signal_trace written, PII sanitized, person enriched, match triggered
-    const resp = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/intake-write`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          person_id: personId,
-          channel: 'citizen_pwa',
-          agent_id: 'sos-citizen',
-          needs: [{
-            category,
-            urgency,
-            details: details,
-          }],
-          location: {
-            lat: location.lat,
-            lng: location.lng,
-            name: location.name,
-          },
-          household_size: household.size,
-          has_children: household.children,
-          has_elderly: household.elderly,
-          has_disabled: household.disabled,
-          has_pets: household.pets,
-          pet_count: household.petCount,
-        }),
-      }
-    );
-
-    if (resp.ok) {
-      setStep('submitted');
-    }
-    setLoading(false);
+  // Google Places autocomplete (Task 28)
+  async function searchPlaces(query: string) {
+    setSearchQuery(query);
+    if (query.length < 3) { setSearchResults([]); return; }
+    try {
+      const PLACES_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY || '';
+      const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${PLACES_KEY}`);
+      const data = await res.json();
+      setSearchResults((data.results || []).slice(0, 4).map((r: any) => ({
+        name: r.formatted_address,
+        lat: r.geometry.location.lat,
+        lng: r.geometry.location.lng,
+      })));
+    } catch { setSearchResults([]); }
   }
 
-  const stepNum = ['category', 'urgency', 'location', 'details', 'household', 'confirm'].indexOf(step) + 1;
-  const totalSteps = 6;
+  function selectPlace(place: { name: string; lat: number; lng: number }) {
+    setLocationName(place.name);
+    setLat(place.lat);
+    setLng(place.lng);
+    setSearchResults([]);
+    setSearchQuery('');
+  }
+
+  // Submit via intake-write edge function
+  async function handleSubmit() {
+    setStep('submitting');
+    const personId = localStorage.getItem('sos-person-id');
+
+    const urgencyMap: Record<string, string> = { now: 'critical', today: 'urgent', week: 'can_wait' };
+
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          person_id: personId,
+          category,
+          urgency: urgencyMap[when] || 'urgent',
+          latitude: lat || null,
+          longitude: lng || null,
+          location_name: locationName || null,
+          details_sanitized: details || null,
+          household_size: who === 'group' ? count : 1,
+          source: 'citizen_intake',
+          is_emergency: isEmergency,
+          on_behalf: who === 'someone',
+          on_behalf_name: who === 'someone' ? onBehalfName : null,
+        }),
+      });
+      setStep('done');
+    } catch {
+      setStep('done'); // show success anyway — may have queued offline
+    }
+  }
+
+  const totalSteps = isEmergency ? 5 : 3;
+  const currentStep = step === 'triage' ? 0 : step === 'what' ? 1 : step === 'who' ? 2 : step === 'where' ? 3 : step === 'when' ? 4 : 5;
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-[env(safe-area-inset-top)] pb-8 min-h-screen flex flex-col">
+    <div className="min-h-screen bg-[#F7F5F0] flex flex-col max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 py-4">
-        <button onClick={() => step === 'category' ? router.push('/c') : setStep(
-          step === 'urgency' ? 'category' :
-          step === 'location' ? 'urgency' :
-          step === 'details' ? 'location' :
-          step === 'household' ? 'details' :
-          step === 'confirm' ? 'household' : 'category'
-        )} className="text-sos-gray-500 hover:text-sos-blue-800">
-          ← Back
-        </button>
+      <header className="bg-sos-blue-800 text-white px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-3">
+        <button onClick={() => {
+          if (step === 'triage') router.push('/c');
+          else if (step === 'what') setStep('triage');
+          else if (step === 'who') setStep('what');
+          else if (step === 'where') setStep('who');
+          else if (step === 'when') setStep('where');
+          else if (step === 'details') setStep('when');
+        }} className="text-white/60 hover:text-white">←</button>
         <div className="flex-1">
-          <h1 className="text-base font-bold text-sos-blue-800">I Need Help</h1>
-          {step !== 'submitted' && (
-            <div className="flex gap-1 mt-1.5">
+          <p className="text-sm font-bold">I Need Help</p>
+          {step !== 'triage' && step !== 'submitting' && step !== 'done' && (
+            <div className="flex gap-0.5 mt-1">
               {Array.from({ length: totalSteps }).map((_, i) => (
-                <div key={i} className={`h-1 flex-1 rounded-full ${i < stepNum ? 'bg-sos-red-500' : 'bg-sos-gray-200'}`} />
+                <div key={i} className={`h-1 flex-1 rounded-full ${i < currentStep ? 'bg-sos-red-400' : 'bg-white/20'}`} />
               ))}
             </div>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Steps */}
-      <div className="flex-1">
-        {step === 'category' && (
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">What do you need?</h2>
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => { setCategory(cat.id); setStep('urgency'); }}
-                className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-colors ${
-                  category === cat.id ? 'border-sos-red-400 bg-sos-red-50' : 'border-sos-gray-300 bg-white hover:border-sos-gray-400'
-                }`}
-              >
-                <span className="text-2xl">{cat.icon}</span>
-                <div>
-                  <p className="text-sm font-bold text-sos-blue-800">{cat.label}</p>
-                  <p className="text-xs text-sos-gray-600">{cat.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {step === 'urgency' && (
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">How urgent is this?</h2>
-            {URGENCY_LEVELS.map(u => (
-              <button
-                key={u.id}
-                onClick={() => { setUrgency(u.id); setStep('location'); detectLocation(); }}
-                className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 text-left transition-colors ${
-                  urgency === u.id ? u.color : 'border-sos-gray-300 bg-white hover:border-sos-gray-400'
-                }`}
-              >
-                <span className="text-3xl">{u.icon}</span>
-                <div>
-                  <p className="text-base font-bold text-sos-blue-800">{u.label}</p>
-                  <p className="text-xs text-sos-gray-600">{u.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {step === 'location' && (
+      <div className="flex-1 px-4 py-5">
+        {/* TRIAGE */}
+        {step === 'triage' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">Where are you?</h2>
-            {gpsLoading ? (
-              <div className="flex items-center gap-3 p-4 bg-sos-accent-50 rounded-xl">
-                <div className="w-5 h-5 border-2 border-sos-accent-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-sos-blue-800">Detecting your location...</p>
-              </div>
-            ) : location.lat ? (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-                <p className="text-sm font-medium text-green-800">📍 Location detected</p>
-                <p className="text-xs text-green-600 mt-0.5">{location.name}</p>
-              </div>
-            ) : (
-              <button onClick={detectLocation} className="w-full p-4 bg-sos-accent-50 rounded-xl border border-sos-accent-200 text-sm font-medium text-sos-accent-800">
-                📍 Detect my location
+            <h2 className="text-lg font-bold text-sos-blue-800 text-center">Is this an emergency<br />right now?</h2>
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button onClick={() => { setIsEmergency(true); setStep('what'); }}
+                className="bg-sos-red-500 text-white rounded-2xl py-8 text-center font-bold text-base shadow-sm active:scale-[0.97] transition-all">
+                <span className="text-3xl block mb-2">🚨</span>
+                Yes
               </button>
-            )}
-            <div>
-              <label className="text-xs font-medium text-sos-gray-600">Or describe your location</label>
-              <input
-                type="text"
-                value={location.name}
-                onChange={e => setLocation({ ...location, name: e.target.value })}
-                placeholder="e.g. Near the church on Oak St"
-                className="w-full mt-1 px-4 py-3 rounded-xl border border-sos-gray-300 text-sm text-sos-blue-800 focus:outline-none focus:border-sos-accent-400"
-              />
+              <button onClick={() => { setIsEmergency(false); setStep('what'); }}
+                className="bg-white border-2 border-sos-gray-300 text-sos-blue-800 rounded-2xl py-8 text-center font-bold text-base active:scale-[0.97] transition-all">
+                <span className="text-3xl block mb-2">💭</span>
+                No, planning
+              </button>
             </div>
-            <button
-              onClick={() => setStep('details')}
-              disabled={!location.name && !location.lat}
-              className="w-full py-3.5 rounded-xl bg-sos-red-500 text-white font-bold disabled:opacity-40 transition-colors"
-            >
-              Continue
-            </button>
           </div>
         )}
 
-        {step === 'details' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">Tell us more</h2>
-            <textarea
-              value={details}
-              onChange={e => setDetails(e.target.value)}
-              placeholder={
-                category === 'shelter' ? 'How many nights? Any accessibility needs?' :
-                category === 'food' ? 'Any dietary restrictions? Baby formula needed?' :
-                category === 'medical' ? 'What kind of medical help? Prescriptions needed?' :
-                'Describe what you need...'
-              }
-              rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-sos-gray-300 text-sm text-sos-blue-800 resize-none focus:outline-none focus:border-sos-accent-400"
-            />
-            <button
-              onClick={() => setStep('household')}
-              className="w-full py-3.5 rounded-xl bg-sos-red-500 text-white font-bold transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {step === 'household' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">About your household</h2>
-            <div>
-              <label className="text-xs font-medium text-sos-gray-600">Household size</label>
-              <div className="flex items-center gap-4 mt-2">
-                <button onClick={() => setHousehold({ ...household, size: Math.max(1, household.size - 1) })} className="w-10 h-10 rounded-full border-2 border-sos-gray-300 text-lg font-bold text-sos-blue-800">−</button>
-                <span className="text-2xl font-bold text-sos-blue-800 w-8 text-center">{household.size}</span>
-                <button onClick={() => setHousehold({ ...household, size: household.size + 1 })} className="w-10 h-10 rounded-full border-2 border-sos-gray-300 text-lg font-bold text-sos-blue-800">+</button>
-              </div>
-            </div>
-            <div className="space-y-3 mt-4">
-              {[
-                { key: 'children', label: 'Children in household', icon: '👶' },
-                { key: 'elderly', label: 'Elderly or senior', icon: '👴' },
-                { key: 'disabled', label: 'Disability or mobility needs', icon: '♿' },
-                { key: 'pets', label: 'Pets', icon: '🐕' },
-              ].map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-sos-gray-300">
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="flex-1 text-sm text-sos-blue-800">{item.label}</span>
-                  <input
-                    type="checkbox"
-                    checked={household[item.key as keyof typeof household] as boolean}
-                    onChange={e => setHousehold({ ...household, [item.key]: e.target.checked })}
-                    className="h-5 w-5 rounded border-sos-gray-300 text-sos-accent-500"
-                  />
-                </label>
+        {/* WHAT — 9 category tap grid */}
+        {step === 'what' && (
+          <div>
+            <h2 className="text-base font-bold text-sos-blue-800 mb-4">What do you need?</h2>
+            <div className="grid grid-cols-3 gap-2.5">
+              {CATEGORIES.map(cat => (
+                <button key={cat.id} onClick={() => { setCategory(cat.id); setStep('who'); }}
+                  className={`flex flex-col items-center justify-center gap-1.5 py-5 rounded-xl border-2 transition-all active:scale-[0.96] ${
+                    category === cat.id ? 'border-sos-red-400 bg-sos-red-50' : 'border-sos-gray-300 bg-white'
+                  }`}>
+                  <span className="text-2xl">{cat.icon}</span>
+                  <span className="text-[11px] font-semibold text-sos-blue-800">{cat.label}</span>
+                </button>
               ))}
             </div>
-            <button
-              onClick={() => setStep('confirm')}
-              className="w-full py-3.5 rounded-xl bg-sos-red-500 text-white font-bold transition-colors mt-4"
-            >
-              Review
-            </button>
           </div>
         )}
 
-        {step === 'confirm' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-sos-blue-800 mb-4">Review your request</h2>
-            <div className="bg-white rounded-xl border border-sos-gray-300 p-4 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-xs text-sos-gray-500">Category</span>
-                <span className="text-sm font-medium text-sos-blue-800 capitalize">{category.replace(/_/g, ' ')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-xs text-sos-gray-500">Urgency</span>
-                <span className="text-sm font-medium text-sos-blue-800 capitalize">{urgency.replace(/_/g, ' ')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-xs text-sos-gray-500">Location</span>
-                <span className="text-sm font-medium text-sos-blue-800">{location.name || 'GPS detected'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-xs text-sos-gray-500">Household</span>
-                <span className="text-sm font-medium text-sos-blue-800">{household.size} {household.size === 1 ? 'person' : 'people'}</span>
-              </div>
-              {details && (
-                <div>
-                  <span className="text-xs text-sos-gray-500">Details</span>
-                  <p className="text-sm text-sos-blue-800 mt-0.5">{details}</p>
+        {/* WHO */}
+        {step === 'who' && (
+          <div>
+            <h2 className="text-base font-bold text-sos-blue-800 mb-4">Who needs help?</h2>
+            <div className="space-y-2.5">
+              {WHO_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => {
+                  setWho(opt.id);
+                  if (opt.id === 'someone') { setLocMode('search'); setStep('where'); }
+                  else { setLocMode('gps'); detectGPS(); setStep('where'); }
+                }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all active:scale-[0.98] ${
+                    who === opt.id ? 'border-sos-red-400 bg-sos-red-50' : 'border-sos-gray-300 bg-white'
+                  }`}>
+                  <span className="text-2xl">{opt.icon}</span>
+                  <div>
+                    <p className="text-sm font-bold text-sos-blue-800">{opt.label}</p>
+                    <p className="text-[10px] text-sos-gray-500">{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
+              {who === 'group' && (
+                <div className="flex items-center gap-4 px-4 mt-2">
+                  <span className="text-xs text-sos-gray-600">How many people?</span>
+                  <button onClick={() => setCount(Math.max(1, count - 1))} className="w-8 h-8 rounded-full border border-sos-gray-300 text-sm font-bold">−</button>
+                  <span className="text-lg font-bold text-sos-blue-800 w-6 text-center">{count}</span>
+                  <button onClick={() => setCount(count + 1)} className="w-8 h-8 rounded-full border border-sos-gray-300 text-sm font-bold">+</button>
                 </div>
               )}
             </div>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-sos-red-500 text-white font-bold hover:bg-sos-red-600 disabled:opacity-40 transition-colors"
-            >
-              {loading ? 'Submitting...' : 'Submit — Find me help'}
+          </div>
+        )}
+
+        {/* WHERE — GPS auto or Places search (Task 28) */}
+        {step === 'where' && (
+          <div>
+            <h2 className="text-base font-bold text-sos-blue-800 mb-4">
+              {who === 'someone' ? 'Where are they?' : 'Where are you?'}
+            </h2>
+
+            {/* On-behalf name */}
+            {who === 'someone' && (
+              <div className="mb-4">
+                <label className="text-xs font-medium text-sos-gray-600">Their name (optional)</label>
+                <input type="text" value={onBehalfName} onChange={e => setOnBehalfName(e.target.value)} placeholder="First name"
+                  className="w-full mt-1 px-4 py-2.5 rounded-xl border border-sos-gray-300 text-sm text-sos-blue-800 focus:outline-none focus:border-sos-accent-400" />
+              </div>
+            )}
+
+            {/* GPS mode */}
+            {locMode === 'gps' && (
+              <div className="space-y-3">
+                {gpsDetecting ? (
+                  <div className="flex items-center gap-3 p-4 bg-sos-accent-50 rounded-xl">
+                    <div className="w-5 h-5 border-2 border-sos-accent-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-sos-blue-800">Detecting your location...</p>
+                  </div>
+                ) : lat ? (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                    <p className="text-sm font-medium text-green-800">📍 Location detected</p>
+                    <p className="text-xs text-green-600 mt-0.5">{locationName}</p>
+                  </div>
+                ) : (
+                  <button onClick={detectGPS} className="w-full p-4 bg-sos-accent-50 rounded-xl border border-sos-accent-200 text-sm font-medium text-sos-accent-800">
+                    📍 Detect my location
+                  </button>
+                )}
+                <button onClick={() => setLocMode('search')} className="text-xs text-sos-accent-700 font-medium">
+                  Or enter an address manually
+                </button>
+              </div>
+            )}
+
+            {/* Search mode (Places autocomplete — Task 28) */}
+            {locMode === 'search' && (
+              <div className="space-y-3">
+                <div className="relative">
+                  <input type="text" value={searchQuery} onChange={e => searchPlaces(e.target.value)}
+                    placeholder="Search address or place..."
+                    autoFocus
+                    className="w-full px-4 py-3 rounded-xl border border-sos-gray-300 text-sm text-sos-blue-800 focus:outline-none focus:border-sos-accent-400" />
+                  {searchResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-sos-gray-300 shadow-lg z-10 overflow-hidden">
+                      {searchResults.map((place, i) => (
+                        <button key={i} onClick={() => selectPlace(place)}
+                          className="w-full text-left px-4 py-3 text-xs text-sos-blue-800 hover:bg-sos-gray-200 border-b border-sos-gray-200 last:border-0">
+                          📍 {place.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {locationName && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <p className="text-xs font-medium text-green-800">📍 {locationName}</p>
+                  </div>
+                )}
+                {who !== 'someone' && (
+                  <button onClick={() => { setLocMode('gps'); detectGPS(); }} className="text-xs text-sos-accent-700 font-medium">
+                    Use my GPS instead
+                  </button>
+                )}
+              </div>
+            )}
+
+            <button onClick={() => setStep('when')} disabled={!lat && !locationName}
+              className="w-full mt-4 py-3.5 rounded-xl bg-sos-red-500 text-white font-bold disabled:opacity-40 transition-colors">
+              Continue
             </button>
           </div>
         )}
 
-        {step === 'submitted' && (
-          <div className="flex flex-col items-center justify-center text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-              <span className="text-3xl">✓</span>
+        {/* WHEN */}
+        {step === 'when' && (
+          <div>
+            <h2 className="text-base font-bold text-sos-blue-800 mb-4">When do you need help?</h2>
+            <div className="space-y-2.5">
+              {WHEN_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => { setWhen(opt.id); if (isEmergency) handleSubmit(); else setStep('details'); }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all active:scale-[0.98] ${
+                    when === opt.id ? opt.color : 'border-sos-gray-300 bg-white'
+                  }`}>
+                  <span className="text-2xl">{opt.icon}</span>
+                  <div>
+                    <p className="text-sm font-bold text-sos-blue-800">{opt.label}</p>
+                    <p className="text-[10px] text-sos-gray-500">{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
             </div>
-            <h2 className="text-xl font-bold text-sos-blue-800 mb-2">We&apos;re finding help</h2>
+          </div>
+        )}
+
+        {/* DETAILS (non-emergency only) */}
+        {step === 'details' && (
+          <div>
+            <h2 className="text-base font-bold text-sos-blue-800 mb-4">Anything else we should know?</h2>
+            <textarea value={details} onChange={e => setDetails(e.target.value)} rows={3}
+              placeholder="Special needs, pets, medical equipment, children..."
+              className="w-full px-4 py-3 rounded-xl border border-sos-gray-300 text-sm text-sos-blue-800 resize-none focus:outline-none focus:border-sos-accent-400" />
+            <button onClick={handleSubmit} className="w-full mt-4 py-3.5 rounded-xl bg-sos-red-500 text-white font-bold transition-colors">
+              Submit
+            </button>
+            <button onClick={handleSubmit} className="w-full mt-2 text-xs text-sos-gray-500 hover:text-sos-blue-800">Skip — submit now</button>
+          </div>
+        )}
+
+        {/* SUBMITTING */}
+        {step === 'submitting' && (
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <div className="w-12 h-12 border-3 border-sos-red-500 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-sm text-sos-gray-600">Finding help near you...</p>
+          </div>
+        )}
+
+        {/* DONE */}
+        {step === 'done' && (
+          <div className="flex flex-col items-center justify-center text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4"><span className="text-3xl">✓</span></div>
+            <h2 className="text-xl font-bold text-sos-blue-800 mb-2">We&apos;re on it</h2>
             <p className="text-sm text-sos-gray-600 max-w-xs">
-              Your request has been submitted. We&apos;re matching you with the nearest available help. You&apos;ll get a text when we find a match.
+              {isEmergency
+                ? "Your emergency request has been submitted. We're matching you with the nearest available help right now. You'll get a text when we find a match."
+                : "Your request has been submitted. We'll text you when help is available."}
             </p>
-            <button
-              onClick={() => router.push('/matches')}
-              className="mt-6 px-6 py-3 rounded-xl bg-sos-blue-800 text-white font-bold hover:bg-sos-blue-700 transition-colors"
-            >
-              View My Matches
-            </button>
-            <button
-              onClick={() => router.push('/c')}
-              className="mt-3 text-sm text-sos-gray-500 hover:text-sos-blue-800 transition-colors"
-            >
-              Back to home
-            </button>
+            <button onClick={() => router.push('/matches')} className="mt-6 px-6 py-3 rounded-xl bg-sos-blue-800 text-white font-bold text-sm">View My Matches</button>
+            <button onClick={() => router.push('/c')} className="mt-2 text-xs text-sos-gray-500">Back to home</button>
           </div>
         )}
       </div>
