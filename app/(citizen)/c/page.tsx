@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// mapbox-gl loaded dynamically in useEffect to avoid SSR issues
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { getAlerts, getExternalResources, type Alert, type ExternalResource } from '@/lib/citizen-api';
@@ -83,10 +82,11 @@ export default function CitizenMapPage() {
     markersRef.current = [];
     if (!MAPBOX_TOKEN) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-
-    const initMap = () => {
+    const initMap = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default;
+      await import('mapbox-gl/dist/mapbox-gl.css');
       if (!mapRef.current) return;
+      mapboxgl.accessToken = MAPBOX_TOKEN;
 
       const map = new mapboxgl.Map({
         container: mapRef.current, style: 'mapbox://styles/mapbox/dark-v11',
