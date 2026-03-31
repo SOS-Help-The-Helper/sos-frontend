@@ -1,4 +1,4 @@
-import { streamUI } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 
@@ -27,18 +27,18 @@ Be warm but efficient. Emergency = fast. Planning = conversational.`;
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  const result = streamUI({
+  const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
     system: SYSTEM_PROMPT,
     messages,
     tools: {
       show_categories: {
         description: 'Show disaster need category selection cards. Use when someone says they need help.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show above the cards'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_categories',
             prompt,
             options: [
@@ -56,11 +56,11 @@ export async function POST(req: Request) {
 
       show_counter: {
         description: 'Show people count selection. Use after categories are selected.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show above the counter'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_counter',
             prompt,
             options: [
@@ -75,11 +75,11 @@ export async function POST(req: Request) {
 
       show_circumstances: {
         description: 'Show special circumstances selection. Use after count is selected.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show above the options'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_circumstances',
             prompt,
             options: [
@@ -97,12 +97,12 @@ export async function POST(req: Request) {
 
       get_location: {
         description: 'Get user location via GPS or address search. Use when you need their location.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show'),
           forSelf: z.boolean().describe('true if for the user themselves, false if for someone else'),
         }),
-        generate: async function*({ prompt, forSelf }) {
-          yield JSON.stringify({
+        execute: async function({ prompt, forSelf }) {
+          return JSON.stringify({
             __tool: 'get_location',
             prompt,
             forSelf,
@@ -112,11 +112,11 @@ export async function POST(req: Request) {
 
       show_helper_type: {
         description: 'Show 3 broad helper categories. Use when someone says they can help.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show above options'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_helper_type',
             prompt,
             options: [
@@ -130,11 +130,11 @@ export async function POST(req: Request) {
 
       show_availability: {
         description: 'Show availability options for helpers.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_availability',
             prompt,
             options: [
@@ -148,13 +148,13 @@ export async function POST(req: Request) {
 
       search_resources: {
         description: 'Search for resources near a location. Returns results to show on map and in list.',
-        parameters: z.object({
+        inputSchema: z.object({
           keyword: z.string().describe('What to search for: shelter, food, medical, etc.'),
           lat: z.number().describe('Latitude'),
           lng: z.number().describe('Longitude'),
           distance: z.number().optional().describe('Search radius in miles, default 25'),
         }),
-        generate: async function*({ keyword, lat, lng, distance }) {
+        execute: async function({ keyword, lat, lng, distance }) {
           // Call resource-search EF
           const resp = await fetch(
             `${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${lat}&lng=${lng}&distance=${distance || 25}`,
@@ -163,7 +163,7 @@ export async function POST(req: Request) {
           const data = await resp.json();
           const results = data.results || [];
 
-          yield JSON.stringify({
+          return JSON.stringify({
             __tool: 'search_results',
             keyword,
             results: results.slice(0, 20).map((r: any) => ({
@@ -184,11 +184,11 @@ export async function POST(req: Request) {
 
       show_score: {
         description: 'Show the user SOS Score with breakdown. Use when they ask about their score or readiness.',
-        parameters: z.object({
+        inputSchema: z.object({
           personId: z.string().optional().describe('Person ID, if known'),
         }),
-        generate: async function*({ personId }) {
-          yield JSON.stringify({
+        execute: async function({ personId }) {
+          return JSON.stringify({
             __tool: 'show_score',
             personId,
           });
@@ -197,7 +197,7 @@ export async function POST(req: Request) {
 
       submit_sos: {
         description: 'Submit a help request. Use after collecting category, count, circumstances, and location.',
-        parameters: z.object({
+        inputSchema: z.object({
           categories: z.array(z.string()).describe('Selected categories'),
           count: z.string().describe('Number of people'),
           circumstances: z.array(z.string()).optional().describe('Special circumstances'),
@@ -207,13 +207,13 @@ export async function POST(req: Request) {
           locationName: z.string().optional().describe('Location name'),
           urgency: z.string().optional().describe('critical/high/medium/low'),
         }),
-        generate: async function*({ categories, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
+        execute: async function({ categories, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
           // Call intake-write EF
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              needs: categories.map(c => ({ category: c, urgency: urgency || 'high' })),
+              needs: categories.map((c: string) => ({ category: c, urgency: urgency || 'high' })),
               household_size: parseInt(count) || 1,
               latitude: lat,
               longitude: lng,
@@ -224,7 +224,7 @@ export async function POST(req: Request) {
           });
           const result = await resp.json();
 
-          yield JSON.stringify({
+          return JSON.stringify({
             __tool: 'submit_confirmation',
             success: resp.ok,
             sosId: result.sos_id,
@@ -235,7 +235,7 @@ export async function POST(req: Request) {
 
       submit_helper: {
         description: 'Register someone as a helper. Use after collecting their skills and availability.',
-        parameters: z.object({
+        inputSchema: z.object({
           helperType: z.string().describe('skills, time, or space'),
           skills: z.array(z.string()).optional().describe('Specific skills mentioned'),
           availability: z.string().describe('disaster, anytime, or active'),
@@ -244,7 +244,7 @@ export async function POST(req: Request) {
           distanceMiles: z.number().optional().describe('How far they will travel'),
           notes: z.string().optional().describe('Additional details from conversation'),
         }),
-        generate: async function*({ helperType, skills, availability, lat, lng, distanceMiles, notes }) {
+        execute: async function({ helperType, skills, availability, lat, lng, distanceMiles, notes }) {
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
@@ -258,7 +258,7 @@ export async function POST(req: Request) {
           });
           const result = await resp.json();
 
-          yield JSON.stringify({
+          return JSON.stringify({
             __tool: 'submit_confirmation',
             success: resp.ok,
             message: resp.ok ? 'You\'re registered as a helper. We\'ll notify you when someone nearby needs help.' : 'Something went wrong. Please try again.',
@@ -268,11 +268,11 @@ export async function POST(req: Request) {
 
       capture_photo: {
         description: 'Prompt user to take a photo for reporting. Shows camera input.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'capture_photo',
             prompt,
           });
@@ -281,11 +281,11 @@ export async function POST(req: Request) {
 
       show_danger_check: {
         description: 'Ask if anyone is in danger. Use during report flow.',
-        parameters: z.object({
+        inputSchema: z.object({
           prompt: z.string().describe('Text to show'),
         }),
-        generate: async function*({ prompt }) {
-          yield JSON.stringify({
+        execute: async function({ prompt }) {
+          return JSON.stringify({
             __tool: 'show_danger_check',
             prompt,
             options: [
@@ -298,16 +298,16 @@ export async function POST(req: Request) {
 
       check_fema: {
         description: 'Check FEMA disaster declarations for a state.',
-        parameters: z.object({
+        inputSchema: z.object({
           state: z.string().describe('2-letter state code'),
         }),
-        generate: async function*({ state }) {
+        execute: async function({ state }) {
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/fema-check?state=${state}`, {
             headers: { 'Authorization': `Bearer ${SUPABASE_ANON}` },
           });
           const data = await resp.json();
 
-          yield JSON.stringify({
+          return JSON.stringify({
             __tool: 'fema_status',
             state,
             iaEligible: data.fema_assistance_available,
@@ -321,11 +321,11 @@ export async function POST(req: Request) {
 
       generate_referral: {
         description: 'Generate a referral code and show share card.',
-        parameters: z.object({
+        inputSchema: z.object({
           personId: z.string().optional().describe('Person ID'),
         }),
-        generate: async function*({ personId }) {
-          yield JSON.stringify({
+        execute: async function({ personId }) {
+          return JSON.stringify({
             __tool: 'referral_card',
             personId,
           });
@@ -334,5 +334,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
