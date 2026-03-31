@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { getAlerts, getExternalResources, type Alert, type ExternalResource } from '@/lib/citizen-api';
@@ -81,14 +83,10 @@ export default function CitizenMapPage() {
     markersRef.current = [];
     if (!MAPBOX_TOKEN) return;
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet'; link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css';
-    if (!document.querySelector('link[href*="mapbox-gl"]')) document.head.appendChild(link);
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const initMap = () => {
-      const mapboxgl = (window as any).mapboxgl;
-      if (!mapboxgl || !mapRef.current) return;
-      mapboxgl.accessToken = MAPBOX_TOKEN;
+      if (!mapRef.current) return;
 
       const map = new mapboxgl.Map({
         container: mapRef.current, style: 'mapbox://styles/mapbox/dark-v11',
@@ -144,9 +142,7 @@ export default function CitizenMapPage() {
       mapInstance.current = map;
     };
 
-    const s = document.querySelector('script[src*="mapbox-gl"]');
-    if (s && (window as any).mapboxgl) initMap();
-    else { const sc = document.createElement('script'); sc.src = 'https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'; sc.onload = initMap; document.head.appendChild(sc); }
+    initMap();
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [lat, lng, partners, extResources, alerts, mapFilter]);
 
