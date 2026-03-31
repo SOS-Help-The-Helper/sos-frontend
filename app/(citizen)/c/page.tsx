@@ -7,7 +7,7 @@ import { getAlerts, getExternalResources, type Alert, type ExternalResource } fr
 import { supabase } from '@/lib/supabase-client';
 import { DEMO_ALERTS, DEMO_PARTNERS, DEMO_EXTERNAL_RESOURCES } from '@/lib/demo-data';
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
 
 const STATUS_MAP: Record<string, { emoji: string; label: string }> = {
   safe: { emoji: '🟢', label: 'Safe' },
