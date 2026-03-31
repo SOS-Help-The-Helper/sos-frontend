@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 // mapbox-gl loaded dynamically in useEffect to avoid SSR issues
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
+import { MapResultsSheet } from '@/components/map-results-sheet';
+import { onMapCommand, clearMapCommand, type MapCommand, type MapResult } from '@/lib/map-commands';
 import { getAlerts, getExternalResources, type Alert, type ExternalResource } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { DEMO_ALERTS, DEMO_PARTNERS, DEMO_EXTERNAL_RESOURCES } from '@/lib/demo-data';
@@ -38,6 +40,10 @@ export default function CitizenMapPage() {
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedPin, setSelectedPin] = useState<any>(null);
+  const [mapResults, setMapResults] = useState<MapResult[]>([]);
+  const [mapResultsQuery, setMapResultsQuery] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const resultMarkersRef = useRef<any[]>([]);
 
   // Check admin preview
   const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
@@ -146,6 +152,76 @@ export default function CitizenMapPage() {
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [lat, lng, partners, extResources, alerts, mapFilter]);
 
+  // Subscribe to map commands from agent/SOS sheet
+  useEffect(() => {
+    const unsub = onMapCommand((cmd: MapCommand) => {
+      const map = mapInstance.current;
+      const mapboxgl = (window as any).mapboxgl;
+      if (!map || !mapboxgl) return;
+
+      // Clear previous result markers
+      resultMarkersRef.current.forEach(m => m.remove());
+      resultMarkersRef.current = [];
+
+      if (cmd.type === 'clear') {
+        setShowResults(false);
+        setMapResults([]);
+        return;
+      }
+
+      if (cmd.type === 'show_results' && cmd.results) {
+        setMapResults(cmd.results);
+        setMapResultsQuery(cmd.query || '');
+        setShowResults(true);
+
+        // Drop result pins
+        cmd.results.forEach((result, i) => {
+          const el = document.createElement('div');
+          const color = result.source === 'partner' ? '#89CFF0' : result.source === '211' ? '#EDB200' : '#EF4E4B';
+          el.style.cssText = `width:14px;height:14px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 0 10px ${color}80;cursor:pointer;`;
+          el.onclick = (e) => {
+            e.stopPropagation();
+            setSelectedPin({ type: result.source, name: result.name, organization_name: result.name, service_name: result.description, phone: result.phone, address: result.address });
+            map.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
+          };
+          const marker = new mapboxgl.Marker({ element: el }).setLngLat([result.lng, result.lat]).addTo(map);
+          resultMarkersRef.current.push(marker);
+        });
+
+        // Fit bounds
+        if (cmd.fitBounds) {
+          map.fitBounds(
+            [[cmd.fitBounds.sw[1], cmd.fitBounds.sw[0]], [cmd.fitBounds.ne[1], cmd.fitBounds.ne[0]]],
+            { padding: 60, duration: 1000 }
+          );
+        }
+      }
+
+      if (cmd.type === 'focus' && cmd.center) {
+        map.flyTo({ center: cmd.center, zoom: cmd.zoom || 14, duration: 800 });
+      }
+    });
+
+    return unsub;
+  }, []);
+
+  // Handle result card tap
+  function handleResultSelect(result: MapResult) {
+    const map = mapInstance.current;
+    if (map) {
+      map.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
+    }
+    setSelectedPin({
+      type: result.source,
+      name: result.name,
+      organization_name: result.name,
+      service_name: result.description,
+      phone: result.phone,
+      address: result.address,
+      org_type: result.category,
+    });
+  }
+
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen}>
       {/* Header */}
@@ -220,7 +296,18 @@ export default function CitizenMapPage() {
       )}
 
       {/* SOS Bottom Sheet */}
-      <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" />
+      {/* Results slide-up sheet */}
+      {showResults && mapResults.length > 0 && (
+        <MapResultsSheet
+          results={mapResults}
+          query={mapResultsQuery}
+          onSelectResult={handleResultSelect}
+          onClose={() => { setShowResults(false); setMapResults([]); }}
+        />
+      )}
+
+      {/* SOS Bottom Sheet */}
+      <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" userLat={lat} userLng={lng} />
     </CitizenShell>
   );
 }
