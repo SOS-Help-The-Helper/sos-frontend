@@ -223,7 +223,7 @@ export default function CitizenMapPage() {
   }
 
   return (
-    <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen}>
+    <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults}>
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-[#0F1E2B] to-transparent">
