@@ -148,7 +148,7 @@ export default function CitizenMapPage() {
     if (s && (window as any).mapboxgl) initMap();
     else { const sc = document.createElement('script'); sc.src = 'https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'; sc.onload = initMap; document.head.appendChild(sc); }
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [gpsReady, loading, lat, lng, partners, extResources, alerts, mapFilter]);
+  }, [lat, lng, partners, extResources, alerts, mapFilter]);
 
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen}>
