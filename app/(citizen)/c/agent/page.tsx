@@ -39,7 +39,7 @@ function AgentContent() {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   function send(text: string) {
-    sendMessage({ text });
+    sendMessage(text);
     setInput('');
   }
 

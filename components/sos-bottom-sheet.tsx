@@ -40,7 +40,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
   function send(text: string) {
     if (sheetState === 'collapsed') setSheetState('half');
-    sendMessage({ text });
+    sendMessage(text);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -78,7 +78,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
         {/* Messages */}
         {sheetState !== 'collapsed' && (
-          <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-2.5">
+          <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-2.5 overflow-x-hidden">
             {messages.map(msg => (
               <div key={msg.id}>
                 {/* Text content */}
