@@ -71,7 +71,7 @@ export function SOSBottomSheet({ open, onClose, context }: SOSBottomSheetProps) 
 
           {/* Logo + title */}
           <div className="flex items-center gap-2 mb-4">
-            <img src="/logomark.svg" alt="SOS" className="h-7 w-7" />
+            <img src="/logomark-white.svg" alt="SOS" className="h-7 w-7" />
             <p className="text-sm font-bold text-white">{contextTitle[context]}</p>
           </div>
 

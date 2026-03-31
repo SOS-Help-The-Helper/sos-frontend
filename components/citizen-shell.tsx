@@ -40,7 +40,7 @@ export function CitizenShell({ children, onSOSTap, hideSOSButton }: CitizenShell
           className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-[#EF4E4B] shadow-lg ring-2 ring-white/30 flex items-center justify-center active:scale-95 transition-transform"
           style={{ boxShadow: '0 0 20px rgba(239, 78, 75, 0.4)' }}
         >
-          <img src="/logomark.svg" alt="SOS" className="h-7 w-7" />
+          <img src="/logomark-white.svg" alt="SOS" className="h-7 w-7" />
           {/* Pulse ring */}
           <span className="absolute inset-0 rounded-full bg-sos-red-500 animate-ping opacity-20" />
         </button>
