@@ -76,7 +76,7 @@ export default function CitizenMapPage() {
 
   // Map
   useEffect(() => {
-    if (!gpsReady || !mapRef.current || loading) return;
+    if (!mapRef.current) return;
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     markersRef.current = [];
     if (!MAPBOX_TOKEN) return;
@@ -92,7 +92,7 @@ export default function CitizenMapPage() {
 
       const map = new mapboxgl.Map({
         container: mapRef.current, style: 'mapbox://styles/mapbox/dark-v11',
-        center: [lng, lat], zoom: 12, attributionControl: false,
+        center: [lng || -82.5515, lat || 35.5951], zoom: 12, attributionControl: false,
       });
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
