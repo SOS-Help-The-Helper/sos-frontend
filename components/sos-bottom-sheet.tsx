@@ -258,7 +258,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
         {/* Input bar (always visible) */}
         <div className="px-4 py-2.5 border-t border-white/10 flex-shrink-0">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2 max-w-full">
             <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
               onFocus={() => { if (sheetState === 'collapsed') setSheetState('half'); }}
               placeholder="Ask SOS anything..."

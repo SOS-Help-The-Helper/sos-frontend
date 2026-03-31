@@ -161,7 +161,7 @@ function AgentContent() {
     <CitizenShell hideSOSButton>
       <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
         {/* Header */}
-        <div className="bg-[#1A3850] px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2">
+        <div className="bg-[#1A3850] px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2 sticky top-0 z-10">
           <img src="/logomark.svg" alt="SOS" className="h-6 w-6" />
           <span className="text-sm font-bold text-white">SOS Agent</span>
         </div>
@@ -243,8 +243,8 @@ function AgentContent() {
         )}
 
         {/* Input */}
-        <div className="bg-[#1A3850] px-4 py-3 border-t border-white/10">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="bg-[#1A3850] px-4 py-3 border-t border-white/10 pb-[env(safe-area-inset-bottom,0px)]">
+          <form onSubmit={handleSubmit} className="flex gap-2 max-w-full">
             <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
               placeholder="Ask SOS anything..." disabled={loading}
               className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
