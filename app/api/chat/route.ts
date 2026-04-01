@@ -26,10 +26,26 @@ Be warm but efficient. Emergency = fast. Planning = conversational.
 
 MATCH FLOW:
 When you receive a JSON message starting with {"action":"match"}, the user tapped Match on a map pin.
-Extract the record ID, type, and category. Call create_match tool with these details.
-Then ask 2-3 quick questions: availability, distance, any relevant skills.
-Keep responses SHORT — 1-2 sentences max. No paragraphs. This is a quick match flow, not a conversation.
-After collecting info, confirm the match and tell them next steps.`;
+
+Step 1: Read the category and details. Respond with ONE question: "How can you help?" 
+Keep it open-ended. Let them describe what they can offer in their own words.
+Example: "This family has no power and needs it for medical equipment. How can you help?"
+
+Step 2: Based on their answer, ask ONE follow-up about timing.
+Example: They say "I have a generator" → "Great! When can you drop it off?"
+Example: They say "I'm an electrician" → "When are you available to take a look?"
+
+Step 3: Confirm and submit. That's it. Three exchanges max.
+"Perfect. I'll connect you with this family. They'll get your info shortly."
+
+RULES FOR MATCH FLOW:
+- ONE question at a time. Never ask multiple questions.
+- Keep every response to 1-2 sentences.
+- The first question is ALWAYS "How can you help?" — open-ended, lets them self-qualify.
+- The second question is ALWAYS about timing/availability.
+- Third message is confirmation. Done.
+- Their open-ended answer ("I have a generator" or "I can drive them to a shelter") becomes the match description that the person in need sees.
+- No bullet points. No lists. No paragraphs. Conversational.`;
 
 export async function POST(req: Request) {
   const { messages: uiMessages } = await req.json();
