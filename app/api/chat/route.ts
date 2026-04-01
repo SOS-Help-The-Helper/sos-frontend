@@ -74,6 +74,11 @@ Always include taxonomy_code in submit_sos and submit_helper tool calls.
 
 Be warm but efficient. Emergency = fast, minimal questions. Planning = conversational.
 
+ESCALATION:
+If a citizen needs help from MULTIPLE partner types (shelter + food + medical), or the situation is complex:
+Call escalate_to_platform with the SOS ID and reason. Tell the user: "I've flagged this for our coordination team."
+Do NOT try to coordinate multi-partner chains yourself — hand off to the platform agent.
+
 MATCH FLOW:
 When you receive a JSON message starting with {"action":"match"}, the user tapped Match on a map pin.
 
@@ -445,6 +450,35 @@ export async function POST(req: Request) {
             fieldsFromSOS: 17,
             fieldsNeeded: 6,
             neverStored: ['SSN', 'Bank account info'],
+          });
+        },
+      },
+
+      escalate_to_platform: {
+        description: 'Escalate a complex coordination request to the SOS platform agent. Use when: multiple partners needed for one SOS, referral chain required, match conflict, or request unfulfilled for extended time.',
+        inputSchema: z.object({
+          sosId: z.string().optional().describe('SOS record ID'),
+          reason: z.string().describe('Why this needs platform coordination'),
+          partnerTypes: z.array(z.string()).optional().describe('Types of partners needed'),
+        }),
+        execute: async function({ sosId, reason, partnerTypes }) {
+          // Write escalation to signal_traces for platform agent to pick up
+          await fetch(SUPABASE_URL + '/rest/v1/signal_traces', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              entity_type: 'escalation',
+              signal_layer: 'A',
+              trace_type: 'platform_escalation',
+              reasoning: reason,
+              agent_id: 'web-citizen',
+              metadata: { skill_id: 'platform-handoff', sos_id: sosId, partner_types: partnerTypes, source: 'web_ai_sdk' },
+            }),
+          }).catch(() => {});
+
+          return JSON.stringify({
+            __tool: 'escalation_confirmed',
+            message: 'I\'ve flagged this for our coordination team. They\'ll connect the right partners and follow up with you.',
           });
         },
       },
