@@ -60,7 +60,7 @@ function AgentContent() {
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#0F1E2B]">
           {messages.map(msg => (
             <div key={msg.id}>
-              {msg.content && (
+              {/* Fallback for content */ false && (
                 <div className={`flex ${((msg as any).role === 'user') ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
                     ((msg as any).role === 'user') ? 'bg-sos-red-500 text-white rounded-br-md' : 'bg-white/10 text-white rounded-bl-md'
