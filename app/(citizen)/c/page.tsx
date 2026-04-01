@@ -96,7 +96,7 @@ export default function CitizenMapPage() {
       setAlerts(alertData);
 
       // Load requests
-      const { data: requests } = await supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'matched']).limit(200);
+      const { data: requests } = await supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(200);
 
       // Load resources (SOS + 211)
       const { data: resources } = await supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(200);
