@@ -28,12 +28,14 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error: chatError } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
+    onError: (err) => console.error('Chat error:', err),
     messages: [{ id: 'welcome', role: 'assistant' as const, content: 'What can I help you with?', parts: [{ type: 'text', text: 'What can I help you with?' }] }],
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+  if (chatError) console.error('useChat error state:', chatError);
 
   useEffect(() => { if (!open) setSheetState('half'); }, [open]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);

@@ -24,6 +24,7 @@ type DetailMode = 'card' | 'expanded' | 'match';
 
 export default function CitizenMapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
 
   const [lat, setLat] = useState(35.5951);
@@ -208,6 +209,7 @@ export default function CitizenMapPage() {
         clickLayers.forEach(layer => {
           map.on('click', layer, (e: any) => {
             if (!e.features?.length) return;
+            layerClickedRef.current = true;
             const props = e.features[0].properties;
             const pinType = props.type || (layer.includes('request') ? 'request' : layer.includes('resource') ? 'resource' : 'report');
             setSelectedPin({ type: pinType, id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
@@ -232,12 +234,12 @@ export default function CitizenMapPage() {
           });
         });
 
-        // Click empty space → dismiss (delayed to let layer handlers fire first)
-        map.on('click', (e: any) => {
+        // Click empty space → dismiss (skip if a layer click just happened)
+        map.on('click', () => {
           setTimeout(() => {
-            const features = map.queryRenderedFeatures(e.point, { layers: [...clickLayers, 'requests-clusters', 'resources-clusters', 'reports-clusters'] });
-            if (!features.length) { setSelectedPin(null); setMatchMode(false); }
-          }, 50);
+            if (layerClickedRef.current) { layerClickedRef.current = false; return; }
+            setSelectedPin(null); setMatchMode(false);
+          }, 100);
         });
       });
 
