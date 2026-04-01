@@ -53,7 +53,7 @@ export default function CitizenMapPage() {
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       p => { setLat(p.coords.latitude); setLng(p.coords.longitude); setGpsReady(true); },
-      () => setGpsReady(true), { enableHighAccuracy: true, timeout: 10000 }
+      () => setGpsReady(true), { enableHighAccuracy: true, timeout: 3000 }
     );
   }, []);
 
@@ -63,16 +63,10 @@ export default function CitizenMapPage() {
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     if (!MAPBOX_TOKEN) return;
 
-    // Load CSS
-    if (!document.querySelector('link[href*="mapbox-gl"]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet'; link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css';
-      document.head.appendChild(link);
-    }
-
     const initMap = async () => {
-      const mapboxgl = (window as any).mapboxgl;
-      if (!mapboxgl || !mapRef.current) return;
+      const mapboxgl = (await import('mapbox-gl')).default;
+      await import('mapbox-gl/dist/mapbox-gl.css');
+      if (!mapRef.current) return;
       mapboxgl.accessToken = MAPBOX_TOKEN;
 
       const map = new mapboxgl.Map({
@@ -84,25 +78,30 @@ export default function CitizenMapPage() {
 
       // Load data
       let alertData: Alert[] = [], partners: any[] = [], extResources: ExternalResource[] = [];
-      if (isAdmin) {
-        alertData = DEMO_ALERTS; partners = DEMO_PARTNERS; extResources = DEMO_EXTERNAL_RESOURCES;
-      } else {
-        const [a, e, p] = await Promise.all([
-          getAlerts(lat, lng), getExternalResources(lat, lng),
-          supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
+      let requests: any[] = [], resources: any[] = [], reports: any[] = [];
+      try {
+        if (isAdmin) {
+          alertData = DEMO_ALERTS; partners = DEMO_PARTNERS; extResources = DEMO_EXTERNAL_RESOURCES;
+        } else {
+          const [a, e, p] = await Promise.all([
+            getAlerts(lat, lng), getExternalResources(lat, lng),
+            supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
+          ]);
+          alertData = a; extResources = e; partners = p.data || [];
+        }
+        setAlerts(alertData);
+
+        const [reqResult, resResult, repResult] = await Promise.all([
+          supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(500),
+          supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(500),
+          supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
         ]);
-        alertData = a; extResources = e; partners = p.data || [];
+        requests = reqResult.data || [];
+        resources = resResult.data || [];
+        reports = repResult.data || [];
+      } catch (err) {
+        console.error('Map data load error:', err);
       }
-      setAlerts(alertData);
-
-      // Load requests
-      const { data: requests } = await supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(200);
-
-      // Load resources (SOS + 211)
-      const { data: resources } = await supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(200);
-
-      // Load citizen reports
-      const { data: reports } = await supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(100);
 
       map.on('load', () => {
         // === REQUESTS SOURCE (red) ===
@@ -202,7 +201,7 @@ export default function CitizenMapPage() {
             map.addSource(`alert-${i}`, { type: 'geojson', data: alert.geometry });
             map.addLayer({ id: `alert-fill-${i}`, type: 'fill', source: `alert-${i}`, paint: { 'fill-color': color, 'fill-opacity': 0.12 } });
             map.addLayer({ id: `alert-line-${i}`, type: 'line', source: `alert-${i}`, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.5 } });
-          } catch {}
+          } catch (e) { console.warn('Alert geometry error:', e); }
         });
 
         // === CLICK HANDLERS ===
@@ -225,11 +224,11 @@ export default function CitizenMapPage() {
           map.on('click', layer, (e: any) => {
             const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
             if (!features.length) return;
-            const clusterId = features[0].properties.cluster_id;
+            const clusterId = features[0].properties?.cluster_id;
             const sourceName = layer.replace('-clusters', '-source');
             (map.getSource(sourceName) as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
               if (err) return;
-              map.easeTo({ center: features[0].geometry.coordinates, zoom });
+              map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
             });
           });
         });
@@ -244,11 +243,9 @@ export default function CitizenMapPage() {
       setLoading(false);
     };
 
-    const s = document.querySelector('script[src*="mapbox-gl"]');
-    if (s && (window as any).mapboxgl) initMap();
-    else { const sc = document.createElement('script'); sc.src = 'https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'; sc.onload = initMap; document.head.appendChild(sc); }
+    initMap();
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [gpsReady, lat, lng, isAdmin]);
+  }, [gpsReady, isAdmin]);
 
   // Map command subscription (for search results)
   useEffect(() => {

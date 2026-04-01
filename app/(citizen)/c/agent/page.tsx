@@ -32,14 +32,14 @@ function AgentContent() {
   useEffect(() => {
     if (initialQuery && !initialized.current) {
       initialized.current = true;
-      sendMessage({ text: initialQuery });
+      sendMessage(initialQuery);
     }
   }, [initialQuery, sendMessage]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   function send(text: string) {
-    sendMessage({ text });
+    sendMessage(text);
     setInput('');
   }
 
