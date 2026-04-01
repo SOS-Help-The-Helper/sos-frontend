@@ -21,15 +21,17 @@ interface SOSBottomSheetProps {
   context: 'map' | 'feed' | 'profile';
   userLat?: number;
   userLng?: number;
+  personId?: string;
+  isAuthenticated?: boolean;
 }
 
-export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515 }: SOSBottomSheetProps) {
+export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false }: SOSBottomSheetProps) {
   const [sheetState, setSheetState] = useState<SheetState>('half');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated) } }),
     onError: (err) => console.error('Chat error:', err),
     messages: [{ id: 'welcome', role: 'assistant' as const, content: 'What can I help you with?', parts: [{ type: 'text', text: 'What can I help you with?' }] }],
   });
