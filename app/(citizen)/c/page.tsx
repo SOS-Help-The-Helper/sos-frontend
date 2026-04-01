@@ -6,9 +6,9 @@ import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { MapResultsSheet } from '@/components/map-results-sheet';
 import { onMapCommand, clearMapCommand, type MapCommand, type MapResult } from '@/lib/map-commands';
 import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter';
-import { getAlerts, getExternalResources, type Alert, type ExternalResource } from '@/lib/citizen-api';
+import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
-import { DEMO_ALERTS, DEMO_PARTNERS, DEMO_EXTERNAL_RESOURCES } from '@/lib/demo-data';
+import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 const STATUS_MAP: Record<string, { emoji: string; label: string }> = {
@@ -80,17 +80,17 @@ export default function CitizenMapPage() {
 
       map.on('load', async () => {
         // Load data INSIDE map.on('load') so we don't miss the event
-        let alertData: Alert[] = [], partners: any[] = [], extResources: ExternalResource[] = [];
+        let alertData: Alert[] = [], partners: any[] = [];
         let requests: any[] = [], resources: any[] = [], reports: any[] = [];
         try {
           if (isAdmin) {
-            alertData = DEMO_ALERTS; partners = DEMO_PARTNERS; extResources = DEMO_EXTERNAL_RESOURCES;
+            alertData = DEMO_ALERTS; partners = DEMO_PARTNERS;
           } else {
-            const [a, e, p] = await Promise.all([
-              getAlerts(lat, lng), getExternalResources(lat, lng),
+            const [a, p] = await Promise.all([
+              getAlerts(lat, lng),
               supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
             ]);
-            alertData = a; extResources = e; partners = p.data || [];
+            alertData = a; partners = (p as any).data || [];
           }
           setAlerts(alertData);
 
@@ -133,11 +133,6 @@ export default function CitizenMapPage() {
             type: 'Feature' as const,
             geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
             properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
-          })),
-          ...extResources.filter(r => r.latitude && r.longitude).map(r => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-            properties: { id: r.id, name: r.organization_name, category: r.category, details: r.description, phone: r.phone, address: r.address, type: 'resource', source_type: '211' },
           })),
           ...partners.filter(p => p.latitude && p.longitude).map(p => ({
             type: 'Feature' as const,

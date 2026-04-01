@@ -130,7 +130,7 @@ export async function getCommunityPreview(lat: number, lng: number, radius: numb
 export async function getExternalResources(lat: number, lng: number, radiusKm: number = 50): Promise<ExternalResource[]> {
   // Direct read — external_resources is reference data, not operational
   const { data } = await supabase
-    .from('external_resources')
+    .from('resources')
     .select('id, organization_name, service_name, description, category, latitude, longitude, address, phone, hours_description')
     .not('latitude', 'is', null)
     .eq('status', 'active')

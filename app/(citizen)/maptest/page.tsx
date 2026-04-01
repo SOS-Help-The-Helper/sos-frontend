@@ -41,7 +41,7 @@ export default function MapDiag() {
         const { data: requests, error: reqErr } = await supabase
           .from('requests')
           .select('id, category, latitude, longitude, status')
-          .not('latitude', 'is', null)
+          .not('latitude', 'is', null).eq('source', '211')
           .in('status', ['open', 'active', 'matched'])
           .limit(500);
         log(`Requests: ${requests?.length || 0} (error: ${reqErr?.message || 'none'})`);
@@ -49,22 +49,22 @@ export default function MapDiag() {
         const { data: resources, error: resErr } = await supabase
           .from('resources')
           .select('id, category, latitude, longitude, status')
-          .not('latitude', 'is', null)
+          .not('latitude', 'is', null).eq('source', '211')
           .limit(500);
         log(`Resources: ${resources?.length || 0} (error: ${resErr?.message || 'none'})`);
 
         const { data: extRes, error: extErr } = await supabase
-          .from('external_resources')
+          .from('resources')
           .select('id, organization_name, latitude, longitude, category')
-          .not('latitude', 'is', null)
+          .not('latitude', 'is', null).eq('source', '211')
           .limit(200);
-        log(`External (211): ${extRes?.length || 0} (error: ${extErr?.message || 'none'})`);
+        log(`211 Resources: ${extRes?.length || 0} (error: ${extErr?.message || 'none'})`);
 
         const { data: reports, error: repErr } = await supabase
           .from('community_messages')
           .select('id, message_text, latitude, longitude')
           .eq('message_type', 'report')
-          .not('latitude', 'is', null)
+          .not('latitude', 'is', null).eq('source', '211')
           .limit(100);
         log(`Reports: ${reports?.length || 0} (error: ${repErr?.message || 'none'})`);
 
