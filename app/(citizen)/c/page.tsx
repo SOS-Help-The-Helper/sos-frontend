@@ -338,7 +338,7 @@ export default function CitizenMapPage() {
       </div>
 
       {/* Full screen map */}
-      <div ref={mapRef} className="absolute inset-0 bg-[#0F1E2B]" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))' }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
 
       {/* Legend */}
       <div className="absolute bottom-20 left-3 z-20 flex gap-1.5">
