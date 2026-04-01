@@ -119,12 +119,12 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
   if (!open) return null;
 
-  const sheetHeight = sheetState === 'full' ? 'calc(100vh - 56px - env(safe-area-inset-bottom, 0px))'
-    : sheetState === 'half' ? '55vh' : '64px';
+  const sheetHeight = sheetState === 'full' ? '70vh'
+    : sheetState === 'half' ? '45vh' : '64px';
 
   return (
     <div className="fixed left-0 right-0 z-50 max-w-lg mx-auto transition-all duration-300"
-      style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))', height: sheetHeight }}>
+      style={{ bottom: '56px', height: sheetHeight, maxWidth: '100vw' }}>
       {sheetState !== 'collapsed' && <div className="fixed inset-0 -z-10" onClick={onClose} />}
       <div className="bg-[#1A3850] rounded-t-2xl h-full flex flex-col shadow-2xl border-t border-white/10 overflow-hidden">
         {/* Header */}
@@ -200,11 +200,11 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
         {/* Input */}
         <div className="px-4 py-2.5 border-t border-white/10 flex-shrink-0">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2 w-full overflow-hidden">
             <input type="text" value={input} onChange={e => setInput(e.target.value)}
               onFocus={() => { if (sheetState === 'collapsed') setSheetState('half'); }}
               placeholder="Ask SOS anything..." disabled={isLoading}
-              className="flex-1 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
+              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
             <button type="submit" disabled={!input.trim() || isLoading}
               className="w-9 h-9 rounded-xl bg-sos-red-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
