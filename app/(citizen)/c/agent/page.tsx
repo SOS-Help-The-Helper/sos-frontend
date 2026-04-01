@@ -26,7 +26,7 @@ function AgentContent() {
   const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': (typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : '') || '', 'x-authenticated': (typeof window !== 'undefined' && localStorage.getItem('sos-person-id')) ? 'true' : 'false' } }),
     // No initial messages — agent responds to first user action
   });
 

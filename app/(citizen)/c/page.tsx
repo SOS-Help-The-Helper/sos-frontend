@@ -440,7 +440,7 @@ export default function CitizenMapPage() {
               )}
 
               {/* Row 3: Metadata chips — uniform across all types */}
-              <div className="flex items-center gap-2.5 flex-wrap mb-3">
+              <div className="flex flex-col gap-1.5 mb-3">
                 {/* Category chip */}
                 {p.category && (
                   <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70 capitalize">
@@ -484,7 +484,7 @@ export default function CitizenMapPage() {
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
                     // Pass structured match context with IDs
                     const matchContext = JSON.stringify({
-                      action: 'match',
+                      action: 'match', intent: 'citizen_needs_this',
                       type: pinData.type,
                       id: pinData.id,
                       category: pinData.properties?.category,
