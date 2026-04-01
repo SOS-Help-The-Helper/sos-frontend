@@ -409,9 +409,9 @@ export default function CitizenMapPage() {
 
       {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
-        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg mx-auto ${
+        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto ${
           detailMode === 'expanded' ? 'bottom-[calc(56px+env(safe-area-inset-bottom,0px))]' : 'bottom-[calc(56px+env(safe-area-inset-bottom,0px))]'
-        }`} style={{ maxHeight: detailMode === 'expanded' ? '50vh' : '160px' }}>
+        }`} style={{ maxHeight: detailMode === 'expanded' ? '60vh' : '220px' }}>
           <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 overflow-hidden h-full flex flex-col">
             {/* Drag handle */}
             <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')} className="py-1.5 flex justify-center flex-shrink-0">
@@ -426,9 +426,17 @@ export default function CitizenMapPage() {
                     selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
                     selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-white'
                   }`} />
-                  <span className="text-xs font-bold text-white">
-                    {p.name || p.category?.replace(/_/g, ' ') || p.id?.slice(0, 12) || 'Unknown'}
-                  </span>
+                  <div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider ${
+                      selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
+                      selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/60'
+                    }">
+                      {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
+                    </span>
+                    <span className="text-xs font-bold text-white block">
+                      {p.name || p.category?.replace(/_/g, ' ') || p.id?.slice(0, 12) || 'Unknown'}
+                    </span>
+                  </div>
                 </div>
                 <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-sm">✕</button>
               </div>

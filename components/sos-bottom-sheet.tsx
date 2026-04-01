@@ -35,7 +35,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   const { messages, sendMessage, status, error: chatError } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated) } }),
     onError: (err) => console.error('Chat error:', err),
-    messages: [{ id: 'welcome', role: 'assistant' as const, content: 'What can I help you with?', parts: [{ type: 'text', text: 'What can I help you with?' }] }],
+    // No welcome message — agent responds to first user action
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
