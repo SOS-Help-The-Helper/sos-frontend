@@ -439,14 +439,20 @@ export default function CitizenMapPage() {
               {/* Action buttons */}
               <div className="flex gap-2 mt-3">
                 <button onClick={() => {
+                    const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
-                    // Pre-load match context — will be picked up by the bottom sheet
-                    const name = p.name || p.category?.replace(/_/g, ' ') || 'this resource';
-                    const matchMsg = selectedPin.type === 'request' 
-                      ? `I want to help with this request: ${p.details || p.category || 'help needed'}`
-                      : `Match me with ${name}`;
+                    // Pass structured match context with IDs
+                    const matchContext = JSON.stringify({
+                      action: 'match',
+                      type: pinData.type,
+                      id: pinData.id,
+                      category: pinData.properties?.category,
+                      urgency: pinData.properties?.urgency,
+                      name: pinData.properties?.name,
+                      details: pinData.properties?.details?.substring(0, 100),
+                    });
                     setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchMsg }));
+                      window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext }));
                     }, 500);
                   }}
                   className="flex-1 py-2 rounded-lg bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">

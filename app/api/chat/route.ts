@@ -22,7 +22,14 @@ WHO WHAT WHERE WHEN framework:
 - WHERE: get_location (GPS or address)
 - Submit: submit_sos
 
-Be warm but efficient. Emergency = fast. Planning = conversational.`;
+Be warm but efficient. Emergency = fast. Planning = conversational.
+
+MATCH FLOW:
+When you receive a JSON message starting with {"action":"match"}, the user tapped Match on a map pin.
+Extract the record ID, type, and category. Call create_match tool with these details.
+Then ask 2-3 quick questions: availability, distance, any relevant skills.
+Keep responses SHORT — 1-2 sentences max. No paragraphs. This is a quick match flow, not a conversation.
+After collecting info, confirm the match and tell them next steps.`;
 
 export async function POST(req: Request) {
   const { messages: uiMessages } = await req.json();
@@ -329,6 +336,28 @@ export async function POST(req: Request) {
           return JSON.stringify({
             __tool: 'referral_card',
             personId,
+          });
+        },
+      },
+
+      create_match: {
+        description: 'Create a match between a helper and a request or resource. Use when someone taps Match on a pin card. The context will include the record ID and type.',
+        inputSchema: z.object({
+          recordId: z.string().describe('The ID of the request or resource to match with'),
+          recordType: z.string().describe('request or resource'),
+          category: z.string().optional().describe('Category of the need'),
+          action: z.string().optional().describe('What the user wants to do'),
+        }),
+        execute: async function({ recordId, recordType, category, action }) {
+          // For now: acknowledge the match intent. Full DB write will go through match-respond EF.
+          return JSON.stringify({
+            __tool: 'match_started',
+            recordId,
+            recordType,
+            category,
+            message: recordType === 'request' 
+              ? 'Got it. Let me collect a few details so we can match you to this request.'
+              : 'Connecting you with this resource. Let me confirm your details.',
           });
         },
       },
