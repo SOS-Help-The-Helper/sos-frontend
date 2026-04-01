@@ -15,8 +15,16 @@ RULES:
 
 AUTH AWARENESS:
 The first message may include metadata: {"isAuthenticated":true/false,"personId":"...","name":"..."}
-If authenticated: you already know their name, phone, location. Skip those questions.
-If not authenticated: collect phone number during match/SOS flows. After 2nd interaction, softly suggest: "Want to save your progress? Quick phone signup."
+If authenticated: you already know their name, phone, location. Skip those questions. Reference their history if provided.
+If not authenticated:
+- Collect phone during match/SOS flows (after "How can you help?" — not before)
+- After their 2nd message: softly mention "By the way, you can save your progress with a quick phone signup."
+- After submitting an SOS: "Sign up to track your request and get notified when matched."
+- After a match: "Want to get notified when help is confirmed? Quick signup."
+- After readiness check: "Save your readiness score — 10 second signup."
+- NEVER block browsing or searching behind auth. Only gate ACTIONS behind phone collection.
+- After 10 messages without auth: "You're getting great use out of SOS! Sign up to keep your conversation history."
+- These are SOFT prompts. If they decline, move on. Don't repeat.
 
 INTAKE FLOW (I need help):
 1. show_categories (multi-select — user can pick multiple needs)
@@ -401,23 +409,49 @@ export async function POST(req: Request) {
       },
 
       create_match: {
-        description: 'Create a match between a helper and a request or resource. Use when someone taps Match on a pin card. The context will include the record ID and type.',
+        description: 'Create a match between a helper and a request or resource. Use after collecting how they can help and when.',
         inputSchema: z.object({
-          recordId: z.string().describe('The ID of the request or resource to match with'),
+          recordId: z.string().describe('The ID of the request or resource'),
           recordType: z.string().describe('request or resource'),
-          category: z.string().optional().describe('Category of the need'),
-          action: z.string().optional().describe('What the user wants to do'),
+          category: z.string().optional(),
+          helperDescription: z.string().optional().describe('What the helper said they can offer'),
+          availability: z.string().optional().describe('When they can help'),
+          phone: z.string().optional().describe('Phone if not authenticated'),
         }),
-        execute: async function({ recordId, recordType, category, action }) {
-          // For now: acknowledge the match intent. Full DB write will go through match-respond EF.
+        execute: async function({ recordId, recordType, category, helperDescription, availability, phone }) {
+          // Write match via match-respond EF
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-respond`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              match_id: recordId,
+              action: 'accept',
+              channel: 'web_ai_sdk',
+              helper_description: helperDescription,
+              availability: availability,
+              phone: phone,
+            }),
+          });
+
+          // Write signal trace
+          await fetch(`${SUPABASE_URL}/rest/v1/signal_traces`, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              entity_type: 'match',
+              entity_id: recordId,
+              signal_layer: 'I',
+              trace_type: 'web_match_created',
+              reasoning: `Web match: ${helperDescription || 'helper offered'}. Available: ${availability || 'not specified'}`,
+              agent_id: 'web-citizen',
+              metadata: { channel: 'web_ai_sdk', category },
+            }),
+          });
+
           return JSON.stringify({
-            __tool: 'match_started',
+            __tool: 'match_confirmed',
             recordId,
-            recordType,
-            category,
-            message: recordType === 'request' 
-              ? 'Got it. Let me collect a few details so we can match you to this request.'
-              : 'Connecting you with this resource. Let me confirm your details.',
+            message: 'Match confirmed! The person in need will be notified with your info.',
           });
         },
       },
