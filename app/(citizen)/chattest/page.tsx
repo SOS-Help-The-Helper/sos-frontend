@@ -41,7 +41,7 @@ export default function ChatTest() {
             <strong>{m.role}:</strong>
             
             {/* Try rendering content */}
-            {m.content && <p style={{ color: '#ff0' }}>content: {m.content}</p>}
+            { (m as any).content && <p style={{ color: "#ff0" }}>content: {(m as any).content}</p>}
             
             {/* Render parts (v6 pattern) */}
             {(m as any).parts?.map((part: any, i: number) => (

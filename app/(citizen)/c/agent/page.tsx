@@ -71,7 +71,7 @@ function AgentContent() {
                         <span className="text-[9px] font-bold text-white/40">SOS</span>
                       </div>
                     )}
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{(msg as any).parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("") || ""}</p>
                   </div>
                 </div>
               )}
