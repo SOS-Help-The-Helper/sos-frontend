@@ -25,7 +25,7 @@ function AgentContent() {
   const initialized = useRef(false);
   const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error: chatError } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
     messages: [{ id: 'welcome', role: 'assistant' as const, content: "I'm your SOS agent. What can I help with?", parts: [{ type: 'text', text: "I'm your SOS agent. What can I help with?" }] }],
   });
@@ -101,10 +101,22 @@ function AgentContent() {
             </div>
           ))}
 
+          {/* Error + retry */}
+          {chatError && !isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl rounded-bl-md px-4 py-2.5">
+                <p className="text-xs text-red-400">Something went wrong.</p>
+                <button onClick={() => { if (messages.length > 0) sendMessage({ text: 'continue' }); }}
+                  className="text-[10px] text-red-300 underline mt-1">Retry</button>
+              </div>
+            </div>
+          )}
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-white/10 rounded-2xl rounded-bl-md px-4 py-2.5">
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 items-center">
+                  <span className="text-[9px] text-white/30 mr-1">SOS is thinking</span>
                   <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                   <div className="w-2 h-2 rounded-full bg-sos-accent-400 animate-bounce" style={{ animationDelay: '300ms' }} />
