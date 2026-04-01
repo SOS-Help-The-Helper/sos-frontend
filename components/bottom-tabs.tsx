@@ -21,7 +21,7 @@ import {
 import { useState } from 'react';
 
 const mainTabs = [
-  { path: '/', label: 'Agent', icon: MessageSquare },
+  { path: '/aa', label: 'Agent', icon: MessageSquare },
   { path: '/map', label: 'Map', icon: Map },
   { path: '/matching', label: 'Matches', icon: GitCompare },
 ];

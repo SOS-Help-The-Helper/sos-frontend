@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 const allNavItems = [
-  { path: '/', label: 'Agent', icon: MessageSquare, adminOnly: false, vendorOnly: false },
+  { path: '/aa', label: 'Agent', icon: MessageSquare, adminOnly: false, vendorOnly: false },
   { path: '/map', label: 'Map', icon: Map, adminOnly: false, vendorOnly: false },
   { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false, vendorOnly: false },
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false, vendorOnly: false },
