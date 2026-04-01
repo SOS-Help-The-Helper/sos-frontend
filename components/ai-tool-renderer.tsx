@@ -251,6 +251,7 @@ function SearchResults({ data, onSelect }: { data: any; onSelect: (msg: string) 
       type: 'show_results', results,
       fitBounds: { sw: [minLat - lp, minLng - lgp], ne: [maxLat + lp, maxLng + lgp] },
       query: data.query || '',
+      filterCategory: data.category || data.query || '',
     });
   }
 

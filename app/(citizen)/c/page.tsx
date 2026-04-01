@@ -5,6 +5,7 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { MapResultsSheet } from '@/components/map-results-sheet';
 import { onMapCommand, clearMapCommand, type MapCommand, type MapResult } from '@/lib/map-commands';
+import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter';
 import { getAlerts, getExternalResources, type Alert, type ExternalResource } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { DEMO_ALERTS, DEMO_PARTNERS, DEMO_EXTERNAL_RESOURCES } from '@/lib/demo-data';
@@ -258,6 +259,7 @@ export default function CitizenMapPage() {
 
       if (cmd.type === 'clear') {
         setShowResults(false); setMapResults([]);
+        clearMapCategoryFilter(map);
         // Restore all permanent layers
         const allLayers = ['requests-clusters', 'requests-cluster-count', 'requests-points', 'resources-clusters', 'resources-cluster-count', 'resources-points', 'reports-clusters', 'reports-cluster-count', 'reports-points', 'disasters-points'];
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
@@ -265,6 +267,10 @@ export default function CitizenMapPage() {
         if (map.getSource('search-results-source')) {
           (map.getSource('search-results-source') as any).setData({ type: 'FeatureCollection', features: [] });
         }
+        // Reset any active filters
+        ['requests-points', 'resources-points'].forEach(layer => {
+          if (map.getLayer(layer)) map.setFilter(layer, ['!', ['has', 'point_count']]);
+        });
         return;
       }
 
@@ -296,13 +302,37 @@ export default function CitizenMapPage() {
             } });
         }
 
+        // Fix 9: Apply category filter to permanent layers
+        if (cmd.filterCategory) {
+          applyMapCategoryFilter(map, cmd.filterCategory);
+        }
+
         if (cmd.fitBounds) {
           map.fitBounds([[cmd.fitBounds.sw[1], cmd.fitBounds.sw[0]], [cmd.fitBounds.ne[1], cmd.fitBounds.ne[0]]], { padding: 60, duration: 1000 });
         }
       }
 
+      if (cmd.type === 'filter' && cmd.filterCategory) {
+        applyMapCategoryFilter(map, cmd.filterCategory);
+      }
+
       if (cmd.type === 'focus' && cmd.center) {
         map.flyTo({ center: cmd.center, zoom: cmd.zoom || 14, duration: 800 });
+      }
+
+      // P1 Fix 9: Filter existing layers by category
+      if ((cmd as any).type === 'filter' && (cmd as any).category) {
+        const cat = (cmd as any).category;
+        // Show only matching points in each layer
+        ['requests-points', 'resources-points'].forEach(layer => {
+          if (map.getLayer(layer)) {
+            map.setFilter(layer, ['all', ['!', ['has', 'point_count']], ['==', ['get', 'category'], cat]]);
+          }
+        });
+        // Hide clusters during filter (they don't respect feature filters well)
+        ['requests-clusters', 'requests-cluster-count', 'resources-clusters', 'resources-cluster-count'].forEach(layer => {
+          if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', 'none');
+        });
       }
     });
     return unsub;

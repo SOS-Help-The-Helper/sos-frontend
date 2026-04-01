@@ -18,12 +18,13 @@ export interface MapResult {
 }
 
 export interface MapCommand {
-  type: 'show_results' | 'clear' | 'focus';
+  type: 'show_results' | 'clear' | 'focus' | 'filter';
   results?: MapResult[];
   fitBounds?: { sw: [number, number]; ne: [number, number] };
   zoom?: number;
   center?: [number, number]; // [lng, lat]
   query?: string; // what the user searched for
+  filterCategory?: string; // category to filter map layers by
 }
 
 type Listener = (cmd: MapCommand) => void;
