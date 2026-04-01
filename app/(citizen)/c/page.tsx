@@ -76,34 +76,33 @@ export default function CitizenMapPage() {
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
       mapInstance.current = map;
 
-      // Load data
-      let alertData: Alert[] = [], partners: any[] = [], extResources: ExternalResource[] = [];
-      let requests: any[] = [], resources: any[] = [], reports: any[] = [];
-      try {
-        if (isAdmin) {
-          alertData = DEMO_ALERTS; partners = DEMO_PARTNERS; extResources = DEMO_EXTERNAL_RESOURCES;
-        } else {
-          const [a, e, p] = await Promise.all([
-            getAlerts(lat, lng), getExternalResources(lat, lng),
-            supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
+      map.on('load', async () => {
+        // Load data INSIDE map.on('load') so we don't miss the event
+        let alertData: Alert[] = [], partners: any[] = [], extResources: ExternalResource[] = [];
+        let requests: any[] = [], resources: any[] = [], reports: any[] = [];
+        try {
+          if (isAdmin) {
+            alertData = DEMO_ALERTS; partners = DEMO_PARTNERS; extResources = DEMO_EXTERNAL_RESOURCES;
+          } else {
+            const [a, e, p] = await Promise.all([
+              getAlerts(lat, lng), getExternalResources(lat, lng),
+              supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
+            ]);
+            alertData = a; extResources = e; partners = p.data || [];
+          }
+          setAlerts(alertData);
+
+          const [reqResult, resResult, repResult] = await Promise.all([
+            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(500),
+            supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(500),
+            supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
           ]);
-          alertData = a; extResources = e; partners = p.data || [];
+          requests = reqResult.data || [];
+          resources = resResult.data || [];
+          reports = repResult.data || [];
+        } catch (err) {
+          console.error('Map data load error:', err);
         }
-        setAlerts(alertData);
-
-        const [reqResult, resResult, repResult] = await Promise.all([
-          supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(500),
-          supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(500),
-          supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
-        ]);
-        requests = reqResult.data || [];
-        resources = resResult.data || [];
-        reports = repResult.data || [];
-      } catch (err) {
-        console.error('Map data load error:', err);
-      }
-
-      map.on('load', () => {
         // === REQUESTS SOURCE (red) ===
         const requestFeatures = (requests || []).filter(r => r.latitude && r.longitude).map(r => ({
           type: 'Feature' as const,
