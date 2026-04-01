@@ -438,18 +438,20 @@ export default function CitizenMapPage() {
 
               {/* Action buttons */}
               <div className="flex gap-2 mt-3">
-                {selectedPin.type === 'request' && (
-                  <button onClick={() => { setMatchMode(true); setSheetOpen(true); }}
-                    className="flex-1 py-2 rounded-lg bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
-                    🔴 Match Me
-                  </button>
-                )}
-                {selectedPin.type === 'resource' && (
-                  <button onClick={() => { setMatchMode(true); setSheetOpen(true); }}
-                    className="flex-1 py-2 rounded-lg bg-[#89CFF0] text-[#1A3850] text-xs font-bold active:scale-[0.97]">
-                    🤝 Connect
-                  </button>
-                )}
+                <button onClick={() => {
+                    setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
+                    // Pre-load match context — will be picked up by the bottom sheet
+                    const name = p.name || p.category?.replace(/_/g, ' ') || 'this resource';
+                    const matchMsg = selectedPin.type === 'request' 
+                      ? `I want to help with this request: ${p.details || p.category || 'help needed'}`
+                      : `Match me with ${name}`;
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchMsg }));
+                    }, 500);
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
+                  Match
+                </button>
                 <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')}
                   className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs font-bold active:scale-[0.97]">
                   {detailMode === 'card' ? 'Details →' : 'Collapse'}

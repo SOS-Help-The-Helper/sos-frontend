@@ -60,29 +60,32 @@ function AgentContent() {
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#0F1E2B]">
           {messages.map(msg => (
             <div key={msg.id}>
-              {/* Fallback for content */ false && (
-                <div className={`flex ${((msg as any).role === 'user') ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                    ((msg as any).role === 'user') ? 'bg-sos-red-500 text-white rounded-br-md' : 'bg-white/10 text-white rounded-bl-md'
-                  }`}>
-                    {((msg as any).role === 'assistant') && (
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <img src="/logomark.svg" alt="" className="h-3.5 w-3.5" />
-                        <span className="text-[9px] font-bold text-white/40">SOS</span>
+              {(msg as any).parts?.map((part: any, pi: number) => {
+                if (part.type === 'text' && part.text) {
+                  return (
+                    <div key={pi} className={`flex ${((msg as any).role === 'user') ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                        ((msg as any).role === 'user') ? 'bg-sos-red-500 text-white rounded-br-md' : 'bg-white/10 text-white rounded-bl-md'
+                      }`}>
+                        {((msg as any).role === 'assistant') && (
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <img src="/logomark.svg" alt="" className="h-3.5 w-3.5" />
+                            <span className="text-[9px] font-bold text-white/40">SOS</span>
+                          </div>
+                        )}
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
                       </div>
-                    )}
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{(msg as any).parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("") || ""}</p>
-                  </div>
-                </div>
-              )}
-
-              {msg.parts?.filter((p: any) => p.type === 'tool-invocation').map((part: any, i: number) => {
-                const inv = part.toolInvocation;
-                if (inv?.state === 'result') {
-                  try {
-                    const data = typeof inv.result === 'string' ? JSON.parse(inv.result) : inv.result;
-                    if (data?.__tool) return <div key={i} className="ml-1 mt-1"><AIToolRenderer toolData={data} onUserAction={send} /></div>;
-                  } catch {}
+                    </div>
+                  );
+                }
+                if (part.type === 'tool-invocation') {
+                  const inv = part.toolInvocation;
+                  if (inv?.state === 'result') {
+                    try {
+                      const data = typeof inv.result === 'string' ? JSON.parse(inv.result) : inv.result;
+                      if (data?.__tool) return <div key={pi} className="ml-1 mt-1"><AIToolRenderer toolData={data} onUserAction={send} /></div>;
+                    } catch {}
+                  }
                 }
                 return null;
               })}

@@ -35,6 +35,17 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Listen for match context from map pin buttons
+  useEffect(() => {
+    function handleMatch(e: any) {
+      if (e.detail && open) {
+        sendMessage({ text: e.detail });
+      }
+    }
+    window.addEventListener('sos-match-message', handleMatch);
+    return () => window.removeEventListener('sos-match-message', handleMatch);
+  }, [open, sendMessage]);
   if (chatError) console.error('useChat error state:', chatError);
 
   useEffect(() => { if (!open) setSheetState('half'); }, [open]);
