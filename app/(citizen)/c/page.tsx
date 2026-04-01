@@ -437,12 +437,19 @@ export default function CitizenMapPage() {
               </div>
 
 
+              {/* Row 4: Summary text */}
+              {(p.details || p.description) && (
+                <p className="text-sm text-white/70 leading-relaxed">
+                  {p.details || p.description}
+                </p>
+              )}
+
               {/* Row 3: Metadata chips — uniform across all types */}
               <div className="flex items-center gap-2.5 flex-wrap mb-3">
                 {/* Category chip */}
                 {p.category && (
                   <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70 capitalize">
-                    {p.category.replace(/_/g, ' ')}
+                    {'Type: ' + p.category.replace(/_/g, ' ')}
                   </span>
                 )}
 
@@ -460,7 +467,7 @@ export default function CitizenMapPage() {
                 {selectedPin.type === 'resource' && p.source_type && (
                   <span className={`text-xs font-medium px-3 py-1 rounded-full ${
                     p.source_type === 'partner' ? 'bg-[#89CFF0]/20 text-[#89CFF0]' : p.source_type === '211' ? 'bg-[#EDB200]/20 text-[#EDB200]' : 'bg-white/10 text-white/50'
-                  }`}>{p.source_type === '211' ? '211 Resource' : p.source_type === 'partner' ? 'SOS Partner' : 'Community'}</span>
+                  }`}>{p.source_type === '211' ? 'Source: 211' : p.source_type === 'partner' ? 'Source: Partner' : 'Source: Community'}</span>
                 )}
                 {selectedPin.type === 'resource' && p.capacity != null && (
                   <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70">Capacity: {p.capacity}</span>
@@ -474,13 +481,6 @@ export default function CitizenMapPage() {
                   <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/50">Unverified</span>
                 )}
               </div>
-
-              {/* Row 4: Summary text */}
-              {(p.details || p.description) && (
-                <p className="text-sm text-white/70 leading-relaxed">
-                  {p.details || p.description}
-                </p>
-              )}
 
               {/* Action buttons */}
               <div className="mt-3">
