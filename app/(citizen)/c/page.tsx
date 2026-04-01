@@ -436,12 +436,6 @@ export default function CitizenMapPage() {
                 <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none p-1">✕</button>
               </div>
 
-              {/* Row 2: Category chip (same size as type label, left-aligned) */}
-              <div className="mb-3 ml-5">
-                <span className="text-sm font-bold text-white capitalize">
-                  {p.name || p.category?.replace(/_/g, ' ')?.replace(/^./, (c: string) => c.toUpperCase()) || 'Unknown'}
-                </span>
-              </div>
 
               {/* Row 3: Metadata chips — uniform across all types */}
               <div className="flex items-center gap-2.5 flex-wrap mb-3">
@@ -489,7 +483,7 @@ export default function CitizenMapPage() {
               )}
 
               {/* Action buttons */}
-              <div className="flex gap-2 mt-3">
+              <div className="mt-3">
                 <button onClick={() => {
                     const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
@@ -507,11 +501,11 @@ export default function CitizenMapPage() {
                       window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext }));
                     }, 500);
                   }}
-                  className="flex-1 py-2 rounded-lg bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
+                  className="w-full py-2.5 rounded-xl bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
                   Match
                 </button>
                 <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')}
-                  className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs font-bold active:scale-[0.97]">
+                  className="hidden">
                   {detailMode === 'card' ? 'Details →' : 'Collapse'}
                 </button>
               </div>
