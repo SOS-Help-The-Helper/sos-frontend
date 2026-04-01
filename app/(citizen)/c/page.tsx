@@ -362,7 +362,7 @@ export default function CitizenMapPage() {
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,0px)]">
-        <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-[#0F1E2B] to-transparent">
+        <div className="flex items-center justify-between px-4 py-3 pb-8 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/70 to-transparent">
           <div className="flex items-center gap-2">
             <img src="/logomark.svg" alt="SOS" className="h-6 w-6" />
             <span className="text-xs font-bold text-white">📍 {locationName}</span>
@@ -393,9 +393,9 @@ export default function CitizenMapPage() {
 
       {/* Legend */}
       <div className="absolute bottom-20 left-3 z-20 flex gap-1.5">
-        <span className="text-[8px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#EF4E4B]" /> Needs</span>
-        <span className="text-[8px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#89CFF0]" /> Resources</span>
-        <span className="text-[8px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white border border-white/50" /> Reports</span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B]" /> Requests</span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#89CFF0]" /> Resources</span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-white border border-white/50" /> Reports</span>
       </div>
 
       {/* Alert banner */}
