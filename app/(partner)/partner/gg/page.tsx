@@ -14,7 +14,7 @@ export default function GgPartnerPage() {
 
   useEffect(() => {
     setCurrentView('c1e74116-5e12-410a-9b21-dc80c7646d77');
-    router.replace('/');
+    router.replace('/matching');
   }, []);
 
   return (

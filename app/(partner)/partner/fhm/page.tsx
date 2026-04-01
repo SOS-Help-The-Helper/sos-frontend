@@ -14,7 +14,7 @@ export default function FhmPartnerPage() {
 
   useEffect(() => {
     setCurrentView('9d894368-51af-4cf7-9318-444a3c216f5d');
-    router.replace('/');
+    router.replace('/matching');
   }, []);
 
   return (

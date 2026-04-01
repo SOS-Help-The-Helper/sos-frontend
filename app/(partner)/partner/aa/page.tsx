@@ -14,7 +14,7 @@ export default function AaPartnerPage() {
 
   useEffect(() => {
     setCurrentView('43299807-6229-49be-9a6b-0498c9188178');
-    router.replace('/');
+    router.replace('/matching');
   }, []);
 
   return (

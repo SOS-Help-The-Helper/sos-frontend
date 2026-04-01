@@ -14,7 +14,7 @@ export default function ErvPartnerPage() {
 
   useEffect(() => {
     setCurrentView('da86c92f-d52d-4b13-a474-30e1be8fb808');
-    router.replace('/');
+    router.replace('/matching');
   }, []);
 
   return (

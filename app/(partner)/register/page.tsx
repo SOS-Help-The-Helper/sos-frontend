@@ -473,7 +473,7 @@ export default function RegisterPage() {
             <h2 className="text-xl font-bold text-sos-blue-800 mb-2">Application Submitted</h2>
             <p className="text-sm text-sos-gray-600 max-w-xs">Your organization is under review. We typically verify within 24-48 hours. You&apos;ll receive an email at <strong>{contactEmail}</strong> when approved.</p>
             <div className="mt-6 space-y-2">
-              <button onClick={() => router.push('/')} className="block w-full px-6 py-3 rounded-xl bg-sos-blue-800 text-white font-bold text-sm">Go to Dashboard</button>
+              <button onClick={() => router.push('/matching')} className="block w-full px-6 py-3 rounded-xl bg-sos-blue-800 text-white font-bold text-sm">Go to Dashboard</button>
               <p className="text-[10px] text-sos-gray-400">Your dashboard will be fully unlocked after verification.</p>
             </div>
           </div>

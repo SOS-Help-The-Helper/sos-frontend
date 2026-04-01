@@ -25,7 +25,7 @@ export default function ViewAs() {
   function selectView(viewId: string) {
     setCurrentView(viewId);
     // Reload to apply the new view across all pages
-    window.location.href = '/';
+    window.location.href = '/matching';
   }
 
   return (

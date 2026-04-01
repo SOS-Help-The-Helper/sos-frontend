@@ -14,7 +14,7 @@ export default function EndurantPartnerPage() {
 
   useEffect(() => {
     setCurrentView('2d84a5d4-41a6-4817-8c36-37d6f8cd727a');
-    router.replace('/');
+    router.replace('/matching');
   }, []);
 
   return (
