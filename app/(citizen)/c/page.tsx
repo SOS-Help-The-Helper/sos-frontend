@@ -242,6 +242,13 @@ export default function CitizenMapPage() {
             setSelectedPin(null); setMatchMode(false);
           }, 100);
         });
+
+        // Safety: reset all filters on load (in case a previous session left filters active)
+        ['requests-points', 'resources-points', 'reports-points'].forEach(layer => {
+          if (map.getLayer(layer)) {
+            map.setFilter(layer, ['!', ['has', 'point_count']]);
+          }
+        });
       });
 
       setLoading(false);
