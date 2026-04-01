@@ -232,10 +232,12 @@ export default function CitizenMapPage() {
           });
         });
 
-        // Click empty space → dismiss
+        // Click empty space → dismiss (delayed to let layer handlers fire first)
         map.on('click', (e: any) => {
-          const features = map.queryRenderedFeatures(e.point, { layers: clickLayers });
-          if (!features.length) { setSelectedPin(null); setMatchMode(false); }
+          setTimeout(() => {
+            const features = map.queryRenderedFeatures(e.point, { layers: [...clickLayers, 'requests-clusters', 'resources-clusters', 'reports-clusters'] });
+            if (!features.length) { setSelectedPin(null); setMatchMode(false); }
+          }, 50);
         });
       });
 
@@ -326,9 +328,23 @@ export default function CitizenMapPage() {
             <img src="/logomark.svg" alt="SOS" className="h-6 w-6" />
             <span className="text-xs font-bold text-white">📍 {locationName}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
-            <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>
-            <span className="text-[10px] font-bold text-white">{STATUS_MAP[status]?.label}</span>
+          <div className="flex items-center gap-2">
+            {!gpsReady && (
+              <button onClick={() => {
+                navigator.geolocation.getCurrentPosition(
+                  p => { setLat(p.coords.latitude); setLng(p.coords.longitude); setGpsReady(true);
+                    mapInstance.current?.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 12 });
+                  },
+                  () => setGpsReady(true), { enableHighAccuracy: true, timeout: 5000 }
+                );
+              }} className="px-2 py-1 rounded-full bg-[#89CFF0]/20 text-[10px] font-bold text-[#89CFF0] backdrop-blur-sm">
+                📍 Share Location
+              </button>
+            )}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
+              <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>
+              <span className="text-[10px] font-bold text-white">{STATUS_MAP[status]?.label}</span>
+            </div>
           </div>
         </div>
       </div>
