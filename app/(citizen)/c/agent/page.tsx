@@ -27,7 +27,7 @@ function AgentContent() {
 
   const { messages, sendMessage, status, error: chatError } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
-    messages: [{ id: 'welcome', role: 'assistant' as const, content: "I'm your SOS agent. What can I help with?", parts: [{ type: 'text', text: "I'm your SOS agent. What can I help with?" }] }],
+    // No initial messages — agent responds to first user action
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
