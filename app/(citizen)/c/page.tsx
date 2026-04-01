@@ -256,18 +256,33 @@ export default function CitizenMapPage() {
       const map = mapInstance.current;
       if (!map) return;
 
-      if (cmd.type === 'clear') { setShowResults(false); setMapResults([]); return; }
+      if (cmd.type === 'clear') {
+        setShowResults(false); setMapResults([]);
+        // Restore all permanent layers
+        const allLayers = ['requests-clusters', 'requests-cluster-count', 'requests-points', 'resources-clusters', 'resources-cluster-count', 'resources-points', 'reports-clusters', 'reports-cluster-count', 'reports-points', 'disasters-points'];
+        allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
+        // Clear search results
+        if (map.getSource('search-results-source')) {
+          (map.getSource('search-results-source') as any).setData({ type: 'FeatureCollection', features: [] });
+        }
+        return;
+      }
 
       if (cmd.type === 'show_results' && cmd.results) {
         setMapResults(cmd.results);
         setMapResultsQuery(cmd.query || '');
         setShowResults(true);
 
-        // Add results as a temporary GeoJSON source
+
+        // Hide all permanent layers — show only search results
+        const allLayers = ['requests-clusters', 'requests-cluster-count', 'requests-points', 'resources-clusters', 'resources-cluster-count', 'resources-points', 'reports-clusters', 'reports-cluster-count', 'reports-points', 'disasters-points'];
+        allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+
+        // Show search results using their natural colors (blue for resources, red for requests)
         const resultFeatures = cmd.results.map(r => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [r.lng, r.lat] },
-          properties: { id: r.id, name: r.name, category: r.category, source_type: r.source, type: 'resource' },
+          properties: { id: r.id, name: r.name, category: r.category, source_type: r.source, type: r.source === 'sos' ? 'request' : 'resource' },
         }));
 
         if (map.getSource('search-results-source')) {
@@ -275,7 +290,10 @@ export default function CitizenMapPage() {
         } else {
           map.addSource('search-results-source', { type: 'geojson', data: { type: 'FeatureCollection', features: resultFeatures } });
           map.addLayer({ id: 'search-results-points', type: 'circle', source: 'search-results-source',
-            paint: { 'circle-color': '#EDB200', 'circle-radius': 10, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
+            paint: {
+              'circle-color': ['match', ['get', 'type'], 'request', '#EF4E4B', 'resource', '#89CFF0', '#89CFF0'],
+              'circle-radius': 10, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff'
+            } });
         }
 
         if (cmd.fitBounds) {
