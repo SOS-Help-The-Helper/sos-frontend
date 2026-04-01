@@ -1,4 +1,5 @@
 import { streamText, convertToModelMessages } from 'ai';
+import { sanitize } from '@/lib/pii-sanitizer';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 
@@ -11,7 +12,9 @@ RULES:
 - Use tools to show interactive UI — don't describe options in text.
 - ONE question at a time. Never ask multiple questions.
 - Keep responses to 1-2 sentences. No paragraphs. No bullet points unless showing a list.
-- NEVER store SSN or bank info.
+- NEVER ask for, collect, or store SSN, bank account numbers, routing numbers, or credit card numbers.
+- If a user shares financial info, respond: 'Please don't share that in chat — I don't need it and can't store it safely.'
+- Phone numbers are OK to collect for matching.
 
 AUTH AWARENESS:
 The first message may include metadata: {"isAuthenticated":true/false,"personId":"...","name":"..."}
@@ -102,6 +105,45 @@ export async function POST(req: Request) {
     ? `\nUSER CONTEXT: Authenticated user (ID: ${personId}). You already have their phone and location. Skip those questions.`
     : '\nUSER CONTEXT: Anonymous user. Collect phone during match/SOS flows.';
   const messages = await convertToModelMessages(uiMessages);
+
+  // PII sanitizer — strip SSN/CC/bank from user messages before LLM sees them
+  const sanitizeResults: any[] = [];
+  for (const msg of messages) {
+    if (msg.role === 'user' && Array.isArray(msg.content)) {
+      for (const part of msg.content) {
+        if (part.type === 'text' && typeof part.text === 'string') {
+          const result = sanitize(part.text);
+          if (result.redactedCount > 0) {
+            part.text = result.text;
+            sanitizeResults.push({
+              skill_id: 'pii-sanitizer',
+              skill_version: 'v1',
+              redacted: result.redacted,
+              flagged: result.flagged,
+              duration_ms: result.durationMs,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Log PII sanitizer traces (async, non-blocking)
+  if (sanitizeResults.length > 0) {
+    fetch(SUPABASE_URL + '/rest/v1/signal_traces', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify(sanitizeResults.map(r => ({
+        entity_type: 'skill_execution',
+        signal_layer: 'N',
+        trace_type: 'pii_sanitize',
+        reasoning: 'PII stripped from user message before LLM: ' + r.redacted.join(', '),
+        confidence_score: 1.0,
+        agent_id: 'web-citizen',
+        metadata: r,
+      }))),
+    }).catch(() => {});
+  }
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
@@ -238,6 +280,18 @@ export async function POST(req: Request) {
           );
           const data = await resp.json();
           const results = data.results || [];
+
+          // Log search skill trace
+          fetch(SUPABASE_URL + '/rest/v1/signal_traces', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              entity_type: 'skill_execution', signal_layer: 'S', trace_type: 'resource_search',
+              reasoning: 'Web search: ' + keyword + ' (' + results.length + ' results)',
+              agent_id: 'web-citizen',
+              metadata: { skill_id: 'resource-search', skill_version: 'v1', keyword, result_count: results.length, lat, lng },
+            }),
+          }).catch(() => {});
 
           return JSON.stringify({
             __tool: 'search_results',
