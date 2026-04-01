@@ -7,6 +7,8 @@ import { DefaultChatTransport } from 'ai';
 import { CitizenShell } from '@/components/citizen-shell';
 import { QuickChips } from '@/components/agent-tap-cards';
 import { AIToolRenderer } from '@/components/ai-tool-renderer';
+import { loadChatHistory, saveChatHistoryDebounced } from '@/lib/chat-persistence';
+import { getPersonContext } from '@/lib/person-context';
 
 const QUICK_ACTIONS = [
   { id: 'help', label: 'I Need Help', icon: '🔴' },
@@ -21,6 +23,7 @@ function AgentContent() {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
@@ -28,6 +31,12 @@ function AgentContent() {
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Fix 5: Debounced chat persistence
+  useEffect(() => {
+    if (!personId || messages.length <= 1) return;
+    saveChatHistoryDebounced(personId, messages);
+  }, [personId, messages]);
 
   useEffect(() => {
     if (initialQuery && !initialized.current) {
