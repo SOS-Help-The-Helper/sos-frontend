@@ -419,66 +419,58 @@ export default function CitizenMapPage() {
             </button>
 
             <div className="flex-1 overflow-y-auto px-4 pb-3">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${
+              {/* Header: colored dot + type label */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-3.5 h-3.5 rounded-full ${
                     selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
                     selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-white'
                   }`} />
                   <div>
-                    <span className="text-[9px] font-bold uppercase tracking-wider ${
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${
                       selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
-                      selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/60'
-                    }">
-                      {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
-                    </span>
-                    <span className="text-xs font-bold text-white block">
-                      {p.name || p.category?.replace(/_/g, ' ') || p.id?.slice(0, 12) || 'Unknown'}
-                    </span>
+                      selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
+                    }`}>
+                      SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
+                    </p>
+                    <p className="text-sm font-bold text-white mt-0.5">
+                      {p.name || p.category?.replace(/_/g, ' ')?.replace(/^./, (c: string) => c.toUpperCase()) || 'Unknown'}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-sm">✕</button>
+                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none">✕</button>
               </div>
 
-              {/* Request detail */}
-              {selectedPin.type === 'request' && (
-                <div className="space-y-1.5">
-                  {p.details && <p className="text-xs text-white/70">{p.details}</p>}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {p.urgency && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+              {/* Category badge */}
+              {p.category && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
+                    {p.category.replace(/_/g, ' ')}
+                  </span>
+                  {selectedPin.type === 'request' && p.urgency && (
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                       p.urgency === 'critical' ? 'bg-[#EF4E4B]/20 text-[#EF4E4B]' : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>{p.urgency}</span>}
-                    {p.household && <span className="text-[9px] text-white/40">👥 {p.household} people</span>}
-                    {p.category && <span className="text-[9px] text-white/40 capitalize">{p.category.replace(/_/g, ' ')}</span>}
-                  </div>
-                </div>
-              )}
-
-              {/* Resource detail */}
-              {selectedPin.type === 'resource' && (
-                <div className="space-y-1.5">
-                  {p.details && <p className="text-xs text-white/70">{p.details}</p>}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {p.source_type && <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${
+                    }`}>{p.urgency}</span>
+                  )}
+                  {selectedPin.type === 'request' && p.household && (
+                    <span className="text-[9px] text-white/40">👥 {p.household}</span>
+                  )}
+                  {selectedPin.type === 'resource' && p.source_type && (
+                    <span className={`text-[9px] font-medium px-2 py-0.5 rounded-full ${
                       p.source_type === 'partner' ? 'bg-[#89CFF0]/20 text-[#89CFF0]' : p.source_type === '211' ? 'bg-[#EDB200]/20 text-[#EDB200]' : 'bg-white/10 text-white/40'
-                    }`}>{p.source_type}</span>}
-                    {p.capacity != null && <span className="text-[9px] text-white/40">Capacity: {p.capacity}</span>}
-                    {p.phone && <span className="text-[9px] text-[#89CFF0]">📞 {p.phone}</span>}
-                  </div>
-                  {p.address && <p className="text-[9px] text-white/30">{p.address}</p>}
+                    }`}>{p.source_type}</span>
+                  )}
+                  {selectedPin.type === 'report' && (
+                    <span className="text-[9px] text-white/30">{p.created_at ? timeSince(p.created_at) + ' ago' : ''}</span>
+                  )}
                 </div>
               )}
 
-              {/* Report detail */}
-              {selectedPin.type === 'report' && (
-                <div className="space-y-1.5">
-                  {p.description && <p className="text-xs text-white/70">{p.description}</p>}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-white/30">{p.created_at ? timeSince(p.created_at) : ''}</span>
-                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-white/40">Unverified</span>
-                  </div>
-                </div>
+              {/* Summary — no phone/address (agent provides those on match) */}
+              {(p.details || p.description) && (
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {p.details || p.description}
+                </p>
               )}
 
               {/* Action buttons */}
