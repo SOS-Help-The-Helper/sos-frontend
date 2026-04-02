@@ -113,18 +113,18 @@ export default function TestAgentPage() {
                   if (part.type === 'text' && part.text) {
                     return <div key={pi} className="bg-white/5 rounded p-2 mb-1 whitespace-pre-wrap">{part.text}</div>;
                   }
-                  if (part.type === 'tool-invocation') {
-                    const inv = part.toolInvocation;
+                  if (part.type.startsWith('tool-')) {
+                    const inv = { state: (part as any).state, result: (part as any).output, toolName: (part as any).toolName || part.type, args: (part as any).input, input: (part as any).input };
                     return (
                       <div key={pi} className="bg-blue-500/10 border border-blue-500/20 rounded p-2 mb-1">
                         <div className="text-blue-400 font-bold">🔧 Tool: {inv?.toolName} (state: {inv?.state})</div>
-                        {inv?.args && (
+                        {(inv?.args || inv?.input) ? (
                           <details className="mt-1">
                             <summary className="text-[10px] text-blue-300 cursor-pointer">Args</summary>
-                            <pre className="text-[9px] text-white/40 mt-1 overflow-x-auto">{JSON.stringify(inv.args, null, 2)}</pre>
+                            <pre className="text-[9px] text-white/40 mt-1 overflow-x-auto">{JSON.stringify(inv.args || inv.input, null, 2)}</pre>
                           </details>
-                        )}
-                        {inv?.state === 'result' && (
+                        ) : null}
+                        {(inv?.state === 'result' || inv?.state === 'output-available') && (
                           <details open className="mt-1">
                             <summary className="text-[10px] text-green-300 cursor-pointer">Result</summary>
                             <pre className="text-[9px] text-white/40 mt-1 overflow-x-auto max-h-40">{
@@ -132,7 +132,7 @@ export default function TestAgentPage() {
                             }</pre>
                           </details>
                         )}
-                        {inv?.state === 'result' && (() => {
+                        {(inv?.state === 'result' || inv?.state === 'output-available') && (() => {
                           try {
                             const data = typeof inv.result === 'string' ? JSON.parse(inv.result) : inv.result;
                             if (data?.__tool) {

@@ -155,16 +155,16 @@ function AgentContent() {
                     </div>
                   );
                 }
-                if (part.type === 'tool-invocation') {
-                  const inv = part.toolInvocation;
-                  if (inv?.state === 'result') {
+                if (part.type.startsWith('tool-') && part.type !== 'tool-approval-request') {
+                  const inv = { state: (part as any).state, result: (part as any).output, toolName: (part as any).toolName || part.type };
+                  if (inv?.state === 'result' || inv?.state === 'output-available') {
                     try {
                       const data = typeof inv.result === 'string' ? JSON.parse(inv.result) : inv.result;
                       if (data?.__tool) return <div key={pi} className="ml-1 mt-1"><AIToolRenderer toolData={data} onUserAction={send} /></div>;
                     } catch {}
                   }
                   // Show loading state for in-progress tool calls
-                  if (inv?.state === 'call') {
+                  if (inv?.state === 'call' || inv?.state === 'partial-call' || inv?.state === 'input-available') {
                     return (
                       <div key={pi} className="flex justify-start mb-1">
                         <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-2.5">
