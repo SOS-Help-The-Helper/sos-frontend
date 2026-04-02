@@ -151,7 +151,8 @@ export default function TestAgentPage() {
                       </div>
                     );
                   }
-                  return <div key={pi} className="text-white/20 text-[9px]">Unknown part type: {part.type}</div>;
+                  // Log all unknown part types for debugging
+                  return <div key={pi} className="text-amber-500/50 text-[9px] bg-amber-500/5 rounded px-2 py-1">Part type: {part.type} {part.toolName ? `(${part.toolName})` : ''} {JSON.stringify(part).substring(0, 200)}</div>;
                 })}
 
                 {/* Fallback: show content if no parts */}

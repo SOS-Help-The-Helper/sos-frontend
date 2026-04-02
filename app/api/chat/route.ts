@@ -53,7 +53,7 @@ When you receive JSON with {"action":"match"}:
 SEARCH:
 When someone asks to find, show, or search for ANYTHING: IMMEDIATELY call search_resources. Do NOT narrate what you're about to do. Just call the tool. The results show on the map automatically.
 
-MAP INTELLIGENCE TOOLS:
+MAP INTELLIGENCE TOOLS (coordinates are OPTIONAL — all tools default to Asheville NC if not provided. Do NOT call get_location first for map tools. Just call the tool directly.):
 - "What's around me?" / "What's nearby?" → call show_nearby (summarizes all pins within radius)
 - "How do I get to [place]?" / "Directions" → call show_route (draws route on map with distance/time)
 - "Show the flood area" / "disaster zone" → call show_disaster_zone
@@ -515,19 +515,20 @@ export async function POST(req: Request) {
       show_nearby: {
         description: 'Show summary of everything near the user. Use when someone says "what\'s around me", "what\'s nearby", "show me what\'s close". Returns counts + closest resource.',
         inputSchema: z.object({
-          lat: z.number().describe('User latitude'),
-          lng: z.number().describe('User longitude'),
+          lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
+          lng: z.number().optional().describe('User longitude'),
           radiusKm: z.number().optional().describe('Search radius in km, default 8'),
         }),
         execute: async function({ lat, lng, radiusKm }) {
+          const useLat = lat || 35.597; const useLng = lng || -82.546; // Default: Asheville NC
           const radius = radiusKm || 8;
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=&lat=${lat}&lng=${lng}`, {
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=&lat=${useLat}&lng=${useLng}`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
           const data = await resp.json().catch(() => ({ results: [] }));
           const results = (data.results || []).filter((r: any) => {
             if (!r.lat || !r.lng) return false;
-            const d = Math.sqrt(Math.pow((r.lat - lat) * 111, 2) + Math.pow((r.lng - lng) * 85, 2));
+            const d = Math.sqrt(Math.pow((r.lat - useLat) * 111, 2) + Math.pow((r.lng - useLng) * 85, 2));
             r.distance_km = Math.round(d * 10) / 10;
             return d <= radius;
           });
@@ -540,7 +541,7 @@ export async function POST(req: Request) {
             __tool: 'nearby_summary',
             __mapCommand: {
               type: 'show_nearby',
-              center: [lng, lat],
+              center: [useLng, useLat],
               nearbyRadius: radius,
               nearbySummary: {
                 shelters: cats['housing'] || 0,
@@ -637,11 +638,12 @@ export async function POST(req: Request) {
         description: 'Compare multiple resources and rank them. Use when someone asks "which is closest", "best option", "compare shelters".',
         inputSchema: z.object({
           keyword: z.string().describe('What to search for'),
-          lat: z.number().describe('User latitude'),
-          lng: z.number().describe('User longitude'),
+          lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
+          lng: z.number().optional().describe('User longitude'),
         }),
         execute: async function({ keyword, lat, lng }) {
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${lat}&lng=${lng}`, {
+          const useLat = lat || 35.597; const useLng = lng || -82.546;
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${useLat}&lng=${useLng}`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
           const data = await resp.json().catch(() => ({ results: [] }));
@@ -675,6 +677,7 @@ export async function POST(req: Request) {
           radiusKm: z.number().optional().describe('Analysis radius in km, default 20'),
         }),
         execute: async function({ lat, lng, radiusKm }) {
+          const useLat = lat || 35.597; const useLng = lng || -82.546;
           const radius = radiusKm || 20;
           // Get requests and resources within radius
           const [reqResp, resResp] = await Promise.all([
@@ -758,10 +761,11 @@ export async function POST(req: Request) {
       show_risk: {
         description: 'Show risk/danger zones near user. Use for "am I in danger", "is it safe", "show alerts", "risk assessment".',
         inputSchema: z.object({
-          lat: z.number().describe('User latitude'),
-          lng: z.number().describe('User longitude'),
+          lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
+          lng: z.number().optional().describe('User longitude'),
         }),
         execute: async function({ lat, lng }) {
+          const useLat = lat || 35.597; const useLng = lng || -82.546;
           // Get NWS alerts from our alerts-feed EF
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/alerts-feed?lat=${lat}&lng=${lng}`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
