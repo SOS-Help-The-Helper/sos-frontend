@@ -60,21 +60,32 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
     case 'match_confirmed':
       return <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4"><p className="text-green-200 text-sm font-medium">✅ {toolData.message || 'Match confirmed!'}</p></div>;
     // ── Map Intelligence Renderers ──
-    case 'nearby_summary':
+    case 'nearby_summary': {
+      const cats = toolData.summary?.categories || {};
+      const sortedCats = Object.entries(cats).sort((a: any, b: any) => b[1] - a[1]);
+      const radiusMi = Math.round((toolData.summary?.radius || 8) * 0.621 * 10) / 10;
+      const closestText = toolData.summary?.closest?.replace(/\d+(\.\d+)?km/, (m: string) => {
+        const mi = Math.round(parseFloat(m) * 0.621 * 10) / 10;
+        return `${mi}mi`;
+      }) || toolData.summary?.closest;
       return (
         <div className="bg-white/5 rounded-xl p-4 space-y-2">
           <p className="text-xs font-bold text-white/40 uppercase tracking-wider">📍 Nearby</p>
-          <p className="text-sm text-white/70">{toolData.summary?.total || 0} resources within {toolData.summary?.radius || 8}km</p>
-          {toolData.summary?.closest && <p className="text-xs text-[#89CFF0]">Closest: {toolData.summary.closest}</p>}
-          {toolData.summary?.categories && (
+          <p className="text-sm text-white/70">{toolData.summary?.total || 0} resources within {radiusMi}mi</p>
+          {closestText && <p className="text-xs text-[#89CFF0]">Closest: {closestText}</p>}
+          {sortedCats.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-1">
-              {Object.entries(toolData.summary.categories).map(([cat, count]: [string, any]) => (
-                <span key={cat} className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">{cat.replace(/_/g, ' ')}: {count}</span>
+              {sortedCats.map(([cat, count]: [string, any]) => (
+                <button key={cat} onClick={() => onUserAction(`Find ${cat.replace(/_/g, ' ')} near me`)}
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors cursor-pointer">
+                  {cat.replace(/_/g, ' ')}: {count}
+                </button>
               ))}
             </div>
           )}
         </div>
       );
+    }
     case 'route_result':
       return toolData.error ? (
         <div className="bg-red-500/10 rounded-xl p-3"><p className="text-xs text-red-400">{toolData.error}</p></div>
@@ -83,7 +94,7 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
           <p className="text-xs font-bold text-white/40 uppercase tracking-wider">🗺️ Route</p>
           <p className="text-sm text-white/70 mt-1">To: {toolData.destName}</p>
           <div className="flex gap-3 mt-2">
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#89CFF0]/20 text-[#89CFF0]">{toolData.distance_km}km</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[#89CFF0]/20 text-[#89CFF0]">{Math.round(toolData.distance_km * 0.621 * 10) / 10}mi</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#89CFF0]/20 text-[#89CFF0]">{toolData.duration_min} min</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/50">{toolData.mode}</span>
           </div>
@@ -106,7 +117,7 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
               <span className="text-sm font-bold text-[#89CFF0] w-6">#{r.rank}</span>
               <div className="flex-1">
                 <p className="text-sm text-white/70">{r.name}</p>
-                <p className="text-[10px] text-white/40">{r.reason}</p>
+                <p className="text-[10px] text-white/40">{r.reason?.replace(/\d+(\.\d+)?km/g, (m: string) => Math.round(parseFloat(m) * 0.621 * 10) / 10 + 'mi')}</p>
               </div>
             </div>
           ))}
@@ -388,7 +399,7 @@ function SearchResults({ data, onSelect }: { data: any; onSelect: (msg: string) 
         <button key={r.id} onClick={() => onSelect(`Tell me about ${r.name}`)}
           className="w-full text-left bg-white/5 border border-white/10 rounded-lg p-2 hover:bg-white/10 transition-colors">
           <p className="text-xs font-bold text-white truncate">{r.name}</p>
-          <p className="text-[9px] text-white/40">{r.distance_km != null ? `${r.distance_km}mi · ` : ''}{r.category}</p>
+          <p className="text-[9px] text-white/40">{r.distance_km != null ? `${Math.round(r.distance_km * 0.621 * 10) / 10}mi · ` : ''}{r.category}</p>
         </button>
       ))}
       {results.length > 3 && <p className="text-[9px] text-white/30">+{results.length - 3} more on map</p>}

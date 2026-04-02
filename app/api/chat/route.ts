@@ -576,7 +576,7 @@ export async function POST(req: Request) {
             summary: {
               total: results.length,
               categories: cats,
-              closest: closest ? `${closest.name} (${closest.distance_km}km, ${closest.category})` : 'none found',
+              closest: closest ? `${closest.name} (${Math.round(closest.distance_km * 0.621 * 10) / 10}mi, ${closest.category})` : 'none found',
               radius,
             },
           });
@@ -683,7 +683,7 @@ export async function POST(req: Request) {
             __tool: 'comparison_result',
             __mapCommand: { type: 'compare', comparedResults: ranked, center: [lng, lat] },
             results: ranked,
-            recommendation: ranked[0] ? `Closest: ${ranked[0].name} (${ranked[0].distance_km}km)` : 'No results found',
+            recommendation: ranked[0] ? `Closest: ${ranked[0].name} (${Math.round(ranked[0].distance_km * 0.621 * 10) / 10}mi)` : 'No results found',
           });
         },
       },
