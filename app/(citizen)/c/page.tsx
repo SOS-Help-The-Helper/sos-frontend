@@ -357,10 +357,13 @@ export default function CitizenMapPage() {
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,0px)]">
-        <div className="flex items-center justify-between px-4 py-3 pb-8 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/70 to-transparent">
-          <div className="flex items-center gap-2">
-            <img src="/logomark.svg" alt="SOS" className="h-6 w-6" />
-            <span className="text-xs font-bold text-white">📍 {locationName}</span>
+        <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
+          <div className="flex items-center gap-3">
+            <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
+            <div>
+              <span className="text-sm font-bold text-white block leading-tight">SOS</span>
+              <span className="text-[10px] text-white/50">📍 {locationName}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {!gpsReady && (
@@ -414,16 +417,16 @@ export default function CitizenMapPage() {
             </button>
 
             <div className="flex-1 overflow-y-auto px-5 pb-4">
-              {/* Row 1: dot + SOS TYPE ---- close button */}
-              <div className="flex items-center justify-between mb-1">
+              {/* Row 1: Type label + close */}
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                     selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
                     selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-white'
                   }`} />
-                  <span className={`text-sm font-bold ${
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${
                     selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
-                    selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/60'
+                    selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
                   }`}>
                     SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
                   </span>
@@ -431,15 +434,19 @@ export default function CitizenMapPage() {
                 <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none p-1">✕</button>
               </div>
 
+              {/* Row 2: Name if present */}
+              {p.name && (
+                <h3 className="text-base font-bold text-white mb-1">{p.name}</h3>
+              )}
 
-              {/* Row 4: Summary text */}
+              {/* Row 3: Summary text */}
               {(p.details || p.description) && (
-                <p className="text-sm text-white/70 leading-relaxed">
+                <p className="text-sm text-white/60 leading-relaxed mb-3">
                   {p.details || p.description}
                 </p>
               )}
 
-              {/* Row 3: Metadata chips — uniform across all types */}
+              {/* Row 4: Metadata chips — stacked vertically */}
               <div className="flex flex-col gap-1.5 mb-3">
                 {/* Category chip */}
                 {p.category && (
