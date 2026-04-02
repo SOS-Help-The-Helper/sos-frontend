@@ -7,9 +7,8 @@ import { Map, List, MessageSquare, User } from 'lucide-react';
 
 const TABS = [
   { path: '/c', label: 'Map', icon: Map },
-  { path: '/c/feed', label: 'Feed', icon: List },
-  { path: '/c/agent', label: 'Agent', icon: MessageSquare },
-  { path: '/c/profile', label: 'Profile', icon: User },
+  { path: '/c/match', label: 'Match', icon: MessageSquare },
+  { path: '/c/manage', label: 'Manage', icon: User },
 ];
 
 interface CitizenShellProps {

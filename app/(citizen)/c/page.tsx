@@ -502,6 +502,11 @@ export default function CitizenMapPage() {
                 📍 Share Location
               </button>
             )}
+            {/* Notification bell */}
+            <a href="/c/feed" className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center relative">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#EF4E4B] border border-[#1A3850]" />
+            </a>
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
               <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>
               <span className="text-[10px] font-bold text-white">{STATUS_MAP[status]?.label}</span>
