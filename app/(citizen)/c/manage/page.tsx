@@ -23,6 +23,22 @@ export default function ManagePage() {
     const pid = localStorage.getItem('sos-person-id');
     setPersonId(pid);
     if (pid) loadData(pid);
+
+    // Refresh on tab focus
+    const onFocus = () => { if (pid) loadData(pid); };
+    window.addEventListener('focus', onFocus);
+
+    // Realtime subscription for matches
+    if (pid) {
+      const channel = supabase
+        .channel('manage-matches')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
+          if (pid) loadData(pid);
+        })
+        .subscribe();
+      return () => { window.removeEventListener('focus', onFocus); supabase.removeChannel(channel); };
+    }
+    return () => { window.removeEventListener('focus', onFocus); };
   }, []);
 
   async function loadData(pid: string) {
