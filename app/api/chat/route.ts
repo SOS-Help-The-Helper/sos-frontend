@@ -522,11 +522,30 @@ export async function POST(req: Request) {
         execute: async function({ lat, lng, radiusKm }) {
           const useLat = lat || 35.597; const useLng = lng || -82.546; // Default: Asheville NC
           const radius = radiusKm || 8;
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=&lat=${useLat}&lng=${useLng}`, {
+          // Query all active resources directly (show_nearby doesn't filter by keyword)
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/resources?status=eq.active&select=id,organization_name,service_name,category,taxonomy_code,details_sanitized,latitude,longitude,capacity_available,source&limit=100`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
-          const data = await resp.json().catch(() => ({ results: [] }));
-          const results = (data.results || []).filter((r: any) => {
+          const allResources = await resp.json().catch(() => []);
+          // Also get active requests
+          const reqResp = await fetch(`${SUPABASE_URL}/rest/v1/requests?status=eq.active&select=id,category,details_sanitized,latitude,longitude,urgency&limit=100`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+          });
+          const allRequests = await reqResp.json().catch(() => []);
+          
+          const allItems = [
+            ...allResources.filter((r: any) => r.latitude && r.longitude).map((r: any) => ({
+              id: r.id, name: r.organization_name || r.details_sanitized?.substring(0, 50) || r.category,
+              lat: r.latitude, lng: r.longitude, category: r.category, source: r.source || 'sos',
+              capacity: r.capacity_available, description: r.details_sanitized,
+            })),
+            ...allRequests.filter((r: any) => r.latitude && r.longitude).map((r: any) => ({
+              id: r.id, name: r.details_sanitized?.substring(0, 50) || r.category,
+              lat: r.latitude, lng: r.longitude, category: r.category, source: 'request',
+              urgency: r.urgency,
+            })),
+          ];
+          const results = allItems.filter((r: any) => {
             if (!r.lat || !r.lng) return false;
             const d = Math.sqrt(Math.pow((r.lat - useLat) * 111, 2) + Math.pow((r.lng - useLng) * 85, 2));
             r.distance_km = Math.round(d * 10) / 10;
@@ -548,7 +567,7 @@ export async function POST(req: Request) {
                 food: (cats['food_water'] || 0) + (cats['food'] || 0),
                 medical: cats['medical'] || 0,
                 supplies: cats['supplies'] || 0,
-                requests: 0,
+                requests: results.filter((r: any) => r.source === 'request').length,
                 total: results.length,
                 closest: closest ? { name: closest.name, distance_km: closest.distance_km, category: closest.category } : undefined,
               },
