@@ -11,10 +11,9 @@ import { getPersonContext } from '@/lib/person-context';
 type SheetState = 'collapsed' | 'half' | 'full';
 
 const MAP_CHIPS = [
-  { id: 'shelters', label: 'Find shelters', icon: '🏠' },
+  { id: 'nearby', label: "What's nearby?", icon: '📍' },
   { id: 'help', label: 'I need help', icon: '🔴' },
-  { id: 'driver', label: 'Sign up as driver', icon: '🚗' },
-  { id: 'near', label: "What's near me", icon: '📍' },
+  { id: 'gaps', label: 'Where are the gaps?', icon: '🔎' },
 ];
 
 interface SOSBottomSheetProps {
@@ -192,7 +191,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {sheetState !== 'collapsed' && messages.length <= 2 && !isLoading && (
           <div className="px-4 py-1.5 flex-shrink-0">
             <QuickChips chips={MAP_CHIPS} onSelect={(id) => {
-              const prompts: Record<string, string> = { shelters: 'Find shelters near me', help: 'I need help', driver: 'Sign me up as a driver', near: 'What resources are near me' };
+              const prompts: Record<string, string> = { nearby: "What's around me?", help: 'I need help', gaps: 'Where is help not reaching?' };
               send(prompts[id] || id);
             }} />
           </div>
