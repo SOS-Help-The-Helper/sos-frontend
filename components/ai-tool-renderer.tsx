@@ -44,6 +44,10 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
       return <DangerCheck data={toolData} onSelect={onUserAction} />;
     case 'fema_status':
       return <FEMACard data={toolData} />;
+    case 'escalation_confirmed':
+      return <div className="bg-amber-900/20 border border-amber-500/30 rounded-xl p-4"><p className="text-amber-200 text-sm font-medium">⚡ {toolData.message || 'Escalated to coordination team.'}</p></div>;
+    case 'match_confirmed':
+      return <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4"><p className="text-green-200 text-sm font-medium">✅ {toolData.message || 'Match confirmed!'}</p></div>;
     case 'referral_card':
       return <ReferralCard data={toolData} />;
     default:

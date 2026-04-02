@@ -67,6 +67,7 @@ export async function getSOSScore(personId: string): Promise<SOSScore> {
 
 // --- 211 Resources ---
 
+// TODO: rename to Resource211 in next refactor
 export interface ExternalResource {
   id: string;
   organization_name: string;
@@ -128,7 +129,7 @@ export async function getCommunityPreview(lat: number, lng: number, radius: numb
 // --- External Resources for Map ---
 
 export async function getExternalResources(lat: number, lng: number, radiusKm: number = 50): Promise<ExternalResource[]> {
-  // Direct read — external_resources is reference data, not operational
+  // Direct read — 211 resources for map display
   const { data } = await supabase
     .from('resources')
     .select('id, organization_name, service_name, description, category, latitude, longitude, address, phone, hours_description')
