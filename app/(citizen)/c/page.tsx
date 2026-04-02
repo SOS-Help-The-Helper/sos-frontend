@@ -75,7 +75,7 @@ export default function CitizenMapPage() {
         container: mapRef.current, style: 'mapbox://styles/mapbox/dark-v11',
         center: [lng, lat], zoom: 12, attributionControl: false,
       });
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      // Navigation control removed — users pinch-to-zoom on mobile
       mapInstance.current = map;
 
       map.on('load', async () => {
