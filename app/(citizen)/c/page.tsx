@@ -325,16 +325,140 @@ export default function CitizenMapPage() {
       // P1 Fix 9: Filter existing layers by category
       if ((cmd as any).type === 'filter' && (cmd as any).category) {
         const cat = (cmd as any).category;
-        // Show only matching points in each layer
         ['requests-points', 'resources-points'].forEach(layer => {
           if (map.getLayer(layer)) {
             map.setFilter(layer, ['all', ['!', ['has', 'point_count']], ['==', ['get', 'category'], cat]]);
           }
         });
-        // Hide clusters during filter (they don't respect feature filters well)
         ['requests-clusters', 'requests-cluster-count', 'resources-clusters', 'resources-cluster-count'].forEach(layer => {
           if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', 'none');
         });
+      }
+
+      // ── Map Intelligence Command Handlers ──
+
+      if (cmd.type === 'show_nearby' && cmd.results) {
+        // Show nearby results + fly to user
+        setMapResults(cmd.results);
+        setShowResults(true);
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: 12, duration: 800 });
+      }
+
+      if (cmd.type === 'show_route' && cmd.route) {
+        // Draw route line on map
+        const routeData = { type: 'FeatureCollection' as const, features: [{ type: 'Feature' as const, geometry: cmd.route.geometry, properties: {} }] };
+        if (map.getSource('route-source')) {
+          (map.getSource('route-source') as any).setData(routeData);
+        } else {
+          map.addSource('route-source', { type: 'geojson', data: routeData });
+          map.addLayer({ id: 'route-line', type: 'line', source: 'route-source',
+            paint: { 'line-color': '#89CFF0', 'line-width': 4, 'line-opacity': 0.8 },
+            layout: { 'line-cap': 'round', 'line-join': 'round' } });
+        }
+        // Add destination marker
+        if (cmd.destination) {
+          const destData = { type: 'FeatureCollection' as const, features: [{ type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [cmd.destination.lng, cmd.destination.lat] }, properties: { name: cmd.destination.name } }] };
+          if (map.getSource('dest-source')) {
+            (map.getSource('dest-source') as any).setData(destData);
+          } else {
+            map.addSource('dest-source', { type: 'geojson', data: destData });
+            map.addLayer({ id: 'dest-marker', type: 'circle', source: 'dest-source',
+              paint: { 'circle-color': '#89CFF0', 'circle-radius': 12, 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
+          }
+        }
+        // Fit bounds to route
+        const coords = cmd.route.geometry.coordinates;
+        if (coords.length > 1) {
+          const lngs = coords.map((c: number[]) => c[0]), lats = coords.map((c: number[]) => c[1]);
+          map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 60, duration: 1000 });
+        }
+      }
+
+      if (cmd.type === 'show_gaps' && cmd.gaps) {
+        // Draw gap circles (red translucent)
+        const gapFeatures = cmd.gaps.map((g: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [g.lng, g.lat] },
+          properties: { radius: g.radius_km, category: g.category, requests: g.request_count },
+        }));
+        const gapData = { type: 'FeatureCollection' as const, features: gapFeatures };
+        if (map.getSource('gaps-source')) {
+          (map.getSource('gaps-source') as any).setData(gapData);
+        } else {
+          map.addSource('gaps-source', { type: 'geojson', data: gapData });
+          map.addLayer({ id: 'gaps-circles', type: 'circle', source: 'gaps-source',
+            paint: { 'circle-color': 'rgba(239,78,75,0.15)', 'circle-radius': 30, 'circle-stroke-width': 2, 'circle-stroke-color': '#EF4E4B' } });
+        }
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: cmd.zoom || 10, duration: 800 });
+      }
+
+      if (cmd.type === 'show_activity' && cmd.activity) {
+        // Show activity pins with time labels
+        const actFeatures = (cmd.activity || []).map((a: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [a.lng, a.lat] },
+          properties: { label: a.label, type: a.type, timestamp: a.timestamp },
+        }));
+        if (map.getSource('activity-source')) {
+          (map.getSource('activity-source') as any).setData({ type: 'FeatureCollection', features: actFeatures });
+        } else {
+          map.addSource('activity-source', { type: 'geojson', data: { type: 'FeatureCollection', features: actFeatures } });
+          map.addLayer({ id: 'activity-points', type: 'circle', source: 'activity-source',
+            paint: { 'circle-color': '#34d399', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.7 } });
+        }
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: 11, duration: 800 });
+      }
+
+      if (cmd.type === 'show_risk' && cmd.riskZones) {
+        // Show risk zones as translucent circles
+        const riskFeatures = (cmd.riskZones || []).map((z: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: z.center || [0, 0] },
+          properties: { severity: z.severity, label: z.label, type: z.type },
+        }));
+        if (map.getSource('risk-source')) {
+          (map.getSource('risk-source') as any).setData({ type: 'FeatureCollection', features: riskFeatures });
+        } else {
+          map.addSource('risk-source', { type: 'geojson', data: { type: 'FeatureCollection', features: riskFeatures } });
+          map.addLayer({ id: 'risk-circles', type: 'circle', source: 'risk-source',
+            paint: {
+              'circle-color': ['match', ['get', 'severity'], 'extreme', 'rgba(239,78,75,0.3)', 'severe', 'rgba(239,78,75,0.2)', 'moderate', 'rgba(245,158,11,0.2)', 'rgba(245,158,11,0.1)'],
+              'circle-radius': 40, 'circle-stroke-width': 2,
+              'circle-stroke-color': ['match', ['get', 'severity'], 'extreme', '#EF4E4B', 'severe', '#EF4E4B', '#f59e0b'],
+            } });
+        }
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: 11, duration: 800 });
+      }
+
+      if (cmd.type === 'track_sos' && cmd.trackingData) {
+        const td = cmd.trackingData;
+        // Show request pin + connecting line to resource if matched
+        const features: any[] = [
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [td.requestPin.lng, td.requestPin.lat] }, properties: { type: 'your_request', status: td.matchStatus } },
+        ];
+        if (td.resourcePin) {
+          features.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [td.resourcePin.lng, td.resourcePin.lat] }, properties: { type: 'matched_resource', name: td.resourcePin.name } });
+          // Add connecting line
+          features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[td.requestPin.lng, td.requestPin.lat], [td.resourcePin.lng, td.resourcePin.lat]] }, properties: { type: 'connection' } });
+        }
+        if (map.getSource('tracking-source')) {
+          (map.getSource('tracking-source') as any).setData({ type: 'FeatureCollection', features });
+        } else {
+          map.addSource('tracking-source', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+          map.addLayer({ id: 'tracking-line', type: 'line', source: 'tracking-source', filter: ['==', ['get', 'type'], 'connection'],
+            paint: { 'line-color': '#89CFF0', 'line-width': 2, 'line-dasharray': [4, 4] } });
+          map.addLayer({ id: 'tracking-points', type: 'circle', source: 'tracking-source', filter: ['!=', ['get', 'type'], 'connection'],
+            paint: { 'circle-color': ['match', ['get', 'type'], 'your_request', '#EF4E4B', '#89CFF0'], 'circle-radius': 12, 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
+        }
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: 13, duration: 800 });
+      }
+
+      if (cmd.type === 'show_disaster') {
+        if (cmd.center) map.flyTo({ center: cmd.center, zoom: cmd.zoom || 10, duration: 800 });
+      }
+
+      if (cmd.type === 'bookmark' && cmd.bookmarkId) {
+        // Visual feedback — star animation on the pinned resource (TODO: find pin and add star)
       }
     });
     return unsub;

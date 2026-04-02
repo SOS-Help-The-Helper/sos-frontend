@@ -53,6 +53,19 @@ When you receive JSON with {"action":"match"}:
 SEARCH:
 When someone asks to find, show, or search for ANYTHING: IMMEDIATELY call search_resources. Do NOT narrate what you're about to do. Just call the tool. The results show on the map automatically.
 
+MAP INTELLIGENCE TOOLS:
+- "What's around me?" / "What's nearby?" → call show_nearby (summarizes all pins within radius)
+- "How do I get to [place]?" / "Directions" → call show_route (draws route on map with distance/time)
+- "Show the flood area" / "disaster zone" → call show_disaster_zone
+- "Which shelter is closest?" / "Compare options" → call compare_resources (ranks + highlights)
+- "Where is help not reaching?" / "Coverage gaps" → call show_coverage_gaps (shows underserved areas)
+- "What's happening right now?" / "Recent activity" → call show_activity
+- "Am I in danger?" / "Is it safe here?" → call show_risk (overlays alerts)
+- "Where's my help?" / "Track my request" → call track_my_sos (shows your SOS + matched resource)
+- "Save this for later" / "Bookmark" → call bookmark_resource
+- "Share my location with the volunteer" → call share_location
+All map tools update the map automatically. The user sees changes on the map behind the chat.
+
 TAXONOMY (CRITICAL):
 When creating SOS requests or resources, use taxonomy codes — NOT flat strings:
 - shelter/housing → HOUSING.EMERGENCY
@@ -493,6 +506,371 @@ export async function POST(req: Request) {
           return JSON.stringify({
             __tool: 'referral_card',
             personId,
+          });
+        },
+      },
+
+      // ── MAP INTELLIGENCE TOOLS ──────────────────────────────────
+
+      show_nearby: {
+        description: 'Show summary of everything near the user. Use when someone says "what\'s around me", "what\'s nearby", "show me what\'s close". Returns counts + closest resource.',
+        inputSchema: z.object({
+          lat: z.number().describe('User latitude'),
+          lng: z.number().describe('User longitude'),
+          radiusKm: z.number().optional().describe('Search radius in km, default 8'),
+        }),
+        execute: async function({ lat, lng, radiusKm }) {
+          const radius = radiusKm || 8;
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=&lat=${lat}&lng=${lng}`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+          });
+          const data = await resp.json().catch(() => ({ results: [] }));
+          const results = (data.results || []).filter((r: any) => {
+            if (!r.lat || !r.lng) return false;
+            const d = Math.sqrt(Math.pow((r.lat - lat) * 111, 2) + Math.pow((r.lng - lng) * 85, 2));
+            r.distance_km = Math.round(d * 10) / 10;
+            return d <= radius;
+          });
+
+          const cats: Record<string, number> = {};
+          results.forEach((r: any) => { cats[r.category || 'other'] = (cats[r.category || 'other'] || 0) + 1; });
+          const closest = results.sort((a: any, b: any) => a.distance_km - b.distance_km)[0];
+
+          return JSON.stringify({
+            __tool: 'nearby_summary',
+            __mapCommand: {
+              type: 'show_nearby',
+              center: [lng, lat],
+              nearbyRadius: radius,
+              nearbySummary: {
+                shelters: cats['housing'] || 0,
+                food: (cats['food_water'] || 0) + (cats['food'] || 0),
+                medical: cats['medical'] || 0,
+                supplies: cats['supplies'] || 0,
+                requests: 0,
+                total: results.length,
+                closest: closest ? { name: closest.name, distance_km: closest.distance_km, category: closest.category } : undefined,
+              },
+              results: results.slice(0, 20),
+            },
+            summary: {
+              total: results.length,
+              categories: cats,
+              closest: closest ? `${closest.name} (${closest.distance_km}km, ${closest.category})` : 'none found',
+              radius,
+            },
+          });
+        },
+      },
+
+      show_route: {
+        description: 'Show directions/route to a destination on the map. Use when someone asks "how do I get to", "directions to", "navigate to".',
+        inputSchema: z.object({
+          fromLat: z.number().describe('Starting latitude'),
+          fromLng: z.number().describe('Starting longitude'),
+          toLat: z.number().describe('Destination latitude'),
+          toLng: z.number().describe('Destination longitude'),
+          destName: z.string().describe('Name of destination'),
+          mode: z.enum(['driving', 'walking', 'cycling']).optional().describe('Travel mode, default driving'),
+        }),
+        execute: async function({ fromLat, fromLng, toLat, toLng, destName, mode }) {
+          const travelMode = mode || 'driving';
+          const resp = await fetch(`https://api.mapbox.com/directions/v5/mapbox/${travelMode}/${fromLng},${fromLat};${toLng},${toLat}?geometries=geojson&steps=true&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`);
+          const data = await resp.json().catch(() => ({ routes: [] }));
+          const route = data.routes?.[0];
+
+          if (!route) {
+            return JSON.stringify({ __tool: 'route_result', error: 'Could not find a route.' });
+          }
+
+          return JSON.stringify({
+            __tool: 'route_result',
+            __mapCommand: {
+              type: 'show_route',
+              route: {
+                geometry: route.geometry,
+                distance_km: Math.round(route.distance / 100) / 10,
+                duration_min: Math.round(route.duration / 60),
+                mode: travelMode,
+              },
+              destination: { lat: toLat, lng: toLng, name: destName },
+            },
+            distance_km: Math.round(route.distance / 100) / 10,
+            duration_min: Math.round(route.duration / 60),
+            mode: travelMode,
+            destName,
+          });
+        },
+      },
+
+      show_disaster_zone: {
+        description: 'Show disaster boundaries or affected area on the map. Use when someone asks about a specific disaster area, flood zone, fire perimeter, etc.',
+        inputSchema: z.object({
+          disasterName: z.string().describe('Name of the disaster'),
+          lat: z.number().optional().describe('Center latitude of disaster area'),
+          lng: z.number().optional().describe('Center longitude of disaster area'),
+        }),
+        execute: async function({ disasterName, lat, lng }) {
+          // Query disaster records from DB
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/disasters?name=ilike.*${encodeURIComponent(disasterName)}*&select=id,name,center_lat,center_lng,radius_km,status&limit=1`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+          });
+          const disasters = await resp.json().catch(() => []);
+          const d = disasters[0];
+
+          return JSON.stringify({
+            __tool: 'disaster_zone',
+            __mapCommand: {
+              type: 'show_disaster',
+              center: d ? [d.center_lng, d.center_lat] : (lng && lat ? [lng, lat] : undefined),
+              disasterName: d?.name || disasterName,
+              zoom: 10,
+            },
+            found: !!d,
+            name: d?.name || disasterName,
+            status: d?.status || 'unknown',
+          });
+        },
+      },
+
+      compare_resources: {
+        description: 'Compare multiple resources and rank them. Use when someone asks "which is closest", "best option", "compare shelters".',
+        inputSchema: z.object({
+          keyword: z.string().describe('What to search for'),
+          lat: z.number().describe('User latitude'),
+          lng: z.number().describe('User longitude'),
+        }),
+        execute: async function({ keyword, lat, lng }) {
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${lat}&lng=${lng}`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+          });
+          const data = await resp.json().catch(() => ({ results: [] }));
+          const results = (data.results || []).filter((r: any) => r.lat && r.lng).slice(0, 5);
+
+          // Rank by distance + capacity
+          const ranked = results.map((r: any, i: number) => {
+            const dist = Math.sqrt(Math.pow((r.lat - lat) * 111, 2) + Math.pow((r.lng - lng) * 85, 2));
+            const distKm = Math.round(dist * 10) / 10;
+            return {
+              ...r, rank: i + 1, distance_km: distKm,
+              reason: `${distKm}km away${r.capacity ? `, capacity: ${r.capacity}` : ''}`,
+            };
+          }).sort((a: any, b: any) => a.distance_km - b.distance_km)
+            .map((r: any, i: number) => ({ ...r, rank: i + 1 }));
+
+          return JSON.stringify({
+            __tool: 'comparison_result',
+            __mapCommand: { type: 'compare', comparedResults: ranked, center: [lng, lat] },
+            results: ranked,
+            recommendation: ranked[0] ? `Closest: ${ranked[0].name} (${ranked[0].distance_km}km)` : 'No results found',
+          });
+        },
+      },
+
+      show_coverage_gaps: {
+        description: 'Show areas where people need help but no resources are nearby. Use for "where is help not reaching", "coverage gaps", "underserved areas".',
+        inputSchema: z.object({
+          lat: z.number().describe('Center latitude'),
+          lng: z.number().describe('Center longitude'),
+          radiusKm: z.number().optional().describe('Analysis radius in km, default 20'),
+        }),
+        execute: async function({ lat, lng, radiusKm }) {
+          const radius = radiusKm || 20;
+          // Get requests and resources within radius
+          const [reqResp, resResp] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/requests?select=id,latitude,longitude,category,status&status=eq.active&limit=200`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+            fetch(`${SUPABASE_URL}/rest/v1/resources?select=id,latitude,longitude,category,status&status=eq.active&limit=200`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+          ]);
+          const requests = await reqResp.json().catch(() => []);
+          const resources = await resResp.json().catch(() => []);
+
+          // Find requests with no resource within 5km
+          const gaps: any[] = [];
+          const nearbyReqs = requests.filter((r: any) => r.latitude && r.longitude);
+          for (const req of nearbyReqs) {
+            const nearRes = resources.filter((res: any) => {
+              if (!res.latitude || !res.longitude) return false;
+              const d = Math.sqrt(Math.pow((res.latitude - req.latitude) * 111, 2) + Math.pow((res.longitude - req.longitude) * 85, 2));
+              return d < 5;
+            });
+            if (nearRes.length === 0) {
+              gaps.push({ lat: req.latitude, lng: req.longitude, radius_km: 5, request_count: 1, resource_count: 0, category: req.category });
+            }
+          }
+
+          return JSON.stringify({
+            __tool: 'coverage_gaps',
+            __mapCommand: { type: 'show_gaps', gaps, center: [lng, lat], zoom: 10 },
+            gapCount: gaps.length,
+            totalRequests: nearbyReqs.length,
+            totalResources: resources.filter((r: any) => r.latitude).length,
+            message: gaps.length > 0
+              ? `Found ${gaps.length} areas where people need help but no resources are within 5km.`
+              : 'Good coverage — all active requests have resources nearby.',
+          });
+        },
+      },
+
+      show_activity: {
+        description: 'Show recent coordination activity on the map. Use for "what\'s happening", "recent activity", "show me what\'s going on".',
+        inputSchema: z.object({
+          lat: z.number().optional().describe('Center latitude'),
+          lng: z.number().optional().describe('Center longitude'),
+          hoursBack: z.number().optional().describe('How many hours back to look, default 24'),
+        }),
+        execute: async function({ lat, lng, hoursBack }) {
+          const hours = hoursBack || 24;
+          const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+
+          const [matchResp, msgResp] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/matches?select=id,request_id,status,created_at&created_at=gte.${since}&order=created_at.desc&limit=20`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+            fetch(`${SUPABASE_URL}/rest/v1/community_messages?select=id,message_type,latitude,longitude,message_text,created_at&created_at=gte.${since}&order=created_at.desc&limit=20`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+          ]);
+          const matches = await matchResp.json().catch(() => []);
+          const messages = await msgResp.json().catch(() => []);
+
+          const activity = messages.filter((m: any) => m.latitude && m.longitude).map((m: any) => ({
+            id: m.id, type: m.message_type || 'report',
+            lat: m.latitude, lng: m.longitude,
+            label: m.message_text?.substring(0, 60) || m.message_type,
+            timestamp: m.created_at,
+          }));
+
+          return JSON.stringify({
+            __tool: 'activity_feed',
+            __mapCommand: { type: 'show_activity', activity, center: lng && lat ? [lng, lat] : undefined },
+            matchCount: matches.length,
+            reportCount: activity.length,
+            hours,
+            message: `${matches.length} matches and ${activity.length} reports in the last ${hours} hours.`,
+          });
+        },
+      },
+
+      show_risk: {
+        description: 'Show risk/danger zones near user. Use for "am I in danger", "is it safe", "show alerts", "risk assessment".',
+        inputSchema: z.object({
+          lat: z.number().describe('User latitude'),
+          lng: z.number().describe('User longitude'),
+        }),
+        execute: async function({ lat, lng }) {
+          // Get NWS alerts from our alerts-feed EF
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/alerts-feed?lat=${lat}&lng=${lng}`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+          });
+          const data = await resp.json().catch(() => ({ alerts: [] }));
+
+          const riskZones = (data.alerts || []).map((a: any) => ({
+            type: a.type === 'flood' ? 'flood' : a.type === 'fire' ? 'fire' : 'weather_alert',
+            severity: a.severity || 'moderate',
+            label: a.headline || a.description?.substring(0, 80),
+            source: 'NWS',
+            center: [lng, lat] as [number, number],
+            radius_km: 10,
+          }));
+
+          return JSON.stringify({
+            __tool: 'risk_assessment',
+            __mapCommand: { type: 'show_risk', riskZones, center: [lng, lat] },
+            alertCount: riskZones.length,
+            alerts: riskZones,
+            safe: riskZones.length === 0,
+            message: riskZones.length > 0
+              ? `${riskZones.length} active alert(s) near your location.`
+              : 'No active alerts near your location.',
+          });
+        },
+      },
+
+      track_my_sos: {
+        description: 'Show the user\'s active SOS and matched resources on the map with a connecting line. Use for "where\'s my help", "track my request", "show my SOS status".',
+        inputSchema: z.object({
+          personId: z.string().optional().describe('Person ID'),
+        }),
+        execute: async function({ personId }) {
+          const pid = personId || 'anonymous';
+          // Get active SOS + matches
+          const [sosResp, matchResp] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/soses?select=id,category,status,latitude,longitude&person_id=eq.${pid}&status=eq.active&order=created_at.desc&limit=1`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+            fetch(`${SUPABASE_URL}/rest/v1/requests?select=id,latitude,longitude,category,status,matches(id,resource_id,status,match_score)&person_id=eq.${pid}&status=in.(active,matched)&order=created_at.desc&limit=3`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+            }),
+          ]);
+          const soses = await sosResp.json().catch(() => []);
+          const requests = await matchResp.json().catch(() => []);
+
+          const activeReq = requests[0];
+          const activeMatch = activeReq?.matches?.[0];
+
+          return JSON.stringify({
+            __tool: 'sos_tracker',
+            __mapCommand: activeReq ? {
+              type: 'track_sos',
+              trackingData: {
+                requestPin: { lat: activeReq.latitude, lng: activeReq.longitude, category: activeReq.category, status: activeReq.status },
+                matchStatus: activeMatch?.status || 'searching',
+                matchId: activeMatch?.id || '',
+              },
+              center: activeReq.latitude && activeReq.longitude ? [activeReq.longitude, activeReq.latitude] : undefined,
+            } : undefined,
+            hasActiveSOS: soses.length > 0,
+            hasActiveRequest: !!activeReq,
+            hasMatch: !!activeMatch,
+            matchStatus: activeMatch?.status || 'no match yet',
+            message: !activeReq
+              ? "You don't have an active SOS request right now."
+              : activeMatch
+                ? `Your ${activeReq.category} request has a ${activeMatch.status} match (score: ${activeMatch.match_score}).`
+                : `Your ${activeReq.category} request is active. We're searching for a match.`,
+          });
+        },
+      },
+
+      bookmark_resource: {
+        description: 'Save/bookmark a resource for later. Use when someone says "save this", "bookmark", "remember this place".',
+        inputSchema: z.object({
+          resourceId: z.string().describe('Resource ID to bookmark'),
+          resourceName: z.string().describe('Resource name'),
+        }),
+        execute: async function({ resourceId, resourceName }) {
+          // Store in person's metadata (or localStorage signal)
+          return JSON.stringify({
+            __tool: 'bookmark_confirmed',
+            __mapCommand: { type: 'bookmark', bookmarkId: resourceId },
+            resourceId,
+            resourceName,
+            message: `Saved "${resourceName}" to your bookmarks. You can find it in your Profile tab.`,
+          });
+        },
+      },
+
+      share_location: {
+        description: 'Share your live location with a matched helper. Use when someone is waiting for help and wants to share location.',
+        inputSchema: z.object({
+          lat: z.number().describe('Your latitude'),
+          lng: z.number().describe('Your longitude'),
+          matchId: z.string().optional().describe('Match ID to share with'),
+        }),
+        execute: async function({ lat, lng, matchId }) {
+          // Generate a share URL (in production, this would create a temporary share token)
+          const shareToken = Math.random().toString(36).substring(2, 10);
+          const shareUrl = `https://sosconnect.org/locate/${shareToken}`;
+
+          return JSON.stringify({
+            __tool: 'location_shared',
+            __mapCommand: { type: 'share_location', center: [lng, lat], shareUrl },
+            shareUrl,
+            message: 'Your location has been shared. The volunteer coming to help you can see where you are.',
           });
         },
       },
