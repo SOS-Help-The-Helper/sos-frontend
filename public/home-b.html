@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS — Coordination Infrastructure</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Nunito Sans', -apple-system, sans-serif;
+    color: #1a1a1a;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    transition: all 0.4s;
+    background: transparent;
+  }
+  nav.scrolled { background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid #f0f0f0; }
+  .nav-inner { max-width: 960px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-brand { font-weight: 700; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: #1a3850; text-decoration: none; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #999; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: #1a3850; }
+
+  /* Sections */
+  section { padding: 100px 32px; }
+  .narrow { max-width: 720px; margin: 0 auto; }
+  .wide { max-width: 960px; margin: 0 auto; }
+
+  /* Typography */
+  .serif { font-family: 'DM Serif Display', Georgia, serif; }
+  h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 52px; line-height: 1.1; color: #1a1a1a; font-weight: 400; }
+  h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.15; color: #1a1a1a; font-weight: 400; }
+  h3 { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+
+  .label { font-size: 11px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: #1a3850; margin-bottom: 16px; }
+  .body-lg { font-size: 18px; font-weight: 300; color: #666; line-height: 1.8; }
+  .body-sm { font-size: 14px; color: #888; line-height: 1.7; }
+  .sos-blue { color: #1a3850; }
+
+  /* Backgrounds */
+  .bg-white { background: #fff; }
+  .bg-light { background: #f8f9fa; }
+  .bg-navy { background: #0F1E2B; color: #fff; }
+  .bg-navy h1, .bg-navy h2, .bg-navy h3 { color: #fff; }
+  .bg-navy .label { color: rgba(137,207,240,0.6); }
+  .bg-navy .body-lg { color: rgba(255,255,255,0.55); }
+  .bg-navy .body-sm { color: rgba(255,255,255,0.35); }
+
+  /* Stat cards */
+  .stat-row { display: flex; gap: 32px; margin: 48px 0; }
+  .stat-card { flex: 1; }
+  .stat-card .num { font-family: 'DM Serif Display', Georgia, serif; font-size: 56px; color: #1a3850; line-height: 1; }
+  .stat-card .desc { font-size: 14px; color: #888; margin-top: 8px; }
+
+  /* Insight cards — left accent */
+  .insight { border-left: 3px solid #1a3850; padding: 20px 0 20px 24px; margin: 16px 0; }
+  .insight h4 { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .insight p { font-size: 14px; color: #777; line-height: 1.65; }
+
+  /* SIGNAL steps */
+  .signal-step { display: flex; gap: 24px; margin: 32px 0; align-items: flex-start; }
+  .signal-marker {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #f0f4f8; display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #1a3850; flex-shrink: 0;
+  }
+  .signal-body h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .signal-body .narrative { font-size: 15px; color: #555; line-height: 1.65; font-weight: 300; }
+  .signal-body .mechanic { font-size: 13px; color: #aaa; margin-top: 4px; }
+
+  /* Result card */
+  .result-card {
+    background: #f8f9fa; border-radius: 12px; padding: 32px; text-align: center; margin-top: 48px;
+    border: 1px solid #eee;
+  }
+  .result-card p { font-size: 17px; color: #555; line-height: 1.8; font-weight: 300; }
+  .result-card strong { color: #1a3850; font-weight: 600; }
+
+  /* Thesis section */
+  .thesis-text { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; line-height: 1.65; color: #555; }
+
+  /* CTA */
+  .btn {
+    display: inline-block; padding: 14px 32px; border-radius: 8px;
+    font-size: 14px; font-weight: 700; text-decoration: none; transition: all 0.2s;
+  }
+  .btn-dark { background: #1a3850; color: #fff; }
+  .btn-dark:hover { background: #0F1E2B; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,56,80,0.2); }
+  .btn-outline { background: transparent; color: #1a3850; border: 1.5px solid #d0d5da; }
+  .btn-outline:hover { border-color: #1a3850; }
+
+  /* Divider */
+  .accent-line { width: 48px; height: 2px; background: #1a3850; margin: 32px 0; }
+
+  /* Footnotes */
+  .footnotes { max-width: 720px; margin: 0 auto; padding: 32px; }
+  .footnotes p { font-size: 11px; color: #bbb; line-height: 1.8; }
+  .footnotes a { color: #999; text-decoration: none; }
+
+  footer { text-align: center; padding: 48px 32px; border-top: 1px solid #f0f0f0; }
+  footer p { font-size: 13px; color: #bbb; }
+  footer a { color: #999; text-decoration: none; }
+
+  /* Fade in */
+  .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 36px; }
+    h2 { font-size: 28px; }
+    .stat-row { flex-direction: column; gap: 24px; }
+    .stat-card .num { font-size: 44px; }
+    section { padding: 72px 20px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">SOS Global</a>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#thesis">Thesis</a>
+      <a href="#solution">Solution</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="bg-white" style="min-height: 100vh; display: flex; align-items: center; padding-top: 140px;">
+  <div class="narrow fade-in">
+    <p class="label">Coordination Infrastructure</p>
+    <h1>
+      The help exists.<br>
+      The coordination <span class="sos-blue">doesn't.</span>
+    </h1>
+    <div class="accent-line"></div>
+    <p class="body-lg" style="max-width: 520px;">
+      After 18 months of field research across five major disasters, we identified
+      a structural gap in how communities, agencies, and organizations coordinate
+      relief. SOS is the infrastructure layer designed to close it.
+    </p>
+  </div>
+</section>
+
+<!-- THE PROBLEM -->
+<section id="problem" class="bg-light" style="border-top: 1px solid #eee;">
+  <div class="narrow fade-in">
+    <p class="label">The Problem</p>
+    <h2>A convergence nobody's addressing.</h2>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="num">305M</div>
+        <div class="desc">people needed humanitarian assistance in 2025</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">68%</div>
+        <div class="desc">of those identified didn't receive help</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">$24B</div>
+        <div class="desc">funding shortfall — the largest on record</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 48px;">
+      <div class="insight">
+        <h4>Federal capacity is contracting</h4>
+        <p>79% of state emergency management agencies want AI-powered coordination tools. None have them. Federal disaster funding dropped 40% in the first half of 2025.</p>
+      </div>
+      <div class="insight">
+        <h4>AI can now coordinate at scale</h4>
+        <p>Conversational intake, real-time resource matching, and multi-channel coordination are feasible today. None of this was possible two years ago.</p>
+      </div>
+      <div class="insight">
+        <h4>Communities are the actual first responders</h4>
+        <p>85% of disaster survivors receive help from neighbors before any agency arrives. The largest coordination network already exists — it just has no infrastructure.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE THESIS -->
+<section id="thesis" class="bg-navy" style="padding: 120px 32px;">
+  <div class="narrow fade-in" style="text-align: center;">
+    <p class="label">The Thesis</p>
+    <div style="height: 24px;"></div>
+    <p class="thesis-text" style="color: rgba(255,255,255,0.55); max-width: 500px; margin: 0 auto;">
+      A displaced family with a truck clears roads.<br>
+      A nurse in a flood zone triages injuries.<br>
+      A teenager who speaks three languages runs comms.
+    </p>
+    <div style="height: 48px;"></div>
+    <h1 style="font-size: 48px; color: #fff;">Everyone is a helper.</h1>
+    <div style="height: 24px;"></div>
+    <p style="font-size: 16px; color: rgba(255,255,255,0.35); max-width: 440px; margin: 0 auto; line-height: 1.8; font-weight: 300;">
+      Needs and offers coexist on the same person. The public isn't a liability in disaster response — they are the response. What they lack is coordination infrastructure.
+    </p>
+  </div>
+</section>
+
+<!-- THE SOLUTION -->
+<section id="solution" class="bg-white">
+  <div class="narrow fade-in">
+    <p class="label">The Solution</p>
+    <h2>How SOS coordinates.</h2>
+    <div class="accent-line"></div>
+    <p class="body-lg" style="margin-bottom: 48px; max-width: 540px;">
+      Six layers of coordination intelligence. Each builds on the last. We call the framework SIGNAL.
+    </p>
+
+    <div class="signal-step">
+      <div class="signal-marker">S</div>
+      <div class="signal-body">
+        <h3>Signal</h3>
+        <div class="narrative">Maria texts: "My house flooded. Two kids. We need shelter and food."</div>
+        <div class="mechanic">Any channel — SMS, WhatsApp, web. AI extracts structured needs from a conversation.</div>
+      </div>
+    </div>
+
+    <div class="signal-step">
+      <div class="signal-marker">I</div>
+      <div class="signal-body">
+        <h3>Intelligence</h3>
+        <div class="narrative">Available partners scored. Shelter matched within radius. Food bank notified automatically.</div>
+        <div class="mechanic">Two needs, two partners, one coordinated response. Every decision traced and auditable.</div>
+      </div>
+    </div>
+
+    <div class="signal-step">
+      <div class="signal-marker">G</div>
+      <div class="signal-body">
+        <h3>Graph</h3>
+        <div class="narrative">At the shelter, the system surfaces: "Translation services needed nearby." Maria speaks three languages.</div>
+        <div class="mechanic">SOS sees what people can offer — not just what they need. Connections form in real time.</div>
+      </div>
+    </div>
+
+    <div class="signal-step">
+      <div class="signal-marker">N</div>
+      <div class="signal-body">
+        <h3>Network</h3>
+        <div class="narrative">Maria helps three families who only speak Creole. A survivor becomes a helper.</div>
+        <div class="mechanic">Trust is earned through verified outcomes. Contribution scores compound over time.</div>
+      </div>
+    </div>
+
+    <div class="signal-step">
+      <div class="signal-marker">A</div>
+      <div class="signal-body">
+        <h3>Adaptive</h3>
+        <div class="narrative">Shelter capacity, meals served, translation queue — all updated across the network in real time.</div>
+        <div class="mechanic">Every match already knows what changed. No stale data.</div>
+      </div>
+    </div>
+
+    <div class="signal-step">
+      <div class="signal-marker">L</div>
+      <div class="signal-body">
+        <h3>Learning</h3>
+        <div class="narrative">"Bilingual citizens resolve intakes 40% faster." The system surfaced that pattern.</div>
+        <div class="mechanic">Every disaster makes the next response smarter. The intelligence compounds.</div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <p>
+        Maria found shelter in 45 minutes. Then helped three families.<br>
+        <strong>The system learned from all of it.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="contact" class="bg-light" style="border-top: 1px solid #eee;">
+  <div class="narrow fade-in" style="text-align: center;">
+    <p class="label">Get Involved</p>
+    <h2>We help the helpers.</h2>
+    <div style="height: 16px;"></div>
+    <p class="body-lg" style="max-width: 440px; margin: 0 auto;">
+      SOS is building coordination infrastructure with partner organizations across North Carolina.
+    </p>
+    <div style="height: 40px;"></div>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a href="/c" class="btn btn-dark">Get Started</a>
+      <a href="/register" class="btn btn-outline">Partner With Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footnotes -->
+<div class="footnotes">
+  <p>
+    Sources: OCHA Global Humanitarian Overview 2026 · Carnegie Endowment for International Peace 2025 · Deloitte-NEMA State of Emergency Management 2025 · Council on Foreign Relations · GAO High-Risk List 2025 · NC Department of Public Safety Hurricane Helene After-Action Review
+  </p>
+</div>
+
+<footer>
+  <p>SOS Global &middot; Everyone is a helper.</p>
+  <p style="margin-top: 8px;">
+    <a href="/c">Citizens</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="/matching">Partners</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="mailto:info@sos-help.org">Contact</a>
+  </p>
+</footer>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+}, { passive: true });
+
+// Fade in
+const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>
