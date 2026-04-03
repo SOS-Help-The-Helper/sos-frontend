@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
+import { SwipeCard } from '@/components/swipe-card';
 import { supabase } from '@/lib/supabase-client';
 
 interface MatchCard {
@@ -45,11 +46,7 @@ export default function MatchPage() {
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [dragX, setDragX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [decision, setDecision] = useState<'accept' | 'skip' | null>(null);
   const [existingMatches, setExistingMatches] = useState<any[]>([]);
-  const startX = useRef(0);
   const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
   useEffect(() => {
@@ -131,33 +128,9 @@ export default function MatchPage() {
     setExistingMatches(data || []);
   }
 
-  function handleDragStart(clientX: number) {
-    startX.current = clientX;
-    setIsDragging(true);
-  }
-
-  function handleDragMove(clientX: number) {
-    if (!isDragging) return;
-    setDragX(clientX - startX.current);
-  }
-
-  function handleDragEnd() {
-    if (!isDragging) return;
-    setIsDragging(false);
-    if (dragX > 100) {
-      handleDecision('accept');
-    } else if (dragX < -100) {
-      handleDecision('skip');
-    } else {
-      setDragX(0);
-    }
-  }
-
   async function handleDecision(action: 'accept' | 'skip') {
     const card = cards[currentIndex];
     if (!card) return;
-
-    setDecision(action);
 
     if (action === 'accept') {
       // Create match via match-respond EF or direct write
@@ -178,12 +151,8 @@ export default function MatchPage() {
       }
     }
 
-    // Animate out then advance
-    setTimeout(() => {
-      setDragX(0);
-      setDecision(null);
-      setCurrentIndex(prev => prev + 1);
-    }, 300);
+    // Advance to next card (SwipeCard handles animation)
+    setCurrentIndex(prev => prev + 1);
   }
 
   const currentCard = cards[currentIndex];
@@ -215,41 +184,20 @@ export default function MatchPage() {
                 className="mt-4 px-4 py-2 rounded-xl bg-white/10 text-sm text-white/70">Refresh</button>
             </div>
           ) : (
-            <div
-              className="w-full max-w-sm relative cursor-grab active:cursor-grabbing select-none"
-              style={{
-                transform: `translateX(${decision === 'accept' ? 300 : decision === 'skip' ? -300 : dragX}px) rotate(${(decision === 'accept' ? 15 : decision === 'skip' ? -15 : dragX * 0.05)}deg)`,
-                transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: decision ? 0.5 : 1,
-              }}
-              onMouseDown={e => handleDragStart(e.clientX)}
-              onMouseMove={e => handleDragMove(e.clientX)}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={() => { if (isDragging) handleDragEnd(); }}
-              onTouchStart={e => handleDragStart(e.touches[0].clientX)}
-              onTouchMove={e => handleDragMove(e.touches[0].clientX)}
-              onTouchEnd={handleDragEnd}
+            <SwipeCard
+              key={`citizen-match-${currentIndex}`}
+              onAccept={() => handleDecision('accept')}
+              onDecline={() => handleDecision('skip')}
+              acceptLabel="Help ✓"
+              declineLabel="Skip"
             >
-              {/* Swipe indicators */}
-              {dragX > 40 && (
-                <div className="absolute top-6 right-6 z-10 px-3 py-1 rounded-full bg-green-500/20 border-2 border-green-500 text-green-400 text-sm font-bold rotate-12">
-                  HELP ✓
-                </div>
-              )}
-              {dragX < -40 && (
-                <div className="absolute top-6 left-6 z-10 px-3 py-1 rounded-full bg-red-500/20 border-2 border-red-500 text-red-400 text-sm font-bold -rotate-12">
-                  SKIP ✕
-                </div>
-              )}
-
-              {/* Card */}
-              <div className={`rounded-2xl overflow-hidden border border-white/10 ${
+              {/* Card content */}
+              <div className={`border-l-4 ${
                 currentCard.urgency ? URGENCY_COLORS[currentCard.urgency] || 'bg-white/5' : 'bg-white/5'
-              } border-l-4`}>
+              }`}>
                 {/* Mini map area */}
                 <div className="h-40 bg-[#1A3850] relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0F1E2B]/80" />
-                  {/* Mapbox static image */}
                   {currentCard.latitude && currentCard.longitude && (
                     <img
                       src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+${currentCard.type === 'request' ? 'ef4e4b' : '89cff0'}(${currentCard.longitude},${currentCard.latitude})/${currentCard.longitude},${currentCard.latitude},12,0/400x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
@@ -257,11 +205,9 @@ export default function MatchPage() {
                       className="w-full h-full object-cover"
                     />
                   )}
-                  {/* Distance badge */}
                   <div className="absolute bottom-3 left-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] text-white/80 font-medium">
                     📍 {currentCard.location_text || 'Location available'}
                   </div>
-                  {/* Stack counter */}
                   <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] text-white/50">
                     {currentIndex + 1} / {cards.length}
                   </div>
@@ -269,7 +215,6 @@ export default function MatchPage() {
 
                 {/* Content */}
                 <div className="p-5">
-                  {/* Type badge */}
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`w-2 h-2 rounded-full ${currentCard.type === 'request' ? 'bg-[#EF4E4B]' : 'bg-[#89CFF0]'}`} />
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${currentCard.type === 'request' ? 'text-[#EF4E4B]' : 'text-[#89CFF0]'}`}>
@@ -278,12 +223,10 @@ export default function MatchPage() {
                     <span className="text-[10px] text-white/30 ml-auto">{timeSince(currentCard.created_at)}</span>
                   </div>
 
-                  {/* Description */}
                   <p className="text-base text-white/80 leading-relaxed mb-4">
                     {currentCard.description}
                   </p>
 
-                  {/* Chips */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/60">
                       {CATEGORY_EMOJI[currentCard.category] || '📋'} {currentCard.category.replace(/_/g, ' ')}
@@ -301,7 +244,6 @@ export default function MatchPage() {
                     )}
                   </div>
 
-                  {/* Match score bar (if available) */}
                   {currentCard.match_score && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-1">
@@ -315,25 +257,7 @@ export default function MatchPage() {
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Action buttons (below card) */}
-          {currentCard && (
-            <div className="flex gap-6 mt-6">
-              <button
-                onClick={() => handleDecision('skip')}
-                className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all active:scale-95"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-              <button
-                onClick={() => handleDecision('accept')}
-                className="w-14 h-14 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 hover:bg-green-500/20 transition-all active:scale-95"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              </button>
-            </div>
+            </SwipeCard>
           )}
         </div>
 
