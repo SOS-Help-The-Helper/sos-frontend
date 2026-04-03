@@ -42,16 +42,53 @@ export default function ManagePage() {
   }, []);
 
   async function loadData(pid: string) {
-    const [scoreData, reqData, resData, matchData] = await Promise.all([
+    // Load core citizen data
+    const [scoreData, reqData, resData] = await Promise.all([
       getSOSScore(pid),
       supabase.from('requests').select('id, category, details_sanitized, urgency, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
       supabase.from('resources').select('id, category, details_sanitized, capacity_available, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
-      supabase.from('matches').select('id, request_id, resource_id, status, match_score, created_at, resources(category, details_sanitized, organizations(name))').or(`request_id.in.(select id from requests where person_id='${pid}'),resource_id.in.(select id from resources where person_id='${pid}')`).order('created_at', { ascending: false }).limit(20),
     ]);
     setScore(scoreData);
     setRequests(reqData.data || []);
     setResources(resData.data || []);
-    setMatches(matchData.data || []);
+
+    // Load matches: two simple queries merged client-side (no PostgREST subqueries)
+    const requestIds = (reqData.data || []).map((r: any) => r.id);
+    const resourceIds = (resData.data || []).map((r: any) => r.id);
+
+    const matchSelect = 'id, request_id, resource_id, status, match_score, created_at, resources(category, details_sanitized, organizations(name))';
+
+    // Query 1: matches on my requests (I'm the requester)
+    let requestMatches: any[] = [];
+    if (requestIds.length > 0) {
+      const { data } = await supabase
+        .from('matches')
+        .select(matchSelect)
+        .in('request_id', requestIds)
+        .not('status', 'in', '("cancelled","expired")')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      requestMatches = data || [];
+    }
+
+    // Query 2: matches on my resources (I'm the helper)
+    let resourceMatches: any[] = [];
+    if (resourceIds.length > 0) {
+      const { data } = await supabase
+        .from('matches')
+        .select(matchSelect)
+        .in('resource_id', resourceIds)
+        .not('status', 'in', '("cancelled","expired")')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      resourceMatches = data || [];
+    }
+
+    // Deduplicate by match ID and sort
+    const allMatches = [...requestMatches, ...resourceMatches];
+    const unique = Array.from(new Map(allMatches.map(m => [m.id, m])).values());
+    unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setMatches(unique.slice(0, 20));
   }
 
   const sections = [

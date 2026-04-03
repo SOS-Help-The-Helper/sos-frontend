@@ -5,22 +5,42 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { supabase } from '@/lib/supabase-client';
 
-interface MatchCard {
-  id: string;
-  type: 'request' | 'resource';
-  category: string;
-  description: string;
-  location_text: string;
-  latitude: number;
-  longitude: number;
-  urgency?: string;
-  capacity?: number;
-  match_score?: number;
-  person_name?: string;
-  org_name?: string;
+/**
+ * Citizen Match Page — swipe through match PROPOSALS from the matches table.
+ * 
+ * Per spec: cards come from `matches` where status='proposed' and the match
+ * references one of the citizen's requests or resources. On accept, calls
+ * match-respond EF with { match_id: matches.id, response: "accept" }.
+ */
+
+interface MatchProposal {
+  id: string;                    // matches.id — the actual match ID
+  match_score: number;
+  match_summary_masked: string | null;
+  match_reasoning: string | null;
+  status: string;
   created_at: string;
-  source_id: string; // request_id or resource_id
+  request_id: string | null;
+  resource_id: string | null;
+  // Joined data
+  request_category?: string;
+  request_description?: string;
+  request_urgency?: string;
+  request_location?: string;
+  request_lat?: number;
+  request_lng?: number;
+  resource_category?: string;
+  resource_description?: string;
+  resource_location?: string;
+  resource_lat?: number;
+  resource_lng?: number;
+  resource_org_name?: string;
+  resource_capacity?: number;
+  // Direction: am I the requester or the helper?
+  direction: 'i_need_help' | 'i_can_help';
 }
+
+type FilterMode = 'all' | 'for_me' | 'i_help';
 
 const URGENCY_COLORS: Record<string, string> = {
   critical: 'border-l-[#EF4E4B] bg-[#EF4E4B]/5',
@@ -43,109 +63,161 @@ function timeSince(dateStr: string): string {
 }
 
 export default function MatchPage() {
-  const [cards, setCards] = useState<MatchCard[]>([]);
+  const [proposals, setProposals] = useState<MatchProposal[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [existingMatches, setExistingMatches] = useState<any[]>([]);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
   const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
   useEffect(() => {
-    loadCards();
-    loadExistingMatches();
-  }, []);
+    if (personId) loadProposals();
+    else setLoading(false);
+  }, [personId]);
 
-  async function loadCards() {
+  async function loadProposals() {
     setLoading(true);
     try {
-      // Load resources near the user (things they could request)
-      const { data: resources } = await supabase
-        .from('resources')
-        .select('id, category, taxonomy_code, details_sanitized, capacity_available, latitude, longitude, location_text, org_id, status, created_at, source, organizations(name)')
-        .eq('status', 'active')
-        .not('latitude', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Step 1: Get my request IDs and resource IDs
+      const [{ data: myRequests }, { data: myResources }] = await Promise.all([
+        supabase.from('requests').select('id').eq('person_id', personId!),
+        supabase.from('resources').select('id').eq('person_id', personId!),
+      ]);
 
-      // Load active requests (things they could help with)
-      const { data: requests } = await supabase
-        .from('requests')
-        .select('id, category, taxonomy_code, details_sanitized, urgency, household_size, latitude, longitude, location_text, status, created_at')
-        .eq('status', 'active')
-        .not('latitude', 'is', null)
-        .order('triage_score', { ascending: false })
-        .limit(20);
+      const myRequestIds = (myRequests || []).map(r => r.id);
+      const myResourceIds = (myResources || []).map(r => r.id);
 
-      const resourceCards: MatchCard[] = (resources || []).map((r: any) => ({
-        id: `res-${r.id}`,
-        type: 'resource' as const,
-        category: r.category || 'general',
-        description: r.details_sanitized || `${r.category} resource available`,
-        location_text: r.location_text || '',
-        latitude: r.latitude,
-        longitude: r.longitude,
-        capacity: r.capacity_available,
-        org_name: r.organizations?.name,
-        created_at: r.created_at,
-        source_id: r.id,
-      }));
-
-      const requestCards: MatchCard[] = (requests || []).map((r: any) => ({
-        id: `req-${r.id}`,
-        type: 'request' as const,
-        category: r.category || 'general',
-        description: r.details_sanitized || `${r.category} needed`,
-        location_text: r.location_text || '',
-        latitude: r.latitude,
-        longitude: r.longitude,
-        urgency: r.urgency,
-        created_at: r.created_at,
-        source_id: r.id,
-      }));
-
-      // Interleave: resource, request, resource, request...
-      const merged: MatchCard[] = [];
-      const maxLen = Math.max(resourceCards.length, requestCards.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < resourceCards.length) merged.push(resourceCards[i]);
-        if (i < requestCards.length) merged.push(requestCards[i]);
+      if (myRequestIds.length === 0 && myResourceIds.length === 0) {
+        setProposals([]);
+        setLoading(false);
+        return;
       }
 
-      setCards(merged);
+      // Step 2: Query matches referencing my requests (resources offered TO me)
+      let requestMatches: any[] = [];
+      if (myRequestIds.length > 0) {
+        const { data } = await supabase
+          .from('matches')
+          .select('id, match_score, match_summary_masked, match_reasoning, status, created_at, request_id, resource_id, resources(category, details_sanitized, location_text, latitude, longitude, capacity_available, organizations(name)), requests(category, details_sanitized, urgency, location_text, latitude, longitude)')
+          .in('request_id', myRequestIds)
+          .eq('status', 'proposed')
+          .order('match_score', { ascending: false });
+        requestMatches = (data || []).map((m: any) => ({
+          ...m,
+          direction: 'i_need_help' as const,
+          resource_category: m.resources?.category,
+          resource_description: m.resources?.details_sanitized,
+          resource_location: m.resources?.location_text,
+          resource_lat: m.resources?.latitude,
+          resource_lng: m.resources?.longitude,
+          resource_capacity: m.resources?.capacity_available,
+          resource_org_name: m.resources?.organizations?.name,
+          request_category: m.requests?.category,
+          request_description: m.requests?.details_sanitized,
+          request_urgency: m.requests?.urgency,
+          request_location: m.requests?.location_text,
+          request_lat: m.requests?.latitude,
+          request_lng: m.requests?.longitude,
+        }));
+      }
+
+      // Step 3: Query matches referencing my resources (requests I could help with)
+      let resourceMatches: any[] = [];
+      if (myResourceIds.length > 0) {
+        const { data } = await supabase
+          .from('matches')
+          .select('id, match_score, match_summary_masked, match_reasoning, status, created_at, request_id, resource_id, resources(category, details_sanitized, location_text, latitude, longitude, capacity_available, organizations(name)), requests(category, details_sanitized, urgency, location_text, latitude, longitude)')
+          .in('resource_id', myResourceIds)
+          .eq('status', 'proposed')
+          .order('match_score', { ascending: false });
+        resourceMatches = (data || []).map((m: any) => ({
+          ...m,
+          direction: 'i_can_help' as const,
+          resource_category: m.resources?.category,
+          resource_description: m.resources?.details_sanitized,
+          resource_location: m.resources?.location_text,
+          resource_lat: m.resources?.latitude,
+          resource_lng: m.resources?.longitude,
+          resource_capacity: m.resources?.capacity_available,
+          resource_org_name: m.resources?.organizations?.name,
+          request_category: m.requests?.category,
+          request_description: m.requests?.details_sanitized,
+          request_urgency: m.requests?.urgency,
+          request_location: m.requests?.location_text,
+          request_lat: m.requests?.latitude,
+          request_lng: m.requests?.longitude,
+        }));
+      }
+
+      // Step 4: Deduplicate and merge (a match could appear in both if citizen has both request & resource)
+      const all = [...requestMatches, ...resourceMatches];
+      const unique = Array.from(new Map(all.map(m => [m.id, m])).values());
+      unique.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+
+      setProposals(unique);
+      setCurrentIndex(0);
+
+      // Also load accepted/connected matches for the bottom section
+      const acceptedIds = [...myRequestIds, ...myResourceIds];
+      if (acceptedIds.length > 0) {
+        // Two queries for accepted matches
+        const results: any[] = [];
+        if (myRequestIds.length > 0) {
+          const { data } = await supabase
+            .from('matches')
+            .select('id, match_score, match_summary_masked, status, created_at, request_id, resource_id, resources(category, details_sanitized, organizations(name)), requests(category)')
+            .in('request_id', myRequestIds)
+            .in('status', ['accepted', 'connected', 'fulfilled'])
+            .order('created_at', { ascending: false })
+            .limit(5);
+          results.push(...(data || []));
+        }
+        if (myResourceIds.length > 0) {
+          const { data } = await supabase
+            .from('matches')
+            .select('id, match_score, match_summary_masked, status, created_at, request_id, resource_id, resources(category, details_sanitized, organizations(name)), requests(category)')
+            .in('resource_id', myResourceIds)
+            .in('status', ['accepted', 'connected', 'fulfilled'])
+            .order('created_at', { ascending: false })
+            .limit(5);
+          results.push(...(data || []));
+        }
+        const uniqueAccepted = Array.from(new Map(results.map(m => [m.id, m])).values());
+        setAcceptedMatches(uniqueAccepted.slice(0, 10) as any);
+      }
     } catch (err) {
-      console.error('Failed to load match cards:', err);
+      console.error('Failed to load match proposals:', err);
     }
     setLoading(false);
   }
 
-  async function loadExistingMatches() {
-    if (!personId) return;
-    const { data } = await supabase
-      .from('matches')
-      .select('id, request_id, resource_id, status, match_score, created_at, requests(category, details_sanitized, person_id), resources(category, details_sanitized, org_id, organizations(name))')
-      .or(`requests.person_id.eq.${personId},resources.person_id.eq.${personId}`)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    setExistingMatches(data || []);
-  }
-
   async function handleDecision(action: 'accept' | 'skip') {
-    const card = cards[currentIndex];
-    if (!card) return;
+    const proposal = filteredProposals[currentIndex];
+    if (!proposal) return;
 
     if (action === 'accept') {
-      // Create match via match-respond EF or direct write
+      // Call match-respond EF with the actual matches.id and correct field name
       try {
         const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        await fetch(`${SUPABASE_URL}/functions/v1/match-respond`, {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/match-respond`, {
           method: 'POST',
-          headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
-            match_id: card.source_id,
-            action: 'accept',
-            notes: `Swiped right from match tab (${card.type})`,
+            match_id: proposal.id,       // matches.id — NOT request_id or resource_id
+            response: 'accept',          // EF reads 'response' — NOT 'action'
+            actor_id: personId,
+            channel: 'citizen_app',
           }),
         });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error('match-respond error:', err);
+        }
       } catch (err) {
         console.error('Match accept failed:', err);
       }
@@ -155,8 +227,35 @@ export default function MatchPage() {
     setCurrentIndex(prev => prev + 1);
   }
 
-  const currentCard = cards[currentIndex];
-  const remaining = cards.length - currentIndex;
+  // Apply filter mode
+  const filteredProposals = proposals.filter(p => {
+    if (filterMode === 'for_me') return p.direction === 'i_need_help';
+    if (filterMode === 'i_help') return p.direction === 'i_can_help';
+    return true;
+  });
+
+  const currentProposal = filteredProposals[currentIndex];
+  const remaining = filteredProposals.length - currentIndex;
+
+  // Card display helpers
+  function getCardCategory(p: MatchProposal): string {
+    if (p.direction === 'i_need_help') return p.resource_category || p.request_category || 'general';
+    return p.request_category || p.resource_category || 'general';
+  }
+  function getCardDescription(p: MatchProposal): string {
+    if (p.match_summary_masked) return p.match_summary_masked;
+    if (p.direction === 'i_need_help') return p.resource_description || 'Resource available for you';
+    return p.request_description || 'Someone needs help';
+  }
+  function getCardLocation(p: MatchProposal): string {
+    if (p.direction === 'i_need_help') return p.resource_location || p.request_location || '';
+    return p.request_location || p.resource_location || '';
+  }
+  function getCardCoords(p: MatchProposal): { lat: number; lng: number } | null {
+    if (p.direction === 'i_need_help' && p.resource_lat && p.resource_lng) return { lat: p.resource_lat, lng: p.resource_lng };
+    if (p.direction === 'i_can_help' && p.request_lat && p.request_lng) return { lat: p.request_lat, lng: p.request_lng };
+    return null;
+  }
 
   return (
     <CitizenShell>
@@ -167,93 +266,131 @@ export default function MatchPage() {
             <span className="text-sm font-bold text-white">Match</span>
             {remaining > 0 && <span className="text-[10px] text-white/40 ml-2">{remaining} available</span>}
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => { setCurrentIndex(0); loadCards(); }} className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/50">Refresh</button>
-          </div>
+          <button onClick={() => { setCurrentIndex(0); loadProposals(); }} className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/50">Refresh</button>
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex gap-1.5 px-4 py-2 bg-[#0F1E2B] flex-shrink-0">
+          {([
+            { id: 'all', label: 'All' },
+            { id: 'for_me', label: 'Help for me' },
+            { id: 'i_help', label: 'I can help' },
+          ] as { id: FilterMode; label: string }[]).map(f => (
+            <button key={f.id} onClick={() => { setFilterMode(f.id); setCurrentIndex(0); }}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors ${
+                filterMode === f.id ? 'bg-white/15 text-white' : 'bg-white/5 text-white/40'
+              }`}>
+              {f.label}
+            </button>
+          ))}
         </div>
 
         {/* Card Stack */}
         <div className="flex-1 flex flex-col items-center justify-center px-4">
-          {loading ? (
+          {!personId ? (
+            <div className="text-center py-12">
+              <p className="text-2xl mb-2">👋</p>
+              <p className="text-sm text-white/50">Submit a request or offer help to see match proposals.</p>
+            </div>
+          ) : loading ? (
             <div className="w-8 h-8 border-2 border-[#89CFF0] border-t-transparent rounded-full animate-spin" />
-          ) : !currentCard ? (
+          ) : !currentProposal ? (
             <div className="text-center py-12">
               <p className="text-2xl mb-2">✅</p>
-              <p className="text-sm text-white/50">You've seen all available matches.</p>
-              <button onClick={() => { setCurrentIndex(0); loadCards(); }}
+              <p className="text-sm text-white/50">
+                {filteredProposals.length === 0 && proposals.length === 0
+                  ? 'No match proposals yet. The matching engine will find matches as resources become available.'
+                  : "You've reviewed all match proposals."}
+              </p>
+              <button onClick={() => { setCurrentIndex(0); loadProposals(); }}
                 className="mt-4 px-4 py-2 rounded-xl bg-white/10 text-sm text-white/70">Refresh</button>
             </div>
           ) : (
             <SwipeCard
-              key={`citizen-match-${currentIndex}`}
+              key={`citizen-match-${currentProposal.id}`}
               onAccept={() => handleDecision('accept')}
               onDecline={() => handleDecision('skip')}
-              acceptLabel="Help ✓"
-              declineLabel="Skip"
+              acceptLabel={currentProposal.direction === 'i_need_help' ? 'Accept ✓' : 'Help ✓'}
+              declineLabel="Pass"
             >
-              {/* Card content */}
               <div className={`border-l-4 ${
-                currentCard.urgency ? URGENCY_COLORS[currentCard.urgency] || 'bg-white/5' : 'bg-white/5'
+                currentProposal.request_urgency ? URGENCY_COLORS[currentProposal.request_urgency] || 'bg-white/5' : 'bg-white/5'
               }`}>
-                {/* Mini map area */}
+                {/* Mini map */}
                 <div className="h-40 bg-[#1A3850] relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0F1E2B]/80" />
-                  {currentCard.latitude && currentCard.longitude && (
-                    <img
-                      src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+${currentCard.type === 'request' ? 'ef4e4b' : '89cff0'}(${currentCard.longitude},${currentCard.latitude})/${currentCard.longitude},${currentCard.latitude},12,0/400x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
-                      alt="Location"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  {(() => {
+                    const coords = getCardCoords(currentProposal);
+                    const cat = getCardCategory(currentProposal);
+                    const pinColor = currentProposal.direction === 'i_need_help' ? '89cff0' : 'ef4e4b';
+                    return coords ? (
+                      <img
+                        src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+${pinColor}(${coords.lng},${coords.lat})/${coords.lng},${coords.lat},12,0/400x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+                        alt="Location"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : null;
+                  })()}
                   <div className="absolute bottom-3 left-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] text-white/80 font-medium">
-                    📍 {currentCard.location_text || 'Location available'}
+                    📍 {getCardLocation(currentProposal) || 'Location available'}
                   </div>
                   <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] text-white/50">
-                    {currentIndex + 1} / {cards.length}
+                    {currentIndex + 1} / {filteredProposals.length}
                   </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-5">
+                  {/* Direction badge */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-2 h-2 rounded-full ${currentCard.type === 'request' ? 'bg-[#EF4E4B]' : 'bg-[#89CFF0]'}`} />
-                    <span className={`text-[11px] font-bold uppercase tracking-wider ${currentCard.type === 'request' ? 'text-[#EF4E4B]' : 'text-[#89CFF0]'}`}>
-                      {currentCard.type === 'request' ? 'Someone needs help' : 'Help available'}
+                    <span className={`w-2 h-2 rounded-full ${currentProposal.direction === 'i_can_help' ? 'bg-[#EF4E4B]' : 'bg-[#89CFF0]'}`} />
+                    <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                      currentProposal.direction === 'i_can_help' ? 'text-[#EF4E4B]' : 'text-[#89CFF0]'
+                    }`}>
+                      {currentProposal.direction === 'i_need_help' ? 'Help available for you' : 'Someone needs your help'}
                     </span>
-                    <span className="text-[10px] text-white/30 ml-auto">{timeSince(currentCard.created_at)}</span>
+                    <span className="text-[10px] text-white/30 ml-auto">{timeSince(currentProposal.created_at)}</span>
                   </div>
 
+                  {/* Description */}
                   <p className="text-base text-white/80 leading-relaxed mb-4">
-                    {currentCard.description}
+                    {getCardDescription(currentProposal)}
                   </p>
 
+                  {/* Chips */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/60">
-                      {CATEGORY_EMOJI[currentCard.category] || '📋'} {currentCard.category.replace(/_/g, ' ')}
+                      {CATEGORY_EMOJI[getCardCategory(currentProposal)] || '📋'} {getCardCategory(currentProposal).replace(/_/g, ' ')}
                     </span>
-                    {currentCard.urgency && (
+                    {currentProposal.request_urgency && (
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        currentCard.urgency === 'critical' ? 'bg-[#EF4E4B]/20 text-[#EF4E4B]' : 'bg-amber-500/20 text-amber-400'
-                      }`}>⚡ {currentCard.urgency}</span>
+                        currentProposal.request_urgency === 'critical' ? 'bg-[#EF4E4B]/20 text-[#EF4E4B]' : 'bg-amber-500/20 text-amber-400'
+                      }`}>⚡ {currentProposal.request_urgency}</span>
                     )}
-                    {currentCard.capacity && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/60">Capacity: {currentCard.capacity}</span>
+                    {currentProposal.resource_capacity && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/60">Capacity: {currentProposal.resource_capacity}</span>
                     )}
-                    {currentCard.org_name && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-[#89CFF0]/15 text-[#89CFF0]">{currentCard.org_name}</span>
+                    {currentProposal.resource_org_name && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-[#89CFF0]/15 text-[#89CFF0]">{currentProposal.resource_org_name}</span>
                     )}
                   </div>
 
-                  {currentCard.match_score && (
-                    <div className="mb-4">
+                  {/* Match score */}
+                  {currentProposal.match_score > 0 && (
+                    <div className="mb-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] text-white/30">Match Score</span>
-                        <span className="text-xs font-bold text-[#89CFF0]">{currentCard.match_score}%</span>
+                        <span className="text-xs font-bold text-[#89CFF0]">{currentProposal.match_score}</span>
                       </div>
                       <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#89CFF0] rounded-full" style={{ width: `${currentCard.match_score}%` }} />
+                        <div className="h-full bg-[#89CFF0] rounded-full" style={{ width: `${Math.min(currentProposal.match_score, 100)}%` }} />
                       </div>
                     </div>
+                  )}
+
+                  {/* Reasoning (if available) */}
+                  {currentProposal.match_reasoning && (
+                    <p className="text-[10px] text-white/30 mt-2 line-clamp-2">{currentProposal.match_reasoning}</p>
                   )}
                 </div>
               </div>
@@ -261,19 +398,19 @@ export default function MatchPage() {
           )}
         </div>
 
-        {/* Existing Matches */}
-        {existingMatches.length > 0 && (
+        {/* Accepted Matches */}
+        {acceptedMatches.length > 0 && (
           <div className="px-4 pb-4">
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">Your Active Matches</p>
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {existingMatches.map(m => (
+              {acceptedMatches.map(m => (
                 <div key={m.id} className="bg-white/5 rounded-xl px-3 py-2 flex items-center gap-3">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    m.status === 'fulfilled' ? 'bg-green-400' : m.status === 'accepted' ? 'bg-[#89CFF0]' : 'bg-amber-400'
+                    m.status === 'fulfilled' ? 'bg-green-400' : m.status === 'connected' ? 'bg-[#89CFF0]' : 'bg-amber-400'
                   }`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-white/70 truncate">
-                      {m.resources?.organizations?.name || m.requests?.category?.replace(/_/g, ' ') || 'Match'}
+                      {(m as any).resources?.organizations?.name || (m as any).requests?.category?.replace(/_/g, ' ') || 'Match'}
                     </p>
                     <p className="text-[10px] text-white/30">{m.status} · Score: {m.match_score}</p>
                   </div>
