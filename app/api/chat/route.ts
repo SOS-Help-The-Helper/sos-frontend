@@ -120,8 +120,23 @@ export async function POST(req: Request) {
   const { messages: uiMessages } = await req.json();
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
-  const ervFlow = req.headers.get('x-erv-flow') || '';
-  const ervFor = req.headers.get('x-erv-for') || '';
+  // Detect ERV flow from first message content: [ERV_INTAKE:survivor:myself]
+  let ervFlow = req.headers.get('x-erv-flow') || '';
+  let ervFor = req.headers.get('x-erv-for') || '';
+  const firstMsg = uiMessages?.[0];
+  if (firstMsg?.content && typeof firstMsg.content === 'string') {
+    const ervMatch = firstMsg.content.match(/\[ERV_INTAKE:(\w+):(\w+)\]/);
+    if (ervMatch) { ervFlow = ervMatch[1]; ervFor = ervMatch[2]; }
+  }
+  // Also check parts array
+  if (!ervFlow && firstMsg?.parts) {
+    for (const p of firstMsg.parts) {
+      if (p.type === 'text' && typeof p.text === 'string') {
+        const m = p.text.match(/\[ERV_INTAKE:(\w+):(\w+)\]/);
+        if (m) { ervFlow = m[1]; ervFor = m[2]; break; }
+      }
+    }
+  }
   const authContext = isAuthenticated 
     ? `\nUSER CONTEXT: Authenticated user (ID: ${personId}). You already have their phone and location. Skip those questions.`
     : '\nUSER CONTEXT: Anonymous user. Collect phone during match/SOS flows.';

@@ -90,17 +90,15 @@ export default function ErvIntakePage() {
 
   const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      headers: {
-        'x-person-id': personId || '',
-        'x-authenticated': personId ? 'true' : 'false',
-        'x-erv-flow': flowType || '',
-        'x-erv-for': forWhom || '',
-      },
-    }),
-  });
+  const transport = useRef(new DefaultChatTransport({
+    api: '/api/chat',
+    headers: {
+      'x-person-id': personId || '',
+      'x-authenticated': personId ? 'true' : 'false',
+    },
+  })).current;
+
+  const { messages, sendMessage, status } = useChat({ transport });
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
@@ -119,7 +117,7 @@ export default function ErvIntakePage() {
         ? 'The user is filling this out for themselves.'
         : 'The user is filling this out on behalf of someone else. Ask for the beneficiary\'s information separately.';
       
-      sendMessage({ text: `[System: ERV ${flowType} intake. ${context}. Start the intake flow.]` });
+      sendMessage({ text: `[ERV_INTAKE:${flowType}:${forWhom}] ${context}. Start the intake flow.` });
     }
   }, [step, flowType, forWhom]);
 
