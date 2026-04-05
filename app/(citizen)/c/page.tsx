@@ -515,7 +515,7 @@ export default function CitizenMapPage() {
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,0px)]">
+      <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
           <div className="flex items-center gap-2.5">
             <button
