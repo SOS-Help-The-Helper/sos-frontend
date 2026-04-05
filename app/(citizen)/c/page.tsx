@@ -144,7 +144,7 @@ export default function CitizenMapPage() {
           layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
         // Individual points
         map.addLayer({ id: 'requests-points', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 12, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === RESOURCES SOURCE (blue) ===
         const resourceFeatures = [
@@ -171,7 +171,7 @@ export default function CitizenMapPage() {
         map.addLayer({ id: 'resources-cluster-count', type: 'symbol', source: 'resources-source', filter: ['has', 'point_count'],
           layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 12, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === REPORTS SOURCE (white) ===
         const reportFeatures = (reports || []).filter(r => r.latitude && r.longitude && !r.flagged).map(r => ({
@@ -191,7 +191,7 @@ export default function CitizenMapPage() {
         map.addLayer({ id: 'reports-cluster-count', type: 'symbol', source: 'reports-source', filter: ['has', 'point_count'],
           layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 11 }, paint: { 'text-color': '#1A3850' } });
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff80' } });
+          paint: { 'circle-color': '#FFFFFF', 'circle-radius': 10, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff80' } });
 
         // === DISASTERS SOURCE (navy, empty for now) ===
         map.addSource('disasters-source', {
