@@ -48,6 +48,17 @@ export default function CitizenMapPage() {
   const [showResults, setShowResults] = useState(false);
 
   const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
+  
+  // Allow setting personId via URL param for testing: /c?pid=xxx
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const pid = params.get('pid');
+    if (pid) {
+      localStorage.setItem('sos-person-id', pid);
+      console.log('Set sos-person-id:', pid);
+    }
+  }, []);
   const hasExtreme = alerts.some(a => a.severity === 'extreme' || a.severity === 'severe');
   const hasWatch = alerts.some(a => a.severity === 'moderate');
   const status = hasExtreme ? 'active' : hasWatch || alerts.length > 0 ? 'watch' : 'safe';
