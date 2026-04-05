@@ -26,7 +26,7 @@ export function CitizenShell({ children, onSOSTap, hideSOSButton }: CitizenShell
   }
 
   return (
-    <div style={{ width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0F1E2B' }}>
+    <div style={{ width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0F1E2B', overflow: 'hidden', overscrollBehavior: 'none' }}>
       {/* Content */}
       <div style={{ flex: 1, position: 'relative' }}>
         {children}
