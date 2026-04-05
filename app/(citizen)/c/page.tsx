@@ -641,7 +641,8 @@ export default function CitizenMapPage() {
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
                     // Pass structured match context with IDs
                     const matchContext = JSON.stringify({
-                      action: 'match', intent: 'citizen_needs_this',
+                      action: 'match', 
+                      intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
                       type: pinData.type,
                       id: pinData.id,
                       category: pinData.properties?.category,

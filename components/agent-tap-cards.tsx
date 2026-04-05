@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 /**
  * Interactive tap cards rendered inside agent chat as messages.
  * When agent asks "What do you need?", these appear as tappable bubbles.
@@ -56,15 +58,59 @@ interface QuickChipsProps {
 }
 
 export function QuickChips({ chips, onSelect }: QuickChipsProps) {
+  // Max 3 per row
+  const rows: typeof chips[] = [];
+  for (let i = 0; i < chips.length; i += 3) {
+    rows.push(chips.slice(i, i + 3));
+  }
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {chips.map(chip => (
-        <button key={chip.id} onClick={() => onSelect(chip.id)}
-          className="text-[11px] font-medium px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 active:scale-[0.97] transition-all">
-          {chip.icon && <span className="mr-1">{chip.icon}</span>}{chip.label}
-        </button>
+    <div className="space-y-1.5">
+      {rows.map((row, ri) => (
+        <div key={ri} className="flex gap-1.5">
+          {row.map(chip => (
+            <button key={chip.id} onClick={() => onSelect(chip.id)}
+              className="flex-1 text-[11px] font-medium px-3 py-2 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 active:scale-[0.97] transition-all text-center">
+              {chip.icon && <span className="mr-1">{chip.icon}</span>}{chip.label}
+            </button>
+          ))}
+        </div>
       ))}
     </div>
+  );
+}
+
+// Send SOS button — branded red with pulse animation on tap
+interface SendSOSButtonProps {
+  onSend: () => void;
+  label?: string;
+  disabled?: boolean;
+}
+
+export function SendSOSButton({ onSend, label = 'Send SOS', disabled = false }: SendSOSButtonProps) {
+  const [animating, setAnimating] = useState(false);
+
+  function handleClick() {
+    if (disabled || animating) return;
+    setAnimating(true);
+    setTimeout(() => {
+      onSend();
+      setAnimating(false);
+    }, 600);
+  }
+
+  return (
+    <button onClick={handleClick} disabled={disabled}
+      className={`relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97] ${
+        disabled ? 'bg-white/10 text-white/30' : 'bg-[#EF4E4B] hover:bg-[#d94340]'
+      } ${animating ? 'scale-[1.02]' : ''}`}>
+      {animating && (
+        <>
+          <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-ping opacity-30" />
+          <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-pulse opacity-50" />
+        </>
+      )}
+      <span className="relative z-10">{animating ? '⚡ Sending...' : `⚡ ${label}`}</span>
+    </button>
   );
 }
 
