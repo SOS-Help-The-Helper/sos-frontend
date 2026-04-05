@@ -145,7 +145,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
         {/* Messages */}
         {sheetState !== 'collapsed' && (
-          <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-2.5 overflow-x-hidden">
+          <div className={`flex-1 overflow-y-auto px-3 pb-2 space-y-2.5 overflow-x-hidden ${fullScreen ? 'pt-16' : ''}`}>
             {messages.map(msg => (
               <div key={msg.id}>
                 {/* Render from parts (AI SDK v6 pattern) */}
