@@ -122,7 +122,8 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
   if (!open) return null;
 
-  const sheetHeight = sheetState === 'full' ? 'calc(100vh - 56px - env(safe-area-inset-top, 0px))'
+  // Full: below header (~80px) and above nav (56px)
+  const sheetHeight = sheetState === 'full' ? 'calc(100vh - 136px - env(safe-area-inset-top, 0px))'
     : sheetState === 'half' ? '45vh' : '64px';
 
   return (
