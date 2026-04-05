@@ -575,11 +575,14 @@ export default function CitizenMapPage() {
       {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
         <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto bottom-[calc(56px+env(safe-area-inset-bottom,0px))]`}
-          style={{ maxHeight: '220px' }}>
+          style={{ maxHeight: '280px' }}>
           <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 h-full flex flex-col overflow-hidden">
-            {/* Drag handle */}
-            <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')} className="py-1.5 flex justify-center flex-shrink-0">
-              <div className="w-8 h-1 bg-white/20 rounded-full" />
+            {/* Drag handle — swipe down to close */}
+            <button 
+              onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
+              className="py-2 flex justify-center flex-shrink-0 cursor-grab active:cursor-grabbing"
+            >
+              <div className="w-10 h-1 bg-white/30 rounded-full" />
             </button>
 
             <div className="flex-1 px-5 overflow-hidden">
