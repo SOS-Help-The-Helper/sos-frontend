@@ -641,7 +641,6 @@ export default function CitizenMapPage() {
                   className="hidden">
                   {detailMode === 'card' ? 'Details →' : 'Collapse'}
                 </button>
-              </div>
             </div>
           </div>
         </div>
