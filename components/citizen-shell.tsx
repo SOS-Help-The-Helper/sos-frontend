@@ -32,18 +32,7 @@ export function CitizenShell({ children, onSOSTap, hideSOSButton }: CitizenShell
         {children}
       </div>
 
-      {/* Floating SOS Button */}
-      {!hideSOSButton && (
-        <button
-          onClick={onSOSTap}
-          className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-[#EF4E4B] shadow-lg ring-2 ring-white/30 flex items-center justify-center active:scale-95 transition-transform"
-          style={{ boxShadow: '0 0 20px rgba(239, 78, 75, 0.4)' }}
-        >
-          <img src="/logomark-white.svg" alt="SOS" className="h-7 w-7" />
-          {/* Pulse ring */}
-          <span className="absolute inset-0 rounded-full bg-sos-red-500 animate-ping opacity-20" />
-        </button>
-      )}
+      {/* Floating SOS Button — REMOVED: agent trigger is now the pulsing logomark in header */}
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#1A3850] border-t border-white/10 pb-[env(safe-area-inset-bottom)]">

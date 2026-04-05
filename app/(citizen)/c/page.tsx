@@ -558,16 +558,15 @@ export default function CitizenMapPage() {
 
       {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
-        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto ${
-          detailMode === 'expanded' ? 'bottom-[calc(56px+env(safe-area-inset-bottom,0px))]' : 'bottom-[calc(56px+env(safe-area-inset-bottom,0px))]'
-        }`} style={{ maxHeight: detailMode === 'expanded' ? '60vh' : '220px' }}>
-          <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 overflow-hidden h-full flex flex-col">
+        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto bottom-[calc(56px+env(safe-area-inset-bottom,0px))]`}
+          style={{ maxHeight: '220px' }}>
+          <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 h-full flex flex-col overflow-hidden">
             {/* Drag handle */}
             <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')} className="py-1.5 flex justify-center flex-shrink-0">
               <div className="w-8 h-1 bg-white/20 rounded-full" />
             </button>
 
-            <div className="flex-1 overflow-y-auto px-5 pb-4">
+            <div className="flex-1 px-5 overflow-hidden">
               {/* Row 1: Type label + close */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -585,65 +584,39 @@ export default function CitizenMapPage() {
                 <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none p-1">✕</button>
               </div>
 
-              {/* Row 2: Name if present */}
-              {p.name && (
-                <h3 className="text-base font-bold text-white mb-1">{p.name}</h3>
-              )}
-
-              {/* Row 3: Summary text */}
+              {/* Row 2: Summary text */}
               {(p.details || p.description) && (
-                <p className="text-sm text-white/60 leading-relaxed mb-3">
+                <p className="text-sm text-white/60 leading-relaxed mb-2 line-clamp-2">
                   {p.details || p.description}
                 </p>
               )}
 
-              {/* Row 4: Metadata chips — stacked vertically */}
-              <div className="flex flex-col gap-1.5 mb-3">
-                {/* Category chip */}
+              {/* Row 3: Metadata — single row, consistent sizing */}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
                 {p.category && (
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70 capitalize">
-                    {'Type: ' + p.category.replace(/_/g, ' ')}
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
+                    {p.category.replace(/_/g, ' ')}
                   </span>
                 )}
-
-                {/* Request: people count + badges (urgency not highlighted) */}
                 {selectedPin.type === 'request' && p.household && (
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70">👥 {p.household} people</span>
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">People: {p.household}</span>
                 )}
                 {selectedPin.type === 'request' && p.urgency && (
-                  <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-white/5 text-white/40">{p.urgency}</span>
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">Urgency: {p.urgency}</span>
                 )}
-                {selectedPin.type === 'request' && p.is_veteran && (
-                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🎖️ Veteran</span>
-                )}
-                {selectedPin.type === 'request' && p.is_first_responder && (
-                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🚒 First Responder</span>
-                )}
-                {selectedPin.type === 'request' && p.has_medical_needs && (
-                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🏥 Medical</span>
-                )}
-
-                {/* Resource: source badge + capacity */}
                 {selectedPin.type === 'resource' && p.source_type && (
-                  <span className={`text-xs font-medium px-3 py-1 rounded-full ${
-                    p.source_type === 'partner' ? 'bg-[#89CFF0]/20 text-[#89CFF0]' : p.source_type === '211' ? 'bg-[#EDB200]/20 text-[#EDB200]' : 'bg-white/10 text-white/50'
-                  }`}>{p.source_type === '211' ? 'Source: 211' : p.source_type === 'partner' ? 'Source: Partner' : 'Source: Community'}</span>
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
+                    {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
+                  </span>
                 )}
                 {selectedPin.type === 'resource' && p.capacity != null && (
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70">Capacity: {p.capacity}</span>
-                )}
-
-                {/* Report: time + verified status */}
-                {selectedPin.type === 'report' && p.created_at && (
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/50">{timeSince(p.created_at)} ago</span>
-                )}
-                {selectedPin.type === 'report' && (
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/50">Unverified</span>
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
                 )}
               </div>
+            </div>
 
-              {/* Action buttons */}
-              <div className="mt-3">
+            {/* Match button — locked to bottom, no scrolling past it */}
+            <div className="px-5 pb-3 pt-1 flex-shrink-0">
                 <button onClick={() => {
                     const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
