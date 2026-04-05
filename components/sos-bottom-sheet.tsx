@@ -10,10 +10,16 @@ import { getPersonContext } from '@/lib/person-context';
 
 type SheetState = 'collapsed' | 'half' | 'full';
 
-const MAP_CHIPS = [
+const DEFAULT_CHIPS = [
   { id: 'help', label: 'Get help', icon: '🔴' },
   { id: 'offer', label: 'Give help', icon: '🟢' },
   { id: 'report', label: 'Report something', icon: '📢' },
+];
+
+const ERV_CHIPS = [
+  { id: 'help', label: 'I need an RV', icon: '🏠' },
+  { id: 'donate', label: 'Donate an RV', icon: '🚐' },
+  { id: 'drive', label: 'Drive an RV to a family', icon: '🛣️' },
 ];
 
 interface SOSBottomSheetProps {
@@ -25,9 +31,10 @@ interface SOSBottomSheetProps {
   personId?: string;
   isAuthenticated?: boolean;
   fullScreen?: boolean;
+  partner?: string; // 'erv', 'fhm', etc. — shows partner-specific chips
 }
 
-export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false }: SOSBottomSheetProps) {
+export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false, partner }: SOSBottomSheetProps) {
   const [sheetState, setSheetState] = useState<SheetState>(fullScreen ? 'full' : 'half');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -102,7 +109,17 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
     if (!open) setSheetState('half');
     else if (fullScreen) setSheetState('full');
   }, [open, fullScreen]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // Scroll to latest message on new messages AND when keyboard opens (input focus)
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => {
+    // When virtual keyboard opens/closes, scroll to keep last message visible
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      const handler = () => setTimeout(scrollToBottom, 100);
+      window.visualViewport.addEventListener('resize', handler);
+      return () => window.visualViewport?.removeEventListener('resize', handler);
+    }
+  }, []);
 
   function send(text: string) {
     if (sheetState === 'collapsed') setSheetState('half');
@@ -195,8 +212,11 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {/* Quick chips */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="px-4 py-1.5 flex-shrink-0">
-            <QuickChips chips={MAP_CHIPS} onSelect={(id) => {
-              const prompts: Record<string, string> = { help: 'I need help', offer: 'I want to help', report: 'I want to report something' };
+            <QuickChips chips={partner === 'erv' ? ERV_CHIPS : DEFAULT_CHIPS} onSelect={(id) => {
+              const prompts: Record<string, string> = { 
+                help: 'I need help', offer: 'I want to help', report: 'I want to report something',
+                donate: 'I want to donate an RV', drive: 'I want to volunteer as an RV delivery driver'
+              };
               send(prompts[id] || id);
             }} />
           </div>
