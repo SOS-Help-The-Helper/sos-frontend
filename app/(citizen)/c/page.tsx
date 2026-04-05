@@ -659,6 +659,7 @@ export default function CitizenMapPage() {
         onClose={() => { setSheetOpen(false); setMatchMode(false); }}
         context="map"
         userLat={lat} userLng={lng}
+        fullScreen={matchMode}
       />
     </CitizenShell>
   );

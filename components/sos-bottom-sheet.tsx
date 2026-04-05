@@ -24,10 +24,11 @@ interface SOSBottomSheetProps {
   userLng?: number;
   personId?: string;
   isAuthenticated?: boolean;
+  fullScreen?: boolean;
 }
 
-export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false }: SOSBottomSheetProps) {
-  const [sheetState, setSheetState] = useState<SheetState>('half');
+export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false }: SOSBottomSheetProps) {
+  const [sheetState, setSheetState] = useState<SheetState>(fullScreen ? 'full' : 'half');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +98,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   }, [messages, personId, isAuthenticated]);
   if (chatError) console.error('useChat error state:', chatError);
 
-  useEffect(() => { if (!open) setSheetState('half'); }, [open]);
+  useEffect(() => { if (!open) setSheetState(fullScreen ? 'full' : 'half'); }, [open, fullScreen]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   function send(text: string) {
@@ -118,7 +119,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
   if (!open) return null;
 
-  const sheetHeight = sheetState === 'full' ? '70vh'
+  const sheetHeight = sheetState === 'full' ? 'calc(100vh - 56px - env(safe-area-inset-top, 0px))'
     : sheetState === 'half' ? '45vh' : '64px';
 
   return (
