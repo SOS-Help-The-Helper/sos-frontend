@@ -98,7 +98,10 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   }, [messages, personId, isAuthenticated]);
   if (chatError) console.error('useChat error state:', chatError);
 
-  useEffect(() => { if (!open) setSheetState(fullScreen ? 'full' : 'half'); }, [open, fullScreen]);
+  useEffect(() => { 
+    if (!open) setSheetState('half');
+    else if (fullScreen) setSheetState('full');
+  }, [open, fullScreen]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   function send(text: string) {
@@ -189,7 +192,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         )}
 
         {/* Quick chips */}
-        {sheetState !== 'collapsed' && messages.length <= 2 && !isLoading && (
+        {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="px-4 py-1.5 flex-shrink-0">
             <QuickChips chips={MAP_CHIPS} onSelect={(id) => {
               const prompts: Record<string, string> = { nearby: "What's around me?", help: 'I need help', gaps: 'Where is help not reaching?' };
