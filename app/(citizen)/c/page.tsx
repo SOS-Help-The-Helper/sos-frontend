@@ -114,7 +114,7 @@ export default function CitizenMapPage() {
           setAlerts(alertData);
 
           const [reqResult, resResult, repResult] = await Promise.all([
-            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id, persons(is_veteran, is_first_responder, has_medical_needs)').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
+            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
             supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).eq('map_visible', true).limit(500),
             supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
           ]);
@@ -128,7 +128,7 @@ export default function CitizenMapPage() {
         const requestFeatures = (requests || []).filter(r => r.latitude && r.longitude).map(r => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', is_veteran: r.persons?.is_veteran, is_first_responder: r.persons?.is_first_responder, has_medical_needs: r.persons?.has_medical_needs },
+          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
         }));
 
         map.addSource('requests-source', {
