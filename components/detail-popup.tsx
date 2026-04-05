@@ -17,6 +17,7 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
   const { orgType } = useAuthContext();
   const [showPartners, setShowPartners] = useState(false);
   const [partners, setPartners] = useState<any[]>([]);
+  const [personFlags, setPersonFlags] = useState<any>(null);
   const isCoordinator = orgType === 'coordination';
 
   useEffect(() => {
@@ -29,20 +30,34 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
     }
   }, [showPartners]);
 
+  // Load person flags for badges
+  useEffect(() => {
+    if (item.person_id) {
+      supabase
+        .from('persons')
+        .select('is_veteran, is_first_responder, has_medical_needs')
+        .eq('id', item.person_id)
+        .single()
+        .then(({ data }) => setPersonFlags(data));
+    }
+  }, [item.person_id]);
+
   function handleTagPartner(partnerId: string) {
-    // Navigate to SOS collaboration thread
     if (item.sos_id) {
       router.push(`/sos/${item.sos_id}`);
     }
     onClose();
   }
 
+  // Use public_display_text if available, fall back to details_sanitized
+  const displayText = item.public_display_text || item.details_sanitized;
+
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
       <div
-        className="relative w-full md:w-[420px] bg-white rounded-t-2xl md:rounded-xl shadow-xl max-h-[85vh] overflow-y-auto"
+        className="relative w-full md:w-[420px] bg-white rounded-t-2xl md:rounded-xl shadow-xl max-h-[85vh] overflow-y-auto pb-20"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -64,7 +79,7 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
 
         {/* Content */}
         <div className="p-5 space-y-4">
-          {/* Status + Urgency */}
+          {/* Status (no urgency highlight) */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
               item.status === 'active' || item.status === 'open' || item.status === 'available'
@@ -73,13 +88,6 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
                 : item.status === 'paused' ? 'bg-yellow-50 text-yellow-700'
                 : 'bg-sos-gray-200 text-sos-gray-600'
             }`}>{item.status}</span>
-            {type === 'request' && item.urgency && (
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                item.urgency === 'critical' ? 'bg-sos-red-50 text-sos-red-700'
-                : item.urgency === 'high' ? 'bg-yellow-50 text-yellow-700'
-                : 'bg-sos-gray-200 text-sos-gray-600'
-              }`}>{item.urgency}</span>
-            )}
             {type === 'resource' && item.capacity_available && (
               <span className="text-[10px] text-sos-gray-600">
                 Capacity: {item.capacity_available}
@@ -88,10 +96,9 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
           </div>
 
           {/* Description */}
-          {item.details_sanitized && (
+          {displayText && (
             <div>
-              <p className="text-[10px] text-sos-gray-500 uppercase tracking-wider mb-1">Details</p>
-              <p className="text-sm text-sos-blue-800 leading-relaxed">{item.details_sanitized}</p>
+              <p className="text-sm text-sos-blue-800 leading-relaxed">{displayText}</p>
             </div>
           )}
 
@@ -120,6 +127,27 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
             Created {new Date(item.created_at).toLocaleDateString()} · {timeAgo(item.created_at)}
           </p>
 
+          {/* Person Badges — last row, small */}
+          {type === 'request' && personFlags && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {personFlags.is_veteran && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sos-gray-100 text-sos-gray-600">🎖️ Veteran</span>
+              )}
+              {personFlags.is_first_responder && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sos-gray-100 text-sos-gray-600">🚒 First Responder</span>
+              )}
+              {personFlags.has_medical_needs && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sos-gray-100 text-sos-gray-600">🏥 Medical</span>
+              )}
+              {item.urgency && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sos-gray-100 text-sos-gray-600">{item.urgency}</span>
+              )}
+              {item.household_size && item.household_size > 1 && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-sos-gray-100 text-sos-gray-600">👥 {item.household_size} people</span>
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="space-y-2 pt-2 border-t border-sos-gray-300">
             {type === 'request' && (
@@ -129,25 +157,13 @@ export function DetailPopup({ item, type, onClose }: DetailPopupProps) {
               </button>
             )}
 
-            {isCoordinator && (
-              <button
-                onClick={() => setShowPartners(!showPartners)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-sos-blue-800 text-sos-blue-800 text-sm font-semibold hover:bg-sos-blue-800 hover:text-white transition-colors"
-              >
-                <UserPlus className="h-4 w-4" />
-                Tag Partner
-              </button>
-            )}
-
-            {!isCoordinator && (
-              <button
-                onClick={() => setShowPartners(!showPartners)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-sos-blue-800 text-sos-blue-800 text-sm font-semibold hover:bg-sos-blue-800 hover:text-white transition-colors"
-              >
-                <UserPlus className="h-4 w-4" />
-                Tag Partner
-              </button>
-            )}
+            <button
+              onClick={() => setShowPartners(!showPartners)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-sos-blue-800 text-sos-blue-800 text-sm font-semibold hover:bg-sos-blue-800 hover:text-white transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              Tag Partner
+            </button>
 
             {item.sos_id && (
               <button

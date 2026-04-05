@@ -12,8 +12,8 @@ export async function getMatchLines(orgId: string | null) {
   if (!matches) return [];
 
   // Get request locations
-  let reqQuery = supabase.from('requests').select('id, latitude, longitude, category, org_id').not('latitude', 'is', null);
-  let resQuery = supabase.from('resources').select('id, latitude, longitude, category, org_id').not('latitude', 'is', null);
+  let reqQuery = supabase.from('requests').select('id, latitude, longitude, category, org_id').not('latitude', 'is', null).eq('map_visible', true);
+  let resQuery = supabase.from('resources').select('id, latitude, longitude, category, org_id').not('latitude', 'is', null).eq('map_visible', true);
   
   if (orgId) {
     reqQuery = reqQuery.eq('org_id', orgId);

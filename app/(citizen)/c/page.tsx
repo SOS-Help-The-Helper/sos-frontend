@@ -52,10 +52,28 @@ export default function CitizenMapPage() {
   const hasWatch = alerts.some(a => a.severity === 'moderate');
   const status = hasExtreme ? 'active' : hasWatch || alerts.length > 0 ? 'watch' : 'safe';
 
-  // GPS
+  // GPS + reverse geocode for city name
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      p => { setLat(p.coords.latitude); setLng(p.coords.longitude); setGpsReady(true); },
+      async (p) => {
+        setLat(p.coords.latitude);
+        setLng(p.coords.longitude);
+        setGpsReady(true);
+        // Reverse geocode with Google
+        try {
+          const gKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+          if (gKey) {
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${p.coords.latitude},${p.coords.longitude}&key=${gKey}&result_type=locality`);
+            const data = await res.json();
+            if (data.results?.[0]) {
+              const components = data.results[0].address_components || [];
+              const city = components.find((c: any) => c.types.includes('locality'))?.long_name;
+              const state = components.find((c: any) => c.types.includes('administrative_area_level_1'))?.short_name;
+              if (city && state) setLocationName(`${city}, ${state}`);
+            }
+          }
+        } catch { /* keep default */ }
+      },
       () => setGpsReady(true), { enableHighAccuracy: true, timeout: 3000 }
     );
   }, []);
@@ -96,8 +114,8 @@ export default function CitizenMapPage() {
           setAlerts(alertData);
 
           const [reqResult, resResult, repResult] = await Promise.all([
-            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, household_size').not('latitude', 'is', null).in('status', ['open', 'active', 'matched']).limit(500),
-            supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).limit(500),
+            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id, persons(is_veteran, is_first_responder, has_medical_needs)').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
+            supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).eq('map_visible', true).limit(500),
             supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
           ]);
           requests = reqResult.data || [];
@@ -110,7 +128,7 @@ export default function CitizenMapPage() {
         const requestFeatures = (requests || []).filter(r => r.latitude && r.longitude).map(r => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request' },
+          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', is_veteran: r.persons?.is_veteran, is_first_responder: r.persons?.is_first_responder, has_medical_needs: r.persons?.has_medical_needs },
         }));
 
         map.addSource('requests-source', {
@@ -483,12 +501,16 @@ export default function CitizenMapPage() {
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
-          <div className="flex items-center gap-3">
-            <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
-            <div>
-              <span className="text-sm font-bold text-white block leading-tight">SOS</span>
-              <span className="text-[10px] text-white/50">📍 {locationName}</span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="relative h-9 w-9 flex items-center justify-center"
+              aria-label="Open SOS Agent"
+            >
+              <span className="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-40" />
+              <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
+            </button>
+            <span className="text-[11px] font-medium text-white/70">📍 {locationName}</span>
           </div>
           <div className="flex items-center gap-2">
             {!gpsReady && (
@@ -584,14 +606,21 @@ export default function CitizenMapPage() {
                   </span>
                 )}
 
-                {/* Request: urgency + people count */}
-                {selectedPin.type === 'request' && p.urgency && (
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                    p.urgency === 'critical' ? 'bg-[#EF4E4B]/20 text-[#EF4E4B]' : 'bg-yellow-500/20 text-yellow-400'
-                  }`}>Urgency: {p.urgency}</span>
-                )}
+                {/* Request: people count + badges (urgency not highlighted) */}
                 {selectedPin.type === 'request' && p.household && (
                   <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/70">👥 {p.household} people</span>
+                )}
+                {selectedPin.type === 'request' && p.urgency && (
+                  <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-white/5 text-white/40">{p.urgency}</span>
+                )}
+                {selectedPin.type === 'request' && p.is_veteran && (
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🎖️ Veteran</span>
+                )}
+                {selectedPin.type === 'request' && p.is_first_responder && (
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🚒 First Responder</span>
+                )}
+                {selectedPin.type === 'request' && p.has_medical_needs && (
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-white/5 text-white/40">🏥 Medical</span>
                 )}
 
                 {/* Resource: source badge + capacity */}
