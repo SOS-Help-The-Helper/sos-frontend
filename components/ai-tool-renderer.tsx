@@ -59,6 +59,19 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
       return <div className="bg-amber-900/20 border border-amber-500/30 rounded-xl p-4"><p className="text-amber-200 text-sm font-medium">⚡ {toolData.message || 'Escalated to coordination team.'}</p></div>;
     case 'match_confirmed':
       return <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4"><p className="text-green-200 text-sm font-medium">✅ {toolData.message || 'Match confirmed!'}</p></div>;
+
+    case 'show_chips':
+      return <div className="space-y-2">
+        {toolData.prompt && <p className="text-xs text-white/60">{toolData.prompt}</p>}
+        <QuickChips chips={toolData.chips || []} onSelect={(id) => onUserAction(`${id}`)} />
+      </div>;
+
+    case 'show_toggle_chips':
+      return <ToggleChipWrapper options={toolData.options || []} prompt={toolData.prompt} onAction={onUserAction} />;
+
+    case 'show_sos_confirmation':
+      return <SOSConfirmationCard summary={toolData.summary} type={toolData.type} details={toolData.details} onAction={onUserAction} />;
+
     // ── Map Intelligence Renderers ──
     case 'nearby_summary': {
       const cats = toolData.summary?.categories || {};
@@ -529,6 +542,62 @@ function ReferralCard({ data }: { data: any }) {
       </button>
       {data.stats && (
         <p className="text-[9px] text-white/30 mt-1 text-center">{data.stats.invited || 0} invited · {data.stats.signed_up || 0} joined</p>
+      )}
+    </div>
+  );
+}
+
+// ── Toggle Chip Wrapper (stateful multi-select) ──
+function ToggleChipWrapper({ options, prompt, onAction }: { options: any[]; prompt?: string; onAction: (msg: string) => void }) {
+  const [selected, setSelected] = useState<string[]>([]);
+  return (
+    <div className="space-y-2">
+      {prompt && <p className="text-xs text-white/60">{prompt}</p>}
+      <ToggleChips
+        options={options}
+        selected={selected}
+        onToggle={(id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+        onDone={() => onAction(selected.join(', '))}
+      />
+    </div>
+  );
+}
+
+// ── Send SOS Confirmation Card ──
+function SOSConfirmationCard({ summary, type, details, onAction }: { summary: string; type: string; details?: any; onAction: (msg: string) => void }) {
+  const [sent, setSent] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
+  function handleSend() {
+    if (sent || animating) return;
+    setAnimating(true);
+    setTimeout(() => {
+      setSent(true);
+      setAnimating(false);
+      onAction(`[SOS_CONFIRMED:${type}]`);
+    }, 600);
+  }
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+      <p className="text-xs text-white/50 uppercase tracking-wider font-bold">Confirm your SOS</p>
+      <p className="text-sm text-white leading-relaxed">{summary}</p>
+      {sent ? (
+        <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-3 text-center">
+          <p className="text-green-200 text-sm font-bold">✅ SOS Sent!</p>
+          <p className="text-green-200/60 text-[10px] mt-1">We're connecting you with help now.</p>
+        </div>
+      ) : (
+        <button onClick={handleSend} disabled={animating}
+          className={`relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97] bg-[#EF4E4B] hover:bg-[#d94340] ${animating ? 'scale-[1.02]' : ''}`}>
+          {animating && (
+            <>
+              <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-ping opacity-30" />
+              <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-pulse opacity-50" />
+            </>
+          )}
+          <span className="relative z-10">{animating ? '⚡ Sending...' : '⚡ Send SOS'}</span>
+        </button>
       )}
     </div>
   );

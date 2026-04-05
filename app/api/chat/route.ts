@@ -95,25 +95,27 @@ Do NOT try to coordinate multi-partner chains yourself — hand off to the platf
 
 MATCH FLOW:
 When you receive a JSON message starting with {"action":"match"}, the user tapped Match on a map pin.
+Check the "intent" field:
 
-Step 1: Read the category and details. Respond with ONE question: "How can you help?" 
-Keep it open-ended. Let them describe what they can offer in their own words.
-Example: "This family has no power and needs it for medical equipment. How can you help?"
-
-Step 2: Based on their answer, ask ONE follow-up about timing.
-Example: They say "I have a generator" → "Great! When can you drop it off?"
-Example: They say "I'm an electrician" → "When are you available to take a look?"
-
-Step 3: Confirm and submit. That's it. Three exchanges max.
-"Perfect. I'll connect you with this family. They'll get your info shortly."
+IF intent = "citizen_wants_to_help" (they tapped a REQUEST — they want to HELP):
+  Step 1: Describe the need briefly. Ask: "How would you like to help?"
+  Show chips: relevant options based on category (e.g., housing → "I have an RV" / "I can deliver" / "I can donate")
+  Step 2: Based on their answer, ONE follow-up about timing/availability.
+  Step 3: Call show_sos_confirmation with summary. Final button is ALWAYS "Send SOS".
+  
+IF intent = "citizen_needs_this" (they tapped a RESOURCE — they NEED it):
+  Step 1: Confirm: "Would you like to request this?" 
+  Show chips: "Yes, for me" / "For someone I know" / "Tell me more"
+  Step 2: Quick intake — household size, any special needs.
+  Step 3: Call show_sos_confirmation with summary. Final button is ALWAYS "Send SOS".
 
 RULES FOR MATCH FLOW:
 - ONE question at a time. Never ask multiple questions.
 - Keep every response to 1-2 sentences.
-- The first question is ALWAYS "How can you help?" — open-ended, lets them self-qualify.
-- The second question is ALWAYS about timing/availability.
-- Third message is confirmation. Done.
-- Their open-ended answer ("I have a generator" or "I can drive them to a shelter") becomes the match description that the person in need sees.
+- Use show_chips for structured choices (max 3 per row).
+- Use show_toggle_chips when multiple selections are allowed (e.g., veteran + medical).
+- Final confirmation ALWAYS uses show_sos_confirmation which renders the "Send SOS" button.
+- Three-four exchanges max. Fast.
 - No bullet points. No lists. No paragraphs. Conversational.`;
 
 export async function POST(req: Request) {
@@ -1012,6 +1014,49 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
             recordId,
             message: 'Match confirmed! The person in need will be notified with your info.',
           });
+        },
+      },
+
+      show_chips: {
+        description: 'Show quick-select chip buttons. Max 3 per row. Use for structured choices at any point in the conversation.',
+        inputSchema: z.object({
+          prompt: z.string().describe('Text to show above the chips'),
+          chips: z.array(z.object({
+            id: z.string(),
+            label: z.string(),
+            icon: z.string().optional(),
+          })).describe('Array of chip options'),
+          multiSelect: z.boolean().optional().describe('Allow multiple selections'),
+        }),
+        execute: async function({ prompt, chips, multiSelect }) {
+          return JSON.stringify({ __tool: 'show_chips', prompt, chips, multiSelect: multiSelect || false });
+        },
+      },
+
+      show_toggle_chips: {
+        description: 'Show multi-select toggle chips (e.g., veteran + medical + first responder). Shows a "Continue" button after selections.',
+        inputSchema: z.object({
+          prompt: z.string().describe('Text to show above the chips'),
+          options: z.array(z.object({
+            id: z.string(),
+            icon: z.string(),
+            label: z.string(),
+          })),
+        }),
+        execute: async function({ prompt, options }) {
+          return JSON.stringify({ __tool: 'show_toggle_chips', prompt, options });
+        },
+      },
+
+      show_sos_confirmation: {
+        description: 'Show final SOS confirmation card with the "Send SOS" button. ALWAYS use this as the final step before submitting any SOS, match, or intake. Never use a text-only confirmation.',
+        inputSchema: z.object({
+          summary: z.string().describe('Brief summary of what will be submitted'),
+          type: z.string().describe('Type: request, offer, match, report'),
+          details: z.object({}).passthrough().optional().describe('Structured data to submit'),
+        }),
+        execute: async function({ summary, type, details }) {
+          return JSON.stringify({ __tool: 'show_sos_confirmation', summary, type, details });
         },
       },
     },
