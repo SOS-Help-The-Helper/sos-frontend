@@ -8,8 +8,8 @@ import { useAuthContext } from '@/lib/auth-context';
 import { getMatchLines } from '@/lib/map-queries';
 import { getMapViews, createMapView, updateMapView, deleteMapView, updateMapViewFilters, type MapView } from '@/lib/map-views';
 import { MapPin, Link2, Plus, X, Save, GripVertical } from 'lucide-react';
-import { measureText } from '@/lib/text-measure';
 import { PersonaToggle, usePersonas } from '@/components/partner/persona-toggle';
+import { DetailPopup } from '@/components/detail-popup';
 import { type FilterConfig, DEFAULT_FILTER, filterRequests, filterResources } from '@/lib/filter-engine';
 import { FilterPanel } from '@/components/partner/filter-panel';
 import { FilterButton } from '@/components/partner/filter-button';
@@ -29,7 +29,7 @@ export default function MapPage() {
 function MapContent() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
+  const layerClickedRef = useRef(false);
   const customPinMarkersRef = useRef<any[]>([]);
   const { effectiveOrgId } = useViewContext();
   const { orgId } = useAuthContext();
@@ -64,7 +64,7 @@ function MapContent() {
   // Load map data
   useEffect(() => {
     async function loadData() {
-      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source').not('latitude', 'is', null);
+      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source, person_id, household_size').not('latitude', 'is', null);
       let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
       if (effectiveOrgId) {
         reqQuery = reqQuery.eq('org_id', effectiveOrgId);
@@ -130,7 +130,6 @@ function MapContent() {
   useEffect(() => {
     if (!mapRef.current) return;
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
-    markersRef.current = [];
     customPinMarkersRef.current = [];
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -161,49 +160,99 @@ function MapContent() {
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.on('load', () => {
-        // Request pins (filtered by persona + filter engine)
-        filteredRequests.forEach(req => {
-          if (!req.latitude || !req.longitude) return;
-          const score = req.triage_score || 50;
-          const size = score >= 80 ? 16 : score >= 50 ? 12 : 9;
-          const el = document.createElement('div');
-          el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
-          const dot = document.createElement('div');
-          dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:#EF4E4B;border:2px solid rgba(239,78,75,0.5);box-shadow:0 0 ${size+4}px rgba(239,78,75,0.6);`;
-          if (score >= 80) dot.style.animation = 'pulse 2s infinite';
-          el.appendChild(dot);
-          const labelText = req.category || 'SOS';
-          const lbl = document.createElement('div');
-          lbl.textContent = labelText;
-          lbl.style.cssText = 'font:500 9px Roboto,sans-serif;color:#1B2A4A;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px);';
-          measureText(labelText, '500 9px Roboto, sans-serif', 80, 11).then(m => { if (m && m.lineCount > 1) lbl.style.fontSize = '8px'; });
-          el.appendChild(lbl);
-          el.onclick = (e) => { e.stopPropagation(); setSelected({ type: 'request', ...req }); };
-          const marker = new mapboxgl.Marker({ element: el }).setLngLat([req.longitude, req.latitude]).addTo(map);
-          markersRef.current.push(marker);
+        // === REQUESTS SOURCE (red, clustered) ===
+        const requestFeatures = filteredRequests
+          .filter(r => r.latitude && r.longitude)
+          .map(r => ({
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+            properties: { id: r.id, type: 'request' },
+          }));
+
+        map.addSource('requests-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: requestFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
-        // Resource pins — color-coded by capacity status (filtered by persona + filter engine)
-        filteredResources.forEach(res => {
-          if (!res.latitude || !res.longitude) return;
-          const pinColor = res.status === 'available' ? '#22C55E' :
-                           res.status === 'limited' ? '#EDB200' :
-                           res.status === 'at_capacity' ? '#EF4E4B' :
-                           res.status === 'paused' ? '#888888' : '#89CFF0';
-          const el = document.createElement('div');
-          el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:pointer;';
-          const dot = document.createElement('div');
-          dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${pinColor};border:2px solid ${pinColor}80;box-shadow:0 0 12px ${pinColor}50;`;
-          el.appendChild(dot);
-          const labelText = res.category || 'Resource';
-          const lbl = document.createElement('div');
-          lbl.textContent = labelText;
-          lbl.style.cssText = 'font:500 9px Roboto,sans-serif;color:#1B2A4A;background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px);';
-          measureText(labelText, '500 9px Roboto, sans-serif', 80, 11).then(m => { if (m && m.lineCount > 1) lbl.style.fontSize = '8px'; });
-          el.appendChild(lbl);
-          el.onclick = (e) => { e.stopPropagation(); setSelected({ type: 'resource', ...res }); };
-          const marker = new mapboxgl.Marker({ element: el }).setLngLat([res.longitude, res.latitude]).addTo(map);
-          markersRef.current.push(marker);
+        map.addLayer({ id: 'requests-clusters', type: 'circle', source: 'requests-source',
+          filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
+        map.addLayer({ id: 'requests-cluster-count', type: 'symbol', source: 'requests-source',
+          filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'requests-points', type: 'circle', source: 'requests-source',
+          filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // === RESOURCES SOURCE (blue=donors, green=drivers, clustered) ===
+        const resourceFeatures = filteredResources
+          .filter(r => r.latitude && r.longitude)
+          .map(r => {
+            const cat = r.category || '';
+            const pType = r.persona_type || '';
+            const isDriver = cat === 'transport' || pType === 'driver';
+            return {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+              properties: { id: r.id, type: 'resource', pin_type: isDriver ? 'driver' : 'donor' },
+            };
+          });
+
+        map.addSource('resources-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: resourceFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+        });
+
+        map.addLayer({ id: 'resources-clusters', type: 'circle', source: 'resources-source',
+          filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
+        map.addLayer({ id: 'resources-cluster-count', type: 'symbol', source: 'resources-source',
+          filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': ['match', ['get', 'pin_type'], 'driver', '#4CAF50', '#89CFF0'],
+            'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff',
+          } });
+
+        // === PIN CLICK HANDLERS ===
+        map.on('click', 'requests-points', (e: any) => {
+          if (!e.features?.length) return;
+          layerClickedRef.current = true;
+          const id = e.features[0].properties.id;
+          const req = filteredRequests.find(r => r.id === id);
+          if (req) setSelected({ type: 'request', ...req });
+        });
+        map.on('click', 'resources-points', (e: any) => {
+          if (!e.features?.length) return;
+          layerClickedRef.current = true;
+          const id = e.features[0].properties.id;
+          const res = filteredResources.find(r => r.id === id);
+          if (res) setSelected({ type: 'resource', ...res });
+        });
+        ['requests-points', 'resources-points'].forEach(layer => {
+          map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+        });
+
+        // Cluster click → zoom in
+        ['requests-clusters', 'resources-clusters'].forEach(layer => {
+          map.on('click', layer, (e: any) => {
+            layerClickedRef.current = true;
+            const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
+            if (!features.length) return;
+            const clusterId = features[0].properties?.cluster_id;
+            const sourceName = layer.replace('-clusters', '-source');
+            (map.getSource(sourceName) as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+              if (err) return;
+              map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
+            });
+          });
         });
 
         // Match lines (matches tab or view with matches layer)
@@ -260,7 +309,12 @@ function MapContent() {
       });
       map.on('mouseup', () => clearTimeout(pressTimeout));
       map.on('mousemove', () => clearTimeout(pressTimeout));
-      map.on('click', () => { if (!addingPin) setSelected(null); });
+      map.on('click', () => {
+        setTimeout(() => {
+          if (layerClickedRef.current) { layerClickedRef.current = false; return; }
+          if (!addingPin) setSelected(null);
+        }, 100);
+      });
 
       mapInstance.current = map;
     };
@@ -509,31 +563,16 @@ function MapContent() {
           </div>
         )}
 
-        {/* Selected pin card */}
-        {selected && (
-          <div className="absolute bottom-4 right-4 left-4 md:left-auto md:w-80 z-10">
-            <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 shadow-xl overflow-hidden">
-              <div className={`px-4 py-2.5 flex items-center justify-between ${selected.type === 'request' ? 'bg-sos-red-500' : 'bg-sos-accent-600'}`}>
-                <span className="text-white text-sm font-bold capitalize">{selected.category?.replace(/_/g, ' ')}</span>
-                <button onClick={() => setSelected(null)} className="text-white/70 hover:text-white text-lg">×</button>
-              </div>
-              <div className="p-4 space-y-2">
-                {selected.details_sanitized && <p className="text-sm text-sos-blue-800">{selected.details_sanitized}</p>}
-                {selected.triage_score && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-sos-gray-500">Triage:</span>
-                    <div className="flex-1 h-1.5 bg-sos-gray-200 rounded-full"><div className={`h-full rounded-full ${selected.triage_score >= 80 ? 'bg-sos-red-500' : 'bg-sos-accent-500'}`} style={{width:`${selected.triage_score}%`}} /></div>
-                    <span className="text-xs font-bold text-sos-blue-800">{selected.triage_score}</span>
-                  </div>
-                )}
-                {selected.sos_id && (
-                  <a href={`/sos/${selected.sos_id}`} className="block text-center text-xs font-semibold py-2 rounded-lg bg-sos-blue-800 text-white hover:bg-sos-blue-700 transition-colors">View SOS →</a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Selected pin detail */}
+      {selected && (
+        <DetailPopup
+          item={selected}
+          type={selected.type}
+          onClose={() => setSelected(null)}
+        />
+      )}
 
       {/* Create Tab Modal */}
       {showCreateModal && (
