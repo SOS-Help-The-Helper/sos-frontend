@@ -1,3 +1,4 @@
+// TODO: migrate all queries to use taxonomy_code as primary filter, category as fallback
 /**
  * Citizen API helpers — calls Supabase edge functions.
  * Never calls Supabase directly for operational data.
@@ -87,9 +88,26 @@ export async function searchResources(keyword: string, lat: number, lng: number)
   return data?.results || [];
 }
 
-// --- Community Messages ---
+// --- Taxonomy-aware query helper ---
 
 import { supabase } from './supabase-client';
+
+/**
+ * Apply taxonomy-aware category filtering to a Supabase query.
+ * Matches by flat `category` OR by `taxonomy_code` when provided.
+ */
+export function queryWithTaxonomy<T extends { eq: (col: string, val: string) => T; or: (filter: string) => T }>(
+  query: T,
+  category: string,
+  taxonomyCode?: string,
+): T {
+  if (taxonomyCode) {
+    return query.or(`category.eq.${category},taxonomy_code.eq.${taxonomyCode}`);
+  }
+  return query.eq('category', category);
+}
+
+// --- Community Messages ---
 
 export interface CommunityMessage {
   id: string;
@@ -128,14 +146,19 @@ export async function getCommunityPreview(lat: number, lng: number, radius: numb
 
 // --- External Resources for Map ---
 
-export async function getExternalResources(lat: number, lng: number, radiusKm: number = 50): Promise<ExternalResource[]> {
+export async function getExternalResources(lat: number, lng: number, radiusKm: number = 50, category?: string, taxonomyCode?: string): Promise<ExternalResource[]> {
   // Direct read — 211 resources for map display
-  const { data } = await supabase
+  let query = supabase
     .from('resources')
-    .select('id, organization_name, service_name, description, category, latitude, longitude, address, phone, hours_description')
+    .select('id, organization_name, service_name, description, category, taxonomy_code, latitude, longitude, address, phone, hours_description')
     .not('latitude', 'is', null)
-    .eq('status', 'active')
-    .limit(200);
+    .eq('status', 'active');
+
+  if (category) {
+    query = queryWithTaxonomy(query, category, taxonomyCode);
+  }
+
+  const { data } = await query.limit(200);
 
   return (data || []).map(r => ({
     ...r,

@@ -1,21 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
-import { shrinkWrapWidth } from '@/lib/text-measure';
+import { AIToolRenderer } from './ai-tool-renderer';
 import { MeasuredBubble } from './measured-bubble';
 import { TextReveal } from './text-reveal';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
 
 interface AgentChatProps {
   hideHeader?: boolean;
@@ -24,174 +19,54 @@ interface AgentChatProps {
 export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const { orgId, orgName, orgType, isAdmin } = useAuthContext();
   const { currentView, effectiveAgentId, effectiveOrgId, effectiveOrgType, effectiveOrgName } = useViewContext();
-  // Persist messages per agent in localStorage
-  const storageKey = `sos-chat-${effectiveAgentId}`;
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { messages, sendMessage, status } = useChat({
+    id: `agent-${effectiveAgentId}`,
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      headers: {
+        'x-org-id': effectiveOrgId || orgId || 'sos-platform',
+        'x-org-type': effectiveOrgType || orgType || '',
+      },
+    }),
+    onError: (err) => console.error('Agent chat error:', err),
+  });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Scroll to latest message
   useEffect(() => {
-    // Save messages to localStorage
-    if (messages.length > 0) {
-      try { localStorage.setItem(storageKey, JSON.stringify(messages)); } catch {}
-    }
-    // Aggressive scroll — use timeout to wait for DOM + keyboard layout shift
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 100);
     return () => clearTimeout(timer);
   }, [messages]);
 
-  // Also scroll when sending (keyboard might shift layout)
+  // Scroll when streaming starts (keyboard might shift layout)
   useEffect(() => {
-    if (!loading) return;
+    if (!isLoading) return;
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 300);
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [isLoading]);
 
-  // Load persisted conversation when view changes
-  useEffect(() => {
-    const key = `sos-chat-${effectiveAgentId}`;
-    try {
-      const saved = localStorage.getItem(key);
-      setMessages(saved ? JSON.parse(saved) : []);
-    } catch { setMessages([]); }
-    setSessionId(null);
-    setLoading(false);
-  }, [currentView, effectiveAgentId]);
+  function send(text: string) {
+    sendMessage({ text });
+  }
 
-  // Don't auto-focus on mobile — keyboard covers the screen on load
-
-  async function sendMessage(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    if (!input.trim() || isLoading) return;
+    send(input.trim());
     setInput('');
-    setLoading(true);
+  }
 
-    try {
-      const response = await fetch('/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMessage.content,
-          orgId: (typeof window !== 'undefined' ? document.querySelector('[data-view-id]')?.getAttribute('data-view-id') : null) || orgId || 'sos-platform',
-          sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Agent error: ${response.status}`);
-      }
-
-      // Handle SSE streaming
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
-      const assistantId = crypto.randomUUID();
-
-      // Add empty assistant message
-      setMessages(prev => [...prev, {
-        id: assistantId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-      }]);
-
-      if (reader) {
-        let buffer = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-
-                // Handle different SSE event types
-                if (data.type === 'response.output_text.delta') {
-                  assistantContent += data.delta || '';
-                  setMessages(prev => prev.map(m =>
-                    m.id === assistantId ? { ...m, content: assistantContent } : m
-                  ));
-                } else if (data.type === 'response.completed') {
-                  // Extract response ID for session continuity
-                  if (data.response?.id) {
-                    setSessionId(data.response.id);
-                  }
-                  // Get full text if available
-                  const fullText = data.response?.output?.find?.((o: any) => o.type === 'message')
-                    ?.content?.find?.((c: any) => c.type === 'output_text')?.text;
-                  if (fullText && !assistantContent) {
-                    assistantContent = fullText;
-                    setMessages(prev => prev.map(m =>
-                      m.id === assistantId ? { ...m, content: fullText } : m
-                    ));
-                  }
-                }
-              } catch {
-                // Non-JSON SSE line — might be plain text
-                if (line.slice(6).trim() && !line.includes('[DONE]')) {
-                  assistantContent += line.slice(6);
-                  setMessages(prev => prev.map(m =>
-                    m.id === assistantId ? { ...m, content: assistantContent } : m
-                  ));
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // If no streaming content was received, try to parse as regular JSON
-      if (!assistantContent) {
-        try {
-          const text = await response.text();
-          const data = JSON.parse(text);
-          assistantContent = data.output?.[0]?.content?.[0]?.text || data.message || 'Agent responded';
-          setMessages(prev => prev.map(m =>
-            m.id === assistantId ? { ...m, content: assistantContent } : m
-          ));
-        } catch {
-          // Keep whatever we have
-        }
-      }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages(prev => [...prev, {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Connection issue — please try again. Your SOS agent is available via Slack or WhatsApp in the meantime.',
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setLoading(false);
-      inputRef.current?.focus();
-    }
+  function handleToolAction(message: string) {
+    send(message);
   }
 
   // Portal config drives all per-org content
@@ -261,41 +136,69 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
         )}
 
         {messages.map(msg => (
-          <div
-            key={msg.id}
-            className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full bg-sos-blue-800 flex items-center justify-center flex-shrink-0 mt-1">
-                <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
-              </div>
-            )}
-            {msg.role === 'user' ? (
-              <MeasuredBubble
-                text={msg.content}
-                isOwn={true}
-                className="bg-sos-blue-800 text-white rounded-br-md"
-              >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              </MeasuredBubble>
-            ) : (
-              <div className="max-w-[80%] md:max-w-[75%] bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-sos-blue-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1 prose-h1:text-base prose-h2:text-sm prose-h3:text-sm prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-strong:text-sos-blue-800 prose-li:marker:text-sos-red-500">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                </div>
-              </div>
-            )}
-            {/* Timestamp */}
-            <div className={`text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-sos-gray-400 text-right' : 'text-sos-gray-400'}`}>
-              {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
+          <div key={msg.id}>
+            {/* Render from parts (AI SDK v6 pattern) */}
+            {(msg as any).parts?.map((part: any, pi: number) => {
+              if (part.type === 'text' && part.text) {
+                return (
+                  <div key={pi} className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="w-7 h-7 rounded-full bg-sos-blue-800 flex items-center justify-center flex-shrink-0 mt-1">
+                        <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
+                      </div>
+                    )}
+                    {msg.role === 'user' ? (
+                      <MeasuredBubble
+                        text={part.text}
+                        isOwn={true}
+                        className="bg-sos-blue-800 text-white rounded-br-md"
+                      >
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
+                      </MeasuredBubble>
+                    ) : (
+                      <div className="max-w-[80%] md:max-w-[75%] bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-sos-blue-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1 prose-h1:text-base prose-h2:text-sm prose-h3:text-sm prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-strong:text-sos-blue-800 prose-li:marker:text-sos-red-500">
+                          <ReactMarkdown>{part.text}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              if (part.type.startsWith('tool-') && part.type !== 'tool-approval-request') {
+                const inv = { state: (part as any).state, result: (part as any).output, toolName: (part as any).toolName || part.type };
+                if (inv?.state === 'result' || inv?.state === 'output-available') {
+                  try {
+                    const data = typeof inv.result === 'string' ? JSON.parse(inv.result) : inv.result;
+                    if (data?.__tool) return <div key={pi} className="ml-9 mt-1"><AIToolRenderer toolData={data} onUserAction={handleToolAction} /></div>;
+                  } catch {}
+                }
+                return null;
+              }
+              return null;
+            })}
           </div>
         ))}
+
+        {isLoading && (
+          <div className="flex gap-2.5 justify-start">
+            <div className="w-7 h-7 rounded-full bg-sos-blue-800 flex items-center justify-center flex-shrink-0">
+              <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
+            </div>
+            <div className="bg-[#F7F5F0] border border-sos-gray-300 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <div className="flex gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-sos-blue-800 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-sos-blue-800 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-sos-blue-800 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="px-4 py-3 border-t border-white/10 bg-sos-blue-800">
+      <form onSubmit={handleSubmit} className="px-4 py-3 border-t border-white/10 bg-sos-blue-800">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -303,12 +206,12 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Message your SOS agent..."
-            disabled={loading}
+            disabled={isLoading}
             className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-base md:text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 disabled:opacity-50 transition-colors"
           />
           <button
             type="submit"
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || isLoading}
             className="w-10 h-10 rounded-xl bg-sos-red-500 text-white flex items-center justify-center hover:bg-sos-red-600 disabled:opacity-30 disabled:hover:bg-sos-red-500 transition-colors flex-shrink-0"
           >
             <Send className="h-4 w-4" />
