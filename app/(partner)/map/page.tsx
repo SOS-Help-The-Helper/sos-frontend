@@ -59,8 +59,8 @@ function MapContent() {
   // Load map data
   useEffect(() => {
     async function loadData() {
-      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id').not('latitude', 'is', null);
-      let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id').not('latitude', 'is', null);
+      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source').not('latitude', 'is', null);
+      let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
       if (effectiveOrgId) {
         reqQuery = reqQuery.eq('org_id', effectiveOrgId);
         resQuery = resQuery.eq('org_id', effectiveOrgId);
@@ -402,6 +402,9 @@ function MapContent() {
           </div>
         )}
       </div>
+
+      {/* Persona Toggle */}
+      <PersonaToggle selectedPersonas={personas} onPersonaChange={setPersonas} />
 
       {/* Map */}
       <div className="relative rounded-xl overflow-hidden border-2 border-sos-gray-300/80">
