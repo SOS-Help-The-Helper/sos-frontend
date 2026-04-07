@@ -6,10 +6,13 @@ import { supabase } from '@/lib/supabase-client';
 import { useViewContext } from '@/lib/view-context';
 import { useAuthContext } from '@/lib/auth-context';
 import { getMatchLines } from '@/lib/map-queries';
-import { getMapViews, createMapView, updateMapView, deleteMapView, type MapView } from '@/lib/map-views';
+import { getMapViews, createMapView, updateMapView, deleteMapView, updateMapViewFilters, type MapView } from '@/lib/map-views';
 import { MapPin, Link2, Plus, X, Save, GripVertical } from 'lucide-react';
 import { measureText } from '@/lib/text-measure';
 import { PersonaToggle, usePersonas } from '@/components/partner/persona-toggle';
+import { type FilterConfig, DEFAULT_FILTER, filterRequests, filterResources } from '@/lib/filter-engine';
+import { FilterPanel } from '@/components/partner/filter-panel';
+import { FilterButton } from '@/components/partner/filter-button';
 
 // "All" is a virtual tab — always first, not deletable, not stored in DB
 const ALL_TAB_ID = '__all__';
@@ -49,6 +52,8 @@ function MapContent() {
 
   const currentOrgId = effectiveOrgId || orgId;
   const [personas, setPersonas] = usePersonas();
+  const [filterConfig, setFilterConfig] = useState<FilterConfig>(DEFAULT_FILTER);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Load map views
   useEffect(() => {
@@ -88,13 +93,24 @@ function MapContent() {
   // Active disaster filter from view or manual selection
   const effectiveDisasterFilter = activeView?.disaster_id || disasterFilter;
 
+  // Restore filter config when switching to a saved view
+  const activeViewId = activeView?.id;
+  useEffect(() => {
+    if (activeView?.config?.filterConfig) {
+      setFilterConfig(activeView.config.filterConfig);
+    } else {
+      setFilterConfig(DEFAULT_FILTER);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeViewId]);
+
   // Filter requests by disaster
-  const filteredRequests = effectiveDisasterFilter && effectiveDisasterFilter !== 'all'
+  const disasterFilteredRequests = effectiveDisasterFilter && effectiveDisasterFilter !== 'all'
     ? requests.filter(r => r.disaster_id === effectiveDisasterFilter)
     : requests;
 
   // Filter by persona
-  const personaFilteredRequests = personas.includes('survivor') ? filteredRequests : [];
+  const personaFilteredRequests = personas.includes('survivor') ? disasterFilteredRequests : [];
   const personaFilteredResources = resources.filter(res => {
     const cat = res.category || '';
     const pType = res.persona_type || '';
@@ -105,6 +121,10 @@ function MapContent() {
     if (!isDonor && !isDriver) return personas.includes('donor') || personas.includes('driver');
     return false;
   });
+
+  // Apply filter-engine filters after persona filtering
+  const filteredRequests = filterRequests(personaFilteredRequests, filterConfig);
+  const filteredResources = filterResources(personaFilteredResources, filterConfig);
 
   // Render map
   useEffect(() => {
@@ -141,8 +161,8 @@ function MapContent() {
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.on('load', () => {
-        // Request pins (filtered by persona)
-        personaFilteredRequests.forEach(req => {
+        // Request pins (filtered by persona + filter engine)
+        filteredRequests.forEach(req => {
           if (!req.latitude || !req.longitude) return;
           const score = req.triage_score || 50;
           const size = score >= 80 ? 16 : score >= 50 ? 12 : 9;
@@ -163,8 +183,8 @@ function MapContent() {
           markersRef.current.push(marker);
         });
 
-        // Resource pins — color-coded by capacity status (filtered by persona)
-        personaFilteredResources.forEach(res => {
+        // Resource pins — color-coded by capacity status (filtered by persona + filter engine)
+        filteredResources.forEach(res => {
           if (!res.latitude || !res.longitude) return;
           const pinColor = res.status === 'available' ? '#22C55E' :
                            res.status === 'limited' ? '#EDB200' :
@@ -255,7 +275,7 @@ function MapContent() {
     }
 
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [personaFilteredRequests, personaFilteredResources, matchLines, activeTabId, activeView]);
+  }, [filteredRequests, filteredResources, matchLines, activeTabId, activeView]);
 
   // Create new tab from current viewport
   async function handleCreateTab() {
@@ -285,17 +305,26 @@ function MapContent() {
     setNewTabDisaster('');
   }
 
-  // Save current viewport to active view
+  // Save current viewport + filters to active view
   async function saveViewport() {
     if (!activeView) return;
     const map = mapInstance.current;
     if (!map) return;
     const center = map.getCenter();
-    await updateMapView(activeView.id, {
-      center_lat: center.lat,
-      center_lng: center.lng,
-      zoom: map.getZoom(),
-    });
+    await Promise.all([
+      updateMapView(activeView.id, {
+        center_lat: center.lat,
+        center_lng: center.lng,
+        zoom: map.getZoom(),
+      }),
+      updateMapViewFilters(activeView.id, filterConfig),
+    ]);
+    // Sync local state so tab restore picks up the saved filters
+    setMapViews(prev => prev.map(v =>
+      v.id === activeView.id
+        ? { ...v, config: { ...v.config, filterConfig } }
+        : v
+    ));
   }
 
   // Add custom pin to active view
@@ -311,6 +340,30 @@ function MapContent() {
     setAddingPin(false);
     setPinLabel('');
     delete (window as any).__pendingPin;
+  }
+
+  // Save current filters as a new tab (from FilterPanel "Save as Tab")
+  async function handleFilterSave(name: string) {
+    if (!currentOrgId) return;
+    const map = mapInstance.current;
+    const center = map?.getCenter();
+    const zoom = map?.getZoom();
+
+    const view = await createMapView({
+      org_id: currentOrgId,
+      name,
+      center_lat: center?.lat || 0,
+      center_lng: center?.lng || 0,
+      zoom: zoom || 4,
+      layers: ['all'],
+      pins: [],
+      sort_order: mapViews.length,
+    }, filterConfig);
+
+    if (view) {
+      setMapViews(prev => [...prev, view]);
+      setActiveTabId(view.id);
+    }
   }
 
   // Delete tab
@@ -403,8 +456,11 @@ function MapContent() {
         )}
       </div>
 
-      {/* Persona Toggle */}
-      <PersonaToggle selectedPersonas={personas} onPersonaChange={setPersonas} />
+      {/* Persona Toggle + Filter Button */}
+      <div className="flex items-center gap-2 mb-3">
+        <PersonaToggle selectedPersonas={personas} onPersonaChange={setPersonas} />
+        <FilterButton config={filterConfig} onClick={() => setFilterOpen(true)} />
+      </div>
 
       {/* Map */}
       <div className="relative rounded-xl overflow-hidden border-2 border-sos-gray-300/80">
@@ -416,7 +472,7 @@ function MapContent() {
             <span className="w-2 h-2 rounded-full bg-sos-red-500" /> {filteredRequests.length} needs
           </span>
           <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sos-accent-500" /> {resources.length} resources
+            <span className="w-2 h-2 rounded-full bg-sos-accent-500" /> {filteredResources.length} resources
           </span>
           {isMatchesTab && (
             <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
@@ -517,6 +573,15 @@ function MapContent() {
           </div>
         </div>
       )}
+
+      {/* Filter Panel */}
+      <FilterPanel
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        config={filterConfig}
+        onChange={setFilterConfig}
+        onSave={handleFilterSave}
+      />
 
       <style jsx global>{`
         @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,78,75,0.4)} 50%{box-shadow:0 0 0 8px rgba(239,78,75,0)} }
