@@ -207,12 +207,13 @@ export default function DriversPage() {
   }, []);
 
   const handleEditSave = useCallback(
-    (updated: Driver) => {
+    (updated: Record<string, unknown>) => {
+      const asDriver = updated as unknown as Driver;
       setDrivers(prev =>
-        prev.map(d => (d.id === updated.id ? updated : d)),
+        prev.map(d => (d.id === asDriver.id ? asDriver : d)),
       );
-      if (selectedDriver && selectedDriver.id === updated.id) {
-        setSelectedDriver(updated);
+      if (selectedDriver && selectedDriver.id === asDriver.id) {
+        setSelectedDriver(asDriver);
       }
       setEditDriver(null);
     },
@@ -470,7 +471,7 @@ export default function DriversPage() {
       {/* Driver Edit Modal */}
       {editDriver && (
         <DriverEditModal
-          driver={editDriver}
+          resource={editDriver}
           onClose={() => setEditDriver(null)}
           onSave={handleEditSave}
         />

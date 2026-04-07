@@ -30,6 +30,7 @@ const allNavItems = [
   { path: '/matching', label: 'Matches', icon: GitCompare, adminOnly: false, vendorOnly: false },
   { path: '/fleet', label: 'Fleet', icon: Warehouse, adminOnly: false, vendorOnly: false, logisticsOnly: true },
   { path: '/queue', label: 'Queue', icon: ListOrdered, adminOnly: false, vendorOnly: false, logisticsOnly: true },
+  { path: '/drivers', label: 'Drivers', icon: Truck, adminOnly: false, vendorOnly: false, logisticsOnly: true },
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false, vendorOnly: false },
   { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false, vendorOnly: false },
   { path: '/runs', label: 'Delivery Runs', icon: Truck, adminOnly: false, vendorOnly: false, logisticsOnly: true },
