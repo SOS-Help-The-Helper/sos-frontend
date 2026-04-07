@@ -85,7 +85,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       {!hideHeader && (
         <div className="px-5 py-3.5 border-b border-sos-gray-300 bg-sos-blue-800">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-[#89CFF0] animate-pulse" />
             <div>
               <h3 className="text-sm font-bold text-white">{agentName} Agent</h3>
               <p className="text-[10px] text-sos-accent-400">
