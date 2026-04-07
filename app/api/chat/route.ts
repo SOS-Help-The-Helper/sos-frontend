@@ -484,8 +484,12 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
 
           return JSON.stringify({
             __tool: 'submit_confirmation',
+            __mapCommand: resp.ok ? { type: 'focus' as const, center: [lng, lat] as [number, number], zoom: 14 } : undefined,
             success: resp.ok,
             sosId: result.sos_id,
+            lat,
+            lng,
+            category: categories[0],
             title: resp.ok ? `SOS #${result.sos_id} Submitted` : 'Submission Failed',
             message: resp.ok ? 'Your SOS has been submitted. We\'re searching for help near you now.' : 'Something went wrong. Please try again.',
           });
