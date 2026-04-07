@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { DriverDetailModal } from '@/components/partner/driver-detail-modal';
 import { DriverEditModal } from '@/components/partner/driver-edit-modal';
+import { MatchWizard } from '@/components/partner/match-wizard';
 import { Search, Eye, Edit3, Truck } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -201,6 +202,7 @@ export default function DriversPage() {
   // Modals
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [editDriver, setEditDriver] = useState<Driver | null>(null);
+  const [wizardDriver, setWizardDriver] = useState<Driver | null>(null);
 
   const handleEdit = useCallback((d: Driver) => {
     setEditDriver(d);
@@ -427,7 +429,7 @@ export default function DriversPage() {
                 driver={driver}
                 onView={() => setSelectedDriver(driver)}
                 onEdit={() => handleEdit(driver)}
-                onAssign={() => {/* TODO: navigate to run assignment */}}
+                onAssign={() => setWizardDriver(driver)}
               />
             ))
           ) : (
@@ -465,6 +467,10 @@ export default function DriversPage() {
           onClose={() => setSelectedDriver(null)}
           onStatusChange={newStatus => handleStatusChange(selectedDriver.id, newStatus)}
           onEdit={() => handleEdit(selectedDriver)}
+          onProposeMatch={d => {
+            setSelectedDriver(null);
+            setWizardDriver(d);
+          }}
         />
       )}
 
@@ -474,6 +480,17 @@ export default function DriversPage() {
           resource={editDriver}
           onClose={() => setEditDriver(null)}
           onSave={handleEditSave}
+        />
+      )}
+
+      {/* Match Wizard */}
+      {wizardDriver && (
+        <MatchWizard
+          preselected={{ driverResourceId: wizardDriver.id }}
+          onClose={() => setWizardDriver(null)}
+          onPropose={() => {
+            setWizardDriver(null);
+          }}
         />
       )}
     </DashboardShell>

@@ -50,6 +50,7 @@ interface DriverDetailModalProps {
   onClose: () => void;
   onStatusChange: (newStatus: string) => void;
   onEdit: () => void;
+  onProposeMatch?: (driver: Driver) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -135,6 +136,7 @@ export function DriverDetailModal({
   onClose,
   onStatusChange,
   onEdit,
+  onProposeMatch,
 }: DriverDetailModalProps) {
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
@@ -491,7 +493,7 @@ export function DriverDetailModal({
               ) : (
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => {/* TODO: navigate to run assignment */}}
+                    onClick={() => onProposeMatch?.(driver)}
                     className="px-4 py-2 rounded-lg text-xs font-semibold border border-blue-700 text-blue-300 bg-blue-900/30 hover:bg-blue-900/50 transition-colors"
                   >
                     Assign to Run

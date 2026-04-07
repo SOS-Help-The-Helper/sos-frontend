@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { SurvivorDetailModal } from '@/components/partner/survivor-detail-modal';
+import { MatchWizard } from '@/components/partner/match-wizard';
 import { Search, ChevronDown, GitCompare, Eye } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -10,6 +11,7 @@ import { Search, ChevronDown, GitCompare, Eye } from 'lucide-react';
 /* ------------------------------------------------------------------ */
 
 export interface QueueSurvivor {
+  id?: string;
   name: string;
   priority_score: number;
   urgency: string;
@@ -216,6 +218,7 @@ export default function QueuePage() {
   const [activeFilters, setActiveFilters] = useState<Set<FilterFlag>>(new Set());
   const [disasterFilter, setDisasterFilter] = useState<string>('all');
   const [selectedSurvivor, setSelectedSurvivor] = useState<QueueSurvivor | null>(null);
+  const [wizardRequest, setWizardRequest] = useState<QueueSurvivor | null>(null);
 
   /* ---- Fetch queue ---- */
   useEffect(() => {
@@ -399,9 +402,7 @@ export default function QueuePage() {
               key={`${survivor.name}-${idx}`}
               survivor={survivor}
               onView={() => setSelectedSurvivor(survivor)}
-              onPropose={() => {
-                // TODO: navigate to match flow
-              }}
+              onPropose={() => setWizardRequest(survivor)}
             />
           ))
         ) : (
@@ -430,6 +431,21 @@ export default function QueuePage() {
         <SurvivorDetailModal
           survivor={selectedSurvivor}
           onClose={() => setSelectedSurvivor(null)}
+          onProposeMatch={s => {
+            setSelectedSurvivor(null);
+            setWizardRequest(s);
+          }}
+        />
+      )}
+
+      {/* Match Wizard */}
+      {wizardRequest && (
+        <MatchWizard
+          preselected={{ requestId: wizardRequest.id }}
+          onClose={() => setWizardRequest(null)}
+          onPropose={() => {
+            setWizardRequest(null);
+          }}
         />
       )}
     </DashboardShell>

@@ -93,9 +93,10 @@ function DetailItem({
 interface SurvivorDetailModalProps {
   survivor: QueueSurvivor;
   onClose: () => void;
+  onProposeMatch?: (survivor: QueueSurvivor) => void;
 }
 
-export function SurvivorDetailModal({ survivor, onClose }: SurvivorDetailModalProps) {
+export function SurvivorDetailModal({ survivor, onClose, onProposeMatch }: SurvivorDetailModalProps) {
   const [noteText, setNoteText] = useState('');
   const [addingNote, setAddingNote] = useState(false);
 
@@ -331,7 +332,10 @@ export function SurvivorDetailModal({ survivor, onClose }: SurvivorDetailModalPr
             <div className="px-5 py-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Actions</h3>
               <div className="flex flex-wrap gap-2">
-                <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors">
+                <button
+                  onClick={() => onProposeMatch?.(survivor)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+                >
                   Propose Match
                 </button>
                 <button

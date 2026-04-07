@@ -78,6 +78,7 @@ interface FleetDetailModalProps {
   onClose: () => void;
   onStatusChange: (newStatus: string) => void;
   onEdit: () => void;
+  onProposeMatch?: (resource: FleetResource) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -203,6 +204,7 @@ export function FleetDetailModal({
   onClose,
   onStatusChange,
   onEdit,
+  onProposeMatch,
 }: FleetDetailModalProps) {
   const m = resource.metadata || {};
   const [matches, setMatches] = useState<MatchRecord[]>([]);
@@ -336,6 +338,12 @@ export function FleetDetailModal({
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => onProposeMatch?.(resource)}
+                className="px-3 py-1.5 text-xs font-medium text-blue-300 border border-blue-700 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 transition-colors"
+              >
+                Propose Match
+              </button>
               <button
                 onClick={onEdit}
                 className="px-3 py-1.5 text-xs font-medium text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"

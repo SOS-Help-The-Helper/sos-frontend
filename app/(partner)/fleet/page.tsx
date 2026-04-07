@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { FleetDetailModal } from '@/components/partner/fleet-detail-modal';
 import { FleetEditModal } from '@/components/partner/fleet-edit-modal';
+import { MatchWizard } from '@/components/partner/match-wizard';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { supabase } from '@/lib/supabase-client';
@@ -165,10 +166,12 @@ function FleetCard({
   resource,
   onView,
   onEdit,
+  onMatch,
 }: {
   resource: FleetResource;
   onView: () => void;
   onEdit: () => void;
+  onMatch: () => void;
 }) {
   const dotColor = STATUS_DOT[resource.status] || 'bg-sos-gray-400';
   const badgeColor = STATUS_BADGE[resource.status] || 'bg-sos-gray-200 text-sos-gray-600';
@@ -237,7 +240,10 @@ function FleetCard({
             >
               <Edit3 className="h-3 w-3" /> Edit
             </button>
-            <button className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors">
+            <button
+              onClick={onMatch}
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+            >
               <GitCompare className="h-3 w-3" /> Match
             </button>
           </div>
@@ -262,6 +268,7 @@ export default function FleetPage() {
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [selectedResource, setSelectedResource] = useState<FleetResource | null>(null);
   const [editResource, setEditResource] = useState<FleetResource | null>(null);
+  const [wizardResource, setWizardResource] = useState<FleetResource | null>(null);
 
   const handleStatusChange = useCallback((newStatus: string) => {
     if (!selectedResource) return;
@@ -455,6 +462,7 @@ export default function FleetPage() {
               resource={resource}
               onView={() => setSelectedResource(resource)}
               onEdit={() => handleEdit(resource)}
+              onMatch={() => setWizardResource(resource)}
             />
           ))
         ) : (
@@ -485,6 +493,10 @@ export default function FleetPage() {
           onClose={() => setSelectedResource(null)}
           onStatusChange={handleStatusChange}
           onEdit={() => handleEdit(selectedResource)}
+          onProposeMatch={r => {
+            setSelectedResource(null);
+            setWizardResource(r);
+          }}
         />
       )}
 
@@ -494,6 +506,17 @@ export default function FleetPage() {
           resource={editResource}
           onClose={() => setEditResource(null)}
           onSave={handleEditSave}
+        />
+      )}
+
+      {/* Match Wizard */}
+      {wizardResource && (
+        <MatchWizard
+          preselected={{ resourceId: wizardResource.id }}
+          onClose={() => setWizardResource(null)}
+          onPropose={() => {
+            setWizardResource(null);
+          }}
         />
       )}
     </DashboardShell>
