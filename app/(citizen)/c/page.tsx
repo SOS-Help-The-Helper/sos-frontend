@@ -29,9 +29,9 @@ export default function CitizenMapPage() {
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
 
-  const [lat, setLat] = useState(35.5951);
-  const [lng, setLng] = useState(-82.5515);
-  const [locationName, setLocationName] = useState('Asheville, NC');
+  const [lat, setLat] = useState(39);
+  const [lng, setLng] = useState(-98);
+  const [locationName, setLocationName] = useState('United States');
   const [gpsReady, setGpsReady] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +70,13 @@ export default function CitizenMapPage() {
         setLat(p.coords.latitude);
         setLng(p.coords.longitude);
         setGpsReady(true);
+        // Fly to user location once GPS resolves
+        if (mapInstance.current) {
+          mapInstance.current.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 12, duration: 1500 });
+          // Update user location dot
+          const userSrc = mapInstance.current.getSource('user-location');
+          if (userSrc) userSrc.setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.coords.longitude, p.coords.latitude] }, properties: {} });
+        }
         // Reverse geocode with Google
         try {
           const gKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
@@ -91,7 +98,7 @@ export default function CitizenMapPage() {
 
   // Load data + initialize map
   useEffect(() => {
-    if (!gpsReady || !mapRef.current) return;
+    if (!mapRef.current) return;
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     if (!MAPBOX_TOKEN) return;
     let glowFrame = 0;
@@ -104,7 +111,7 @@ export default function CitizenMapPage() {
 
       const map = new mapboxgl.Map({
         container: mapRef.current, style: 'mapbox://styles/mapbox/dark-v11',
-        center: [lng, lat], zoom: 12, attributionControl: false,
+        center: [-98, 39], zoom: 3.5, attributionControl: false,
       });
       // Navigation control removed — users pinch-to-zoom on mobile
       mapInstance.current = map;
@@ -307,7 +314,7 @@ export default function CitizenMapPage() {
 
     initMap();
     return () => { cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [gpsReady, isAdmin]);
+  }, [isAdmin]);
 
   // Map command subscription (for search results)
   useEffect(() => {
@@ -535,28 +542,26 @@ export default function CitizenMapPage() {
 
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
-      {/* Logomark glow keyframes */}
+      {/* Logomark radar-ping keyframes */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes sos-glow-outer {
-          0%, 100% { transform: scale(1); opacity: 0.35; }
-          50% { transform: scale(1.55); opacity: 0.08; }
-        }
-        @keyframes sos-glow-inner {
-          0%, 100% { transform: scale(1); opacity: 0.55; }
-          50% { transform: scale(1.3); opacity: 0.15; }
+        @keyframes radar-ping {
+          0% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(2.5); opacity: 0; }
         }
       ` }} />
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 overflow-visible">
             <button
               onClick={() => setSheetOpen(true)}
-              className="relative h-9 w-9 flex items-center justify-center"
+              className="relative h-9 w-9 flex items-center justify-center overflow-visible"
               aria-label="Open SOS Agent"
             >
-              <span className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #EF4E4B 0%, transparent 70%)', animation: 'sos-glow-outer 3s ease-in-out infinite' }} />
-              <span className="absolute inset-[3px] rounded-full" style={{ background: 'radial-gradient(circle, #EF4E4B 20%, transparent 70%)', animation: 'sos-glow-inner 1.5s ease-in-out infinite' }} />
+              {/* Radar ping rings — expand outward from logomark */}
+              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out infinite' }} />
+              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 1s infinite' }} />
+              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 2s infinite' }} />
               <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
             </button>
             <span className="text-[11px] font-medium text-white/70">📍 {locationName}</span>
