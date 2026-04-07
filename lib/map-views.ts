@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase-client';
+import type { FilterConfig } from '@/lib/filter-engine';
 
 export interface MapView {
   id: string;
@@ -31,14 +32,19 @@ export async function getMapViews(orgId: string): Promise<MapView[]> {
   return data || [];
 }
 
-export async function createMapView(view: Partial<MapView>): Promise<MapView | null> {
+export async function createMapView(
+  view: Partial<MapView>,
+  filterConfig?: FilterConfig,
+): Promise<MapView | null> {
+  const config = { ...(view.config || {}), ...(filterConfig ? { filterConfig } : {}) };
+
   const { data, error } = await supabase
     .from('map_views')
     .insert({
       org_id: view.org_id,
       name: view.name || 'New View',
       disaster_id: view.disaster_id || null,
-      config: view.config || {},
+      config,
       center_lat: view.center_lat || 0,
       center_lng: view.center_lng || 0,
       zoom: view.zoom || 4,
@@ -60,6 +66,28 @@ export async function updateMapView(id: string, updates: Partial<MapView>): Prom
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id);
   return !error;
+}
+
+/** Patch only the filterConfig inside the config JSONB column. */
+export async function updateMapViewFilters(
+  viewId: string,
+  filterConfig: FilterConfig,
+): Promise<boolean> {
+  // Read current config so we merge rather than overwrite other keys
+  const { data: existing } = await supabase
+    .from('map_views')
+    .select('config')
+    .eq('id', viewId)
+    .single();
+
+  const merged = { ...(existing?.config || {}), filterConfig };
+  const { error } = await supabase
+    .from('map_views')
+    .update({ config: merged, updated_at: new Date().toISOString() })
+    .eq('id', viewId);
+
+  if (error) { console.error('[map-views] Filter update error:', error); return false; }
+  return true;
 }
 
 export async function deleteMapView(id: string): Promise<boolean> {
