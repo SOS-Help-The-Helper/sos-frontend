@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { FleetDetailModal } from '@/components/partner/fleet-detail-modal';
+import { FleetEditModal } from '@/components/partner/fleet-edit-modal';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { supabase } from '@/lib/supabase-client';
@@ -260,6 +261,7 @@ export default function FleetPage() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [selectedResource, setSelectedResource] = useState<FleetResource | null>(null);
+  const [editResource, setEditResource] = useState<FleetResource | null>(null);
 
   const handleStatusChange = useCallback((newStatus: string) => {
     if (!selectedResource) return;
@@ -269,9 +271,20 @@ export default function FleetPage() {
     setSelectedResource(prev => prev ? { ...prev, status: newStatus } : null);
   }, [selectedResource]);
 
-  const handleEdit = useCallback(() => {
-    // Edit mode placeholder — will be implemented in a future run
+  const handleEdit = useCallback((res: FleetResource) => {
+    setEditResource(res);
   }, []);
+
+  const handleEditSave = useCallback((updated: Record<string, unknown>) => {
+    setResources(prev =>
+      prev.map(r => r.id === updated.id ? { ...r, ...updated } as FleetResource : r),
+    );
+    // Also refresh the detail modal if it's showing the same resource
+    if (selectedResource && selectedResource.id === updated.id) {
+      setSelectedResource({ ...selectedResource, ...updated } as FleetResource);
+    }
+    setEditResource(null);
+  }, [selectedResource]);
 
   useEffect(() => {
     async function load() {
@@ -441,7 +454,7 @@ export default function FleetPage() {
               key={resource.id}
               resource={resource}
               onView={() => setSelectedResource(resource)}
-              onEdit={() => { setSelectedResource(resource); handleEdit(); }}
+              onEdit={() => handleEdit(resource)}
             />
           ))
         ) : (
@@ -471,7 +484,16 @@ export default function FleetPage() {
           resource={selectedResource}
           onClose={() => setSelectedResource(null)}
           onStatusChange={handleStatusChange}
-          onEdit={handleEdit}
+          onEdit={() => handleEdit(selectedResource)}
+        />
+      )}
+
+      {/* Fleet Edit Modal */}
+      {editResource && (
+        <FleetEditModal
+          resource={editResource}
+          onClose={() => setEditResource(null)}
+          onSave={handleEditSave}
         />
       )}
     </DashboardShell>
