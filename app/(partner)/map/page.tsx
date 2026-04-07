@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { supabase } from '@/lib/supabase-client';
 import { useViewContext } from '@/lib/view-context';
@@ -9,12 +9,21 @@ import { getMatchLines } from '@/lib/map-queries';
 import { getMapViews, createMapView, updateMapView, deleteMapView, type MapView } from '@/lib/map-views';
 import { MapPin, Link2, Plus, X, Save, GripVertical } from 'lucide-react';
 import { measureText } from '@/lib/text-measure';
+import { PersonaToggle, usePersonas } from '@/components/partner/persona-toggle';
 
 // "All" is a virtual tab — always first, not deletable, not stored in DB
 const ALL_TAB_ID = '__all__';
 const MATCHES_TAB_ID = '__matches__';
 
 export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="w-10 h-10 border-3 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <MapContent />
+    </Suspense>
+  );
+}
+
+function MapContent() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -39,6 +48,7 @@ export default function MapPage() {
   const [pinLabel, setPinLabel] = useState('');
 
   const currentOrgId = effectiveOrgId || orgId;
+  const [personas, setPersonas] = usePersonas();
 
   // Load map views
   useEffect(() => {
@@ -83,6 +93,19 @@ export default function MapPage() {
     ? requests.filter(r => r.disaster_id === effectiveDisasterFilter)
     : requests;
 
+  // Filter by persona
+  const personaFilteredRequests = personas.includes('survivor') ? filteredRequests : [];
+  const personaFilteredResources = resources.filter(res => {
+    const cat = res.category || '';
+    const pType = res.persona_type || '';
+    const isDonor = cat === 'housing' || pType === 'donor';
+    const isDriver = cat === 'transport' || pType === 'driver';
+    if (isDonor && personas.includes('donor')) return true;
+    if (isDriver && personas.includes('driver')) return true;
+    if (!isDonor && !isDriver) return personas.includes('donor') || personas.includes('driver');
+    return false;
+  });
+
   // Render map
   useEffect(() => {
     if (!mapRef.current) return;
@@ -118,8 +141,8 @@ export default function MapPage() {
       map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       map.on('load', () => {
-        // Request pins
-        filteredRequests.forEach(req => {
+        // Request pins (filtered by persona)
+        personaFilteredRequests.forEach(req => {
           if (!req.latitude || !req.longitude) return;
           const score = req.triage_score || 50;
           const size = score >= 80 ? 16 : score >= 50 ? 12 : 9;
@@ -140,8 +163,8 @@ export default function MapPage() {
           markersRef.current.push(marker);
         });
 
-        // Resource pins — color-coded by capacity status
-        resources.forEach(res => {
+        // Resource pins — color-coded by capacity status (filtered by persona)
+        personaFilteredResources.forEach(res => {
           if (!res.latitude || !res.longitude) return;
           const pinColor = res.status === 'available' ? '#22C55E' :
                            res.status === 'limited' ? '#EDB200' :
@@ -232,7 +255,7 @@ export default function MapPage() {
     }
 
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [filteredRequests, resources, matchLines, activeTabId, activeView]);
+  }, [personaFilteredRequests, personaFilteredResources, matchLines, activeTabId, activeView]);
 
   // Create new tab from current viewport
   async function handleCreateTab() {
