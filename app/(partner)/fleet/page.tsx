@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
+import { FleetDetailModal } from '@/components/partner/fleet-detail-modal';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { supabase } from '@/lib/supabase-client';
@@ -159,7 +160,15 @@ function sortResources(items: FleetResource[], field: SortField): FleetResource[
 /*  Fleet Card                                                         */
 /* ------------------------------------------------------------------ */
 
-function FleetCard({ resource }: { resource: FleetResource }) {
+function FleetCard({
+  resource,
+  onView,
+  onEdit,
+}: {
+  resource: FleetResource;
+  onView: () => void;
+  onEdit: () => void;
+}) {
   const dotColor = STATUS_DOT[resource.status] || 'bg-sos-gray-400';
   const badgeColor = STATUS_BADGE[resource.status] || 'bg-sos-gray-200 text-sos-gray-600';
   const sleeps = getSleeps(resource);
@@ -215,10 +224,16 @@ function FleetCard({ resource }: { resource: FleetResource }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2 mt-2.5">
-            <button className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors">
+            <button
+              onClick={onView}
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors"
+            >
               <Eye className="h-3 w-3" /> View
             </button>
-            <button className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors">
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors"
+            >
               <Edit3 className="h-3 w-3" /> Edit
             </button>
             <button className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors">
@@ -244,6 +259,19 @@ export default function FleetPage() {
   const [statusFilter, setStatusFilter] = useState<FleetStatus>('all');
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('created_at');
+  const [selectedResource, setSelectedResource] = useState<FleetResource | null>(null);
+
+  const handleStatusChange = useCallback((newStatus: string) => {
+    if (!selectedResource) return;
+    setResources(prev =>
+      prev.map(r => r.id === selectedResource.id ? { ...r, status: newStatus } : r),
+    );
+    setSelectedResource(prev => prev ? { ...prev, status: newStatus } : null);
+  }, [selectedResource]);
+
+  const handleEdit = useCallback(() => {
+    // Edit mode placeholder — will be implemented in a future run
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -409,7 +437,12 @@ export default function FleetPage() {
       <div className="space-y-2">
         {filtered.length > 0 ? (
           filtered.map(resource => (
-            <FleetCard key={resource.id} resource={resource} />
+            <FleetCard
+              key={resource.id}
+              resource={resource}
+              onView={() => setSelectedResource(resource)}
+              onEdit={() => { setSelectedResource(resource); handleEdit(); }}
+            />
           ))
         ) : (
           <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
@@ -431,6 +464,16 @@ export default function FleetPage() {
           </div>
         )}
       </div>
+
+      {/* Fleet Detail Modal */}
+      {selectedResource && (
+        <FleetDetailModal
+          resource={selectedResource}
+          onClose={() => setSelectedResource(null)}
+          onStatusChange={handleStatusChange}
+          onEdit={handleEdit}
+        />
+      )}
     </DashboardShell>
   );
 }
