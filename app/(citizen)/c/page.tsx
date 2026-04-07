@@ -94,6 +94,7 @@ export default function CitizenMapPage() {
     if (!gpsReady || !mapRef.current) return;
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     if (!MAPBOX_TOKEN) return;
+    let glowFrame = 0;
 
     const initMap = async () => {
       const mapboxgl = (await import('mapbox-gl')).default;
@@ -145,14 +146,15 @@ export default function CitizenMapPage() {
         map.addSource('requests-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: requestFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
         });
 
+        // Cluster glow (behind)
+        map.addLayer({ id: 'requests-cluster-glow', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
         // Cluster circles
         map.addLayer({ id: 'requests-clusters', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
-        map.addLayer({ id: 'requests-cluster-count', type: 'symbol', source: 'requests-source', filter: ['has', 'point_count'],
-          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
         // Invisible hit target (larger tap area)
         map.addLayer({ id: 'requests-hit', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
@@ -177,13 +179,13 @@ export default function CitizenMapPage() {
         map.addSource('resources-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: resourceFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
         });
 
+        map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
         map.addLayer({ id: 'resources-clusters', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
-        map.addLayer({ id: 'resources-cluster-count', type: 'symbol', source: 'resources-source', filter: ['has', 'point_count'],
-          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
         map.addLayer({ id: 'resources-hit', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
@@ -199,13 +201,13 @@ export default function CitizenMapPage() {
         map.addSource('reports-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: reportFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
         });
 
+        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
         map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.6, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff20' } });
-        map.addLayer({ id: 'reports-cluster-count', type: 'symbol', source: 'reports-source', filter: ['has', 'point_count'],
-          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 11 }, paint: { 'text-color': '#1A3850' } });
+          paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff80' } });
 
@@ -234,6 +236,25 @@ export default function CitizenMapPage() {
             map.addLayer({ id: `alert-line-${i}`, type: 'line', source: `alert-${i}`, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.5 } });
           } catch (e) { console.warn('Alert geometry error:', e); }
         });
+
+        // === CLUSTER GLOW ANIMATION ===
+        const animateGlow = () => {
+          const t = Date.now() / 1000;
+          const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+          const glowLayers = [
+            { id: 'requests-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+            { id: 'resources-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+            { id: 'reports-cluster-glow', baseRadius: [29, 40, 50], baseOpacity: 0.2 },
+          ];
+          glowLayers.forEach(({ id, baseRadius, baseOpacity }) => {
+            if (!map.getLayer(id)) return;
+            const scale = 1 + pulse * 0.3;
+            map.setPaintProperty(id, 'circle-radius', ['step', ['get', 'point_count'], baseRadius[0] * scale, 10, baseRadius[1] * scale, 50, baseRadius[2] * scale]);
+            map.setPaintProperty(id, 'circle-opacity', baseOpacity * (0.6 + pulse * 0.4));
+          });
+          glowFrame = requestAnimationFrame(animateGlow);
+        };
+        animateGlow();
 
         // === CLICK HANDLERS ===
         const clickLayers = ['requests-hit', 'requests-points', 'resources-hit', 'resources-points', 'reports-points'];
@@ -285,7 +306,7 @@ export default function CitizenMapPage() {
     };
 
     initMap();
-    return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+    return () => { cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [gpsReady, isAdmin]);
 
   // Map command subscription (for search results)
@@ -298,7 +319,7 @@ export default function CitizenMapPage() {
         setShowResults(false); setMapResults([]);
         clearMapCategoryFilter(map);
         // Restore all permanent layers
-        const allLayers = ['requests-clusters', 'requests-cluster-count', 'requests-points', 'resources-clusters', 'resources-cluster-count', 'resources-points', 'reports-clusters', 'reports-cluster-count', 'reports-points', 'disasters-points'];
+        const allLayers = ['requests-clusters', 'requests-cluster-glow', 'requests-points', 'resources-clusters', 'resources-cluster-glow', 'resources-points', 'reports-clusters', 'reports-cluster-glow', 'reports-points', 'disasters-points'];
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
         // Clear search results
         if (map.getSource('search-results-source')) {
@@ -318,7 +339,7 @@ export default function CitizenMapPage() {
 
 
         // Hide all permanent layers — show only search results
-        const allLayers = ['requests-clusters', 'requests-cluster-count', 'requests-points', 'resources-clusters', 'resources-cluster-count', 'resources-points', 'reports-clusters', 'reports-cluster-count', 'reports-points', 'disasters-points'];
+        const allLayers = ['requests-clusters', 'requests-cluster-glow', 'requests-points', 'resources-clusters', 'resources-cluster-glow', 'resources-points', 'reports-clusters', 'reports-cluster-glow', 'reports-points', 'disasters-points'];
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
 
         // Show search results using their natural colors (blue for resources, red for requests)
@@ -365,7 +386,7 @@ export default function CitizenMapPage() {
             map.setFilter(layer, ['all', ['!', ['has', 'point_count']], ['==', ['get', 'category'], cat]]);
           }
         });
-        ['requests-clusters', 'requests-cluster-count', 'resources-clusters', 'resources-cluster-count'].forEach(layer => {
+        ['requests-clusters', 'requests-cluster-glow', 'resources-clusters', 'resources-cluster-glow'].forEach(layer => {
           if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', 'none');
         });
       }
@@ -514,6 +535,17 @@ export default function CitizenMapPage() {
 
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
+      {/* Logomark glow keyframes */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes sos-glow-outer {
+          0%, 100% { transform: scale(1); opacity: 0.35; }
+          50% { transform: scale(1.55); opacity: 0.08; }
+        }
+        @keyframes sos-glow-inner {
+          0%, 100% { transform: scale(1); opacity: 0.55; }
+          50% { transform: scale(1.3); opacity: 0.15; }
+        }
+      ` }} />
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
@@ -523,7 +555,8 @@ export default function CitizenMapPage() {
               className="relative h-9 w-9 flex items-center justify-center"
               aria-label="Open SOS Agent"
             >
-              <span className="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-40" />
+              <span className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #EF4E4B 0%, transparent 70%)', animation: 'sos-glow-outer 3s ease-in-out infinite' }} />
+              <span className="absolute inset-[3px] rounded-full" style={{ background: 'radial-gradient(circle, #EF4E4B 20%, transparent 70%)', animation: 'sos-glow-inner 1.5s ease-in-out infinite' }} />
               <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
             </button>
             <span className="text-[11px] font-medium text-white/70">📍 {locationName}</span>
