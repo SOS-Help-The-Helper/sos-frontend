@@ -408,9 +408,24 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
           personId: z.string().optional().describe('Person ID, if known'),
         }),
         execute: async function({ personId }) {
+          // Query score from score-compute EF
+          let score = { total: 0, readiness: 0, community: 0, impact: 0, next_action: 'Complete your profile to start your score' };
+          if (personId) {
+            try {
+              const resp = await fetch(`${SUPABASE_URL}/functions/v1/score-compute`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ person_id: personId }),
+              });
+              const data = await resp.json();
+              if (data?.total != null) {
+                score = { total: data.total, readiness: data.readiness || 0, community: data.community || 0, impact: data.impact || 0, next_action: data.next_action || '' };
+              }
+            } catch {}
+          }
           return JSON.stringify({
             __tool: 'show_score',
-            personId,
+            ...score,
           });
         },
       },
@@ -448,6 +463,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
             __tool: 'submit_confirmation',
             success: resp.ok,
             sosId: result.sos_id,
+            title: resp.ok ? `SOS #${result.sos_id} Submitted` : 'Submission Failed',
             message: resp.ok ? 'Your SOS has been submitted. We\'re searching for help near you now.' : 'Something went wrong. Please try again.',
           });
         },
@@ -481,6 +497,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
           return JSON.stringify({
             __tool: 'submit_confirmation',
             success: resp.ok,
+            title: resp.ok ? 'Helper Profile Created' : 'Submission Failed',
             message: resp.ok ? 'You\'re registered as a helper. We\'ll notify you when someone nearby needs help.' : 'Something went wrong. Please try again.',
           });
         },
@@ -530,7 +547,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
           return JSON.stringify({
             __tool: 'fema_status',
             state,
-            iaEligible: data.fema_assistance_available,
+            eligible: data.fema_assistance_available,
             declarations: data.declarations?.slice(0, 3),
             fieldsFromSOS: 17,
             fieldsNeeded: 6,
