@@ -126,6 +126,94 @@ Tool results from `/api/chat` return inconsistent JSON shapes. The `AIToolRender
 - Anon key: in .env.local or NEXT_PUBLIC_SUPABASE_ANON_KEY env var
 - Edge functions: in `../sos-core/supabase/functions/`
 
+## Active Build Plans
+
+- **ERV_BUILD_PLAN.md** — 8-phase build plan for ERV partner portal (persona system, filters, fleet, queue, drivers, 3-way match, referrals, security)
+- **PARTNER_PORTAL_VISION.md** — Canonical partner portal vision (map tabs, persona toggles, filter dimensions)
+- **ERV_PORTAL_AUDIT.md** — Current state audit with gap analysis
+
+Read the build plan BEFORE making any ERV-related changes. Each phase has exact specs: SQL migrations, component designs, data flow, wireframes.
+
+## Acceptance Criteria (for auditing Claude Code's work)
+
+Every phase must pass these checks before being considered done:
+
+### General
+- [ ] No TypeScript errors (`npx tsc --noEmit` passes)
+- [ ] No `any` types introduced (use proper interfaces)
+- [ ] All new components have proper prop types
+- [ ] Mobile-responsive (works at 375px width)
+- [ ] Dark theme compatible (partner portal uses dark theme)
+- [ ] No hardcoded org_ids in new code (use context/props)
+- [ ] Loading states for all async data
+- [ ] Error states for failed queries
+- [ ] Empty states when no data matches filters
+
+### Phase 1 (Persona System)
+- [ ] Migration runs cleanly on Supabase
+- [ ] PersonaToggle component renders 3 buttons
+- [ ] Multi-select works (can select any combo, minimum 1)
+- [ ] URL params update on toggle (`?persona=survivor,driver`)
+- [ ] Map pins filter based on persona selection
+- [ ] Match list filters based on persona selection
+- [ ] Existing map functionality not broken (tabs, disaster filter, pin clicks)
+
+### Phase 2 (Filter Panel)
+- [ ] Panel slides out on desktop (right), bottom sheet on mobile
+- [ ] All 7 universal dimensions present with multi-select
+- [ ] Distance slider works with location picker
+- [ ] "Save as tab" creates map_view with filter_config
+- [ ] Restoring a saved tab applies both viewport AND filters
+- [ ] "Clear" resets to defaults
+- [ ] Active filter count badge shows on filter button
+- [ ] Filters apply to both map pins AND data queries
+
+### Phase 3 (Fleet Page)
+- [ ] `/partner/fleet` route exists and loads
+- [ ] Shows all ERV resources (housing category)
+- [ ] Status tab filters work (available/matched/maintenance/sold)
+- [ ] Search by VIN, description, location works
+- [ ] Sort by date/capacity/location/status works
+- [ ] Detail modal shows full metadata + match history + notes
+- [ ] Status change buttons work (calls erv-update EF)
+- [ ] "Propose Match" navigates to match flow
+
+### Phase 4 (Priority Queue)
+- [ ] `/partner/queue` route exists and loads
+- [ ] Sorted by priority score descending
+- [ ] Shows name, score, flags (veteran/FR/medical), household, location, disaster
+- [ ] Score breakdown visible (shows component values)
+- [ ] Filters work: veteran, FR, medical, FEMA, disaster, location
+- [ ] "Propose Match" button opens match flow
+- [ ] Pagination works (20 per page)
+
+### Phase 5 (Driver Registry)
+- [ ] `/partner/drivers` route exists and loads
+- [ ] Shows all 127 drivers with vehicle details
+- [ ] Filter by: hitch type, availability, CDL, travel range
+- [ ] "Assign to Run" action works
+- [ ] Driver detail shows specs + delivery history
+
+### Phase 6 (Three-Way Match)
+- [ ] 3-step wizard: Survivor → RV → Driver
+- [ ] Each step shows ranked candidates by compatibility
+- [ ] Hitch compatibility flagged (⚠️ for mismatches)
+- [ ] Creates linked chain matches with chain_id
+- [ ] Match chain visualization shows all 3 legs
+- [ ] New `erv-match-propose` EF deployed and functional
+
+### Phase 7 (Referrals)
+- [ ] `referring_org_id` column exists on requests
+- [ ] Referral section in priority queue shows grouped counts
+- [ ] erv-intake accepts referring_org_name
+- [ ] erv-query supports `referral_summary` query type
+
+### Phase 8 (Security)
+- [ ] `org_scoped_matches` view or org_id column exists
+- [ ] `getScopedMatches()` uses server-side filtering
+- [ ] `buildContext()` uses server-side filtering
+- [ ] No client-side match filtering remains
+
 ## DO NOT
 - Change the taxonomy structure (84 entries, carefully designed)
 - Remove `category` column (backward compat needed alongside `taxonomy_code`)
