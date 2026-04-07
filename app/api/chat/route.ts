@@ -431,9 +431,10 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
       },
 
       submit_sos: {
-        description: 'Submit a help request. Use after collecting category, count, circumstances, and location.',
+        description: 'Submit a help request. Use after collecting category, count, circumstances, and location. Include taxonomy_codes when possible.',
         inputSchema: z.object({
           categories: z.array(z.string()).describe('Selected categories'),
+          taxonomy_codes: z.array(z.string()).optional().describe('Taxonomy codes matching each category (e.g. HOUSING.EMERGENCY, FOOD.MEALS)'),
           count: z.string().describe('Number of people'),
           circumstances: z.array(z.string()).optional().describe('Special circumstances'),
           circumstanceNotes: z.string().optional().describe('Free text about circumstances'),
@@ -442,13 +443,17 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
           locationName: z.string().optional().describe('Location name'),
           urgency: z.string().optional().describe('critical/high/medium/low'),
         }),
-        execute: async function({ categories, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
+        execute: async function({ categories, taxonomy_codes, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
           // Call intake-write EF
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              needs: categories.map((c: string) => ({ category: c, urgency: urgency || 'high' })),
+              needs: categories.map((c: string, i: number) => ({
+                category: c,
+                urgency: urgency || 'high',
+                taxonomy_code: taxonomy_codes?.[i] || undefined,
+              })),
               household_size: parseInt(count) || 1,
               latitude: lat,
               longitude: lng,
@@ -902,11 +907,9 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
       },
 
       track_my_sos: {
-        description: 'Show the user\'s active SOS and matched resources on the map with a connecting line. Use for "where\'s my help", "track my request", "show my SOS status".',
-        inputSchema: z.object({
-          personId: z.string().optional().describe('Person ID'),
-        }),
-        execute: async function({ personId }) {
+        description: 'Show the user\'s active SOS and matched resources on the map with a connecting line. Use for "where\'s my help", "track my request", "show my SOS status". No parameters needed — uses authenticated user.',
+        inputSchema: z.object({}),
+        execute: async function() {
           const pid = personId || 'anonymous';
           // Get active SOS + matches
           const [sosResp, matchResp] = await Promise.all([
