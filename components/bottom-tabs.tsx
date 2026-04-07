@@ -17,6 +17,7 @@ import {
   Settings,
   Eye,
   X,
+  Warehouse,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,6 +28,7 @@ const mainTabs = [
 ];
 
 const moreTabs = [
+  { path: '/fleet', label: 'Fleet', icon: Warehouse, adminOnly: false, logisticsOnly: true },
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
   { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
   { path: '/view', label: 'View As', icon: Eye, adminOnly: true },
@@ -47,8 +49,9 @@ export function BottomTabs() {
     return pathname.startsWith(path);
   };
 
+  const isLogistics = effectiveOrgType === 'transport_housing';
   const isMoreActive = moreTabs.some(t => isActive(t.path));
-  const filteredMore = moreTabs.filter(t => isAdmin || !t.adminOnly);
+  const filteredMore = moreTabs.filter(t => (isAdmin || !t.adminOnly) && (!(t as any).logisticsOnly || isLogistics || isAdmin));
 
   return (
     <>
