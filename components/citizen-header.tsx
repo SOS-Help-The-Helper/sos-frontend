@@ -43,13 +43,9 @@ export function CitizenHeader({ onAgentTap, locationName, status }: CitizenHeade
             <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
           </button>
 
-          {/* Center: status chip + location */}
-          <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm pointer-events-auto">
-              <span className="text-xs">{resolved.emoji}</span>
-              <span className="text-[10px] font-bold text-white">{resolved.label}</span>
-            </div>
-            <span className="text-[11px] font-medium text-white/70 mt-0.5">📍 {locationName}</span>
+          {/* Center: location */}
+          <div className="absolute left-0 right-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[11px] font-medium text-white/70">📍 {locationName}</span>
           </div>
 
           {/* Right: notification bell */}
