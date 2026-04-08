@@ -184,9 +184,17 @@ export async function POST(req: Request) {
       }
     }
   }
-  const authContext = isAuthenticated 
+  const authContext = isAuthenticated
     ? `\nUSER CONTEXT: Authenticated user (ID: ${personId}). You already have their phone and location. Skip those questions.`
     : '\nUSER CONTEXT: Anonymous user. Collect phone during match/SOS flows.';
+
+  // Extract user GPS from headers for auto-location in searches
+  const userLat = parseFloat(req.headers.get('x-user-lat') || '') || undefined;
+  const userLng = parseFloat(req.headers.get('x-user-lng') || '') || undefined;
+  const locationContext = userLat && userLng
+    ? `\nUSER LOCATION: lat=${userLat}, lng=${userLng}. Use these coordinates for any search_resources or show_nearby call when user says near me, nearby, close by, etc. Do NOT ask for location again.`
+    : '';
+
   const messages = await convertToModelMessages(uiMessages);
 
   // PII sanitizer — strip SSN/CC/bank from user messages before LLM sees them
@@ -276,9 +284,9 @@ INTAKE FLOW — ONE question at a time:
 RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${ervFor === 'someone' ? '\nBeing filled out ON BEHALF of the volunteer.' : ''}`,
   };
 
-  const activeSystemPrompt = ervFlow && ERV_PROMPTS[ervFlow] 
-    ? ERV_PROMPTS[ervFlow] + authContext
-    : SYSTEM_PROMPT + authContext;
+  const activeSystemPrompt = ervFlow && ERV_PROMPTS[ervFlow]
+    ? ERV_PROMPTS[ervFlow] + authContext + locationContext
+    : SYSTEM_PROMPT + authContext + locationContext;
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
@@ -424,14 +432,30 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
         description: 'Search for resources near a location. Returns results to show on map and in list.',
         inputSchema: z.object({
           keyword: z.string().describe('What to search for: shelter, food, medical, etc.'),
-          lat: z.number().describe('Latitude'),
-          lng: z.number().describe('Longitude'),
-          distance: z.number().optional().describe('Search radius in miles, default 25'),
+          lat: z.number().optional().describe('Latitude (optional — falls back to user location or Asheville NC)'),
+          lng: z.number().optional().describe('Longitude (optional — falls back to user location or Asheville NC)'),
+          distance: z.number().optional().describe('Search radius in miles, default 15'),
         }),
         execute: async function({ keyword, lat, lng, distance }) {
+          // Fallback: user GPS from headers → Asheville NC default
+          const useLat = lat ?? userLat ?? 35.5951;
+          const useLng = lng ?? userLng ?? -82.5515;
+
+          // Map common keywords to taxonomy prefixes for better search
+          const KEYWORD_TO_TAXONOMY: Record<string, string> = {
+            'food': 'FOOD', 'meals': 'FOOD.MEALS', 'shelter': 'HOUSING.EMERGENCY', 'housing': 'HOUSING',
+            'generator': 'SVC.EQUIPMENT.GENERATOR', 'power': 'UTILITIES.POWER', 'water': 'FOOD.WATER',
+            'clothing': 'GOODS.CLOTHING', 'supplies': 'GOODS', 'medical': 'HEALTH', 'transport': 'TRANSPORT',
+            'debris': 'SAFETY.DEBRIS', 'roofing': 'SVC.TRADES.ROOFING', 'plumbing': 'SVC.TRADES.PLUMBING',
+            'electrician': 'SVC.TRADES.ELECTRIC', 'rv': 'HOUSING.TEMPORARY.RV', 'volunteer': 'COMMUNITY.VOLUNTEER',
+          };
+          const keyLower = keyword.toLowerCase().trim();
+          const taxonomyCode = KEYWORD_TO_TAXONOMY[keyLower] || '';
+          const taxonomyParam = taxonomyCode ? `&taxonomy_code=${encodeURIComponent(taxonomyCode)}` : '';
+
           // Call resource-search EF
           const resp = await fetch(
-            `${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${lat}&lng=${lng}&distance=${distance || 25}`,
+            `${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${useLat}&lng=${useLng}&distance=${distance || 15}${taxonomyParam}`,
             { headers: { 'Authorization': `Bearer ${SUPABASE_ANON}` } }
           );
           const data = await resp.json();
@@ -445,7 +469,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
               entity_type: 'skill_execution', signal_layer: 'S', trace_type: 'resource_search',
               reasoning: 'Web search: ' + keyword + ' (' + results.length + ' results)',
               agent_id: 'web-citizen',
-              metadata: { skill_id: 'resource-search', skill_version: 'v1', keyword, result_count: results.length, lat, lng },
+              metadata: { skill_id: 'resource-search', skill_version: 'v1', keyword, result_count: results.length, lat: useLat, lng: useLng, taxonomy_code: taxonomyCode || undefined },
             }),
           }).catch(() => {});
 
