@@ -326,11 +326,19 @@ function Matching() {
           ) : (
             <div className="text-center py-16">
               <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✓</span>
+                <span className="text-2xl">{matches.length > 0 ? '✓' : '📋'}</span>
               </div>
-              <h3 className="text-lg font-bold text-sos-blue-800">All caught up</h3>
-              <p className="text-sm text-sos-gray-600 mt-1">No pending matches to review</p>
-              <p className="text-xs text-sos-gray-400 mt-3">{matches.length} total matches · {stats?.byStatus?.fulfilled || 0} fulfilled</p>
+              <h3 className="text-lg font-bold text-sos-blue-800">
+                {matches.length > 0 ? 'All caught up' : 'No coordination tasks yet'}
+              </h3>
+              <p className="text-sm text-sos-gray-600 mt-1">
+                {matches.length > 0
+                  ? 'No pending matches to review'
+                  : 'When citizens submit needs in your area, assignments will appear here.'}
+              </p>
+              {matches.length > 0 && (
+                <p className="text-xs text-sos-gray-400 mt-3">{matches.length} total matches · {stats?.byStatus?.fulfilled || 0} fulfilled</p>
+              )}
             </div>
           )}
         </div>
@@ -426,7 +434,11 @@ function Matching() {
             ))}
             {matches.length === 0 && (
               <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
-                <p className="text-sm text-sos-gray-500">No matches found</p>
+                <div className="w-12 h-12 rounded-full bg-sos-gray-200 flex items-center justify-center mx-auto mb-3">
+                  <span className="text-lg">📋</span>
+                </div>
+                <h3 className="text-sm font-bold text-sos-blue-800">No coordination tasks yet</h3>
+                <p className="text-xs text-sos-gray-500 mt-1">When citizens submit needs in your area, assignments will appear here.</p>
               </div>
             )}
           </div>

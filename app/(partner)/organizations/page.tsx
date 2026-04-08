@@ -47,10 +47,19 @@ export default function Organizations() {
   }
 
   return (
-    <DashboardShell title="Organizations" subtitle={`${orgs.length} partners in the network`}>
+    <DashboardShell title="Network" subtitle={orgs.length > 0 ? `${orgs.length} partners in the network` : 'Partner organizations in your coordination network'}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Org List (2 cols) */}
         <div className="col-span-1 md:col-span-2 space-y-3">
+          {orgs.length === 0 && (
+            <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-sos-gray-200 flex items-center justify-center mx-auto mb-3">
+                <span className="text-lg">🤝</span>
+              </div>
+              <h3 className="text-sm font-bold text-sos-blue-800">No partner organizations yet</h3>
+              <p className="text-xs text-sos-gray-500 mt-1">Organizations in your network will appear here as they join the platform.</p>
+            </div>
+          )}
           {orgs.map(org => (
             <div
               key={org.id}
