@@ -157,7 +157,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
                       </MeasuredBubble>
                     ) : (
-                      <div className="max-w-[80%] md:max-w-[75%] bg-[#F7F5F0] border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                      <div className="max-w-[80%] md:max-w-[75%] bg-white border border-sos-gray-300 text-sos-blue-800 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                         <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-headings:text-sos-blue-800 prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1 prose-h1:text-base prose-h2:text-sm prose-h3:text-sm prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-strong:text-sos-blue-800 prose-li:marker:text-sos-red-500">
                           <ReactMarkdown>{part.text}</ReactMarkdown>
                         </div>
@@ -186,7 +186,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             <div className="w-7 h-7 rounded-full bg-sos-blue-800 flex items-center justify-center flex-shrink-0">
               <img src="/logomark.svg" alt="SOS" className="h-4 w-4" />
             </div>
-            <div className="bg-[#F7F5F0] border border-sos-gray-300 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+            <div className="bg-white border border-sos-gray-300 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
               <div className="flex gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-sos-blue-800 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-1.5 h-1.5 rounded-full bg-sos-blue-800 animate-bounce" style={{ animationDelay: '150ms' }} />
