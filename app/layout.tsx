@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
 import "./globals.css";
@@ -39,19 +38,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-        </head>
-        <body>
-          <AuthProvider>
-            <ViewProvider>
-              {children}
-            </ViewProvider>
-          </AuthProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+      </head>
+      <body>
+        <AuthProvider>
+          <ViewProvider>
+            {children}
+          </ViewProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

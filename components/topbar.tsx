@@ -1,6 +1,5 @@
 'use client';
 
-import { UserButton } from '@clerk/nextjs';
 import { ViewSwitcher } from './view-switcher';
 
 interface TopbarProps {
@@ -25,13 +24,9 @@ export function Topbar({ title, subtitle, currentView, onViewChange }: TopbarPro
         {currentView && onViewChange && (
           <ViewSwitcher currentView={currentView} onViewChange={onViewChange} />
         )}
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: 'h-8 w-8',
-            },
-          }}
-        />
+        <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+          SOS
+        </div>
       </div>
     </header>
   );

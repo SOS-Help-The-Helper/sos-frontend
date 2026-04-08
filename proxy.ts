@@ -1,4 +1,3 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -7,7 +6,7 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function rateLimit(req: NextRequest): NextResponse | null {
   if (!req.nextUrl.pathname.startsWith('/api/chat')) return null;
-  
+
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const now = Date.now();
   let record = rateLimitMap.get(ip);
@@ -22,10 +21,12 @@ function rateLimit(req: NextRequest): NextResponse | null {
   return null;
 }
 
-export default clerkMiddleware(async (auth, req) => {
+// Demo bypass: no Clerk auth, just rate limiting
+export default function middleware(req: NextRequest) {
   const limited = rateLimit(req);
   if (limited) return limited;
-})
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
