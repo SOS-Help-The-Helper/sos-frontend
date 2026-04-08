@@ -644,11 +644,9 @@ export default function CitizenMapPage() {
               </div>
 
               {/* Row 2: Summary text */}
-              {(p.details || p.description) && (
-                <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-3">
-                  {p.details || p.description}
-                </p>
-              )}
+              <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-3">
+                {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
+              </p>
 
               {/* Row 3: Metadata — single row, consistent sizing */}
               <div className="flex items-center gap-2 flex-wrap mb-4">

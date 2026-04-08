@@ -802,12 +802,8 @@ function SOSConfirmationCard({ summary, type, details, onAction }: { summary: st
 
   function handleSend() {
     if (sent || animating) return;
-    setAnimating(true);
-    setTimeout(() => {
-      setSent(true);
-      setAnimating(false);
-      onAction(`[SOS_CONFIRMED:${type}]`);
-    }, 600);
+    setSent(true);
+    onAction(`[SOS_CONFIRMED:${type}]`);
   }
 
   return (
