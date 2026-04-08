@@ -45,6 +45,7 @@ export default function ManagePage() {
   const [editingRequest, setEditingRequest] = useState<EditRequestForm | null>(null);
   const [editingResource, setEditingResource] = useState<EditResourceForm | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async (pid: string) => {
     const [scoreData, reqData, resData] = await Promise.all([
@@ -58,7 +59,7 @@ export default function ManagePage() {
 
     const requestIds = (reqData.data || []).map((r: any) => r.id);
     const resourceIds = (resData.data || []).map((r: any) => r.id);
-    const matchSelect = 'id, request_id, resource_id, status, match_score, created_at, resources(category, details_sanitized, organizations(name))';
+    const matchSelect = 'id, request_id, resource_id, status, match_score, created_at, requests(category, details_sanitized, urgency), resources(category, details_sanitized, organizations(name))';
 
     let requestMatches: any[] = [];
     if (requestIds.length > 0) {
@@ -262,18 +263,31 @@ export default function ManagePage() {
                 <div key={r.id} className={`bg-white/5 rounded-xl p-4 transition-all duration-300 ${
                   flashId === r.id ? 'ring-2 ring-green-400/60' : ''
                 }`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      r.status === 'active' ? 'bg-[#EF4E4B]' : r.status === 'paused' ? 'bg-amber-400' : 'bg-white/20'
-                    }`} />
-                    <span className="text-[10px] font-bold text-[#EF4E4B] uppercase tracking-wider">{r.status}</span>
-                    {r.urgency && <span className="text-[10px] text-amber-400 ml-auto">⚡ {r.urgency}</span>}
+                  <div className="cursor-pointer" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        r.status === 'active' ? 'bg-[#EF4E4B]' : r.status === 'paused' ? 'bg-amber-400' : 'bg-white/20'
+                      }`} />
+                      <span className="text-[10px] font-bold text-[#EF4E4B] uppercase tracking-wider">{r.status}</span>
+                      {r.urgency && <span className="text-[10px] text-amber-400 ml-auto">⚡ {r.urgency}</span>}
+                      <span className="text-white/30 text-xs ml-1">{expandedId === r.id ? '▾' : '▸'}</span>
+                    </div>
+                    <p className="text-sm text-white/70">{r.details_sanitized || r.category?.replace(/_/g, ' ')}</p>
+                    <div className="flex gap-2 mt-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">{CATEGORY_EMOJI[r.category] || ''} {r.category?.replace(/_/g, ' ')}</span>
+                      <span className="text-[10px] text-white/30">{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-white/70">{r.details_sanitized || r.category}</p>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">{CATEGORY_EMOJI[r.category] || ''} {r.category?.replace(/_/g, ' ')}</span>
-                    <span className="text-[10px] text-white/30">{new Date(r.created_at).toLocaleDateString()}</span>
-                  </div>
+
+                  {/* Expanded details */}
+                  {expandedId === r.id && (
+                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                      {r.household_size && <p className="text-[11px] text-white/50">👥 Household: {r.household_size} people</p>}
+                      {r.urgency && <p className="text-[11px] text-white/50">⚡ Urgency: {r.urgency}</p>}
+                      <p className="text-[11px] text-white/50">📅 Submitted: {new Date(r.created_at).toLocaleString()}</p>
+                      <p className="text-[11px] text-white/50">📋 Status: {r.status}</p>
+                    </div>
+                  )}
 
                   {/* Action buttons */}
                   {errorId === r.id && (
@@ -333,15 +347,27 @@ export default function ManagePage() {
                 <div key={r.id} className={`bg-white/5 rounded-xl p-4 transition-all duration-300 ${
                   flashId === r.id ? 'ring-2 ring-green-400/60' : ''
                 }`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      r.status === 'active' ? 'bg-[#89CFF0]' : r.status === 'paused' ? 'bg-amber-400' : 'bg-white/20'
-                    }`} />
-                    <span className="text-[10px] font-bold text-[#89CFF0] uppercase tracking-wider">{r.status}</span>
-                    {r.capacity_available && <span className="text-[10px] text-white/40 ml-auto">Cap: {r.capacity_available}</span>}
+                  <div className="cursor-pointer" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        r.status === 'active' ? 'bg-[#89CFF0]' : r.status === 'paused' ? 'bg-amber-400' : 'bg-white/20'
+                      }`} />
+                      <span className="text-[10px] font-bold text-[#89CFF0] uppercase tracking-wider">{r.status}</span>
+                      {r.capacity_available && <span className="text-[10px] text-white/40 ml-auto">Cap: {r.capacity_available}</span>}
+                      <span className="text-white/30 text-xs ml-1">{expandedId === r.id ? '▾' : '▸'}</span>
+                    </div>
+                    <p className="text-sm text-white/70">{r.details_sanitized || r.category?.replace(/_/g, ' ')}</p>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50 mt-2 inline-block">{r.category?.replace(/_/g, ' ')}</span>
                   </div>
-                  <p className="text-sm text-white/70">{r.details_sanitized || r.category}</p>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50 mt-2 inline-block">{r.category?.replace(/_/g, ' ')}</span>
+
+                  {/* Expanded details */}
+                  {expandedId === r.id && (
+                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                      {r.capacity_available && <p className="text-[11px] text-white/50">📦 Capacity: {r.capacity_available}</p>}
+                      <p className="text-[11px] text-white/50">📅 Created: {new Date(r.created_at).toLocaleString()}</p>
+                      <p className="text-[11px] text-white/50">📋 Status: {r.status}</p>
+                    </div>
+                  )}
 
                   {/* Action buttons */}
                   {errorId === r.id && (
@@ -398,18 +424,69 @@ export default function ManagePage() {
                 <p className="text-xs text-white/30 text-center py-8">No matches yet. Submit a request or offer help to get matched.</p>
               ) : matches.map(m => (
                 <div key={m.id} className="bg-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      m.status === 'fulfilled' ? 'bg-green-400' : m.status === 'accepted' ? 'bg-[#89CFF0]' : m.status === 'proposed' ? 'bg-amber-400' : 'bg-white/20'
-                    }`} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">{m.status}</span>
-                    <span className="text-[10px] text-white/30 ml-auto">Score: {m.match_score}</span>
+                  <div className="cursor-pointer" onClick={() => setExpandedId(expandedId === m.id ? null : m.id)}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        m.status === 'fulfilled' ? 'bg-green-400' : m.status === 'accepted' ? 'bg-[#89CFF0]' : m.status === 'proposed' ? 'bg-amber-400' : 'bg-white/20'
+                      }`} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">{m.status}</span>
+                      <span className="text-[10px] text-white/30 ml-auto">Score: {m.match_score}</span>
+                      <span className="text-white/30 text-xs ml-1">{expandedId === m.id ? '▾' : '▸'}</span>
+                    </div>
+                    {m.resources?.organizations?.name && (
+                      <p className="text-sm font-medium text-white/80">{m.resources.organizations.name}</p>
+                    )}
+                    <p className="text-xs text-white/50 mt-1">{m.resources?.details_sanitized || m.resources?.category || 'Pending match details'}</p>
+                    <p className="text-[10px] text-white/30 mt-2">{new Date(m.created_at).toLocaleDateString()}</p>
                   </div>
-                  {m.resources?.organizations?.name && (
-                    <p className="text-sm font-medium text-white/80">{m.resources.organizations.name}</p>
+
+                  {/* Expanded match details */}
+                  {expandedId === m.id && (
+                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                      <p className="text-[11px] text-white/50">🎯 Match Score: {m.match_score}/100</p>
+                      {m.requests?.category && <p className="text-[11px] text-white/50">📋 Request: {m.requests.category.replace(/_/g, ' ')}{m.requests.urgency ? ` · ${m.requests.urgency}` : ''}</p>}
+                      {m.requests?.details_sanitized && <p className="text-[11px] text-white/40">{m.requests.details_sanitized}</p>}
+                      {m.resources?.category && <p className="text-[11px] text-white/50">📦 Resource: {m.resources.category.replace(/_/g, ' ')}</p>}
+                      {m.resources?.details_sanitized && <p className="text-[11px] text-white/40">{m.resources.details_sanitized}</p>}
+
+                      {m.status === 'proposed' && (
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            onClick={async () => {
+                              const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+                              const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+                              await fetch(`${url}/functions/v1/match-respond`, {
+                                method: 'POST',
+                                headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ match_id: m.id, response: 'accept', actor_id: personId, channel: 'citizen_app' }),
+                              });
+                              setExpandedId(null);
+                              if (personId) loadData(personId);
+                            }}
+                            className="flex-1 py-2 rounded-xl bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30"
+                          >
+                            ✓ Accept Match
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+                              const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+                              await fetch(`${url}/functions/v1/match-respond`, {
+                                method: 'POST',
+                                headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ match_id: m.id, response: 'decline', actor_id: personId, channel: 'citizen_app' }),
+                              });
+                              setExpandedId(null);
+                              if (personId) loadData(personId);
+                            }}
+                            className="flex-1 py-2 rounded-xl bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30"
+                          >
+                            ✕ Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <p className="text-xs text-white/50 mt-1">{m.resources?.details_sanitized || m.resources?.category || 'Pending match details'}</p>
-                  <p className="text-[10px] text-white/30 mt-2">{new Date(m.created_at).toLocaleDateString()}</p>
                 </div>
               ))}
             </>
