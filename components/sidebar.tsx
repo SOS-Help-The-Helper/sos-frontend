@@ -60,8 +60,10 @@ export function Sidebar() {
   const isVendor = effectiveOrgType === 'vendor';
   const isLogistics = effectiveOrgType === 'transport_housing';
   const hasNetworkView = portalConfig.features.networkView;
+  // When viewing as a specific org, use that org's nav — don't show admin-only items
+  const showAdminItems = isAdmin && effectiveOrgType === 'admin';
   const navItems = allNavItems
-    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin) && (!(item as any).logisticsOnly || isLogistics || isAdmin) && (!(item as any).networkOnly || hasNetworkView || isAdmin))
+    .filter(item => (showAdminItems || !item.adminOnly) && (!item.vendorOnly || isVendor || showAdminItems) && (!(item as any).logisticsOnly || isLogistics || showAdminItems) && (!(item as any).networkOnly || hasNetworkView || showAdminItems))
     .map(item => {
       const configKey = LABEL_MAP[item.path];
       if (configKey && portalConfig.labels[configKey]) {

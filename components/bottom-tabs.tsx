@@ -52,7 +52,8 @@ export function BottomTabs() {
   const isLogistics = effectiveOrgType === 'transport_housing';
   const hasNetworkView = portalConfig.features.networkView;
   const isMoreActive = moreTabs.some(t => isActive(t.path));
-  const filteredMore = moreTabs.filter(t => (isAdmin || !t.adminOnly) && (!(t as any).logisticsOnly || isLogistics || isAdmin) && (!(t as any).networkOnly || hasNetworkView || isAdmin));
+  const showAdminItems = isAdmin && effectiveOrgType === 'admin';
+  const filteredMore = moreTabs.filter(t => (showAdminItems || !t.adminOnly) && (!(t as any).logisticsOnly || isLogistics || showAdminItems) && (!(t as any).networkOnly || hasNetworkView || showAdminItems));
 
   return (
     <>
