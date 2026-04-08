@@ -54,9 +54,28 @@ export function useViewContext() {
   return useContext(ViewCtx);
 }
 
+// URL slug → org ID mapping for direct links
+const VIEW_SLUG_MAP: Record<string, string> = {
+  'aid-arena': '43299807-6229-49be-9a6b-0498c9188178',
+  'erv': 'da86c92f-d52d-4b13-a474-30e1be8fb808',
+  'fhm': '9d894368-51af-4cf7-9318-444a3c216f5d',
+  'greater-good': 'c1e74116-5e12-410a-9b21-dc80c7646d77',
+  'endurant': '2d84a5d4-41a6-4817-8c36-37d6f8cd727a',
+  'citizen': 'citizen',
+  'admin': 'admin',
+};
+
 export function ViewProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentViewState] = useState(() => {
     if (typeof window !== 'undefined') {
+      // Check URL param ?org=aid-arena for direct partner links
+      const params = new URLSearchParams(window.location.search);
+      const orgSlug = params.get('org');
+      if (orgSlug && VIEW_SLUG_MAP[orgSlug]) {
+        const viewId = VIEW_SLUG_MAP[orgSlug];
+        localStorage.setItem('sos-view', viewId);
+        return viewId;
+      }
       return localStorage.getItem('sos-view') || 'admin';
     }
     return 'admin';
