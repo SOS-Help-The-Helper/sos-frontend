@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { TapCardGrid, QuickChips, CounterCards, ToggleChips } from './agent-tap-cards';
 import { emitMapCommand, type MapResult } from '@/lib/map-commands';
 import { getSOSScore } from '@/lib/citizen-api';
@@ -20,8 +21,9 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
   if (!tool) return null;
 
   // Generic map command emitter — any tool with __mapCommand updates the map
+  // Skip for submit_confirmation — it fires the map command after its overlay fades
   const mapCmd = toolData?.__mapCommand;
-  if (mapCmd && typeof window !== 'undefined') {
+  if (mapCmd && tool !== 'submit_confirmation' && typeof window !== 'undefined') {
     // Emit once (use a ref-like check via data attribute)
     const cmdKey = JSON.stringify(mapCmd).substring(0, 100);
     if (!(window as any).__lastMapCmd || (window as any).__lastMapCmd !== cmdKey) {
@@ -47,6 +49,8 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
       return <SearchResults data={toolData} onSelect={onUserAction} />;
     case 'show_score':
       return <ScoreDisplay data={toolData} />;
+    case 'show_phone_input':
+      return <PhoneInput data={toolData} onSelect={onUserAction} />;
     case 'submit_confirmation':
       return <SubmitConfirmation data={toolData} />;
     case 'capture_photo':
@@ -254,12 +258,29 @@ function CounterSelection({ data, onSelect }: { data: any; onSelect: (msg: strin
 
 function CircumstanceChips({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
+  const [freeText, setFreeText] = useState('');
   const options = data.options || [
     { id: 'children', icon: '👶', label: 'Children' },
     { id: 'elderly', icon: '👴', label: 'Elderly' },
     { id: 'pets', icon: '🐕', label: 'Pets' },
     { id: 'accessibility', icon: '♿', label: 'Accessibility' },
   ];
+
+  function handleConfirm() {
+    const parts: string[] = [];
+    if (selected.length > 0) {
+      const labels = selected.map(s => options.find((o: any) => o.id === s)?.label || s);
+      parts.push(`Special circumstances: ${labels.join(', ')}`);
+    }
+    if (freeText.trim()) {
+      parts.push(freeText.trim());
+    }
+    if (parts.length === 0) {
+      onSelect('None of these');
+    } else {
+      onSelect(parts.join('. '));
+    }
+  }
 
   return (
     <div>
@@ -268,14 +289,17 @@ function CircumstanceChips({ data, onSelect }: { data: any; onSelect: (msg: stri
         options={options}
         selected={selected}
         onToggle={(id) => setSelected(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])}
-        onDone={() => {
-          if (selected.length === 0) onSelect('None of these');
-          else {
-            const labels = selected.map(s => options.find((o: any) => o.id === s)?.label || s);
-            onSelect(`Special circumstances: ${labels.join(', ')}`);
-          }
-        }}
+        onDone={handleConfirm}
       />
+      {data.showFreeText && (
+        <input
+          type="text"
+          value={freeText}
+          onChange={(e) => setFreeText(e.target.value)}
+          placeholder={data.freeTextPlaceholder || 'Anything else you would like to add?'}
+          className="w-full mt-2 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]"
+        />
+      )}
       <button onClick={() => onSelect('None of these')}
         className="text-[10px] text-white/30 mt-1 hover:text-white/50">None of these</button>
     </div>
@@ -452,11 +476,106 @@ function ScoreDisplay({ data }: { data: any }) {
 }
 
 function SubmitConfirmation({ data }: { data: any }) {
+  const [visible, setVisible] = useState(data.success !== false);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    const fadeTimer = setTimeout(() => setFading(true), 2000);
+    const removeTimer = setTimeout(() => {
+      setVisible(false);
+      // Fire map command after overlay clears
+      if (data.__mapCommand) {
+        emitMapCommand(data.__mapCommand);
+      }
+    }, 2500);
+    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
+  }, [visible, data.__mapCommand]);
+
+  if (data.success === false) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+        <span className="text-2xl">❌</span>
+        <p className="text-xs font-bold text-red-400 mt-1">{data.title || 'Error'}</p>
+        {data.message && <p className="text-[10px] text-white/50 mt-0.5">{data.message}</p>}
+      </div>
+    );
+  }
+
+  if (!visible) return null;
+
+  const overlay = (
+    <div
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0F1E2B] transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}
+    >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes sos-radar-ring {
+          0% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(3); opacity: 0; }
+        }
+      ` }} />
+      {/* Logomark with radar rings */}
+      <div className="relative flex items-center justify-center" style={{ width: 192, height: 192 }}>
+        <span
+          className="absolute rounded-full border-2 border-[#EF4E4B]"
+          style={{ width: 96, height: 96, top: 48, left: 48, animation: 'sos-radar-ring 2.5s ease-out infinite' }}
+        />
+        <span
+          className="absolute rounded-full border-2 border-[#EF4E4B]"
+          style={{ width: 96, height: 96, top: 48, left: 48, animation: 'sos-radar-ring 2.5s ease-out 0.8s infinite' }}
+        />
+        <span
+          className="absolute rounded-full border-2 border-[#EF4E4B]"
+          style={{ width: 96, height: 96, top: 48, left: 48, animation: 'sos-radar-ring 2.5s ease-out 1.6s infinite' }}
+        />
+        <img src="/logomark.svg" alt="SOS" className="relative z-10" style={{ width: 96, height: 96 }} />
+      </div>
+      <p className="text-white text-xl font-bold mt-6">SOS Submitted</p>
+      {data.sosId && <p className="text-white/70 text-sm mt-1 font-mono">{data.sosId}</p>}
+      <p className="text-white/50 text-sm mt-3">Searching for help near you...</p>
+    </div>
+  );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(overlay, document.body);
+}
+
+function PhoneInput({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+
+  function handleSubmit() {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      onSelect(`+1${digits}`);
+    } else if (digits.length === 11 && digits.startsWith('1')) {
+      onSelect(`+${digits}`);
+    } else {
+      setError('Enter a valid 10-digit US phone number');
+    }
+  }
+
   return (
-    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-      <span className="text-2xl">✅</span>
-      <p className="text-xs font-bold text-green-400 mt-1">{data.title || 'Submitted'}</p>
-      {data.message && <p className="text-[10px] text-white/50 mt-0.5">{data.message}</p>}
+    <div className="space-y-2">
+      {data.prompt && <p className="text-xs text-white/60 mb-1">{data.prompt}</p>}
+      <div className="flex gap-2">
+        <span className="flex items-center text-xs text-white/40 px-2 py-2 bg-white/5 rounded-lg border border-white/10">+1</span>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => { setPhone(e.target.value); setError(''); }}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          placeholder="(555) 123-4567"
+          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]"
+        />
+      </div>
+      {error && <p className="text-[10px] text-red-400">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2.5 rounded-xl bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97] hover:bg-[#d94340] transition-colors"
+      >
+        Continue
+      </button>
     </div>
   );
 }
