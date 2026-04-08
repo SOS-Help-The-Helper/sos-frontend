@@ -67,8 +67,11 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
 
     case 'show_chips':
       return <div className="space-y-2">
-        {toolData.prompt && <p className="text-xs text-white/60">{toolData.prompt}</p>}
-        <QuickChips chips={toolData.chips || []} onSelect={(id) => onUserAction(`${id}`)} />
+        {toolData.prompt && <p className="text-xs text-white/60 mb-1">{toolData.prompt}</p>}
+        <QuickChips chips={toolData.chips || []} onSelect={(id) => {
+          const chip = (toolData.chips || []).find((c: any) => c.id === id);
+          onUserAction(chip?.label || id);
+        }} />
       </div>;
 
     case 'show_toggle_chips':
