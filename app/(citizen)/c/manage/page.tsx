@@ -183,17 +183,18 @@ export default function ManagePage() {
         {/* Spacer for absolutely-positioned header */}
         <div className="pt-[calc(env(safe-area-inset-top,0px)+72px)] flex-shrink-0" />
 
-        {/* Section tabs */}
-        <div className="flex gap-1 px-4 py-3 bg-[#0F1E2B] flex-shrink-0 overflow-x-auto">
-          {sections.map(s => (
-            <button key={s.id} onClick={() => setSection(s.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                section === s.id ? 'bg-white/15 text-white' : 'bg-white/5 text-white/40'
-              }`}>
-              {s.label}{s.count != null ? ` (${s.count})` : ''}
+        {/* Section tabs — only show when drilled into a section */}
+        {section !== 'overview' && (
+          <div className="flex gap-1 px-4 py-3 bg-[#0F1E2B] flex-shrink-0 overflow-x-auto">
+            <button onClick={() => setSection('overview')}
+              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 text-white/40">
+              ← Back
             </button>
-          ))}
-        </div>
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/15 text-white">
+              {sections.find(s => s.id === section)?.label}
+            </span>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
@@ -219,18 +220,18 @@ export default function ManagePage() {
               )}
 
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/5 rounded-xl p-3 text-center">
+                <button onClick={() => setSection('requests')} className="bg-white/5 rounded-xl p-3 text-center hover:bg-white/10 transition-colors">
                   <p className="text-lg font-bold text-[#EF4E4B]">{requests.filter(r => r.status === 'active').length}</p>
                   <p className="text-[10px] text-white/40">Active Requests</p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
+                </button>
+                <button onClick={() => setSection('resources')} className="bg-white/5 rounded-xl p-3 text-center hover:bg-white/10 transition-colors">
                   <p className="text-lg font-bold text-[#89CFF0]">{resources.filter(r => r.status === 'active').length}</p>
                   <p className="text-[10px] text-white/40">Active Offers</p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
+                </button>
+                <button onClick={() => setSection('matches')} className="bg-white/5 rounded-xl p-3 text-center hover:bg-white/10 transition-colors">
                   <p className="text-lg font-bold text-white">{matches.length}</p>
                   <p className="text-[10px] text-white/40">Matches</p>
-                </div>
+                </button>
               </div>
 
               <div>
