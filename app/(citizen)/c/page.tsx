@@ -380,6 +380,19 @@ export default function CitizenMapPage() {
 
       if (cmd.type === 'focus' && cmd.center) {
         map.flyTo({ center: cmd.center, zoom: cmd.zoom || 14, duration: 800 });
+        // If this is a submission focus, add the new pin to the map
+        const src = map.getSource('requests-source') as any;
+        if (src) {
+          try {
+            const existing = src._data || { type: 'FeatureCollection', features: [] };
+            const features = [...(existing.features || []), {
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: cmd.center },
+              properties: { id: 'new-submission', category: (cmd as any).category || 'housing', urgency: 'high', status: 'active', type: 'request' },
+            }];
+            src.setData({ type: 'FeatureCollection', features });
+          } catch {}
+        }
       }
 
       // P1 Fix 9: Filter existing layers by category
