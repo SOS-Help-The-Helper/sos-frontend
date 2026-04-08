@@ -11,9 +11,9 @@ import { getPersonContext } from '@/lib/person-context';
 type SheetState = 'collapsed' | 'half' | 'full';
 
 const DEFAULT_CHIPS = [
-  { id: 'help', label: 'Get help', icon: '🩵' },
-  { id: 'offer', label: 'Give help', icon: '🟢' },
-  { id: 'report', label: 'Report something', icon: '📢' },
+  { id: 'help', label: 'Get help', icon: '' },
+  { id: 'offer', label: 'Give help', icon: '' },
+  { id: 'report', label: 'Report', icon: '' },
 ];
 
 const ERV_CHIPS = [
@@ -212,13 +212,26 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {/* Quick chips */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-1.5">
-            <QuickChips chips={partner === 'erv' ? ERV_CHIPS : DEFAULT_CHIPS} onSelect={(id) => {
-              const prompts: Record<string, string> = { 
-                help: 'I need help', offer: 'I want to help', report: 'I want to report something',
-                donate: 'I want to donate an RV', drive: 'I want to volunteer as an RV delivery driver'
-              };
-              send(prompts[id] || id);
-            }} />
+            {partner === 'erv' ? (
+              <QuickChips chips={ERV_CHIPS} onSelect={(id) => {
+                const prompts: Record<string, string> = { donate: 'I want to donate an RV', drive: 'I want to volunteer as an RV delivery driver' };
+                send(prompts[id] || id);
+              }} />
+            ) : (
+              <div className="flex gap-2">
+                {[
+                  { id: 'help', label: 'Get help', color: '#EF4E4B', prompt: 'I need help' },
+                  { id: 'offer', label: 'Give help', color: '#89CFF0', prompt: 'I want to help' },
+                  { id: 'report', label: 'Report', color: '#FBBF24', prompt: 'I want to report something' },
+                ].map(chip => (
+                  <button key={chip.id} onClick={() => send(chip.prompt)}
+                    className="flex items-center gap-1.5 text-[11px] font-medium px-3.5 py-2 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 active:scale-[0.97] transition-all">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chip.color }} />
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <p className="mt-3 text-[11px] text-white/30 italic">or, just start a conversation</p>
           </div>
         )}
