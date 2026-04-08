@@ -137,15 +137,30 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
     send(message);
   }
 
+  // Track visual viewport offset for keyboard
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const handler = () => {
+      const offset = window.innerHeight - vv.height;
+      setKeyboardOffset(offset > 50 ? offset : 0);
+    };
+    vv.addEventListener('resize', handler);
+    vv.addEventListener('scroll', handler);
+    return () => { vv.removeEventListener('resize', handler); vv.removeEventListener('scroll', handler); };
+  }, []);
+
   if (!open) return null;
 
   // Full: below header (~80px) and above nav (56px)
   const sheetHeight = sheetState === 'full' ? 'calc(100vh - 136px - env(safe-area-inset-top, 0px))'
     : sheetState === 'half' ? '45vh' : '64px';
+  const bottomOffset = keyboardOffset > 0 ? keyboardOffset : 56;
 
   return (
     <div className="fixed left-0 right-0 z-50 max-w-lg mx-auto transition-all duration-300"
-      style={{ bottom: '56px', height: sheetHeight, maxWidth: '100vw' }}>
+      style={{ bottom: `${bottomOffset}px`, height: sheetHeight, maxWidth: '100vw' }}>
       {sheetState !== 'collapsed' && <div className="fixed inset-0 -z-10" onClick={onClose} />}
       <div className="bg-[#1A3850] rounded-t-2xl h-full flex flex-col shadow-2xl border-t border-white/10 overflow-hidden">
         {/* Header */}
