@@ -564,7 +564,7 @@ export default function CitizenMapPage() {
       {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
         <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto bottom-[calc(56px+env(safe-area-inset-bottom,0px))]`}
-          style={{ maxHeight: '280px' }}>
+          style={{ maxHeight: '360px' }}>
           <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 h-full flex flex-col overflow-hidden">
             {/* Drag handle — swipe down to close */}
             <button 
@@ -594,16 +594,16 @@ export default function CitizenMapPage() {
 
               {/* Row 2: Summary text */}
               {(p.details || p.description) && (
-                <p className="text-sm text-white/60 leading-relaxed mb-2 line-clamp-2">
+                <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-3">
                   {p.details || p.description}
                 </p>
               )}
 
               {/* Row 3: Metadata — single row, consistent sizing */}
-              <div className="flex items-center gap-2 flex-wrap mb-2">
+              <div className="flex items-center gap-2 flex-wrap mb-4">
                 {p.category && (
                   <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
-                    {p.category.replace(/_/g, ' ')}
+                    Category: {p.category.replace(/_/g, ' ')}
                   </span>
                 )}
                 {selectedPin.type === 'request' && p.household && (
@@ -624,7 +624,7 @@ export default function CitizenMapPage() {
             </div>
 
             {/* Match button — locked to bottom, no scrolling past it */}
-            <div className="px-5 pb-3 pt-1 flex-shrink-0">
+            <div className="px-5 pb-3 pt-3 flex-shrink-0">
                 <button onClick={() => {
                     const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
