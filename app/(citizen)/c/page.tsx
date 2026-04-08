@@ -553,41 +553,30 @@ export default function CitizenMapPage() {
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
-          <div className="flex items-center gap-2.5 overflow-visible">
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="relative h-9 w-9 flex items-center justify-center overflow-visible"
-              aria-label="Open SOS Agent"
-            >
-              {/* Radar ping rings — expand outward from logomark */}
-              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out infinite' }} />
-              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 1s infinite' }} />
-              <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 2s infinite' }} />
-              <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
-            </button>
-            <span className="text-[11px] font-medium text-white/70">📍 {locationName}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {!gpsReady && (
-              <button onClick={() => {
-                navigator.geolocation.getCurrentPosition(
-                  p => { setLat(p.coords.latitude); setLng(p.coords.longitude); setGpsReady(true);
-                    mapInstance.current?.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 12 });
-                  },
-                  () => setGpsReady(true), { enableHighAccuracy: true, timeout: 5000 }
-                );
-              }} className="px-2 py-1 rounded-full bg-[#89CFF0]/20 text-[10px] font-bold text-[#89CFF0] backdrop-blur-sm">
-                📍 Share Location
-              </button>
-            )}
-            {/* Notification bell */}
-            <div className="relative">
-              <NotificationBell personId={typeof window !== 'undefined' ? getPersonId() : null} />
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
+          {/* Left: logomark */}
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="relative h-9 w-9 flex items-center justify-center overflow-visible"
+            aria-label="Open SOS Agent"
+          >
+            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out infinite' }} />
+            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 1s infinite' }} />
+            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 2s infinite' }} />
+            <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
+          </button>
+
+          {/* Center: status chip + location */}
+          <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm pointer-events-auto">
               <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>
               <span className="text-[10px] font-bold text-white">{STATUS_MAP[status]?.label}</span>
             </div>
+            <span className="text-[11px] font-medium text-white/70 mt-0.5">📍 {locationName}</span>
+          </div>
+
+          {/* Right: notification bell */}
+          <div className="relative">
+            <NotificationBell personId={typeof window !== 'undefined' ? getPersonId() : null} />
           </div>
         </div>
       </div>
