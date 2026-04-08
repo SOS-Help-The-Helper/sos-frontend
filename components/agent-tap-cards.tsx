@@ -31,12 +31,12 @@ export function TapCardGrid({ options, columns = 3, multiSelect, selected = [], 
           const isSelected = selected.includes(opt.id);
           return (
             <button key={opt.id} onClick={() => onSelect(opt.id)}
-              className={`flex flex-col items-center justify-center gap-1 py-3 rounded-xl border transition-all active:scale-[0.96] ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg border transition-all active:scale-[0.96] ${
                 isSelected ? 'border-sos-red-400 bg-sos-red-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'
               }`}>
               {isSelected && multiSelect && <span className="absolute top-1 right-1 text-[9px] text-sos-red-400">✓</span>}
-              <span className="text-xl">{opt.icon}</span>
-              <span className="text-[10px] font-semibold text-white">{opt.label}</span>
+              <span className="text-base">{opt.icon}</span>
+              <span className="text-[9px] font-semibold text-white">{opt.label}</span>
             </button>
           );
         })}
