@@ -107,6 +107,7 @@ export default function CitizenMapPage() {
     if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     if (!MAPBOX_TOKEN) return;
     let glowFrame = 0;
+    let destroyed = false;
 
     const initMap = async () => {
       const mapboxgl = (await import('mapbox-gl')).default;
@@ -121,6 +122,7 @@ export default function CitizenMapPage() {
       });
       // Navigation control removed — users pinch-to-zoom on mobile
       mapInstance.current = map;
+      map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
         // Load data INSIDE map.on('load') so we don't miss the event
@@ -252,19 +254,22 @@ export default function CitizenMapPage() {
 
         // === CLUSTER GLOW ANIMATION ===
         const animateGlow = () => {
-          const t = Date.now() / 1000;
-          const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
-          const glowLayers = [
-            { id: 'requests-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
-            { id: 'resources-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
-            { id: 'reports-cluster-glow', baseRadius: [29, 40, 50], baseOpacity: 0.2 },
-          ];
-          glowLayers.forEach(({ id, baseRadius, baseOpacity }) => {
-            if (!map.getLayer(id)) return;
-            const scale = 1 + pulse * 0.3;
-            map.setPaintProperty(id, 'circle-radius', ['step', ['get', 'point_count'], baseRadius[0] * scale, 10, baseRadius[1] * scale, 50, baseRadius[2] * scale]);
-            map.setPaintProperty(id, 'circle-opacity', baseOpacity * (0.6 + pulse * 0.4));
-          });
+          if (destroyed) return;
+          try {
+            const t = Date.now() / 1000;
+            const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+            const glowLayers = [
+              { id: 'requests-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+              { id: 'resources-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+              { id: 'reports-cluster-glow', baseRadius: [29, 40, 50], baseOpacity: 0.2 },
+            ];
+            glowLayers.forEach(({ id, baseRadius, baseOpacity }) => {
+              if (!map.getLayer(id)) return;
+              const scale = 1 + pulse * 0.3;
+              map.setPaintProperty(id, 'circle-radius', ['step', ['get', 'point_count'], baseRadius[0] * scale, 10, baseRadius[1] * scale, 50, baseRadius[2] * scale]);
+              map.setPaintProperty(id, 'circle-opacity', baseOpacity * (0.6 + pulse * 0.4));
+            });
+          } catch { /* map destroyed or style changed */ }
           glowFrame = requestAnimationFrame(animateGlow);
         };
         animateGlow();
@@ -293,7 +298,7 @@ export default function CitizenMapPage() {
             const clusterId = features[0].properties?.cluster_id;
             const sourceName = layer.replace('-clusters', '-source');
             (map.getSource(sourceName) as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-              if (err) return;
+              if (err || zoom == null) return;
               map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
             });
           });
@@ -319,7 +324,7 @@ export default function CitizenMapPage() {
     };
 
     initMap();
-    return () => { cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [isAdmin]);
 
   // Map command subscription (for search results)
@@ -356,41 +361,46 @@ export default function CitizenMapPage() {
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
 
         // Show search results using their natural colors (blue for resources, red for requests)
-        const resultFeatures = cmd.results.map(r => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [r.lng, r.lat] },
-          properties: { id: r.id, name: r.name, category: r.category, source_type: r.source, type: r.source === 'sos' ? 'request' : 'resource' },
-        }));
+        try {
+          const resultFeatures = cmd.results.filter(r => r.lng != null && r.lat != null).map(r => ({
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [r.lng, r.lat] },
+            properties: { id: r.id, name: r.name, category: r.category, source_type: r.source, type: r.source === 'sos' ? 'request' : 'resource' },
+          }));
 
-        if (map.getSource('search-results-source')) {
-          (map.getSource('search-results-source') as any).setData({ type: 'FeatureCollection', features: resultFeatures });
-        } else {
-          map.addSource('search-results-source', { type: 'geojson', data: { type: 'FeatureCollection', features: resultFeatures } });
-          map.addLayer({ id: 'search-results-points', type: 'circle', source: 'search-results-source',
-            paint: {
-              'circle-color': ['match', ['get', 'type'], 'request', '#EF4E4B', 'resource', '#89CFF0', '#89CFF0'],
-              'circle-radius': 10, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff'
-            } });
-          // Click handler for search result pins
-          map.on('click', 'search-results-points', (e: any) => {
-            if (!e.features?.length) return;
-            layerClickedRef.current = true;
-            const props = e.features[0].properties;
-            setSelectedPin({ type: props.type === 'request' ? 'request' : 'resource', id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
-            setDetailMode('card');
-            setMatchMode(false);
-          });
-          map.on('mouseenter', 'search-results-points', () => { map.getCanvas().style.cursor = 'pointer'; });
-          map.on('mouseleave', 'search-results-points', () => { map.getCanvas().style.cursor = ''; });
-        }
+          if (map.getSource('search-results-source')) {
+            (map.getSource('search-results-source') as any).setData({ type: 'FeatureCollection', features: resultFeatures });
+          } else {
+            map.addSource('search-results-source', { type: 'geojson', data: { type: 'FeatureCollection', features: resultFeatures } });
+            map.addLayer({ id: 'search-results-points', type: 'circle', source: 'search-results-source',
+              paint: {
+                'circle-color': ['match', ['get', 'type'], 'request', '#EF4E4B', 'resource', '#89CFF0', '#89CFF0'],
+                'circle-radius': 10, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff'
+              } });
+            // Click handler for search result pins
+            map.on('click', 'search-results-points', (e: any) => {
+              if (!e.features?.length) return;
+              layerClickedRef.current = true;
+              const props = e.features[0].properties;
+              setSelectedPin({ type: props.type === 'request' ? 'request' : 'resource', id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
+              setDetailMode('card');
+              setMatchMode(false);
+            });
+            map.on('mouseenter', 'search-results-points', () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', 'search-results-points', () => { map.getCanvas().style.cursor = ''; });
+          }
 
-        // Auto-fit map to search results
-        const mapboxgl = mapboxglRef.current;
-        if (mapboxgl && cmd.results.length > 0) {
-          const bounds = new mapboxgl.LngLatBounds();
-          cmd.results.forEach((r: MapResult) => bounds.extend([r.lng, r.lat]));
-          map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 800 });
-        }
+          // Auto-fit map to search results
+          const mapboxgl = mapboxglRef.current;
+          if (mapboxgl && cmd.results.length > 0) {
+            const validResults = cmd.results.filter(r => r.lng != null && r.lat != null);
+            if (validResults.length > 0) {
+              const bounds = new mapboxgl.LngLatBounds();
+              validResults.forEach((r: MapResult) => bounds.extend([r.lng, r.lat]));
+              map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 800 });
+            }
+          }
+        } catch (e) { console.warn('Search results render error:', e); }
 
         // Fix 9: Apply category filter to permanent layers
         if (cmd.filterCategory) {
