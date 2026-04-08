@@ -237,9 +237,9 @@ export default function CitizenMapPage() {
         // === USER LOCATION (pulsing) ===
         map.addSource('user-location', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} } });
         map.addLayer({ id: 'user-pulse', type: 'circle', source: 'user-location',
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 20, 'circle-opacity': 0.15 } });
+          paint: { 'circle-color': '#34d399', 'circle-radius': 24, 'circle-opacity': 0.2 } });
         map.addLayer({ id: 'user-dot', type: 'circle', source: 'user-location',
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 6, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
+          paint: { 'circle-color': '#34d399', 'circle-radius': 7, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
 
         // === ALERT GEOMETRIES ===
         alertData.forEach((alert, i) => {
