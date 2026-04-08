@@ -25,6 +25,7 @@ export default function CitizenMapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
+  const mapboxglRef = useRef<any>(null);
 
   const [lat, setLat] = useState(39);
   const [lng, setLng] = useState(-98);
@@ -109,6 +110,7 @@ export default function CitizenMapPage() {
 
     const initMap = async () => {
       const mapboxgl = (await import('mapbox-gl')).default;
+      mapboxglRef.current = mapboxgl;
       await import('mapbox-gl/dist/mapbox-gl.css');
       if (!mapRef.current) return;
       mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -369,6 +371,25 @@ export default function CitizenMapPage() {
               'circle-color': ['match', ['get', 'type'], 'request', '#EF4E4B', 'resource', '#89CFF0', '#89CFF0'],
               'circle-radius': 10, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff'
             } });
+          // Click handler for search result pins
+          map.on('click', 'search-results-points', (e: any) => {
+            if (!e.features?.length) return;
+            layerClickedRef.current = true;
+            const props = e.features[0].properties;
+            setSelectedPin({ type: props.type === 'request' ? 'request' : 'resource', id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
+            setDetailMode('card');
+            setMatchMode(false);
+          });
+          map.on('mouseenter', 'search-results-points', () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', 'search-results-points', () => { map.getCanvas().style.cursor = ''; });
+        }
+
+        // Auto-fit map to search results
+        const mapboxgl = mapboxglRef.current;
+        if (mapboxgl && cmd.results.length > 0) {
+          const bounds = new mapboxgl.LngLatBounds();
+          cmd.results.forEach((r: MapResult) => bounds.extend([r.lng, r.lat]));
+          map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 800 });
         }
 
         // Fix 9: Apply category filter to permanent layers

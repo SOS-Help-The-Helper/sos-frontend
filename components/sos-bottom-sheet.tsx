@@ -40,7 +40,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated) } }),
+    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated), 'x-user-lat': String(userLat || ''), 'x-user-lng': String(userLng || '') } }),
     onError: (err) => console.error('Chat error:', err),
     // No welcome message — agent responds to first user action
   });
