@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
+import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
+import { CitizenHeader } from '@/components/citizen-header';
 import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
-import { NotificationBell } from '@/components/notification-panel';
 
 /**
  * Citizen Match Page — swipe through match PROPOSALS from the matches table.
@@ -70,6 +71,7 @@ export default function MatchPage() {
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
@@ -263,23 +265,9 @@ export default function MatchPage() {
     <CitizenShell>
       <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
         {/* Header */}
-        <div className="relative px-5 py-4 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-4 bg-gradient-to-b from-[#1A3850] to-[#1A3850]/80 flex items-center justify-between flex-shrink-0">
-          {/* Left: logomark */}
-          <a href="/c" className="relative h-9 w-9 flex items-center justify-center" aria-label="Back to map">
-            <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
-          </a>
-
-          {/* Center: title + count */}
-          <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none">
-            <span className="text-sm font-bold text-white">Match</span>
-            {remaining > 0 && <span className="text-[10px] text-white/40">{remaining} available</span>}
-          </div>
-
-          {/* Right: notification bell */}
-          <div className="relative">
-            <NotificationBell personId={personId} />
-          </div>
-        </div>
+        <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName="United States" status="safe" />
+        {/* Spacer for absolutely-positioned header */}
+        <div className="pt-[calc(env(safe-area-inset-top,0px)+72px)] flex-shrink-0" />
 
         {/* Filter chips */}
         <div className="flex gap-1.5 px-4 py-2 bg-[#0F1E2B] flex-shrink-0">
@@ -432,6 +420,8 @@ export default function MatchPage() {
           </div>
         )}
       </div>
+
+      <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" />
     </CitizenShell>
   );
 }

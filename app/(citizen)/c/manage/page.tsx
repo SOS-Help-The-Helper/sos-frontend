@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
+import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
+import { CitizenHeader } from '@/components/citizen-header';
 import { supabase } from '@/lib/supabase-client';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { getPersonId } from '@/lib/person-cookie';
-import { NotificationBell } from '@/components/notification-panel';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   housing: '🏠', food_water: '🍞', medical: '🏥', transportation: '🚗',
@@ -30,6 +31,7 @@ interface EditResourceForm {
 
 export default function ManagePage() {
   const [personId, setPersonId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [score, setScore] = useState<SOSScore | null>(null);
   const [requests, setRequests] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
@@ -177,22 +179,9 @@ export default function ManagePage() {
     <CitizenShell>
       <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
         {/* Header */}
-        <div className="relative px-5 py-4 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-4 bg-gradient-to-b from-[#1A3850] to-[#1A3850]/80 flex items-center justify-between flex-shrink-0">
-          {/* Left: logomark */}
-          <a href="/c" className="relative h-9 w-9 flex items-center justify-center" aria-label="Back to map">
-            <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
-          </a>
-
-          {/* Center: title */}
-          <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none">
-            <span className="text-sm font-bold text-white">Manage</span>
-          </div>
-
-          {/* Right: notification bell */}
-          <div className="relative">
-            <NotificationBell personId={personId} />
-          </div>
-        </div>
+        <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName="United States" status="safe" />
+        {/* Spacer for absolutely-positioned header */}
+        <div className="pt-[calc(env(safe-area-inset-top,0px)+72px)] flex-shrink-0" />
 
         {/* Section tabs */}
         <div className="flex gap-1 px-4 py-3 bg-[#0F1E2B] flex-shrink-0 overflow-x-auto">
@@ -542,6 +531,8 @@ export default function ManagePage() {
           </div>
         )}
       </div>
+
+      <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" />
     </CitizenShell>
   );
 }

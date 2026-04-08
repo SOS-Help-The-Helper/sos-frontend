@@ -8,15 +8,11 @@ import { onMapCommand, clearMapCommand, type MapCommand, type MapResult } from '
 import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter';
 import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
-import { NotificationBell } from '@/components/notification-panel';
+import { CitizenHeader } from '@/components/citizen-header';
 import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
-import { setPersonId, getPersonId } from '@/lib/person-cookie';
+import { setPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-const STATUS_MAP: Record<string, { emoji: string; label: string }> = {
-  safe: { emoji: '🟢', label: 'Safe' }, watch: { emoji: '🟡', label: 'Watch' }, active: { emoji: '🔴', label: 'Active' },
-};
-
 type SelectedPin = {
   type: 'request' | 'resource' | 'report';
   id: string;
@@ -543,43 +539,8 @@ export default function CitizenMapPage() {
 
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
-      {/* Logomark radar-ping keyframes */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes radar-ping {
-          0% { transform: scale(1); opacity: 0.6; }
-          100% { transform: scale(2.5); opacity: 0; }
-        }
-      ` }} />
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
-        <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
-          {/* Left: logomark */}
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="relative h-9 w-9 flex items-center justify-center overflow-visible"
-            aria-label="Open SOS Agent"
-          >
-            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out infinite' }} />
-            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 1s infinite' }} />
-            <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out 2s infinite' }} />
-            <img src="/logomark.svg" alt="SOS" className="h-8 w-8 relative z-10" />
-          </button>
-
-          {/* Center: status chip + location */}
-          <div className="absolute left-0 right-0 flex flex-col items-center pointer-events-none">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm pointer-events-auto">
-              <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>
-              <span className="text-[10px] font-bold text-white">{STATUS_MAP[status]?.label}</span>
-            </div>
-            <span className="text-[11px] font-medium text-white/70 mt-0.5">📍 {locationName}</span>
-          </div>
-
-          {/* Right: notification bell */}
-          <div className="relative">
-            <NotificationBell personId={typeof window !== 'undefined' ? getPersonId() : null} />
-          </div>
-        </div>
-      </div>
+      <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName={locationName} status={status} />
 
       {/* Full screen map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
