@@ -243,7 +243,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
             <input type="text" value={input} onChange={e => setInput(e.target.value)}
               onFocus={() => { if (sheetState === 'collapsed') setSheetState('half'); }}
               placeholder={messages.length === 0 ? "Find resources near me, report an issue..." : "Ask SOS anything..."} disabled={isLoading}
-              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
+              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
             <button type="submit" disabled={!input.trim() || isLoading}
               className="w-9 h-9 rounded-xl bg-sos-red-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
