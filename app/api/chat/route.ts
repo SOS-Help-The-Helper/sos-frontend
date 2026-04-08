@@ -504,6 +504,8 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
               location_name: locationName,
               metadata: { circumstances, circumstanceNotes },
               channel: 'web_ai_sdk',
+              consent_given: true,
+              consent_method: 'web',
             }),
           });
           const result = await resp.json();
@@ -544,6 +546,8 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
               longitude: lng,
               metadata: { helper_type: helperType, skills, availability, distance_miles: distanceMiles },
               channel: 'web_ai_sdk',
+              consent_given: true,
+              consent_method: 'web',
             }),
           });
           const result = await resp.json();

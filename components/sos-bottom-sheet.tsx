@@ -170,6 +170,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
                   if (part.type === 'text' && part.text) {
                     // Hide match context JSON from display
                     if (part.text.trim().startsWith('{"action":"match"')) return null;
+                    if (part.text.trim().startsWith('[SOS_CONFIRMED')) return null;
                     return (
                       <div key={pi} className={`flex ${((msg as any).role === 'user') ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 ${
