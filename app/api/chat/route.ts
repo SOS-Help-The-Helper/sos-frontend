@@ -31,17 +31,20 @@ If not authenticated:
 - These are SOFT prompts. If they decline, move on. Don't repeat.
 
 INTAKE FLOW (I need help):
-1. show_categories (multi-select — user can pick multiple needs)
-2. show_counter (how many people)  
-3. show_circumstances (special needs + free text)
+1. show_categories (multi-select — Housing, Food, Utilities, Supplies)
+2. show_counter (how many people)
+3. show_circumstances (special needs chips multi-select + open text)
 4. get_location (skip if authenticated)
-5. submit_sos with ALL selected categories as array (creates one SOS umbrella with multiple sub-requests)
+5. show_phone_input (skip if authenticated — REQUIRED before submit)
+6. submit_sos with ALL data
 
 HELPER FLOW (I can help):
-1. show_helper_type (3 broad options)
-2. Ask follow-ups conversationally based on their type
-3. get_location + availability
-4. submit_helper
+1. show_categories (multi-select — Housing, Food, Utilities, Supplies, Volunteer, Donate) — pass flow='help'
+2. show_counter (how much capacity / how many people can you help)
+3. show_circumstances (what can you offer + open text 'anything else?')
+4. get_location (skip if authenticated)
+5. show_phone_input (skip if authenticated — REQUIRED before submit)
+6. submit_helper with ALL data
 
 MATCH FLOW (from map pin):
 When you receive JSON with {"action":"match"}: 
@@ -259,22 +262,28 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
     messages,
     tools: {
       show_categories: {
-        description: 'Show disaster need category selection cards. Use when someone says they need help.',
+        description: 'Show disaster need category selection cards. Use when someone says they need help or can help.',
         inputSchema: z.object({
           prompt: z.string().describe('Text to show above the cards'),
+          flow: z.enum(['need', 'help']).optional().describe('Which flow - need shows need categories, help adds Volunteer and Donate'),
         }),
-        execute: async function({ prompt }) {
+        execute: async function({ prompt, flow }) {
+          const options = [
+            { id: 'housing', icon: '🏠', label: 'Housing' },
+            { id: 'food', icon: '🍽️', label: 'Food' },
+            { id: 'utilities', icon: '⚡', label: 'Utilities' },
+            { id: 'supplies', icon: '📦', label: 'Supplies' },
+          ];
+          if (flow === 'help') {
+            options.push(
+              { id: 'volunteer', icon: '🤝', label: 'Volunteer' },
+              { id: 'donate', icon: '💰', label: 'Donate' },
+            );
+          }
           return JSON.stringify({
             __tool: 'show_categories',
             prompt,
-            options: [
-              { id: 'safety', icon: '🆘', label: 'Safety' },
-              { id: 'housing', icon: '🏠', label: 'Housing' },
-              { id: 'food', icon: '🍽️', label: 'Food' },
-              { id: 'health', icon: '💊', label: 'Health' },
-              { id: 'utilities', icon: '⚡', label: 'Utilities' },
-              { id: 'supplies', icon: '📦', label: 'Supplies' },
-            ],
+            options,
             multiSelect: true,
           });
         },
@@ -317,6 +326,8 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
               { id: 'other', icon: '💬', label: 'Tell me more' },
             ],
             multiSelect: true,
+            showFreeText: true,
+            freeTextPlaceholder: 'Anything else you would like to add?',
           });
         },
       },
@@ -332,6 +343,19 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
             __tool: 'get_location',
             prompt,
             forSelf,
+          });
+        },
+      },
+
+      show_phone_input: {
+        description: 'Collect phone number from non-authenticated citizen. Shows a phone input field. Use BEFORE submit_sos or submit_helper when user is not authenticated.',
+        inputSchema: z.object({
+          prompt: z.string().describe('Text above the phone input'),
+        }),
+        execute: async function({ prompt }) {
+          return JSON.stringify({
+            __tool: 'show_phone_input',
+            prompt: prompt || 'What is the best number to reach you?',
           });
         },
       },
@@ -523,6 +547,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
 
           return JSON.stringify({
             __tool: 'submit_confirmation',
+            __mapCommand: resp.ok ? { type: 'focus' as const, center: [lng, lat] as [number, number], zoom: 14 } : undefined,
             success: resp.ok,
             title: resp.ok ? 'Helper Profile Created' : 'Submission Failed',
             message: resp.ok ? 'You\'re registered as a helper. We\'ll notify you when someone nearby needs help.' : 'Something went wrong. Please try again.',
