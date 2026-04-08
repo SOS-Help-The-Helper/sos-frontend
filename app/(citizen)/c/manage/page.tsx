@@ -187,10 +187,10 @@ export default function ManagePage() {
         {section !== 'overview' && (
           <div className="flex gap-1 px-4 py-3 bg-[#0F1E2B] flex-shrink-0 overflow-x-auto">
             <button onClick={() => setSection('overview')}
-              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/5 text-white/40">
+              className="px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap bg-white/5 text-white/40">
               ← Back
             </button>
-            <span className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white/15 text-white">
+            <span className="px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap bg-white/15 text-white">
               {sections.find(s => s.id === section)?.label}
             </span>
           </div>
