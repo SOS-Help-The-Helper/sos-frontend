@@ -545,7 +545,6 @@ function SubmitConfirmation({ data }: { data: any }) {
         <img src="/logomark.svg" alt="SOS" className="relative z-10" style={{ width: 96, height: 96 }} />
       </div>
       <p className="text-white text-xl font-bold mt-6">SOS Submitted</p>
-      {data.sosId && <p className="text-white/70 text-sm mt-1 font-mono">{data.sosId}</p>}
       <p className="text-white/50 text-sm mt-3">Searching for help near you...</p>
     </div>
   );
