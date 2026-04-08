@@ -571,6 +571,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
                 category: c,
                 urgency: urgency || 'high',
                 taxonomy_code: taxonomy_codes?.[i] || undefined,
+                description: `${c.replace(/_/g, ' ')} needed for household of ${count || 1}${circumstances?.length ? '. ' + circumstances.join(', ') : ''}${circumstanceNotes ? '. ' + circumstanceNotes : ''}`,
               })),
               household_size: parseInt(count) || 1,
               latitude: lat,

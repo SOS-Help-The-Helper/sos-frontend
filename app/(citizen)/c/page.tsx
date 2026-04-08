@@ -426,7 +426,7 @@ export default function CitizenMapPage() {
             const features = [...(existing.features || []), {
               type: 'Feature',
               geometry: { type: 'Point', coordinates: cmd.center },
-              properties: { id: 'new-submission', category: (cmd as any).category || 'housing', urgency: 'high', status: 'active', type: 'request' },
+              properties: { id: 'new-submission', category: (cmd as any).category || 'housing', urgency: 'high', status: 'active', type: 'request', details: `${((cmd as any).category || 'housing').replace(/_/g, ' ')} request submitted just now` },
             }];
             src.setData({ type: 'FeatureCollection', features });
           } catch {}
