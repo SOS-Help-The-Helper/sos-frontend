@@ -410,7 +410,30 @@ function AvailabilityChips({ data, onSelect }: { data: any; onSelect: (msg: stri
   );
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  food_water: '🍽️', food: '🍽️', housing: '🏠', shelter: '🏠', health: '🏥', medical: '🏥',
+  mental_health: '🧠', transport: '🚗', transportation: '🚗', clothing: '👕', utilities: '💡',
+  legal: '⚖️', employment: '💼', education: '📚', childcare: '👶', financial: '💰',
+  supplies: '📦', communication: '📱', pets: '🐾', debris: '🧹', volunteer: '🤝',
+};
+
+function categoryEmoji(cat: string): string {
+  if (!cat) return '📍';
+  const key = cat.toLowerCase().split('.').pop() || cat.toLowerCase();
+  return CATEGORY_EMOJI[key] || CATEGORY_EMOJI[key.replace(/_/g, '')] || '📍';
+}
+
+function sourceLabel(source: string): { text: string; cls: string } | null {
+  switch (source) {
+    case 'sos': case 'citizen': return { text: 'Community', cls: 'bg-green-500/20 text-green-400' };
+    case 'partner': return { text: 'Partner', cls: 'bg-[#89CFF0]/20 text-[#89CFF0]' };
+    case 'request': return { text: 'Request', cls: 'bg-amber-500/20 text-amber-400' };
+    default: return null;
+  }
+}
+
 function SearchResults({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
+  const keyword = data.query || data.category || '';
   const results: MapResult[] = (data.results || []).map((r: any, i: number) => ({
     id: r.id || `r-${i}`, name: r.name, lat: r.lat || r.latitude, lng: r.lng || r.longitude,
     category: r.category || '', distance_km: r.distance_km || r.distance,
@@ -430,22 +453,99 @@ function SearchResults({ data, onSelect }: { data: any; onSelect: (msg: string) 
     emitMapCommand({
       type: 'show_results', results,
       fitBounds: { sw: [minLat - lp, minLng - lgp], ne: [maxLat + lp, maxLng + lgp] },
-      query: data.query || '',
+      query: keyword,
       filterCategory: data.category || data.query || '',
     });
   }
 
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[10px] text-white/40">{results.length} results on map</p>
-      {results.slice(0, 3).map((r, i) => (
-        <button key={r.id} onClick={() => onSelect(`Tell me about ${r.name}`)}
-          className="w-full text-left bg-white/5 border border-white/10 rounded-lg p-2 hover:bg-white/10 transition-colors">
-          <p className="text-xs font-bold text-white truncate">{r.name}</p>
-          <p className="text-[9px] text-white/40">{r.distance_km != null ? `${Math.round(r.distance_km * 0.621 * 10) / 10}mi · ` : ''}{r.category}</p>
+  // No results
+  if (results.length === 0) {
+    return (
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center space-y-2">
+        <p className="text-sm text-white/60">No results found{keyword ? ` for "${keyword}"` : ''}.</p>
+        <p className="text-[10px] text-white/40">Try a broader search or expand your area.</p>
+        <button
+          onClick={() => onSelect(`Search ${keyword || 'resources'} within 50 miles`)}
+          className="mt-1 px-3 py-1.5 rounded-lg bg-[#89CFF0]/20 text-[#89CFF0] text-[11px] font-medium hover:bg-[#89CFF0]/30 transition-colors"
+        >
+          Expand search to 50 miles
         </button>
-      ))}
-      {results.length > 3 && <p className="text-[9px] text-white/30">+{results.length - 3} more on map</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Result count header */}
+      <p className="text-[11px] text-white/50">
+        🔍 {results.length} result{results.length !== 1 ? 's' : ''}{keyword ? ` for "${keyword}"` : ''} on map
+      </p>
+
+      {/* Result cards */}
+      {results.slice(0, 5).map((r) => {
+        const distMi = r.distance_km != null ? Math.round(r.distance_km * 0.621 * 10) / 10 : null;
+        const src = sourceLabel(r.source);
+        return (
+          <div key={r.id} className="bg-white/5 border border-white/10 rounded-xl p-2.5 space-y-1.5">
+            {/* Top row: icon + name + badges */}
+            <div className="flex items-start gap-2">
+              <span className="text-base leading-none mt-0.5 flex-shrink-0">{categoryEmoji(r.category)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white truncate">{r.name}</p>
+                {r.description && (
+                  <p className="text-[10px] text-white/40 truncate">{r.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {distMi != null && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#89CFF0]/15 text-[#89CFF0] font-medium whitespace-nowrap">
+                    {distMi} mi
+                  </span>
+                )}
+                {src && (
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${src.cls}`}>
+                    {src.text}
+                  </span>
+                )}
+              </div>
+            </div>
+            {/* Actions */}
+            <div className="flex gap-1.5 pl-6">
+              <button
+                onClick={() => {
+                  emitMapCommand({ type: 'focus', center: [r.lng, r.lat], zoom: 15 });
+                }}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+              >
+                📍 Show on map
+              </button>
+              <button
+                onClick={() => onSelect(`Tell me about ${r.name}`)}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+              >
+                Details
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      {results.length > 5 && (
+        <p className="text-[9px] text-white/30 text-center">+{results.length - 5} more on map</p>
+      )}
+
+      {/* Few results prompt */}
+      {results.length > 0 && results.length < 3 && (
+        <p className="text-[10px] text-white/40 text-center pt-1">
+          Few results nearby.{' '}
+          <button
+            onClick={() => onSelect(`Search ${keyword || 'resources'} within 50 miles`)}
+            className="text-[#89CFF0] hover:underline"
+          >
+            Expand your search area?
+          </button>
+        </p>
+      )}
     </div>
   );
 }
