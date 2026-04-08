@@ -496,6 +496,8 @@ function SubmitConfirmation({ data }: { data: any }) {
     const fadeTimer = setTimeout(() => setFading(true), 2000);
     const removeTimer = setTimeout(() => {
       setVisible(false);
+      // Close the agent sheet so map is visible
+      window.dispatchEvent(new CustomEvent('sos-close-sheet'));
       // Fire map command after overlay clears
       if (data.__mapCommand) {
         emitMapCommand(data.__mapCommand);

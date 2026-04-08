@@ -56,6 +56,13 @@ export default function CitizenMapPage() {
       console.log('Set sos-person-id:', pid);
     }
   }, []);
+  // Close sheet when submission animation completes
+  useEffect(() => {
+    const handler = () => { setSheetOpen(false); setMatchMode(false); };
+    window.addEventListener('sos-close-sheet', handler);
+    return () => window.removeEventListener('sos-close-sheet', handler);
+  }, []);
+
   const hasExtreme = alerts.some(a => a.severity === 'extreme' || a.severity === 'severe');
   const hasWatch = alerts.some(a => a.severity === 'moderate');
   const status = hasExtreme ? 'active' : hasWatch || alerts.length > 0 ? 'watch' : 'safe';
