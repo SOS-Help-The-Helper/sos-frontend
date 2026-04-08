@@ -230,8 +230,6 @@ function CategoryCards({ data, onSelect }: { data: any; onSelect: (msg: string) 
             onSelect(`I need help with ${opt?.label || id}`);
           }
         }}
-        freeTextPlaceholder="Or describe what's going on..."
-        onFreeText={onSelect}
       />
       {selected.length > 1 && (
         <button onClick={() => {
