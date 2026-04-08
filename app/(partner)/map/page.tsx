@@ -31,7 +31,7 @@ function MapContent() {
   const mapInstance = useRef<any>(null);
   const layerClickedRef = useRef(false);
   const customPinMarkersRef = useRef<any[]>([]);
-  const { effectiveOrgId } = useViewContext();
+  const { effectiveOrgId, effectiveOrgType } = useViewContext();
   const { orgId } = useAuthContext();
   const [requests, setRequests] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
@@ -66,7 +66,8 @@ function MapContent() {
     async function loadData() {
       let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source, person_id, household_size').not('latitude', 'is', null);
       let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
-      if (effectiveOrgId) {
+      // Coordination orgs see all network data; other orgs see only their own
+      if (effectiveOrgId && effectiveOrgType !== 'coordination') {
         reqQuery = reqQuery.eq('org_id', effectiveOrgId);
         resQuery = resQuery.eq('org_id', effectiveOrgId);
       }
