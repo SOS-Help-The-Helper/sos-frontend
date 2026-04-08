@@ -38,7 +38,7 @@ const allNavItems = [
   { path: '/capabilities', label: 'Capabilities', icon: Wrench, adminOnly: false, vendorOnly: true },
   { path: '/revenue', label: 'Revenue', icon: DollarSign, adminOnly: false, vendorOnly: true },
   { path: '/view', label: 'View As', icon: Eye, adminOnly: true, vendorOnly: false },
-  { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true, vendorOnly: false },
+  { path: '/organizations', label: 'Network', icon: Building2, adminOnly: false, vendorOnly: false, networkOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true, vendorOnly: false },
 ];
 
@@ -59,8 +59,9 @@ export function Sidebar() {
 
   const isVendor = effectiveOrgType === 'vendor';
   const isLogistics = effectiveOrgType === 'transport_housing';
+  const hasNetworkView = portalConfig.features.networkView;
   const navItems = allNavItems
-    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin) && (!(item as any).logisticsOnly || isLogistics || isAdmin))
+    .filter(item => (isAdmin || !item.adminOnly) && (!item.vendorOnly || isVendor || isAdmin) && (!(item as any).logisticsOnly || isLogistics || isAdmin) && (!(item as any).networkOnly || hasNetworkView || isAdmin))
     .map(item => {
       const configKey = LABEL_MAP[item.path];
       if (configKey && portalConfig.labels[configKey]) {

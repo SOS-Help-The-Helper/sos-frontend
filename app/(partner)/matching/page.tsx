@@ -13,6 +13,7 @@ import { getScopedMatches } from '@/lib/scoped-queries';
 import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
+import { getPortalConfig } from '@/lib/portal-config';
 import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
 import { BidForm } from '@/components/bid-form';
 import { AdminMatchView } from '@/components/admin-match-view';
@@ -172,6 +173,7 @@ function Matching() {
   // Determine org type from view context or auth
   const isVendorView = effectiveOrgType === 'vendor';
   const currentVendorJob = vendorJobs[vendorSwipeIndex];
+  const portalConfig = getPortalConfig(effectiveOrgType);
 
   return (
     <DashboardShell
@@ -311,8 +313,8 @@ function Matching() {
               key={`match-${swipeIndex}`}
               onAccept={handleSwipeAccept}
               onDecline={handleSwipeDecline}
-              acceptLabel={effectiveOrgType === 'vendor' ? 'Bid' : 'Accept'}
-              declineLabel={effectiveOrgType === 'vendor' ? 'Pass' : 'Decline'}
+              acceptLabel={portalConfig.matchCard.acceptLabel}
+              declineLabel={portalConfig.matchCard.declineLabel}
             >
               <MatchSwipeContent
                 match={currentSwipeMatch}

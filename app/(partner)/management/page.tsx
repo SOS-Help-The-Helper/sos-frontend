@@ -99,6 +99,7 @@ export default function Management() {
 
   // Vendor-specific management
   const isVendorView = effectiveOrgType === 'vendor';
+  const showVendorJobs = isAdmin || effectiveOrgType === 'vendor';
   if (isVendorView) {
     return (
       <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
@@ -163,6 +164,7 @@ export default function Management() {
         >
           <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Capacity</span>
         </button>
+        {showVendorJobs && (
         <button
           onClick={() => { setTab('vendor_jobs'); setFilter('all'); }}
           className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
@@ -173,6 +175,7 @@ export default function Management() {
         >
           💼 Vendor Jobs ({vendorJobs.length})
         </button>
+        )}
       </div>
 
       {/* Vendor Jobs Tab */}

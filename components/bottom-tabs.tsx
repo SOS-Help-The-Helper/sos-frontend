@@ -32,7 +32,7 @@ const moreTabs = [
   { path: '/management', label: 'Management', icon: ClipboardList, adminOnly: false },
   { path: '/reporting', label: 'Reports', icon: BarChart3, adminOnly: false },
   { path: '/view', label: 'View As', icon: Eye, adminOnly: true },
-  { path: '/organizations', label: 'Organizations', icon: Building2, adminOnly: true },
+  { path: '/organizations', label: 'Network', icon: Building2, adminOnly: false, networkOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
 
@@ -50,8 +50,9 @@ export function BottomTabs() {
   };
 
   const isLogistics = effectiveOrgType === 'transport_housing';
+  const hasNetworkView = portalConfig.features.networkView;
   const isMoreActive = moreTabs.some(t => isActive(t.path));
-  const filteredMore = moreTabs.filter(t => (isAdmin || !t.adminOnly) && (!(t as any).logisticsOnly || isLogistics || isAdmin));
+  const filteredMore = moreTabs.filter(t => (isAdmin || !t.adminOnly) && (!(t as any).logisticsOnly || isLogistics || isAdmin) && (!(t as any).networkOnly || hasNetworkView || isAdmin));
 
   return (
     <>
