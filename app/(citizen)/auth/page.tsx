@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { sendOTP, verifyOTP } from '@/packages/auth/phone-auth';
 import { useRouter } from 'next/navigation';
+import { setPersonId } from '@/lib/person-cookie';
 
 type Step = 'phone' | 'otp' | 'verifying';
 
@@ -46,7 +47,7 @@ export default function CitizenAuth() {
     if (result.success) {
       // Store person ID in localStorage for citizen context
       if (result.personId) {
-        localStorage.setItem('sos-person-id', result.personId);
+        setPersonId(result.personId);
         // Convert referral if one was stored
         const refCode = localStorage.getItem('sos-referral-code');
         if (refCode) {

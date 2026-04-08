@@ -10,6 +10,7 @@ import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { NotificationBell } from '@/components/notification-panel';
 import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
+import { setPersonId, getPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 const STATUS_MAP: Record<string, { emoji: string; label: string }> = {
@@ -55,7 +56,7 @@ export default function CitizenMapPage() {
     const params = new URLSearchParams(window.location.search);
     const pid = params.get('pid');
     if (pid) {
-      localStorage.setItem('sos-person-id', pid);
+      setPersonId(pid);
       console.log('Set sos-person-id:', pid);
     }
   }, []);
@@ -581,7 +582,7 @@ export default function CitizenMapPage() {
             )}
             {/* Notification bell */}
             <div className="relative">
-              <NotificationBell personId={typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null} />
+              <NotificationBell personId={typeof window !== 'undefined' ? getPersonId() : null} />
             </div>
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
               <span className="text-xs">{STATUS_MAP[status]?.emoji}</span>

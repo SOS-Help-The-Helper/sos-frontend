@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { AIToolRenderer } from '@/components/ai-tool-renderer';
+import { getPersonId } from '@/lib/person-cookie';
 
 type Step = 'who' | 'what' | 'chat';
 type FlowType = 'survivor' | 'donor' | 'volunteer';
@@ -21,7 +22,7 @@ export default function ErvIntakePage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   const transport = useRef(new DefaultChatTransport({
     api: '/api/chat',

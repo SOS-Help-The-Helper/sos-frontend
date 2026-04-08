@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { supabase } from '@/lib/supabase-client';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
+import { getPersonId } from '@/lib/person-cookie';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   housing: '🏠', food_water: '🍞', medical: '🏥', transportation: '🚗',
@@ -20,7 +21,7 @@ export default function ManagePage() {
   const [section, setSection] = useState<'overview' | 'requests' | 'resources' | 'matches'>('overview');
 
   useEffect(() => {
-    const pid = localStorage.getItem('sos-person-id');
+    const pid = getPersonId();
     setPersonId(pid);
     if (pid) loadData(pid);
 

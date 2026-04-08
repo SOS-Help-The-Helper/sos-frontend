@@ -511,6 +511,7 @@ RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic.${er
             __mapCommand: resp.ok ? { type: 'focus' as const, center: [lng, lat] as [number, number], zoom: 14 } : undefined,
             success: resp.ok,
             sosId: result.sos_id,
+            personId: result.person_id || undefined,
             lat,
             lng,
             category: categories[0],

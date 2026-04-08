@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
+import { getPersonId } from '@/lib/person-cookie';
 
 interface LeaderboardEntry {
   id: string;
@@ -19,7 +20,7 @@ export default function LeaderboardPage() {
   const [myRank, setMyRank] = useState<number | null>(null);
   const [myScore, setMyScore] = useState(0);
   const [loading, setLoading] = useState(true);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
     async function load() {

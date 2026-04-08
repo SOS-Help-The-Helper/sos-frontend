@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
+import { getPersonId } from '@/lib/person-cookie';
 
 const STATUS_PIPELINE = [
   { id: 'assigned', label: 'Assigned', icon: '📋' },
@@ -54,7 +55,7 @@ function DriverContent() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
     if (!runId) { setLoading(false); return; }

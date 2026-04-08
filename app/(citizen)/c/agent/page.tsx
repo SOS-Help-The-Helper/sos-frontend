@@ -9,6 +9,7 @@ import { QuickChips } from '@/components/agent-tap-cards';
 import { AIToolRenderer } from '@/components/ai-tool-renderer';
 import { loadChatHistory, saveChatHistoryDebounced } from '@/lib/chat-persistence';
 import { getPersonContext } from '@/lib/person-context';
+import { getPersonId } from '@/lib/person-cookie';
 
 const QUICK_ACTIONS = [
   { id: 'help', label: 'I Need Help', icon: '🔴' },
@@ -26,14 +27,14 @@ function AgentContent() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   const { messages, sendMessage, status, error: chatError } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       headers: {
-        'x-person-id': (typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : '') || '',
-        'x-authenticated': (typeof window !== 'undefined' && localStorage.getItem('sos-person-id')) ? 'true' : 'false',
+        'x-person-id': (typeof window !== 'undefined' ? getPersonId() : '') || '',
+        'x-authenticated': (typeof window !== 'undefined' && getPersonId()) ? 'true' : 'false',
       },
     }),
   });

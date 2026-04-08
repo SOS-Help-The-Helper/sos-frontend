@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { TapCardGrid, QuickChips, CounterCards, ToggleChips } from './agent-tap-cards';
 import { emitMapCommand, type MapResult } from '@/lib/map-commands';
 import { getSOSScore } from '@/lib/citizen-api';
+import { setPersonId } from '@/lib/person-cookie';
 
 interface ToolRendererProps {
   toolData: any; // parsed JSON from tool result
@@ -478,6 +479,12 @@ function ScoreDisplay({ data }: { data: any }) {
 function SubmitConfirmation({ data }: { data: any }) {
   const [visible, setVisible] = useState(data.success !== false);
   const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (data.personId) {
+      setPersonId(data.personId);
+    }
+  }, [data.personId]);
 
   useEffect(() => {
     if (!visible) return;

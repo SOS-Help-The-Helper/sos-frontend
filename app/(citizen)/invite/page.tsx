@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getPersonId } from '@/lib/person-cookie';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -12,7 +13,7 @@ export default function InvitePage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [stats, setStats] = useState({ invited: 0, signedUp: 0, pointsEarned: 0 });
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
     if (!personId) { setLoading(false); return; }

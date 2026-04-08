@@ -6,6 +6,7 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
+import { getPersonId, clearPersonId } from '@/lib/person-cookie';
 
 const READINESS_ITEMS = [
   { id: 'contact1', icon: '📱', label: 'Emergency Contact #1', points: 10 },
@@ -25,7 +26,7 @@ export default function ProfilePage() {
   const [reportCount, setReportCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
     async function load() {
@@ -146,7 +147,7 @@ export default function ProfilePage() {
 
             {/* Sign out */}
             {personId && (
-              <button onClick={() => { localStorage.removeItem('sos-person-id'); router.push('/auth'); }}
+              <button onClick={() => { clearPersonId(); router.push('/auth'); }}
                 className="w-full text-center text-[10px] text-white/20 hover:text-white/40 py-2">
                 Sign out
               </button>

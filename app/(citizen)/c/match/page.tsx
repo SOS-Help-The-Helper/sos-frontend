@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { supabase } from '@/lib/supabase-client';
+import { getPersonId } from '@/lib/person-cookie';
 
 /**
  * Citizen Match Page — swipe through match PROPOSALS from the matches table.
@@ -68,7 +69,7 @@ export default function MatchPage() {
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   useEffect(() => {
     if (personId) loadProposals();

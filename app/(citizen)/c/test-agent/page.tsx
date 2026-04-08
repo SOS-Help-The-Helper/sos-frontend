@@ -5,6 +5,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { AIToolRenderer } from '@/components/ai-tool-renderer';
 import { onMapCommand, type MapCommand } from '@/lib/map-commands';
+import { getPersonId } from '@/lib/person-cookie';
 
 /**
  * Agent Test Page — Debug the full tool chain.
@@ -16,7 +17,7 @@ export default function TestAgentPage() {
   const [mapCmds, setMapCmds] = useState<MapCommand[]>([]);
   const [input, setInput] = useState('');
   const logsRef = useRef<HTMLDivElement>(null);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   const log = (msg: string) => {
     const ts = new Date().toISOString().substring(11, 19);

@@ -2,6 +2,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getPersonId } from '@/lib/person-cookie';
 
 function JoinHandler() {
   const router = useRouter();
@@ -14,7 +15,7 @@ function JoinHandler() {
       localStorage.setItem('sos-referral-code', ref);
     }
     // Redirect to auth (or home if already authed)
-    const personId = localStorage.getItem('sos-person-id');
+    const personId = getPersonId();
     if (personId) {
       // Already signed in — convert referral
       convertReferral(ref, personId);

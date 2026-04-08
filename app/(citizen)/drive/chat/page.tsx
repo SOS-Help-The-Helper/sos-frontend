@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
+import { getPersonId } from '@/lib/person-cookie';
 
 interface Message {
   id: string;
@@ -24,7 +25,7 @@ function CaravanChatContent() {
   const [runName, setRunName] = useState('');
   const [memberCount, setMemberCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const personId = typeof window !== 'undefined' ? localStorage.getItem('sos-person-id') : null;
+  const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
   // Load messages scoped to run_id
   useEffect(() => {
