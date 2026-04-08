@@ -270,11 +270,11 @@ export default function MatchPage() {
         <div className="pt-[calc(env(safe-area-inset-top,0px)+72px)] flex-shrink-0" />
 
         {/* Filter chips */}
-        <div className="flex gap-1.5 px-4 py-2 bg-[#0F1E2B] flex-shrink-0">
+        <div className="flex gap-1.5 justify-center px-4 py-4 bg-[#0F1E2B] flex-shrink-0">
           {([
             { id: 'all', label: 'All' },
-            { id: 'for_me', label: 'Help for me' },
-            { id: 'i_help', label: 'I can help' },
+            { id: 'for_me', label: 'Requests' },
+            { id: 'i_help', label: 'Resources' },
           ] as { id: FilterMode; label: string }[]).map(f => (
             <button key={f.id} onClick={() => { setFilterMode(f.id); setCurrentIndex(0); }}
               className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors ${
