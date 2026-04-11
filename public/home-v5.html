@@ -484,6 +484,7 @@
     .thesis-intro, .vignette-panel, .thesis-reveal-panel { width: 100% !important; height: auto !important; min-height: 50vh; padding: 60px 24px; }
     .thesis-pin-container { height: auto !important; }
     .btn-row-cta { flex-direction: column; align-items: center; }
+    .convergence-grid { grid-template-columns: 1fr !important; }
     .timeline { padding-left: 36px; }
     .invitation-section { padding: 80px 20px; }
   }
@@ -674,14 +675,11 @@
       </div>
     </div>
 
-    <p class="body-lg gs-fade" style="margin-top: 40px;">
-      After Hurricane Helene hit western North Carolina in September 2024, FEMA's resource tracking system crashed under ten times its normal volume.<a href="#cite-3" class="cite">³</a> Search and rescue teams checked the same homes three and four times because two platforms didn't talk to each other. Facebook became the missing persons database — not by design, but because nothing else worked.
+    <p class="body-lg gs-fade" style="margin-top: 40px; font-weight: 300; color: #3d4852;">
+      After Hurricane Helene, FEMA's system crashed under ten times its normal volume.<a href="#cite-3" class="cite">³</a> Search and rescue checked the same homes three times. Facebook became the missing persons database — not by design, but because nothing else worked.
     </p>
-    <p class="body-lg gs-fade" style="margin-top: 16px;">
-      The help pours in — but without coordination, it becomes part of the problem. Volunteers converge on the same visible damage while isolated communities go unserved. Donations pile up in parking lots instead of reaching the people who need them.
-    </p>
-    <p class="body-lg gs-fade" style="margin-top: 16px;">
-      This pattern isn't new. From Katrina to Sandy, Harvey to Maria, the same coordination failures surface every time. The tools break. The data fragments. The people who want to help can't find the people who need it.
+    <p class="body-lg gs-fade" style="margin-top: 16px; font-weight: 300; color: #3d4852;">
+      The help pours in — but without coordination, it becomes part of the problem. Volunteers converge on visible damage while isolated communities go unserved. This pattern repeats every disaster.
     </p>
 
     <div style="margin-top: 48px;">
@@ -696,6 +694,27 @@
       <div class="insight gs-fade">
         <h4>Communities respond first</h4>
         <p>Three out of four people turn to family, neighbors, and friends before any agency.<a href="#cite-6" class="cite">⁶</a> The largest coordination network already exists — it just has no infrastructure.</p>
+      </div>
+    </div>
+    <!-- Three things converging -->
+    <div style="margin-top: 64px;">
+      <p class="label gs-fade" style="text-align: center; margin-bottom: 24px;">Three things are converging at once</p>
+      <div class="convergence-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div class="gs-fade" style="background: #0F1E2B; border-radius: 16px; padding: 32px 24px; text-align: center;">
+          <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Global Crisis</h4>
+          <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">Disasters are accelerating. Federal systems are contracting. The gap between need and response grows every year.</p>
+        </div>
+        <div class="gs-fade" style="background: #0F1E2B; border-radius: 16px; padding: 32px 24px; text-align: center;">
+          <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Community First</h4>
+          <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">Three out of four people turn to neighbors before any agency. The largest response network already exists — it just has no tools.</p>
+        </div>
+        <div class="gs-fade" style="background: #0F1E2B; border-radius: 16px; padding: 32px 24px; text-align: center;">
+          <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="11" opacity="0.4"/></svg>
+          <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Agentic Intelligence</h4>
+          <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">AI coordination — conversational intake, real-time matching, multi-channel orchestration — is feasible today. None of this was possible two years ago.</p>
+        </div>
       </div>
     </div>
   </div>
