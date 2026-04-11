@@ -1058,43 +1058,35 @@
   }
   window.addEventListener('scroll', updateNav, { passive: true });
 
-  // ─── SECTION 1: HERO — GSAP Timeline ───
-  (function() {
+  // ─── SECTION 1: HERO — GSAP Hybrid ───
+  (async function() {
     var hero = document.getElementById('hero');
     var stage = document.getElementById('heroTextStage');
     var mc = document.getElementById('morphContainer');
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    // ── Build Phase 1: typing span ──
-    var typingSpan = document.createElement('span');
-    typingSpan.id = 'typingLine';
-    typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
-    typingSpan.style.paddingRight = '4px';
-    typingSpan.style.animation = 'blink 0.8s step-end infinite';
-    mc.appendChild(typingSpan);
-    mc.style.display = 'block';
-    mc.style.textAlign = 'center';
-
-    // Typing function that returns a promise
-    function typeInto(el, text, speed, highlightWord) {
+    function anim(targets, vars) {
       return new Promise(function(resolve) {
-        var i = 0;
-        var hwStart = text.indexOf(highlightWord);
-        var hwEnd = hwStart + highlightWord.length;
+        vars.onComplete = resolve;
+        gsap.to(targets, vars);
+      });
+    }
+    function wait(ms) {
+      return new Promise(function(r) { setTimeout(r, ms); });
+    }
+    function typeInto(el, text, speed, hlWord) {
+      return new Promise(function(resolve) {
+        var i = 0, hs = text.indexOf(hlWord), he = hs + hlWord.length;
         function step() {
           if (i < text.length) {
             i++;
-            if (hwStart >= 0 && i > hwStart && i <= hwEnd) {
-              el.innerHTML = text.substring(0, hwStart) +
-                '<span style="color:#EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">' +
-                text.substring(hwStart, i) + '</span>';
-            } else if (i > hwEnd) {
-              el.innerHTML = text.substring(0, hwStart) +
-                '<span style="color:#EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">' +
-                highlightWord + '</span>' + text.substring(hwEnd, i);
+            if (hs >= 0 && i > hs && i <= he) {
+              el.innerHTML = text.substring(0,hs) + '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text.substring(hs,i) + '</span>';
+            } else if (i > he) {
+              el.innerHTML = text.substring(0,hs) + '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + hlWord + '</span>' + text.substring(he,i);
             } else {
-              el.textContent = text.substring(0, i);
+              el.textContent = text.substring(0,i);
             }
             setTimeout(step, speed);
           } else {
@@ -1108,155 +1100,110 @@
       });
     }
 
-    // Build word spans for scatter (hidden, positioned over the typed text)
-    var line1Words = ["when", "relief", "systems", "fail,", "people", "stand", "in", "the", "gap"];
-    var p1 = [];
+    await wait(800);
+
+    // ═══ PHASE 1: Typing ═══
+    hero.classList.add('storm-flicker');
+    gsap.set(stage, { opacity: 1 });
+
+    var typingSpan = document.createElement('span');
+    typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
+    typingSpan.style.paddingRight = '4px';
+    typingSpan.style.animation = 'blink 0.8s step-end infinite';
+    mc.style.display = 'block';
+    mc.style.textAlign = 'center';
+    mc.appendChild(typingSpan);
+
+    await typeInto(typingSpan, "when relief systems fail, people stand in the gap", 55, "people");
+
+    // ═══ TRANSITION 1→2: Flicker fade out ═══
+    hero.classList.remove('storm-flicker');
+    // Flicker the text opacity a few times then fade out
+    await anim(mc, { opacity: 0.3, duration: 0.1 });
+    await anim(mc, { opacity: 0.8, duration: 0.1 });
+    await anim(mc, { opacity: 0.15, duration: 0.08 });
+    await anim(mc, { opacity: 0.6, duration: 0.1 });
+    await anim(mc, { opacity: 0, duration: 0.3 });
+
+    // ═══ PHASE 2: Stars materialize ═══
+    mc.innerHTML = '';
+    mc.style.display = 'flex';
+    mc.style.flexWrap = 'wrap';
+    mc.style.justifyContent = 'center';
+    mc.style.gap = '0 0.35em';
+    gsap.set(mc, { opacity: 1 });
 
     var line2 = ["coordination", "is", "the", "missing", "piece."];
-    var p2 = [];
-
-    // ── MASTER TIMELINE ──
-    var tl = gsap.timeline({ delay: 0.8 });
-
-    // PHASE 1: Type "When systems fail, people show up."
-    tl.call(function() { hero.classList.add('storm-flicker'); })
-      .set(stage, { opacity: 1 })
-      .call(function() {
-        typeInto(typingSpan, "when relief systems fail, people stand in the gap", 55, "people");
-      })
-      // Wait for typing to complete (~55ms * 48 chars = ~2.6s)
-      .to({}, { duration: 2.8 })
-
-      // Convert typed text to individual word spans for scatter
-      .call(function() {
-        hero.classList.remove('storm-flicker');
-        mc.innerHTML = '';
-        mc.style.display = 'flex';
-        mc.style.flexWrap = 'wrap';
-        mc.style.justifyContent = 'center';
-        mc.style.gap = '0 0.35em';
-        line1Words.forEach(function(w) {
-          var s = document.createElement('span');
-          s.textContent = w;
-          s.style.display = 'inline-block';
-          if (w === 'people') {
-            s.style.color = '#EF4E4B';
-            s.style.textShadow = '0 0 20px rgba(239,78,75,0.35)';
-          }
-          p1.push(s);
-          mc.appendChild(s);
-        });
-      })
-
-      // SCATTER Phase 1 out
-      .to('.p1word-dummy', { duration: 0.01 }) // tiny delay for DOM to render
-      .call(function() {
-        gsap.to(p1, {
-          x: function() { return gsap.utils.random(-vw*0.35, vw*0.35); },
-          y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
-          rotation: function() { return gsap.utils.random(-90, 90); },
-          opacity: 0, scale: 0.5,
-          duration: 1.0, ease: 'power2.in',
-          stagger: { amount: 0.2, from: 'random' }
-        });
-      })
-      .to({}, { duration: 1.1 })
-
-      // Remove Phase 1, build Phase 2 spans, then continue
-      .call(function() {
-        mc.innerHTML = '';
-        mc.style.display = 'flex';
-        mc.style.flexWrap = 'wrap';
-        mc.style.justifyContent = 'center';
-        mc.style.gap = '0 0.35em';
-        line2.forEach(function(w) {
-          var s = document.createElement('span');
-          s.textContent = w;
-          s.style.display = 'inline-block';
-          s.id = (w === 'coordination') ? 'coordWord' : '';
-          s.className = 'p2span';
-          mc.appendChild(s);
-          gsap.set(s, {
-            x: gsap.utils.random(-vw*0.3, vw*0.3),
-            y: gsap.utils.random(-vh*0.25, vh*0.25),
-            scale: 0.7, opacity: 0
-          });
-        });
-      })
-      // Stars appear (use class selector — spans exist after .call above)
-      .to('.p2span', {
-        opacity: 0.2, duration: 0.5,
-        stagger: { amount: 0.5, from: 'random' },
-        ease: 'power1.in'
-      })
-      // Assemble
-      .to('.p2span', {
-        x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 1.0, ease: 'power2.inOut',
-        stagger: 0.08
-      }, '+=0.1')
-      // coordination glows
-      .to('#coordWord', {
-        color: '#EF4E4B',
-        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
-        duration: 0.4
-      })
-      .call(function() {
-        var cw = document.getElementById('coordWord');
-        if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-      })
-      // Hold
-      .to({}, { duration: 1.2 })
-      // Scatter out
-      .to('.p2span', {
-        x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
-        y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
-        opacity: 0, scale: 0.3,
-        duration: 0.5, ease: 'power2.in',
-        stagger: { amount: 0.08, from: 'random' }
-      })
-      .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3')
-
-      // PHASE 3: Logomark
-      .set('#heroPhase3', { opacity: 1 })
-      .call(function() {
-        var lw = document.getElementById('heroLogoWrap');
-        lw.style.animation = 'motelFlicker 2.2s ease-out forwards';
-      })
-      .to({}, { duration: 1.5 })
-
-      // Pulse rings
-      .call(function() {
-        ['ring1','ring2','ring3'].forEach(function(id, i) {
-          var r = document.getElementById(id);
-          r.style.opacity = '0.5';
-          r.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
-        });
-      })
-
-      // Tagline glow (triggered by pulse reaching it)
-      .call(function() {
-        var tagWords = document.querySelectorAll('.hero-card-text');
-        tagWords.forEach(function(el, i) {
-          setTimeout(function() { el.classList.add('glow'); }, i * 400);
-        });
-      }, null, '+=0.8')
-
-      // Show tagline container then words one by one
-      .set('#heroTagline', { opacity: 1 })
-      .to('.tag-word', {
-        opacity: 1, y: 0, duration: 0.4,
-        stagger: 0.3, ease: 'power2.out'
-      })
-
-      // Scroll hint
-      .to('#scrollHint', { opacity: 1, duration: 0.5 }, '+=0.4')
-      .to('#scrollHint', {
-        y: 8, duration: 1.2, ease: 'power1.inOut',
-        yoyo: true, repeat: -1
+    var p2 = line2.map(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      if (w === 'coordination') s.id = 'coordWord';
+      mc.appendChild(s);
+      gsap.set(s, {
+        x: gsap.utils.random(-vw*0.3, vw*0.3),
+        y: gsap.utils.random(-vh*0.25, vh*0.25),
+        scale: 0.7, opacity: 0
       });
+      return s;
+    });
 
+    // Stars fade in
+    await anim(p2, { opacity: 0.2, duration: 0.5, stagger: { amount: 0.5, from: 'random' }, ease: 'power1.in' });
+    await wait(150);
 
+    // Assemble
+    await anim(p2, { x: 0, y: 0, opacity: 1, scale: 1, duration: 1.0, ease: 'power2.inOut', stagger: 0.08 });
+
+    // "coordination" glows
+    var cw = document.getElementById('coordWord');
+    if (cw) {
+      gsap.to(cw, { color: '#EF4E4B', textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)', duration: 0.4 });
+      await wait(400);
+      cw.style.animation = 'coordPulse 2s ease-in-out infinite';
+    }
+
+    await wait(1000);
+
+    // ═══ TRANSITION 2→3: Flicker fade out ═══
+    await anim(mc, { opacity: 0.3, duration: 0.1 });
+    await anim(mc, { opacity: 0.7, duration: 0.08 });
+    await anim(mc, { opacity: 0.1, duration: 0.1 });
+    await anim(mc, { opacity: 0, duration: 0.25 });
+    gsap.set(stage, { opacity: 0 });
+
+    // ═══ PHASE 3: Logomark ═══
+    gsap.set('#heroPhase3', { opacity: 1 });
+    var logoWrap = document.getElementById('heroLogoWrap');
+    logoWrap.style.animation = 'motelFlicker 2s ease-out forwards';
+    await wait(1500);
+
+    // Pulse rings
+    ['ring1','ring2','ring3'].forEach(function(id, i) {
+      var r = document.getElementById(id);
+      r.style.opacity = '0.5';
+      r.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
+    });
+
+    // Tagline words appear one by one
+    await wait(600);
+    gsap.set('#heroTagline', { opacity: 1 });
+    await anim('.tag-word', { opacity: 1, y: 0, duration: 0.4, stagger: 0.3, ease: 'power2.out' });
+
+    // Tagline words glow red staggered
+    await wait(400);
+    document.querySelectorAll('.hero-card-text').forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('glow'); }, i * 400);
+    });
+
+    // Scroll hint
+    await wait(800);
+    gsap.to('#scrollHint', {
+      opacity: 1, duration: 0.5,
+      onComplete: function() {
+        gsap.to('#scrollHint', { y: 8, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1 });
+      }
+    });
   })();
 
   // ─── NAV: show after scrolling past hero ───
