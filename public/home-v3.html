@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOS — When Systems Fail, People Don't</title>
+<meta name="description" content="SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset ── */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Nunito Sans', -apple-system, sans-serif;
+    color: #1a1a1a;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    transition: background 0.4s, border-color 0.4s;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    background: rgba(15,30,43,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom-color: rgba(255,255,255,0.08);
+  }
+  .nav-inner {
+    max-width: 960px; margin: 0 auto; padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-weight: 700; font-size: 12px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #fff; text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: #fff; }
+
+  /* ── Sections ── */
+  section { padding: 100px 32px; }
+  .narrow { max-width: 720px; margin: 0 auto; }
+  .wide { max-width: 960px; margin: 0 auto; }
+
+  /* ── Typography ── */
+  .serif { font-family: 'DM Serif Display', Georgia, serif; }
+  h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 52px; line-height: 1.1; color: #1a1a1a; font-weight: 400; }
+  h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.15; color: #1a1a1a; font-weight: 400; }
+  h3 { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+
+  .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: #0F1E2B; margin-bottom: 16px;
+  }
+  .body-lg { font-size: 18px; font-weight: 300; color: #666; line-height: 1.8; }
+  .body-sm { font-size: 14px; color: #888; line-height: 1.7; }
+
+  /* ── Backgrounds ── */
+  .bg-white { background: #fff; }
+  .bg-light { background: #f8f9fa; }
+  .bg-navy { background: #0F1E2B; color: #fff; }
+  .bg-navy h1, .bg-navy h2, .bg-navy h3 { color: #fff; }
+  .bg-navy .label { color: #89CFF0; }
+  .bg-navy .body-lg { color: rgba(255,255,255,0.55); }
+  .bg-navy .body-sm { color: rgba(255,255,255,0.35); }
+
+  /* ── Stat cards ── */
+  .stat-row { display: flex; gap: 32px; margin: 48px 0; }
+  .stat-card { flex: 1; }
+  .stat-card .num { font-family: 'DM Serif Display', Georgia, serif; font-size: 56px; color: #0F1E2B; line-height: 1; }
+  .stat-card .desc { font-size: 14px; color: #888; margin-top: 8px; }
+
+  /* ── Insight cards ── */
+  .insight { border-left: 3px solid #0F1E2B; padding: 20px 0 20px 24px; margin: 16px 0; }
+  .insight h4 { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .insight p { font-size: 14px; color: #777; line-height: 1.65; }
+
+  /* ── Ecosystem cards ── */
+  .eco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+  .eco-card {
+    background: #fff; border-radius: 12px; padding: 32px;
+    border: 1px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .eco-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .eco-card h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; font-weight: 400; color: #1a1a1a; margin-bottom: 12px; }
+  .eco-card p { font-size: 14px; color: #777; line-height: 1.65; }
+  .eco-card .eco-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #89CFF0; margin-bottom: 8px;
+  }
+
+  /* ── Coordination contrast ── */
+  .coord-block { margin: 32px 0; padding: 28px; border-radius: 12px; }
+  .coord-fail { background: #fef7f7; border: 1px solid #fce4e4; }
+  .coord-work { background: #f7fdf9; border: 1px solid #ddf3e4; }
+  .coord-block h4 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .coord-fail h4 { color: #c0392b; }
+  .coord-work h4 { color: #27ae60; }
+  .coord-block p { font-size: 15px; color: #555; line-height: 1.7; }
+
+  /* ── Blockquote ── */
+  .pull-quote {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px; line-height: 1.5; color: #1a1a1a;
+    border-left: 3px solid #89CFF0; padding-left: 24px;
+    margin: 40px 0; max-width: 600px;
+  }
+  .bg-navy .pull-quote { color: #fff; border-left-color: #89CFF0; }
+
+  /* ── Thesis vignettes ── */
+  .vignette {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px; line-height: 1.65; color: rgba(255,255,255,0.55);
+    max-width: 520px; margin: 0 auto;
+  }
+  .vignette-item {
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .vignette-item.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Solution flow ── */
+  .flow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 48px; }
+  .flow-card {
+    background: #fff; border-radius: 12px; padding: 28px;
+    border: 1px solid #eee; text-align: center;
+  }
+  .flow-card .flow-icon { font-size: 28px; margin-bottom: 12px; }
+  .flow-card h4 { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; font-weight: 400; margin-bottom: 8px; }
+  .flow-card p { font-size: 13px; color: #888; line-height: 1.6; }
+
+  /* ── Result card ── */
+  .result-card {
+    background: #f8f9fa; border-radius: 12px; padding: 32px;
+    text-align: center; margin-top: 48px; border: 1px solid #eee;
+  }
+  .result-card p { font-size: 17px; color: #555; line-height: 1.8; font-weight: 300; }
+  .result-card strong { color: #0F1E2B; font-weight: 600; }
+  .bg-light .result-card { background: #fff; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-block; padding: 16px 36px; border-radius: 8px;
+    font-size: 14px; font-weight: 700; text-decoration: none;
+    transition: all 0.2s; cursor: pointer; border: none;
+  }
+  .btn-red {
+    background: #e74c3c; color: #fff;
+  }
+  .btn-red:hover {
+    background: #c0392b; transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(231,76,60,0.3);
+  }
+  .btn-outline-white {
+    background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .btn-outline-white:hover { border-color: #fff; }
+  .btn-dark {
+    background: #0F1E2B; color: #fff;
+  }
+  .btn-dark:hover {
+    background: #1a2f40; transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(15,30,43,0.3);
+  }
+
+  /* ── Accent line ── */
+  .accent-line { width: 48px; height: 2px; background: #0F1E2B; margin: 32px 0; }
+  .bg-navy .accent-line { background: #89CFF0; }
+
+  /* ── Values list ── */
+  .values-list { list-style: none; margin-top: 32px; }
+  .values-list li {
+    padding: 12px 0; border-bottom: 1px solid #eee;
+    font-size: 15px; color: #555; line-height: 1.7;
+  }
+  .values-list li:last-child { border-bottom: none; }
+  .values-list li strong { color: #1a1a1a; }
+
+  /* ── Footer ── */
+  footer { text-align: center; padding: 48px 32px; background: #0F1E2B; border-top: 1px solid rgba(255,255,255,0.06); }
+  footer p { font-size: 13px; color: rgba(255,255,255,0.35); }
+  footer a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: #fff; }
+
+  /* ── Fade in (Intersection Observer) ── */
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Stagger children ── */
+  .stagger > * { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .stagger.visible > *:nth-child(1) { transition-delay: 0s; opacity: 1; transform: translateY(0); }
+  .stagger.visible > *:nth-child(2) { transition-delay: 0.15s; opacity: 1; transform: translateY(0); }
+  .stagger.visible > *:nth-child(3) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+  .stagger.visible > *:nth-child(4) { transition-delay: 0.45s; opacity: 1; transform: translateY(0); }
+
+  /* ══════════════════════════════════
+     HERO — Cinematic Flicker Animation
+     ══════════════════════════════════ */
+
+  .hero {
+    position: relative; min-height: 100vh; display: flex; align-items: center;
+    justify-content: center; text-align: center; overflow: hidden;
+    background: #0F1E2B; padding: 0 32px;
+  }
+
+  /* Grain overlay */
+  .hero::before {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    opacity: 0.04; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    animation: grain 0.5s steps(1) infinite;
+  }
+
+  @keyframes grain {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5%, -5%); }
+    40% { transform: translate(3%, 7%); }
+    60% { transform: translate(-7%, 3%); }
+    80% { transform: translate(5%, -3%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 720px; }
+
+  /* Flicker-in animation */
+  @keyframes flickerIn {
+    0%   { opacity: 0; }
+    5%   { opacity: 0.6; }
+    10%  { opacity: 0.1; }
+    15%  { opacity: 0.7; }
+    20%  { opacity: 0; }
+    30%  { opacity: 0.8; }
+    35%  { opacity: 0.2; }
+    45%  { opacity: 0.9; }
+    50%  { opacity: 0.4; }
+    60%  { opacity: 1; }
+    65%  { opacity: 0.7; }
+    75%  { opacity: 1; }
+    80%  { opacity: 0.85; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes subtlePulse {
+    0%, 100% { opacity: 0.6; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(6px); }
+  }
+
+  .hero-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 60px; line-height: 1.08; color: #fff; font-weight: 400;
+    opacity: 0;
+    animation: flickerIn 2.5s ease-out 0.8s forwards;
+  }
+
+  .hero-sub {
+    font-size: 20px; font-weight: 300; color: rgba(255,255,255,0.55);
+    margin-top: 24px; opacity: 0;
+    animation: fadeUp 1.2s ease-out 3.5s forwards;
+  }
+
+  .hero-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: #89CFF0; margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 1s ease-out 0.3s forwards;
+  }
+
+  .scroll-hint {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    z-index: 2; color: rgba(255,255,255,0.35); font-size: 24px;
+    animation: subtlePulse 2.5s ease-in-out infinite;
+    animation-delay: 4.5s; opacity: 0;
+  }
+  .scroll-hint.show { animation: subtlePulse 2.5s ease-in-out infinite; }
+
+  @keyframes scrollHintAppear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ── SOS Logomark Flicker (Section 8) ── */
+  @keyframes logoFlicker {
+    0%   { opacity: 0; }
+    8%   { opacity: 0.5; }
+    12%  { opacity: 0; }
+    20%  { opacity: 0.7; }
+    25%  { opacity: 0.1; }
+    35%  { opacity: 0.8; }
+    40%  { opacity: 0.3; }
+    55%  { opacity: 1; }
+    60%  { opacity: 0.6; }
+    75%  { opacity: 1; }
+    100% { opacity: 1; }
+  }
+
+  .logo-flicker {
+    opacity: 0;
+    animation: logoFlicker 3s ease-out forwards;
+    animation-play-state: paused;
+  }
+  .logo-flicker.animate { animation-play-state: running; }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    h1 { font-size: 36px; }
+    h2 { font-size: 28px; }
+    .hero-title { font-size: 40px; }
+    .hero-sub { font-size: 17px; }
+    .stat-row { flex-direction: column; gap: 24px; }
+    .stat-card .num { font-size: 44px; }
+    .eco-grid { grid-template-columns: 1fr; }
+    .flow-grid { grid-template-columns: 1fr; }
+    section { padding: 72px 20px; }
+    .nav-links { display: none; }
+    .vignette { font-size: 19px; }
+    .pull-quote { font-size: 19px; }
+    .coord-block { padding: 20px; }
+    .btn-row { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ NAV ════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">SOS</a>
+    <div class="nav-links">
+      <a href="#crisis">Crisis</a>
+      <a href="#ecosystem">Ecosystem</a>
+      <a href="#coordination">Coordination</a>
+      <a href="#thesis">Thesis</a>
+      <a href="#solution">Solution</a>
+      <a href="#origin">Origin</a>
+      <a href="#invitation">Join</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════ 1. HERO — Dark, Full Viewport ════════ -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <p class="hero-label">SOS — Coordination Infrastructure</p>
+    <h1 class="hero-title">When systems fail,<br>people don't.</h1>
+    <p class="hero-sub">They just need a way to coordinate.</p>
+  </div>
+  <div class="scroll-hint" id="scrollHint">↓</div>
+</section>
+
+<!-- ════════ 2. CRISIS — White ════════ -->
+<section id="crisis" class="bg-white">
+  <div class="narrow fade-in">
+    <p class="label">The Disaster Within the Disaster</p>
+    <h2>Every major disaster exposes the same failure.</h2>
+    <div class="accent-line"></div>
+
+    <div class="stat-row" style="margin-top: 48px;">
+      <div class="stat-card">
+        <div class="num">305M</div>
+        <div class="desc">people needed humanitarian assistance in 2025</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">68%</div>
+        <div class="desc">didn't receive it</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">$24B</div>
+        <div class="desc">funding shortfall — the largest on record</div>
+      </div>
+    </div>
+
+    <p class="body-lg" style="margin-top: 32px;">
+      After Hurricane Helene hit western North Carolina in September 2024, FEMA's resource tracking system crashed under ten times its normal volume. Search and rescue teams checked the same homes three and four times because two platforms didn't talk to each other. Facebook became the missing persons database — not by design, but because nothing else worked.
+    </p>
+    <p class="body-lg" style="margin-top: 16px;">
+      This pattern isn't new. From Katrina to Sandy, Harvey to Maria, the same coordination failures surface every time. The tools break. The data fragments. The people who want to help can't find the people who need it.
+    </p>
+
+    <div style="margin-top: 48px;">
+      <div class="insight">
+        <h4>Federal capacity is contracting</h4>
+        <p>FEMA has stopped funding non-lifesaving disaster recovery. Twenty states have sued to restart the largest federal preparedness grant program. GAO added disaster assistance to its high-risk list for the first time.</p>
+      </div>
+      <div class="insight">
+        <h4>The technology now exists</h4>
+        <p>AI coordination — conversational intake, real-time matching, multi-channel coordination — is feasible today. None of this was possible two years ago.</p>
+      </div>
+      <div class="insight">
+        <h4>Communities respond first</h4>
+        <p>Three out of four people turn to family, neighbors, and friends before any agency. The largest coordination network already exists — it just has no infrastructure.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 3. ECOSYSTEM — Light Gray ════════ -->
+<section id="ecosystem" class="bg-light">
+  <div class="narrow fade-in">
+    <p class="label">The Help Exists</p>
+    <h2>Everyone responds. They just can't see each other.</h2>
+    <div class="accent-line"></div>
+
+    <div class="eco-grid">
+      <div class="eco-card">
+        <p class="eco-label">Citizens</p>
+        <h3>The actual first responders</h3>
+        <p>Three out of four people turn to neighbors first. Nurses on porches. Teenagers translating. People with trucks. An elderly couple — their own home damaged — gets up before dawn to care for the properties of people who had to evacuate.</p>
+      </div>
+      <div class="eco-card">
+        <p class="eco-label">Nonprofits</p>
+        <h3>Deployed within hours</h3>
+        <p>Four-person staffs managing thousands of requests on spreadsheets. Faith-based groups self-organizing on Facebook. Large networks coordinating across hundreds of member organizations through group chats and word of mouth.</p>
+      </div>
+      <div class="eco-card">
+        <p class="eco-label">Government</p>
+        <h3>Overwhelmed &amp; underfunded</h3>
+        <p>Operations centers overwhelmed. 85 percent of state emergency management agencies cite infrastructure limitations as the primary barrier. Only 25 percent say their staff are ready to manage emergency conditions effectively.</p>
+      </div>
+      <div class="eco-card">
+        <p class="eco-label">The Disaster Economy</p>
+        <h3>$45 billion market</h3>
+        <p>Contractors, suppliers, adjusters, materials vendors. Money flows through communities in waves, and without coordination, much of it flows right back out.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 4. COORDINATION — White ════════ -->
+<section id="coordination" class="bg-white">
+  <div class="narrow fade-in">
+    <p class="label">Coordination as a Force Multiplier</p>
+    <h2>When it works, everything multiplies.</h2>
+    <div class="accent-line"></div>
+
+    <div class="coord-block coord-fail">
+      <h4>When coordination fails</h4>
+      <p>A family needs shelter, food, and medical transport. Without coordination, two organizations never hear about the need. The third shows up a week late. The family called nine hotlines and filled out fifteen applications — to organizations that have no way of knowing what the others have already done. Nobody tracks what was spent. After Katrina, that absence of accountability cost billions in fraud. The system never learns from it.</p>
+    </div>
+
+    <p class="pull-quote">When coordination fails — and today, it fails by default — the cost is measured in lives, in money lost to fraud, in communities that never fully recover, and in helpers who burn out because the system made them carry it alone.</p>
+
+    <div class="coord-block coord-work">
+      <h4>When coordination works</h4>
+      <p>The shelter organization, the food distribution team, and the medical transport volunteer all receive the same match at the same time. One family. Three partners. Connected simultaneously. Each knows what the other is doing. Every dollar is traced from source to outcome. Every contribution is attributed. The fraud surface shrinks because the data trail is auditable. And the system learns — which responses worked fastest, which resources ran dry, which partners delivered.</p>
+    </div>
+
+    <p class="pull-quote">The technology to make this possible didn't exist two years ago. It does now.</p>
+  </div>
+</section>
+
+<!-- ════════ 5. THESIS — Dark, Full Viewport ════════ -->
+<section id="thesis" class="bg-navy" style="min-height: 100vh; display: flex; align-items: center; padding: 120px 32px;">
+  <div class="narrow" style="text-align: center; width: 100%;">
+    <p class="label fade-in">The Thesis</p>
+    <div style="height: 32px;"></div>
+
+    <div class="vignette" id="vignettes">
+      <p class="vignette-item">A displaced family with a truck clears roads.</p>
+      <p class="vignette-item" style="margin-top: 8px;">A nurse in a flood zone triages her neighbors.</p>
+      <p class="vignette-item" style="margin-top: 8px;">A teenager who speaks three languages becomes the translator for miles.</p>
+    </div>
+
+    <div style="height: 48px;"></div>
+    <h1 class="fade-in" style="font-size: 52px; color: #fff;">Everyone is a helper.</h1>
+    <div style="height: 24px;"></div>
+    <p class="fade-in" style="font-size: 16px; color: rgba(255,255,255,0.55); max-width: 460px; margin: 0 auto; line-height: 1.8; font-weight: 300;">
+      Needs and offers coexist on the same person.<br>
+      The pay-it-forward instinct is already there.<br>
+      What they lack is infrastructure.
+    </p>
+    <div style="height: 48px;"></div>
+    <p class="fade-in body-sm" style="color: rgba(255,255,255,0.35);">
+      Everyone is a helper. We help the helpers.
+    </p>
+  </div>
+</section>
+
+<!-- ════════ 6. SOLUTION — Light Gray ════════ -->
+<section id="solution" class="bg-light">
+  <div class="narrow fade-in">
+    <p class="label">Relief as Permaculture</p>
+    <h2>The system learns. The network strengthens. The response accelerates.</h2>
+    <div class="accent-line"></div>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <div class="flow-icon">📱</div>
+        <h4>Multi-Channel Intake</h4>
+        <p>Text, QR, call, web. No app. No account. Works on any phone. People talk naturally — the system extracts the need.</p>
+      </div>
+      <div class="flow-card">
+        <div class="flow-icon">🔄</div>
+        <h4>Both Sides</h4>
+        <p>Need help and give help through the same flow. "I have a truck." "I can translate." "I have three pallets of water."</p>
+      </div>
+      <div class="flow-card">
+        <div class="flow-icon">📍</div>
+        <h4>Closest Match</h4>
+        <p>Capability, capacity, proximity, urgency. One family. Three partners. Coordinated simultaneously.</p>
+      </div>
+      <div class="flow-card">
+        <div class="flow-icon">🤖</div>
+        <h4>AI Coordination Agents</h4>
+        <p>Each partner gets their own agent — trained on their inventory, workflows, and rhythm. Context retained across every conversation.</p>
+      </div>
+      <div class="flow-card">
+        <div class="flow-icon">📊</div>
+        <h4>Intelligence Compounds</h4>
+        <p>Every match traced. Every outcome recorded. Which neighborhoods surge first, which resources run dry, which partners deliver fastest.</p>
+      </div>
+      <div class="flow-card">
+        <div class="flow-icon">💰</div>
+        <h4>Mission-Funded</h4>
+        <p>Revenue from connecting homeowners with vetted contractors funds coordination for people with no insurance, no savings, no safety net.</p>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <p>
+        The system doesn't just respond to disasters — it learns from them. Every cycle feeds the next. The intelligence compounds. The network strengthens.<br><br>
+        <strong>The system sustains itself. Relief as permaculture.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 7. ORIGIN — White ════════ -->
+<section id="origin" class="bg-white">
+  <div class="narrow fade-in">
+    <p class="label">Born in a Hurricane</p>
+    <h2>4,000 missing people on Facebook.<br>No system to find them.</h2>
+    <div class="accent-line"></div>
+
+    <p class="body-lg" style="margin-top: 32px;">
+      SOS started during Hurricane Helene, when our team scraped 4,000 missing persons posts from Facebook because no system existed to track them. Our founder's farmhouse in Burnsville, North Carolina was damaged. He lived in a donated RV for three months. When roads washed out and isolated mountain communities from supplies, neighbors carved access trails through the terrain themselves. The team delivered RVs, brought Starlink terminals to people who'd been cut off for weeks, and started building the coordination tools that should have existed before the storm hit.
+    </p>
+
+    <p class="body-lg" style="margin-top: 16px;">
+      Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026, when we coordinated hundreds of resources across 12 states. Fox Weather featured SOS during the storm, showing how the platform connects people to emergency resources in real time.
+    </p>
+
+    <ul class="values-list" style="margin-top: 48px;">
+      <li><strong>Partners keep their data.</strong> If they leave, it goes with them.</li>
+      <li><strong>Citizens control their privacy.</strong> No profile required. Location data expires.</li>
+      <li><strong>Every coordination decision is logged with reasoning.</strong> Full auditability.</li>
+      <li><strong>SOS doesn't sell data, build profiles, or optimize for engagement.</strong></li>
+      <li><strong>Works for communities, not on them.</strong> That principle is in the architecture.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ════════ 8. INVITATION — Dark, Red Accent ════════ -->
+<section id="invitation" class="bg-navy" style="padding: 120px 32px; text-align: center; position: relative; overflow: hidden;">
+  <!-- Grain overlay -->
+  <div style="position: absolute; inset: 0; opacity: 0.03; pointer-events: none; background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E&quot;); background-repeat: repeat; background-size: 256px 256px;"></div>
+
+  <div class="narrow" style="position: relative; z-index: 2;">
+    <!-- SOS Logomark with flicker -->
+    <div class="logo-flicker" id="logoFlicker" style="margin-bottom: 40px;">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="40" r="38" stroke="#e74c3c" stroke-width="3" fill="none"/>
+        <text x="40" y="48" text-anchor="middle" font-family="DM Serif Display, Georgia, serif" font-size="28" fill="#e74c3c">SOS</text>
+      </svg>
+    </div>
+
+    <h1 class="fade-in" style="font-size: 52px; color: #fff; margin-bottom: 16px;">Are you a helper?</h1>
+    <p class="fade-in" style="font-size: 20px; color: rgba(255,255,255,0.55); font-weight: 300; margin-bottom: 48px;">
+      Join the SOS community.
+    </p>
+
+    <div class="fade-in btn-row" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <a href="/c" class="btn btn-red">I need help</a>
+      <a href="/volunteer" class="btn btn-outline-white">I want to help</a>
+    </div>
+
+    <div style="height: 64px;"></div>
+    <p class="fade-in" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: rgba(255,255,255,0.55);">
+      Everyone is a helper. We help the helpers.
+    </p>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer>
+  <p style="margin-bottom: 12px;">
+    <a href="/" style="font-weight: 700; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5);">SOS</a>
+  </p>
+  <p>
+    <a href="/c">Citizens</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/matching">Partners</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="mailto:info@sos-help.org">Contact</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="#crisis">Sources</a>
+  </p>
+  <p style="margin-top: 16px; font-size: 11px;">
+    sosconnect.org &middot; © 2026 SOS Global
+  </p>
+</footer>
+
+<!-- ════════ SCRIPTS ════════ -->
+<script>
+(function() {
+  // Nav scroll effect
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  // Scroll hint
+  var hint = document.getElementById('scrollHint');
+  setTimeout(function() {
+    hint.style.animation = 'scrollHintAppear 1s ease forwards, subtlePulse 2.5s ease-in-out 1s infinite';
+  }, 4500);
+
+  // Intersection Observer for fade-ins
+  var fadeObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-in').forEach(function(el) {
+    fadeObs.observe(el);
+  });
+
+  // Vignette staggered reveal
+  var vignetteObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        var items = e.target.querySelectorAll('.vignette-item');
+        items.forEach(function(item, i) {
+          setTimeout(function() {
+            item.classList.add('visible');
+          }, i * 600);
+        });
+        vignetteObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  var vig = document.getElementById('vignettes');
+  if (vig) vignetteObs.observe(vig);
+
+  // Logo flicker on scroll into view
+  var logoObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('animate');
+        logoObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  var logo = document.getElementById('logoFlicker');
+  if (logo) logoObs.observe(logo);
+
+  // Stagger observer
+  var staggerObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        staggerObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.stagger').forEach(function(el) {
+    staggerObs.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>
