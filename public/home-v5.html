@@ -522,7 +522,7 @@
     font-family: 'DM Serif Display', Georgia, serif;
   }
   #typedLine1 { font-size: inherit; color: #fff; }
-  #typedLine2 { font-size: inherit; color: rgba(255,255,255,0.55); }
+  #typedLine2 { font-size: inherit; color: #fff; }
 
   @keyframes coordPulse {
     0%, 100% { text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3); }
@@ -574,11 +574,10 @@
     <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
       <img src="/logomark-red.svg" alt="SOS" id="heroLogo" style="height: 120px; width: 120px; margin-bottom: 24px;">
       <span id="heroSosText" style="font-family: 'Nunito Sans', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0;">SOS</span>
+      <div style="height: 48px;"></div>
+      <p id="heroTagline" class="hero-tagline" style="opacity: 0;">Community Coordination Infrastructure</p>
     </div>
-    <!-- Phase 4: Community coordination infrastructure -->
-    <div id="heroPhase4" style="opacity: 0; position: absolute; left: 50%; bottom: 20%; transform: translateX(-50%);">
-      <p class="hero-tagline" style="opacity: 1; transform: none;">Community Coordination Infrastructure</p>
-    </div>
+
   </div>
   <div class="scroll-hint" id="scrollHint">↓</div>
 </section>
@@ -996,8 +995,8 @@
     // Phase 1: Type "When systems fail, people don’t…"
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
     await typeText(document.getElementById('typedLine1'), "When systems fail, people don’t…", 65);
-    await wait(1000);
-    await gsapTo('#heroPhase1', { opacity: 0, duration: 0.8 });
+    await wait(800);
+    await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
 
     // Phase 2: Type "They just need a way to coordinate."
     await gsapTo('#heroPhase2', { opacity: 1, duration: 0.3 });
@@ -1020,7 +1019,7 @@
 
     // Phase 4: Tagline
     await wait(800);
-    gsap.to('#heroPhase4', { opacity: 1, duration: 0.8 });
+    gsap.to('#heroTagline', { opacity: 1, duration: 0.8 });
 
     // Show nav
     await wait(400);
