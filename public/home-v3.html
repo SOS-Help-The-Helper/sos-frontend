@@ -12,7 +12,7 @@
   html { scroll-behavior: smooth; }
   body {
     font-family: 'Nunito Sans', -apple-system, sans-serif;
-    color: #1a1a1a;
+    color: #0F1E2B;
     background: #fff;
     -webkit-font-smoothing: antialiased;
     font-weight: 400;
@@ -56,9 +56,9 @@
 
   /* ── Typography ── */
   .serif { font-family: 'DM Serif Display', Georgia, serif; }
-  h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 52px; line-height: 1.1; color: #1a1a1a; font-weight: 400; }
-  h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.15; color: #1a1a1a; font-weight: 400; }
-  h3 { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 52px; line-height: 1.1; color: #0F1E2B; font-weight: 400; }
+  h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.15; color: #0F1E2B; font-weight: 400; }
+  h3 { font-size: 16px; font-weight: 700; color: #0F1E2B; }
 
   .label {
     font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
@@ -84,7 +84,7 @@
 
   /* ── Insight cards ── */
   .insight { border-left: 3px solid #0F1E2B; padding: 20px 0 20px 24px; margin: 16px 0; }
-  .insight h4 { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+  .insight h4 { font-size: 15px; font-weight: 700; color: #0F1E2B; margin-bottom: 4px; }
   .insight p { font-size: 14px; color: #777; line-height: 1.65; }
 
   /* ── Ecosystem cards ── */
@@ -94,7 +94,7 @@
     border: 1px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
   }
   .eco-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-  .eco-card h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; font-weight: 400; color: #1a1a1a; margin-bottom: 12px; }
+  .eco-card h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; font-weight: 400; color: #0F1E2B; margin-bottom: 12px; }
   .eco-card p { font-size: 14px; color: #777; line-height: 1.65; }
   .eco-card .eco-label {
     font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
@@ -113,7 +113,7 @@
   /* ── Blockquote ── */
   .pull-quote {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 22px; line-height: 1.5; color: #1a1a1a;
+    font-size: 22px; line-height: 1.5; color: #0F1E2B;
     border-left: 3px solid #89CFF0; padding-left: 24px;
     margin: 40px 0; max-width: 600px;
   }
@@ -186,7 +186,7 @@
     font-size: 15px; color: #555; line-height: 1.7;
   }
   .values-list li:last-child { border-bottom: none; }
-  .values-list li strong { color: #1a1a1a; }
+  .values-list li strong { color: #0F1E2B; }
 
   /* ── Footer ── */
   footer { text-align: center; padding: 48px 32px; background: #0F1E2B; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -346,7 +346,7 @@
 <!-- ════════ NAV ════════ -->
 <nav id="navbar">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">SOS</a>
+    <a href="/" class="nav-brand"><img src="/logomark.svg" alt="SOS" style="height:20px;margin-right:8px;vertical-align:middle;display:inline-block;">SOS Global</a>
     <div class="nav-links">
       <a href="#crisis">Crisis</a>
       <a href="#ecosystem">Ecosystem</a>
@@ -579,10 +579,7 @@
   <div class="narrow" style="position: relative; z-index: 2;">
     <!-- SOS Logomark with flicker -->
     <div class="logo-flicker" id="logoFlicker" style="margin-bottom: 40px;">
-      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="40" cy="40" r="38" stroke="#e74c3c" stroke-width="3" fill="none"/>
-        <text x="40" y="48" text-anchor="middle" font-family="DM Serif Display, Georgia, serif" font-size="28" fill="#e74c3c">SOS</text>
-      </svg>
+      <img src="/logomark.svg" alt="SOS" style="height:80px;width:80px;filter:brightness(0) invert(1);">
     </div>
 
     <h1 class="fade-in" style="font-size: 52px; color: #fff; margin-bottom: 16px;">Are you a helper?</h1>
