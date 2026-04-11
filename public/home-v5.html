@@ -1066,17 +1066,51 @@
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    // ── Build Phase 1 words ──
-    var line1 = ["When", "systems", "fail,", "people", "show", "up."];
-    var p1 = line1.map(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.className = 'p1word';
-      gsap.set(s, { opacity: 0, y: 12 });
-      mc.appendChild(s);
-      return s;
-    });
+    // ── Build Phase 1: typing span ──
+    var typingSpan = document.createElement('span');
+    typingSpan.id = 'typingLine';
+    typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
+    typingSpan.style.paddingRight = '4px';
+    typingSpan.style.animation = 'blink 0.8s step-end infinite';
+    mc.appendChild(typingSpan);
+    mc.style.display = 'block';
+    mc.style.textAlign = 'center';
+
+    // Typing function that returns a promise
+    function typeInto(el, text, speed, highlightWord) {
+      return new Promise(function(resolve) {
+        var i = 0;
+        var hwStart = text.indexOf(highlightWord);
+        var hwEnd = hwStart + highlightWord.length;
+        function step() {
+          if (i < text.length) {
+            i++;
+            if (hwStart >= 0 && i > hwStart && i <= hwEnd) {
+              el.innerHTML = text.substring(0, hwStart) +
+                '<span style="color:#EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">' +
+                text.substring(hwStart, i) + '</span>';
+            } else if (i > hwEnd) {
+              el.innerHTML = text.substring(0, hwStart) +
+                '<span style="color:#EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">' +
+                highlightWord + '</span>' + text.substring(hwEnd, i);
+            } else {
+              el.textContent = text.substring(0, i);
+            }
+            setTimeout(step, speed);
+          } else {
+            el.style.borderRight = 'none';
+            el.style.paddingRight = '0';
+            el.style.animation = 'none';
+            resolve();
+          }
+        }
+        step();
+      });
+    }
+
+    // Build word spans for scatter (hidden, positioned over the typed text)
+    var line1Words = ["When", "systems", "fail,", "people", "show", "up."];
+    var p1 = [];
 
     // ── Build Phase 2 words (hidden) ──
     var line2 = ["coordination", "is", "the", "missing", "piece."];
@@ -1094,32 +1128,51 @@
     // ── MASTER TIMELINE ──
     var tl = gsap.timeline({ delay: 0.8 });
 
-    // PHASE 1: Words appear + storm flicker
+    // PHASE 1: Type "When systems fail, people show up."
     tl.call(function() { hero.classList.add('storm-flicker'); })
       .set(stage, { opacity: 1 })
-      .to(p1, {
-        opacity: 1, y: 0, duration: 0.2,
-        stagger: 0.18, ease: 'power2.out'
+      .call(function() {
+        typeInto(typingSpan, "When systems fail, people show up.", 60, "people");
       })
-      // "people" (index 3) glows red
-      .to(p1[3], {
-        color: '#EF4E4B',
-        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
-        duration: 0.3
-      }, '-=0.1')
-      // Hold
-      .to({}, { duration: 1.0 })
+      // Wait for typing to complete (~60ms * 34 chars = ~2s + buffer)
+      .to({}, { duration: 2.6 })
+      // Hold with text visible
+      .to({}, { duration: 0.8 })
+
+      // Convert typed text to individual word spans for scatter
+      .call(function() {
+        hero.classList.remove('storm-flicker');
+        mc.innerHTML = '';
+        mc.style.display = 'flex';
+        mc.style.flexWrap = 'wrap';
+        mc.style.justifyContent = 'center';
+        mc.style.gap = '0 0.35em';
+        line1Words.forEach(function(w) {
+          var s = document.createElement('span');
+          s.textContent = w;
+          s.style.display = 'inline-block';
+          if (w === 'people') {
+            s.style.color = '#EF4E4B';
+            s.style.textShadow = '0 0 20px rgba(239,78,75,0.35)';
+          }
+          p1.push(s);
+          mc.appendChild(s);
+        });
+      })
 
       // SCATTER Phase 1 out
-      .call(function() { hero.classList.remove('storm-flicker'); })
-      .to(p1, {
-        x: function() { return gsap.utils.random(-vw*0.35, vw*0.35); },
-        y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
-        rotation: function() { return gsap.utils.random(-90, 90); },
-        opacity: 0, scale: 0.5,
-        duration: 0.8, ease: 'power2.in',
-        stagger: { amount: 0.15, from: 'random' }
+      .to('.p1word-dummy', { duration: 0.01 }) // tiny delay for DOM to render
+      .call(function() {
+        gsap.to(p1, {
+          x: function() { return gsap.utils.random(-vw*0.35, vw*0.35); },
+          y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
+          rotation: function() { return gsap.utils.random(-90, 90); },
+          opacity: 0, scale: 0.5,
+          duration: 0.8, ease: 'power2.in',
+          stagger: { amount: 0.15, from: 'random' }
+        });
       })
+      .to({}, { duration: 0.9 })
 
       // Remove Phase 1, prep Phase 2
       .call(function() {
