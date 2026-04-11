@@ -1162,14 +1162,14 @@
       })
       .to({}, { duration: 0.9 })
 
-      // Remove Phase 1, build Phase 2
+      // Remove Phase 1, build & animate Phase 2 as sub-timeline
       .call(function() {
         mc.innerHTML = '';
         mc.style.display = 'flex';
         mc.style.flexWrap = 'wrap';
         mc.style.justifyContent = 'center';
         mc.style.gap = '0 0.35em';
-        p2 = line2.map(function(w) {
+        var spans = line2.map(function(w) {
           var s = document.createElement('span');
           s.textContent = w;
           s.style.display = 'inline-block';
@@ -1182,45 +1182,44 @@
           });
           return s;
         });
-      })
 
-      // PHASE 2: Stars appear
-      .to(p2, {
-        opacity: 0.2, duration: 0.5,
-        stagger: { amount: 0.5, from: 'random' },
-        ease: 'power1.in'
+        var t2 = gsap.timeline();
+        // Stars appear
+        t2.to(spans, {
+          opacity: 0.2, duration: 0.5,
+          stagger: { amount: 0.5, from: 'random' },
+          ease: 'power1.in'
+        })
+        // Assemble
+        .to(spans, {
+          x: 0, y: 0, opacity: 1, scale: 1,
+          duration: 1.0, ease: 'power2.inOut',
+          stagger: 0.08
+        }, '+=0.1')
+        // coordination glows
+        .to('#coordWord', {
+          color: '#EF4E4B',
+          textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
+          duration: 0.4
+        })
+        .call(function() {
+          var cw = document.getElementById('coordWord');
+          if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
+        })
+        // Hold
+        .to({}, { duration: 1.2 })
+        // Scatter out
+        .to(spans, {
+          x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
+          y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
+          opacity: 0, scale: 0.3,
+          duration: 0.5, ease: 'power2.in',
+          stagger: { amount: 0.08, from: 'random' }
+        })
+        .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3');
       })
-
-      // Assemble into sentence
-      .to(p2, {
-        x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 1.0, ease: 'power2.inOut',
-        stagger: 0.08
-      }, '+=0.1')
-
-      // "coordination" glows red
-      .to('#coordWord', {
-        color: '#EF4E4B',
-        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
-        duration: 0.4
-      })
-      .call(function() {
-        var cw = document.getElementById('coordWord');
-        if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-      })
-
-      // Hold
-      .to({}, { duration: 1.2 })
-
-      // SCATTER Phase 2 out
-      .to(p2, {
-        x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
-        y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
-        opacity: 0, scale: 0.3,
-        duration: 0.5, ease: 'power2.in',
-        stagger: { amount: 0.08, from: 'random' }
-      })
-      .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3')
+      // Wait for sub-timeline to complete (~0.5+1.0+0.4+1.2+0.5 = ~3.8s)
+      .to({}, { duration: 4.0 })
 
       // PHASE 3: Logomark
       .set('#heroPhase3', { opacity: 1 })
