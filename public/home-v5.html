@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOS — When Systems Fail, People Don't</title>
 <meta name="description" content="SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   /* ── Reset ── */
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -75,7 +75,7 @@
     text-transform: uppercase; color: #0F1E2B; margin-bottom: 16px;
   }
   .body-lg { font-size: 18px; font-weight: 300; color: #555; line-height: 1.8; }
-  .body-sm { font-size: 14px; color: #888; line-height: 1.7; }
+  .body-sm { font-size: 14px; color: #6b7280; line-height: 1.7; }
 
   /* ── Backgrounds ── */
   .bg-white { background: #fff; }
@@ -101,7 +101,7 @@
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 56px; color: #0F1E2B; line-height: 1;
   }
-  .stat-card .desc { font-size: 14px; color: #888; margin-top: 8px; line-height: 1.6; }
+  .stat-card .desc { font-size: 14px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
 
   /* ── Insight cards ── */
   .insight {
@@ -111,19 +111,18 @@
   .insight h4 { font-size: 15px; font-weight: 700; color: #0F1E2B; margin-bottom: 6px; }
   .insight p { font-size: 14px; color: #666; line-height: 1.7; }
 
-  /* ── Ecosystem cards — glassmorphism ── */
+  /* ── Ecosystem cards ── */
   .eco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
   .eco-card {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 20px; padding: 36px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(15,30,43,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 32px;
     transition: transform 0.3s, box-shadow 0.3s;
   }
   .eco-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
-  .eco-card .eco-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+  .eco-card .eco-icon { margin-bottom: 16px; display: block; }
   .eco-card h3 {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 20px; font-weight: 400; color: #0F1E2B; margin-bottom: 12px;
@@ -240,14 +239,9 @@
   }
 
   .scroll-hint {
-    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 40px; left: 50%; margin-left: -14px;
     z-index: 2; color: rgba(255,255,255,0.3); font-size: 28px;
     opacity: 0;
-  }
-
-  @keyframes bounceDown {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(8px); }
   }
 
   /* ══════════════════════════════════
@@ -303,7 +297,7 @@
   }
   .thesis-dawn {
     position: absolute; bottom: 0; left: 0; right: 0; height: 200px;
-    background: linear-gradient(to bottom, transparent, rgba(248,249,250,0.03));
+    background: linear-gradient(to bottom, transparent, rgba(248,249,250,0.15));
     pointer-events: none; z-index: 1;
   }
 
@@ -386,7 +380,7 @@
     background: #89CFF0;
     box-shadow: 0 0 12px rgba(137,207,240,0.4);
   }
-  .scenario-card .sc-emoji { font-size: 20px; margin-right: 8px; }
+  
   .scenario-card .sc-role {
     font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
     text-transform: uppercase; color: #89CFF0;
@@ -448,6 +442,23 @@
   footer a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
   footer a:hover { color: #fff; }
 
+  /* ── Backdrop-filter fallbacks ── */
+  @supports not (backdrop-filter: blur(8px)) {
+    .vignette-card { background: rgba(30,50,70,0.85); }
+    .scenario-card { background: rgba(30,50,70,0.75); }
+  }
+
+  /* ── SOS Icon system ── */
+  .sos-icon {
+    width: 24px; height: 24px;
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .sos-icon-lg { width: 36px; height: 36px; }
+
   /* ── Mobile ── */
   @media (max-width: 640px) {
     h1 { font-size: 36px; }
@@ -469,6 +480,8 @@
     .scenario-card { padding: 24px; }
     .scenario-card::before { left: -28px; width: 10px; height: 10px; }
     .scenario-timeline-line { left: 12px; }
+    .thesis-pin-container { flex-direction: column; width: 100%; }
+    .thesis-intro, .vignette-panel, .thesis-reveal-panel { width: 100%; min-height: auto; padding: 60px 24px; }
     .btn-row-cta { flex-direction: column; align-items: center; }
     .timeline { padding-left: 36px; }
     .invitation-section { padding: 80px 20px; }
@@ -593,6 +606,9 @@
       After Hurricane Helene hit western North Carolina in September 2024, FEMA's resource tracking system crashed under ten times its normal volume.<a href="#cite-3" class="cite">³</a> Search and rescue teams checked the same homes three and four times because two platforms didn't talk to each other. Facebook became the missing persons database — not by design, but because nothing else worked.
     </p>
     <p class="body-lg gs-fade" style="margin-top: 16px;">
+      The help pours in — but without coordination, it becomes part of the problem. Volunteers converge on the same visible damage while isolated communities go unserved. Donations pile up in parking lots instead of reaching the people who need them.
+    </p>
+    <p class="body-lg gs-fade" style="margin-top: 16px;">
       This pattern isn't new. From Katrina to Sandy, Harvey to Maria, the same coordination failures surface every time. The tools break. The data fragments. The people who want to help can't find the people who need it.
     </p>
 
@@ -627,28 +643,28 @@
 
     <div class="eco-grid">
       <div class="eco-card gs-fade">
-        <span class="eco-icon">👥</span>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
         <p class="eco-label">Citizens</p>
         <h3>The actual first responders</h3>
-        <p>Three out of four people turn to neighbors first.<a href="#cite-6" class="cite">⁶</a> People with trucks clear roads. Nurses triage on front porches. Teenagers who speak three languages become the only translators for miles.</p>
+        <p>Three out of four people turn to neighbors first.<a href="#cite-6" class="cite">⁶</a> Most search and rescue in the first 24 hours is performed by community members, not professional responders. People with trucks clear roads. Nurses triage on front porches. Teenagers who speak three languages become the only translators for miles. An elderly couple in their eighties — their own home damaged — gets up before dawn to care for the properties of people who had to evacuate.</p>
       </div>
       <div class="eco-card gs-fade">
-        <span class="eco-icon">🏥</span>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <p class="eco-label">Nonprofits</p>
         <h3>Deployed within hours</h3>
-        <p>Four-person staffs managing thousands of requests on spreadsheets. Faith-based groups self-organizing on Facebook. Large networks coordinating across hundreds of member organizations through group chats and word of mouth.</p>
+        <p>Small organizations with four-person staffs manage thousands of requests on spreadsheets. Large networks coordinate across hundreds of member organizations. Faith-based groups, mutual aid networks, and volunteer teams self-organize through group chats, Facebook posts, and word of mouth.</p>
       </div>
       <div class="eco-card gs-fade">
-        <span class="eco-icon">🏛️</span>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
         <p class="eco-label">Government</p>
         <h3>Overwhelmed &amp; underfunded</h3>
-        <p>85 percent of state emergency management agencies cite infrastructure limitations as the primary barrier to adopting AI coordination tools.<a href="#cite-7" class="cite">⁷</a> Only 25 percent say their staff are ready.</p>
+        <p>Government agencies and emergency services activate operations centers, deploy case management, and process applications for federal assistance — often overwhelmed, underfunded, and working with tools from a different era. 85 percent of state emergency management agencies cite infrastructure limitations as the primary barrier to adopting AI coordination tools.<a href="#cite-7" class="cite">⁷</a> Only 25 percent of directors say their staff have the skills to manage emergency conditions effectively.</p>
       </div>
       <div class="eco-card gs-fade">
-        <span class="eco-icon">🔧</span>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
         <p class="eco-label">Disaster Economy</p>
         <h3>$45 billion market</h3>
-        <p>Contractors, suppliers, adjusters, materials vendors.<a href="#cite-8" class="cite">⁸</a> Money flows through communities in waves, and without coordination, much of it flows right back out.</p>
+        <p>Restoration contractors, equipment suppliers, insurance adjusters, materials vendors — a $45 billion market that grows with every climate season.<a href="#cite-8" class="cite">⁸</a> Money flows through communities in waves, and without coordination, much of it flows right back out.</p>
       </div>
     </div>
   </div>
@@ -673,6 +689,10 @@
         <p>The shelter organization, the food distribution team, and the medical transport volunteer all receive the same match at the same time. One family. Three partners. Connected simultaneously. Each knows what the other is doing. Every dollar is traced from source to outcome. Every contribution attributed. The fraud surface shrinks because the data trail is auditable. And the system learns.</p>
       </div>
     </div>
+
+    <p class="body-lg gs-fade" style="margin-top: 32px; text-align: center; font-weight: 400; color: #0F1E2B;">
+      When coordination fails, help doesn't disappear — it scatters.
+    </p>
 
     <div class="pull-quote gs-fade">
       When coordination fails — and today, it fails by default — the cost is measured in lives, in money lost to fraud, in communities that never fully recover, and in helpers who burn out because the system made them carry it alone.
@@ -775,7 +795,7 @@
       <p>
         The system doesn't just respond to disasters — it learns from them. Every cycle feeds the next. The intelligence compounds. The network strengthens.<br><br>
         <strong>The system sustains itself. Relief as permaculture.</strong><br><br>
-        <span style="font-size: 14px; color: #888;">Revenue from connecting homeowners with vetted contractors funds coordination for people with no insurance, no savings, no safety net.</span>
+        <span style="font-size: 14px; color: #6b7280;">Revenue from connecting homeowners with vetted contractors funds coordination for people with no insurance, no savings, no safety net.</span>
       </p>
     </div>
   </div>
@@ -796,42 +816,42 @@
       <div class="scenario-timeline-line"></div>
 
       <div class="scenario-card" id="sc1">
-        <span class="sc-emoji">📱</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
         <span class="sc-role">Citizen</span>
         <p class="sc-text">Maria texts: <em>"my roof collapsed. Three kids, no car, no power."</em></p>
         <p class="sc-time">2:14 PM</p>
       </div>
 
       <div class="scenario-card" id="sc2">
-        <span class="sc-emoji">🤖</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" opacity="0.6"/><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
         <span class="sc-role">SOS Intelligence</span>
         <p class="sc-text">Matched to Riverside Community Shelter (2.1 mi). Capacity confirmed. Three open beds.</p>
         <p class="sc-time">2:14 PM — instant</p>
       </div>
 
       <div class="scenario-card" id="sc3">
-        <span class="sc-emoji">🚐</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 17V7a2 2 0 0 1 2-2h9v12H3z"/><path d="M14 5h3l3 4v8h-6V5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
         <span class="sc-role">Volunteer</span>
         <p class="sc-text">David — retired teacher with a truck — gets the route. ETA 12 minutes.</p>
         <p class="sc-time">2:15 PM</p>
       </div>
 
       <div class="scenario-card" id="sc4">
-        <span class="sc-emoji">🏥</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <span class="sc-role">Nonprofit</span>
         <p class="sc-text">Red Cross case worker notified. Maria's intake pre-filled from her initial text.</p>
         <p class="sc-time">2:15 PM</p>
       </div>
 
       <div class="scenario-card" id="sc5">
-        <span class="sc-emoji">🏛️</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
         <span class="sc-role">Government</span>
         <p class="sc-text">FEMA resource tracker updated. Maria's request no longer duplicated across 3 agencies.</p>
         <p class="sc-time">2:16 PM</p>
       </div>
 
       <div class="scenario-card resolution-card" id="sc6">
-        <span class="sc-emoji">✅</span>
+        <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
         <span class="sc-role" style="color: #34d399;">Resolution</span>
         <p class="sc-text">Three kids confirmed safe. Maria connected to long-term housing pipeline.</p>
         <p class="sc-time" style="color: #34d399;">4:47 PM</p>
@@ -852,7 +872,7 @@
   <div class="narrow" style="position: relative; z-index: 2;">
 
     <p class="gs-fade" style="font-size: 16px; color: rgba(255,255,255,0.4); max-width: 560px; margin: 0 auto 56px; line-height: 1.8; font-weight: 300;">
-      SOS started during Hurricane Helene, when our team scraped 4,000 missing persons posts from Facebook because no system existed to track them. Our founder lived in a donated RV for three months. The coordination tools that should have existed before the storm — we built them after.
+      SOS started during Hurricane Helene, when our team scraped 4,000 missing persons posts from Facebook because no system existed to track them. Our founder's farmhouse in Burnsville, North Carolina was damaged — he lived in a donated RV for three months. When roads washed out and isolated mountain communities from supplies, neighbors carved access trails through the terrain themselves. The team delivered RVs and brought Starlink terminals to people who'd been cut off for weeks, and started building the coordination tools that should have existed before the storm hit.
     </p>
 
     <div class="gs-fade" style="margin-bottom: 48px;">
@@ -1049,24 +1069,41 @@
     y: -30, ease: 'none'
   });
 
-  // ─── SECTION 5: Thesis — pinned horizontal scroll ───
+  // ─── SECTION 5: Thesis — pinned horizontal scroll (desktop) / vertical fade (mobile) ───
   var thesisContainer = document.getElementById('thesisContainer');
-  var panels = thesisContainer.querySelectorAll('.thesis-intro, .vignette-panel, .thesis-reveal-panel');
-  var totalPanels = panels.length;
 
-  gsap.to(thesisContainer, {
-    x: function() {
-      return -(thesisContainer.scrollWidth - window.innerWidth);
+  ScrollTrigger.matchMedia({
+    "(min-width: 641px)": function() {
+      gsap.to(thesisContainer, {
+        x: function() {
+          return -(thesisContainer.scrollWidth - window.innerWidth);
+        },
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#thesis',
+          pin: true,
+          scrub: 1,
+          end: function() {
+            return '+=' + (thesisContainer.scrollWidth - window.innerWidth);
+          },
+          invalidateOnRefresh: true
+        }
+      });
     },
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#thesis',
-      pin: true,
-      scrub: 1,
-      end: function() {
-        return '+=' + (thesisContainer.scrollWidth - window.innerWidth);
-      },
-      invalidateOnRefresh: true
+    "(max-width: 640px)": function() {
+      // On mobile: no pin, just fade in each panel vertically
+      var mobilePanels = thesisContainer.querySelectorAll('.vignette-panel, .thesis-reveal-panel');
+      mobilePanels.forEach(function(panel) {
+        gsap.from(panel, {
+          scrollTrigger: {
+            trigger: panel,
+            start: 'top 85%',
+            toggleActions: 'play none none none'
+          },
+          opacity: 0, y: 30,
+          duration: 0.7, ease: 'power2.out'
+        });
+      });
     }
   });
 
