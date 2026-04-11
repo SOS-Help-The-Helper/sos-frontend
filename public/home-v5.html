@@ -1243,8 +1243,9 @@
 
       // Tagline glow (triggered by pulse reaching it)
       .call(function() {
-        var ct = document.querySelector('.hero-card-text');
-        if (ct) ct.classList.add('glow');
+        document.querySelectorAll('.hero-card-text').forEach(function(el) {
+          el.classList.add('glow');
+        });
       }, null, '+=0.8')
 
       // Show tagline container then words one by one
