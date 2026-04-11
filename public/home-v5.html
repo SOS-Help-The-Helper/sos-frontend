@@ -1065,10 +1065,9 @@
     // Phase 1: Type "When systems fail, people show up."
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
     await typeText(document.getElementById('typedLine1'), "When systems fail, people show up.", 65);
-    // "people" glows red
+    // "people" glows red immediately
     var line1 = document.getElementById('typedLine1');
-    line1.innerHTML = 'When systems fail, <span id="peopleWord" style="transition: color 0.6s, text-shadow 0.6s;">people</span> show up.';
-    await wait(200);
+    line1.innerHTML = 'When systems fail, <span id="peopleWord" style="transition: color 0.4s, text-shadow 0.4s;">people</span> show up.';
     var pw = document.getElementById('peopleWord');
     pw.style.color = '#e74c3c';
     pw.style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
