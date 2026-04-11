@@ -588,7 +588,7 @@
     </div>
     <!-- Phase 2: They just need a way to coordinate. -->
     <div id="heroPhase2" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%;">
-      <h1 class="hero-title" id="scrambleLine" style="opacity: 1; white-space: nowrap;"></h1>
+      <h1 class="hero-title" id="scrambleLine" style="opacity: 1;"></h1>
     </div>
     <!-- Phase 3: SOS logomark + name -->
     <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
@@ -1019,57 +1019,82 @@
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
 
-    // Phase 2: Scramble letters then assemble "but coordination is the key."
-    var sentence = "but coordination is the key.";
-    var coordStart = 4;
-    var coordEnd = 16;
+    // Phase 2: Words appear like stars scattered across screen, then glide together
+    var words = ["but", "coordination", "is", "the", "key."];
     var container = document.getElementById('scrambleLine');
     
-    var letters = [];
-    for (var ci = 0; ci < sentence.length; ci++) {
+    var wordSpans = [];
+    words.forEach(function(word, i) {
       var span = document.createElement('span');
-      span.textContent = sentence[ci];
+      span.textContent = word;
       span.style.display = 'inline-block';
-      span.style.position = 'relative';
+      span.style.position = 'absolute';
       span.style.opacity = '0';
-      if (sentence[ci] === ' ') span.style.width = '0.3em';
+      span.style.whiteSpace = 'nowrap';
+      if (word === 'coordination') {
+        span.id = 'coordWord';
+      }
       container.appendChild(span);
-      letters.push(span);
-    }
-    
-    gsap.set('#heroPhase2', { opacity: 1 });
-    
-    letters.forEach(function(span) {
-      if (span.textContent.trim() === '') return;
-      var rx = (Math.random() - 0.5) * window.innerWidth * 0.8;
-      var ry = (Math.random() - 0.5) * window.innerHeight * 0.6;
-      var rr = (Math.random() - 0.5) * 360;
-      gsap.set(span, { x: rx, y: ry, rotation: rr, opacity: 0.15, scale: 0.5 + Math.random() * 1.5 });
+      wordSpans.push(span);
     });
     
-    await wait(600);
+    // Also add spaces between words for final layout
+    gsap.set('#heroPhase2', { opacity: 1 });
     
+    // Scatter words to random positions across the viewport
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    wordSpans.forEach(function(span) {
+      var rx = (Math.random() - 0.5) * vw * 0.6;
+      var ry = (Math.random() - 0.5) * vh * 0.5;
+      gsap.set(span, { x: rx, y: ry, scale: 0.7 });
+    });
+    
+    // Phase A: Fade in each word like stars appearing — staggered, gentle
     await new Promise(function(resolve) {
-      gsap.to(letters, {
-        x: 0, y: 0, rotation: 0, opacity: 1, scale: 1,
-        duration: 1.2, ease: 'power3.inOut',
-        stagger: { amount: 0.4, from: 'random' },
+      gsap.to(wordSpans, {
+        opacity: 0.25,
+        duration: 0.6,
+        stagger: { amount: 1.2, from: 'random' },
+        ease: 'power1.in',
         onComplete: resolve
       });
     });
     
-    await wait(300);
-    for (var gi = coordStart; gi < coordEnd; gi++) {
-      letters[gi].style.color = '#e74c3c';
-      letters[gi].style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
-      letters[gi].style.transition = 'color 0.5s, text-shadow 0.5s';
-    }
-    await wait(200);
-    for (var pi = coordStart; pi < coordEnd; pi++) {
-      letters[pi].style.animation = 'coordPulse 2s ease-in-out infinite';
-    }
+    // Brief pause — stars are twinkling
+    await wait(400);
     
-    await wait(1500);
+    // Phase B: Brighten and pull together
+    // First, reset container to relative for flow layout
+    wordSpans.forEach(function(span) {
+      span.style.position = 'relative';
+    });
+    
+    // Add word spacing
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.justifyContent = 'center';
+    container.style.gap = '0 0.35em';
+    
+    await new Promise(function(resolve) {
+      gsap.to(wordSpans, {
+        x: 0, y: 0, opacity: 1, scale: 1,
+        duration: 1.5, ease: 'power2.inOut',
+        stagger: 0.08,
+        onComplete: resolve
+      });
+    });
+    
+    // Make "coordination" glow red
+    await wait(300);
+    var cw = document.getElementById('coordWord');
+    cw.style.transition = 'color 0.6s, text-shadow 0.6s';
+    cw.style.color = '#e74c3c';
+    cw.style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
+    await wait(300);
+    cw.style.animation = 'coordPulse 2s ease-in-out infinite';
+    
+    await wait(1800);
     await gsapTo('#heroPhase2', { opacity: 0, duration: 0.8 });
 
     // Phase 3: SOS logomark + name
