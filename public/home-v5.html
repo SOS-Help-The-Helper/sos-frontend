@@ -598,6 +598,17 @@
     background-clip: text;
     animation: shimmerGlint 2s ease-in-out 0.5s forwards;
   }
+
+  @keyframes pulseRing {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid #EF4E4B;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -640,9 +651,13 @@
     </div>
     <!-- Phase 3: SOS logomark + name -->
     <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px;">
-        <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block;">
-        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 22px; font-weight: 800; color: #e74c3c; letter-spacing: 0.15em;">SOS</span>
+      <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center;">
+        <!-- Pulse rings -->
+        <div class="pulse-ring" id="ring1" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
+        <div class="pulse-ring" id="ring2" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
+        <div class="pulse-ring" id="ring3" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
+        <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 22px; font-weight: 800; color: #e74c3c; letter-spacing: 0.15em; z-index: 3;">SOS</span>
       </div>
       <div id="heroTagline" class="hero-card" style="opacity: 0; margin-top: 48px;"><span class="hero-card-text">Community Coordination Infrastructure</span></div>
     </div>
@@ -1193,10 +1208,17 @@
 
     // Phase 3: SOS logomark + name
     gsap.set('#heroPhase3', { opacity: 1 });
-    // Motel light flicker on the logomark
+    // Flicker on the logomark
     var logoWrap = document.getElementById('heroLogoWrap');
     logoWrap.style.animation = 'flickerGlow 2s ease-out forwards';
-    await wait(2000);
+    await wait(1600);
+    // Start pulse rings — staggered expanding circles
+    ['ring1','ring2','ring3'].forEach(function(id, i) {
+      var ring = document.getElementById(id);
+      ring.style.opacity = '0.5';
+      ring.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
+    });
+    await wait(400);
 
 
     // Phase 4: Tagline
