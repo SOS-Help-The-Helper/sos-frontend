@@ -558,7 +558,7 @@
   <div class="grain-overlay"></div>
 
   <div class="hero-content" style="position: relative; width: 100%; max-width: 780px; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center;">
-    <!-- Phase 1: When systems fail, people don’t… -->
+    <!-- Phase 1: When systems fail, people show up. -->
     <div id="heroPhase1" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%;">
       <h1 class="hero-title" style="opacity: 1;">
         <span id="typedLine1" style="border-right: 2px solid rgba(137,207,240,0.7); padding-right: 4px;"></span>
@@ -992,18 +992,18 @@
   (async function() {
     await wait(800);
 
-    // Phase 1: Type "When systems fail, people don’t…"
+    // Phase 1: Type "When systems fail, people show up."
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
-    await typeText(document.getElementById('typedLine1'), "When systems fail, people don’t…", 65);
+    await typeText(document.getElementById('typedLine1'), "When systems fail, people show up.", 65);
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
 
     // Phase 2: Type "They just need a way to coordinate."
     await gsapTo('#heroPhase2', { opacity: 1, duration: 0.3 });
-    await typeText(document.getElementById('typedLine2'), "…but they need a way to coordinate.", 55);
+    await typeText(document.getElementById('typedLine2'), "Coordination is key.", 55);
     // Make "coordinate" glow red
     var line2 = document.getElementById('typedLine2');
-    line2.innerHTML = '…but they need a way to <span id="coordWord" style="transition: all 0.8s ease;">coordinate</span>.';
+    line2.innerHTML = 'Coordination is <span id="coordWord" style="transition: all 0.8s ease;">key</span>.';
     await wait(200);
     var cw = document.getElementById('coordWord');
     cw.style.color = '#e74c3c';
@@ -1021,9 +1021,7 @@
     await wait(800);
     gsap.to('#heroTagline', { opacity: 1, duration: 0.8 });
 
-    // Show nav
-    await wait(400);
-    gsap.to('nav', { opacity: 1, duration: 0.6 });
+
 
     // Scroll hint
     await wait(600);
@@ -1034,6 +1032,14 @@
       }
     });
   })();
+
+  // ─── NAV: show after scrolling past hero ───
+  ScrollTrigger.create({
+    trigger: '#hero',
+    start: 'bottom top+=100',
+    onEnter: function() { gsap.to('nav', { opacity: 1, duration: 0.4 }); },
+    onLeaveBack: function() { gsap.to('nav', { opacity: 0, duration: 0.3 }); }
+  });
 
   // ─── GLOBAL: gs-fade elements ───
   document.querySelectorAll('.gs-fade').forEach(function(el) {
