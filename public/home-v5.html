@@ -1124,10 +1124,8 @@
       .call(function() {
         typeInto(typingSpan, "when systems fail, people show up", 60, "people");
       })
-      // Wait for typing to complete (~60ms * 34 chars = ~2s + buffer)
-      .to({}, { duration: 2.6 })
-      // Hold with text visible
-      .to({}, { duration: 0.8 })
+      // Wait for typing to complete (~60ms * 33 chars = ~2s)
+      .to({}, { duration: 2.1 })
 
       // Convert typed text to individual word spans for scatter
       .call(function() {
