@@ -488,45 +488,45 @@
     <h2>Everyone responds. They just can't see each other.</h2>
     <div class="accent-line"></div>
 
-    <!-- SVG Network Diagram -->
-    <svg class="network-diagram" viewBox="0 0 520 360" xmlns="http://www.w3.org/2000/svg" style="margin-top: 48px;">
-      <!-- Connection lines -->
-      <line x1="260" y1="180" x2="130" y2="80" stroke="#0F1E2B" stroke-width="1.5" opacity="0.2"/>
-      <line x1="260" y1="180" x2="390" y2="80" stroke="#0F1E2B" stroke-width="1.5" opacity="0.2"/>
-      <line x1="260" y1="180" x2="100" y2="280" stroke="#0F1E2B" stroke-width="1.5" opacity="0.2"/>
-      <line x1="260" y1="180" x2="420" y2="280" stroke="#0F1E2B" stroke-width="1.5" opacity="0.2"/>
-      <!-- Cross connections (dashed) -->
-      <line x1="130" y1="80" x2="390" y2="80" stroke="#89CFF0" stroke-width="1" opacity="0.15" stroke-dasharray="4 4"/>
-      <line x1="100" y1="280" x2="420" y2="280" stroke="#89CFF0" stroke-width="1" opacity="0.15" stroke-dasharray="4 4"/>
-      <line x1="130" y1="80" x2="100" y2="280" stroke="#89CFF0" stroke-width="1" opacity="0.1" stroke-dasharray="4 4"/>
-      <line x1="390" y1="80" x2="420" y2="280" stroke="#89CFF0" stroke-width="1" opacity="0.1" stroke-dasharray="4 4"/>
-      <!-- Center hub: SOS -->
-      <circle cx="260" cy="180" r="28" fill="rgba(137,207,240,0.08)"/>
-      <image href="/logomark.svg" x="240" y="160" width="40" height="40"/>
-      <!-- Node: Citizens -->
-      <circle cx="130" cy="80" r="22" fill="#89CFF0" opacity="0.15"/>
-      <circle cx="130" cy="80" r="16" fill="#89CFF0" opacity="0.3"/>
-      <text x="130" y="83" text-anchor="middle" fill="#0F1E2B" font-size="9" font-family="'Nunito Sans', sans-serif" font-weight="600">Citizens</text>
-      <!-- Node: Nonprofits -->
-      <circle cx="390" cy="80" r="22" fill="#89CFF0" opacity="0.15"/>
-      <circle cx="390" cy="80" r="16" fill="#89CFF0" opacity="0.3"/>
-      <text x="390" y="83" text-anchor="middle" fill="#0F1E2B" font-size="9" font-family="'Nunito Sans', sans-serif" font-weight="600">Nonprofits</text>
-      <!-- Node: Government -->
-      <circle cx="100" cy="280" r="22" fill="#89CFF0" opacity="0.15"/>
-      <circle cx="100" cy="280" r="16" fill="#89CFF0" opacity="0.3"/>
-      <text x="100" y="276" text-anchor="middle" fill="#0F1E2B" font-size="8" font-family="'Nunito Sans', sans-serif" font-weight="600">Govern-</text>
-      <text x="100" y="287" text-anchor="middle" fill="#0F1E2B" font-size="8" font-family="'Nunito Sans', sans-serif" font-weight="600">ment</text>
-      <!-- Node: Disaster Economy -->
-      <circle cx="420" cy="280" r="22" fill="#89CFF0" opacity="0.15"/>
-      <circle cx="420" cy="280" r="16" fill="#89CFF0" opacity="0.3"/>
-      <text x="420" y="276" text-anchor="middle" fill="#0F1E2B" font-size="8" font-family="'Nunito Sans', sans-serif" font-weight="600">Disaster</text>
-      <text x="420" y="287" text-anchor="middle" fill="#0F1E2B" font-size="8" font-family="'Nunito Sans', sans-serif" font-weight="600">Economy</text>
-      <!-- Legend -->
-      <line x1="30" y1="340" x2="50" y2="340" stroke="#0F1E2B" stroke-width="1.5" opacity="0.3"/>
-      <text x="55" y="343" fill="#999" font-size="9" font-family="'Nunito Sans', sans-serif">Coordination</text>
-      <line x1="160" y1="340" x2="180" y2="340" stroke="#89CFF0" stroke-width="1" opacity="0.4" stroke-dasharray="4 4"/>
-      <text x="185" y="343" fill="#999" font-size="9" font-family="'Nunito Sans', sans-serif">Shared intelligence</text>
-    </svg>
+    <!-- Coordination Network -->
+    <div class="coord-network" style="position: relative; max-width: 420px; margin: 48px auto 0; aspect-ratio: 1; ">
+      <!-- Connection lines using CSS borders/pseudo-elements -->
+      <svg viewBox="0 0 420 420" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;">
+        <line x1="210" y1="210" x2="105" y2="70" stroke="#0F1E2B" stroke-width="1" opacity="0.12"/>
+        <line x1="210" y1="210" x2="315" y2="70" stroke="#0F1E2B" stroke-width="1" opacity="0.12"/>
+        <line x1="210" y1="210" x2="80" y2="340" stroke="#0F1E2B" stroke-width="1" opacity="0.12"/>
+        <line x1="210" y1="210" x2="340" y2="340" stroke="#0F1E2B" stroke-width="1" opacity="0.12"/>
+      </svg>
+      <!-- Center: SOS logomark -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; text-align: center;">
+        <img src="/logomark.svg" alt="SOS" style="width: 48px; height: 48px; opacity: 0.9;">
+      </div>
+      <!-- Nodes -->
+      <div style="position: absolute; top: 8%; left: 18%; transform: translate(-50%, -50%); text-align: center; z-index: 1;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(137,207,240,0.12); border: 1.5px solid rgba(137,207,240,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;">
+          <span style="font-size: 18px;">👥</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0F1E2B;">Citizens</span>
+      </div>
+      <div style="position: absolute; top: 8%; right: 18%; transform: translate(50%, -50%); text-align: center; z-index: 1;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(137,207,240,0.12); border: 1.5px solid rgba(137,207,240,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;">
+          <span style="font-size: 18px;">🏥</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0F1E2B;">Nonprofits</span>
+      </div>
+      <div style="position: absolute; bottom: 8%; left: 12%; transform: translate(-50%, 50%); text-align: center; z-index: 1;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(137,207,240,0.12); border: 1.5px solid rgba(137,207,240,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;">
+          <span style="font-size: 18px;">🏛️</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0F1E2B;">Government</span>
+      </div>
+      <div style="position: absolute; bottom: 8%; right: 12%; transform: translate(50%, 50%); text-align: center; z-index: 1;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(137,207,240,0.12); border: 1.5px solid rgba(137,207,240,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;">
+          <span style="font-size: 18px;">🔧</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0F1E2B;">Vendors</span>
+      </div>
+    </div>
 
     <div class="eco-grid">
       <div class="eco-card">
