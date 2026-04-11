@@ -652,7 +652,7 @@
         <div class="pulse-ring" id="ring2" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <div class="pulse-ring" id="ring3" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
-        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.65); letter-spacing: 0.2em; z-index: 3; padding-right: 0.15em; margin-left: 3px;">SOS</span>
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
         <span class="hero-card-text tag-word" style="opacity: 0;">Community</span>
@@ -1112,18 +1112,8 @@
     var line1Words = ["when", "systems", "fail,", "people", "show", "up"];
     var p1 = [];
 
-    // ── Build Phase 2 words (hidden) ──
     var line2 = ["coordination", "is", "the", "missing", "piece."];
-    var p2 = line2.map(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.className = 'p2word';
-      if (w === 'coordination') s.id = 'coordWord';
-      gsap.set(s, { opacity: 0, position: 'absolute' });
-      mc.appendChild(s);
-      return s;
-    });
+    var p2 = [];
 
     // ── MASTER TIMELINE ──
     var tl = gsap.timeline({ delay: 0.8 });
@@ -1174,16 +1164,25 @@
       })
       .to({}, { duration: 0.9 })
 
-      // Remove Phase 1, prep Phase 2
+      // Remove Phase 1, build Phase 2
       .call(function() {
-        p1.forEach(function(s) { s.remove(); });
-        p2.forEach(function(s) {
-          s.style.position = 'relative';
+        mc.innerHTML = '';
+        mc.style.display = 'flex';
+        mc.style.flexWrap = 'wrap';
+        mc.style.justifyContent = 'center';
+        mc.style.gap = '0 0.35em';
+        p2 = line2.map(function(w) {
+          var s = document.createElement('span');
+          s.textContent = w;
+          s.style.display = 'inline-block';
+          if (w === 'coordination') s.id = 'coordWord';
+          mc.appendChild(s);
           gsap.set(s, {
             x: gsap.utils.random(-vw*0.3, vw*0.3),
             y: gsap.utils.random(-vh*0.25, vh*0.25),
             scale: 0.7, opacity: 0
           });
+          return s;
         });
       })
 
@@ -1231,7 +1230,7 @@
         var lw = document.getElementById('heroLogoWrap');
         lw.style.animation = 'motelFlicker 2.2s ease-out forwards';
       })
-      .to({}, { duration: 2.2 })
+      .to({}, { duration: 1.5 })
 
       // Pulse rings
       .call(function() {
