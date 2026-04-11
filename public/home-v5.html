@@ -154,7 +154,7 @@
     font-size: 13px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.1em; margin-bottom: 16px;
   }
-  .coord-fail h4 { color: #e74c3c; }
+  .coord-fail h4 { color: #EF4E4B; }
   .coord-work h4 { color: #34d399; }
   .coord-block p { font-size: 15px; color: #555; line-height: 1.75; }
 
@@ -527,7 +527,7 @@
   #typedLine2 { font-size: inherit; color: #fff; }
 
   @keyframes coordPulse {
-    0%, 100% { text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3); }
+    0%, 100% { text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15); }
     50% { text-shadow: 0 0 30px rgba(231,76,60,0.7), 0 0 60px rgba(231,76,60,0.4), 0 0 80px rgba(231,76,60,0.2); }
   }
 
@@ -577,13 +577,6 @@
     100% { background-position: 0% center; }
   }
   .hero-card {
-    background: rgba(248,249,250,0.9);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.5);
-    padding: 16px 32px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     position: relative;
     z-index: 1;
   }
@@ -593,14 +586,14 @@
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #0F1E2B;
-    background: linear-gradient(90deg, #0F1E2B 0%, #0F1E2B 35%, #ffffff 50%, #0F1E2B 65%, #0F1E2B 100%);
-    background-size: 300% 100%;
-    background-position: 100% center;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: shimmerGlint 1.5s ease-in-out 0.3s forwards;
+    color: rgba(255,255,255,0.4);
+    -webkit-text-fill-color: rgba(255,255,255,0.4);
+    transition: color 0.8s, text-shadow 0.8s, -webkit-text-fill-color 0.8s;
+  }
+  .hero-card-text.glow {
+    color: #EF4E4B;
+    -webkit-text-fill-color: #EF4E4B;
+    text-shadow: 0 0 20px rgba(239,78,75,0.4), 0 0 40px rgba(239,78,75,0.2);
   }
 
   @keyframes pulseRing {
@@ -1113,9 +1106,9 @@
           i++;
           // Check if we just finished typing "people"
           if (i === peopleEnd) {
-            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color:#e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3);">people</span>';
+            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color: #EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">people</span>';
           } else if (i > peopleEnd) {
-            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color:#e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3);">people</span>' + fullText.substring(peopleEnd, i);
+            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color: #EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">people</span>' + fullText.substring(peopleEnd, i);
           } else {
             t1.textContent = fullText.substring(0, i);
           }
@@ -1223,6 +1216,13 @@
       ring.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
     });
     await wait(400);
+
+    // When first pulse reaches the tagline area, glow the text soft red
+    var cardText = document.querySelector('.hero-card-text');
+    if (cardText) {
+      await wait(600);
+      cardText.classList.add('glow');
+    }
 
 
     // Phase 4: Tagline
