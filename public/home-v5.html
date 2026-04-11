@@ -606,6 +606,10 @@
     border: 2px solid #EF4E4B;
     pointer-events: none;
   }
+
+  .tag-word {
+    transform: translateY(8px);
+  }
 </style>
 </head>
 <body>
@@ -648,9 +652,13 @@
         <div class="pulse-ring" id="ring2" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <div class="pulse-ring" id="ring3" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
-        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.2em; z-index: 3;">SOS</span>
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.65); letter-spacing: 0.2em; z-index: 3; padding-right: 0.2em; margin-left: 1px;">SOS</span>
       </div>
-      <div id="heroTagline" class="hero-card" style="opacity: 0; margin-top: 64px;"><span class="hero-card-text">Community Coordination Infrastructure</span></div>
+      <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span class="hero-card-text tag-word" style="opacity: 0;">Community</span>
+        <span class="hero-card-text tag-word" style="opacity: 0;">Coordination</span>
+        <span class="hero-card-text tag-word" style="opacity: 0;">Infrastructure</span>
+      </div>
     </div>
 
   </div>
@@ -1091,7 +1099,7 @@
       .set(stage, { opacity: 1 })
       .to(p1, {
         opacity: 1, y: 0, duration: 0.2,
-        stagger: 0.12, ease: 'power2.out'
+        stagger: 0.18, ease: 'power2.out'
       })
       // "people" (index 3) glows red
       .to(p1[3], {
@@ -1100,7 +1108,7 @@
         duration: 0.3
       }, '-=0.1')
       // Hold
-      .to({}, { duration: 0.6 })
+      .to({}, { duration: 1.0 })
 
       // SCATTER Phase 1 out
       .call(function() { hero.classList.remove('storm-flicker'); })
@@ -1109,8 +1117,8 @@
         y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
         rotation: function() { return gsap.utils.random(-90, 90); },
         opacity: 0, scale: 0.5,
-        duration: 0.6, ease: 'power2.in',
-        stagger: { amount: 0.12, from: 'random' }
+        duration: 0.8, ease: 'power2.in',
+        stagger: { amount: 0.15, from: 'random' }
       })
 
       // Remove Phase 1, prep Phase 2
@@ -1128,16 +1136,16 @@
 
       // PHASE 2: Stars appear
       .to(p2, {
-        opacity: 0.2, duration: 0.3,
-        stagger: { amount: 0.35, from: 'random' },
+        opacity: 0.2, duration: 0.5,
+        stagger: { amount: 0.5, from: 'random' },
         ease: 'power1.in'
       })
 
       // Assemble into sentence
       .to(p2, {
         x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 0.7, ease: 'power2.inOut',
-        stagger: 0.05
+        duration: 1.0, ease: 'power2.inOut',
+        stagger: 0.08
       }, '+=0.1')
 
       // "coordination" glows red
@@ -1152,7 +1160,7 @@
       })
 
       // Hold
-      .to({}, { duration: 0.8 })
+      .to({}, { duration: 1.2 })
 
       // SCATTER Phase 2 out
       .to(p2, {
@@ -1168,9 +1176,9 @@
       .set('#heroPhase3', { opacity: 1 })
       .call(function() {
         var lw = document.getElementById('heroLogoWrap');
-        lw.style.animation = 'flickerGlow 1.8s ease-out forwards';
+        lw.style.animation = 'motelFlicker 2.2s ease-out forwards';
       })
-      .to({}, { duration: 1.8 })
+      .to({}, { duration: 2.2 })
 
       // Pulse rings
       .call(function() {
@@ -1187,8 +1195,12 @@
         if (ct) ct.classList.add('glow');
       }, null, '+=0.8')
 
-      // Show tagline
-      .to('#heroTagline', { opacity: 1, duration: 0.5 }, '-=0.3')
+      // Show tagline container then words one by one
+      .set('#heroTagline', { opacity: 1 })
+      .to('.tag-word', {
+        opacity: 1, y: 0, duration: 0.4,
+        stagger: 0.3, ease: 'power2.out'
+      })
 
       // Scroll hint
       .to('#scrollHint', { opacity: 1, duration: 0.5 }, '+=0.4')
