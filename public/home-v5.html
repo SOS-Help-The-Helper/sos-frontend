@@ -576,22 +576,22 @@
     100% { background-position: 200% center; }
   }
   .hero-card {
-    background: rgba(248,249,250,0.95);
+    background: rgba(255,255,255,0.08);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.15);
     padding: 28px 48px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
   }
   .hero-card-text {
     font-family: 'Nunito Sans', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #0F1E2B;
-    background: linear-gradient(90deg, #0F1E2B 0%, #0F1E2B 40%, #fff 50%, #0F1E2B 60%, #0F1E2B 100%);
+    color: rgba(255,255,255,0.8);
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 40%, #fff 50%, rgba(255,255,255,0.8) 60%, rgba(255,255,255,0.8) 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -643,7 +643,7 @@
       <div id="heroLogoWrap" style="opacity: 0;">
         <img src="/logomark-red.svg" alt="SOS" style="height: 120px; width: 120px; display: block; margin: 0 auto;">
       </div>
-      <div id="heroSosText" style="font-family: 'Nunito Sans', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0; margin-top: 24px; padding-right: 0.25em;">SOS</div>
+      <div id="heroSosText" style="font-family: 'Nunito Sans', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0; margin-top: 24px; padding: 8px 24px; border: 2px solid #e74c3c; border-radius: 8px;">SOS</div>
       <div id="heroTagline" class="hero-card" style="opacity: 0; margin-top: 48px;"><span class="hero-card-text">Community Coordination Infrastructure</span></div>
     </div>
 
@@ -1083,13 +1083,33 @@
 
     // Phase 1: Type "When systems fail, people show up."
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
-    await typeText(document.getElementById('typedLine1'), "When systems fail, people show up.", 65);
-    // "people" glows red immediately
-    var line1 = document.getElementById('typedLine1');
-    line1.innerHTML = 'When systems fail, <span id="peopleWord" style="transition: color 0.4s, text-shadow 0.4s;">people</span> show up.';
-    var pw = document.getElementById('peopleWord');
-    pw.style.color = '#e74c3c';
-    pw.style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
+    // Type with "people" glowing red as soon as it's typed
+    var t1 = document.getElementById('typedLine1');
+    var fullText = "When systems fail, people show up.";
+    var peopleEnd = 25; // index after "people" in the string
+    await new Promise(function(resolve) {
+      var i = 0;
+      function step() {
+        if (i < fullText.length) {
+          i++;
+          // Check if we just finished typing "people"
+          if (i === peopleEnd) {
+            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color:#e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3);">people</span>';
+          } else if (i > peopleEnd) {
+            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color:#e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3);">people</span>' + fullText.substring(peopleEnd, i);
+          } else {
+            t1.textContent = fullText.substring(0, i);
+          }
+          setTimeout(step, 65);
+        } else {
+          t1.style.borderRight = 'none';
+          t1.style.paddingRight = '0';
+          t1.style.animation = 'none';
+          setTimeout(resolve, 600);
+        }
+      }
+      step();
+    });
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
     document.getElementById('hero').classList.remove('storm-flicker');
@@ -1175,14 +1195,14 @@
     gsap.set('#heroPhase3', { opacity: 1 });
     // Motel light flicker on the logomark
     var logoWrap = document.getElementById('heroLogoWrap');
-    logoWrap.style.animation = 'motelFlicker 2.5s ease-out forwards';
-    await wait(2500);
-    await wait(400);
-    await gsapTo('#heroSosText', { opacity: 1, duration: 0.8 });
+    logoWrap.style.animation = 'motelFlicker 1.8s ease-out forwards';
+    await wait(1800);
+    await wait(300);
+    await gsapTo('#heroSosText', { opacity: 1, duration: 0.5 });
 
     // Phase 4: Tagline
-    await wait(800);
-    gsap.to('#heroTagline', { opacity: 1, duration: 0.8 });
+    await wait(400);
+    gsap.to('#heroTagline', { opacity: 1, duration: 0.6 });
 
 
 
