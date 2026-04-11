@@ -1109,7 +1109,7 @@
     }
 
     // Build word spans for scatter (hidden, positioned over the typed text)
-    var line1Words = ["when", "systems", "fail,", "people", "show", "up"];
+    var line1Words = ["when", "relief", "systems", "fail,", "people", "stand", "in", "the", "gap"];
     var p1 = [];
 
     var line2 = ["coordination", "is", "the", "missing", "piece."];
@@ -1122,10 +1122,10 @@
     tl.call(function() { hero.classList.add('storm-flicker'); })
       .set(stage, { opacity: 1 })
       .call(function() {
-        typeInto(typingSpan, "when systems fail, people show up", 60, "people");
+        typeInto(typingSpan, "when relief systems fail, people stand in the gap", 55, "people");
       })
-      // Wait for typing to complete (~60ms * 33 chars = ~2s)
-      .to({}, { duration: 2.1 })
+      // Wait for typing to complete (~55ms * 48 chars = ~2.6s)
+      .to({}, { duration: 2.8 })
 
       // Convert typed text to individual word spans for scatter
       .call(function() {
@@ -1236,8 +1236,9 @@
 
       // Tagline glow (triggered by pulse reaching it)
       .call(function() {
-        document.querySelectorAll('.hero-card-text').forEach(function(el) {
-          el.classList.add('glow');
+        var tagWords = document.querySelectorAll('.hero-card-text');
+        tagWords.forEach(function(el, i) {
+          setTimeout(function() { el.classList.add('glow'); }, i * 400);
         });
       }, null, '+=0.8')
 
