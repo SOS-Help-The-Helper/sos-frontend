@@ -569,6 +569,34 @@
   .storm-flicker {
     animation: stormFlicker 3s ease-in-out infinite;
   }
+
+  @keyframes shimmerGlint {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .hero-card {
+    background: rgba(248,249,250,0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 28px 48px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .hero-card-text {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #0F1E2B;
+    background: linear-gradient(90deg, #0F1E2B 0%, #0F1E2B 40%, #fff 50%, #0F1E2B 60%, #0F1E2B 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmerGlint 2s ease-in-out 0.5s forwards;
+  }
 </style>
 </head>
 <body>
