@@ -641,18 +641,18 @@
 
   <div class="hero-content" style="position: relative; width: 100%; max-width: 780px; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center;">
     <!-- Morphing text container -->
-    <div id="heroTextStage" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%; opacity: 0;">
+    <div id="heroTextStage" style="position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%); width: 100%; opacity: 0;">
       <h1 class="hero-title" id="morphContainer" style="opacity: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 0.35em;"></h1>
     </div>
     <!-- Phase 3: SOS logomark + name -->
-    <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
+    <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
       <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; overflow: visible; z-index: 10;">
         <!-- Pulse rings -->
         <div class="pulse-ring" id="ring1" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <div class="pulse-ring" id="ring2" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <div class="pulse-ring" id="ring3" style="width: 140px; height: 140px; top: 0; left: 0; opacity: 0;"></div>
         <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
-        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.65); letter-spacing: 0.2em; z-index: 3; padding-right: 0.2em; margin-left: 1px;">SOS</span>
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.65); letter-spacing: 0.2em; z-index: 3; padding-right: 0.15em; margin-left: 3px;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
         <span class="hero-card-text tag-word" style="opacity: 0;">Community</span>
@@ -1109,7 +1109,7 @@
     }
 
     // Build word spans for scatter (hidden, positioned over the typed text)
-    var line1Words = ["When", "systems", "fail,", "people", "show", "up."];
+    var line1Words = ["when", "systems", "fail,", "people", "show", "up"];
     var p1 = [];
 
     // ── Build Phase 2 words (hidden) ──
@@ -1132,7 +1132,7 @@
     tl.call(function() { hero.classList.add('storm-flicker'); })
       .set(stage, { opacity: 1 })
       .call(function() {
-        typeInto(typingSpan, "When systems fail, people show up.", 60, "people");
+        typeInto(typingSpan, "when systems fail, people show up", 60, "people");
       })
       // Wait for typing to complete (~60ms * 34 chars = ~2s + buffer)
       .to({}, { duration: 2.6 })
