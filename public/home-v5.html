@@ -1156,70 +1156,66 @@
           y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
           rotation: function() { return gsap.utils.random(-90, 90); },
           opacity: 0, scale: 0.5,
-          duration: 0.8, ease: 'power2.in',
-          stagger: { amount: 0.15, from: 'random' }
+          duration: 1.0, ease: 'power2.in',
+          stagger: { amount: 0.2, from: 'random' }
         });
       })
-      .to({}, { duration: 0.9 })
+      .to({}, { duration: 1.1 })
 
-      // Remove Phase 1, build & animate Phase 2 as sub-timeline
+      // Remove Phase 1, build Phase 2 spans, then continue
       .call(function() {
         mc.innerHTML = '';
         mc.style.display = 'flex';
         mc.style.flexWrap = 'wrap';
         mc.style.justifyContent = 'center';
         mc.style.gap = '0 0.35em';
-        var spans = line2.map(function(w) {
+        line2.forEach(function(w) {
           var s = document.createElement('span');
           s.textContent = w;
           s.style.display = 'inline-block';
-          if (w === 'coordination') s.id = 'coordWord';
+          s.id = (w === 'coordination') ? 'coordWord' : '';
+          s.className = 'p2span';
           mc.appendChild(s);
           gsap.set(s, {
             x: gsap.utils.random(-vw*0.3, vw*0.3),
             y: gsap.utils.random(-vh*0.25, vh*0.25),
             scale: 0.7, opacity: 0
           });
-          return s;
         });
-
-        var t2 = gsap.timeline();
-        // Stars appear
-        t2.to(spans, {
-          opacity: 0.2, duration: 0.5,
-          stagger: { amount: 0.5, from: 'random' },
-          ease: 'power1.in'
-        })
-        // Assemble
-        .to(spans, {
-          x: 0, y: 0, opacity: 1, scale: 1,
-          duration: 1.0, ease: 'power2.inOut',
-          stagger: 0.08
-        }, '+=0.1')
-        // coordination glows
-        .to('#coordWord', {
-          color: '#EF4E4B',
-          textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
-          duration: 0.4
-        })
-        .call(function() {
-          var cw = document.getElementById('coordWord');
-          if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-        })
-        // Hold
-        .to({}, { duration: 1.2 })
-        // Scatter out
-        .to(spans, {
-          x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
-          y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
-          opacity: 0, scale: 0.3,
-          duration: 0.5, ease: 'power2.in',
-          stagger: { amount: 0.08, from: 'random' }
-        })
-        .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3');
       })
-      // Wait for sub-timeline to complete (~0.5+1.0+0.4+1.2+0.5 = ~3.8s)
-      .to({}, { duration: 4.0 })
+      // Stars appear (use class selector — spans exist after .call above)
+      .to('.p2span', {
+        opacity: 0.2, duration: 0.5,
+        stagger: { amount: 0.5, from: 'random' },
+        ease: 'power1.in'
+      })
+      // Assemble
+      .to('.p2span', {
+        x: 0, y: 0, opacity: 1, scale: 1,
+        duration: 1.0, ease: 'power2.inOut',
+        stagger: 0.08
+      }, '+=0.1')
+      // coordination glows
+      .to('#coordWord', {
+        color: '#EF4E4B',
+        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
+        duration: 0.4
+      })
+      .call(function() {
+        var cw = document.getElementById('coordWord');
+        if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
+      })
+      // Hold
+      .to({}, { duration: 1.2 })
+      // Scatter out
+      .to('.p2span', {
+        x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
+        y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
+        opacity: 0, scale: 0.3,
+        duration: 0.5, ease: 'power2.in',
+        stagger: { amount: 0.08, from: 'random' }
+      })
+      .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3')
 
       // PHASE 3: Logomark
       .set('#heroPhase3', { opacity: 1 })
