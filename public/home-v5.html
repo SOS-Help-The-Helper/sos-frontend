@@ -610,6 +610,24 @@
   .tag-word {
     transform: translateY(8px);
   }
+
+  @keyframes motelCrackle {
+    0%, 100% { opacity: 1; }
+    5% { opacity: 0.85; }
+    10% { opacity: 1; }
+    25% { opacity: 0.9; }
+    30% { opacity: 1; }
+    45% { opacity: 0.8; }
+    47% { opacity: 0.95; }
+    50% { opacity: 1; }
+    65% { opacity: 0.88; }
+    68% { opacity: 1; }
+    80% { opacity: 0.92; }
+    85% { opacity: 1; }
+  }
+  .motel-crackle {
+    animation: motelCrackle 2.5s ease-in-out infinite;
+  }
 </style>
 </head>
 <body>
@@ -655,8 +673,8 @@
         <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <span class="hero-card-text tag-word" style="opacity: 0;">Everyone is a helper</span>
-        <span class="hero-card-text tag-word" style="opacity: 0;">We help the helpers</span>
+        <span class="hero-card-text tag-word" style="opacity: 0; white-space: nowrap;">Everyone is a helper</span>
+        <span class="hero-card-text tag-word" style="opacity: 0; white-space: nowrap;">We help the helpers</span>
       </div>
     </div>
 
@@ -1102,7 +1120,7 @@
     await wait(800);
 
     // ═══ PHASE 1: Typing ═══
-    hero.classList.add('storm-flicker');
+    // storm flicker removed
     gsap.set(stage, { opacity: 1 });
 
     var typingSpan = document.createElement('span');
@@ -1112,15 +1130,13 @@
     mc.style.display = 'block';
     mc.style.textAlign = 'center';
     mc.appendChild(typingSpan);
+    typingSpan.classList.add('motel-crackle');
 
-    await typeInto(typingSpan, "when relief systems fail, communities step up", 60, "communities");
+    await typeInto(typingSpan, "when relief systems fail… communities step up", 60, "communities");
 
-    // ═══ TRANSITION 1→2: 2 flickers then fade ═══
-    hero.classList.remove('storm-flicker');
-    await anim(mc, { opacity: 0.4, duration: 0.3, ease: 'power1.in' });
-    await anim(mc, { opacity: 0.7, duration: 0.15 });
-    await anim(mc, { opacity: 0.2, duration: 0.4, ease: 'power1.in' });
-    await anim(mc, { opacity: 0, duration: 0.4, ease: 'power2.in' });
+    typingSpan.classList.remove('motel-crackle');
+    // ═══ TRANSITION 1→2: smooth fade out ═══
+    await anim(mc, { opacity: 0, duration: 0.6, ease: 'power2.inOut' });
 
     // ═══ PHASE 2: Flicker in then stars materialize ═══
     mc.innerHTML = '';
