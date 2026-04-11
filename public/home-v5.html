@@ -548,7 +548,7 @@
     72%  { opacity: 0.85; filter: brightness(1.0); }
     80%  { opacity: 0.97; filter: brightness(1.05); }
     90%  { opacity: 1; filter: brightness(1.0); }
-    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 15px rgba(231,76,60,0.4)) drop-shadow(0 0 30px rgba(231,76,60,0.2)); }
+    100% { opacity: 1; filter: brightness(1); }
   }
 </style>
 </head>
@@ -1016,6 +1016,9 @@
     // Phase 1: Type "When systems fail, people show up."
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
     await typeText(document.getElementById('typedLine1'), "When systems fail, people show up.", 65);
+    // Underline "show up" in SOS red
+    var line1 = document.getElementById('typedLine1');
+    line1.innerHTML = 'When systems fail, people <span style="color: #e74c3c; text-decoration: underline; text-decoration-color: #e74c3c; text-underline-offset: 6px; text-decoration-thickness: 3px; transition: all 0.5s ease;">show up</span>.';
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
 
