@@ -550,6 +550,25 @@
     90%  { opacity: 1; filter: brightness(1.0); }
     100% { opacity: 1; filter: brightness(1); }
   }
+
+  @keyframes stormFlicker {
+    0%, 100% { opacity: 1; }
+    4% { opacity: 0.92; }
+    8% { opacity: 1; }
+    12% { opacity: 0.85; }
+    14% { opacity: 1; }
+    30% { opacity: 0.95; }
+    32% { opacity: 1; }
+    50% { opacity: 0.9; }
+    52% { opacity: 1; }
+    70% { opacity: 0.93; }
+    72% { opacity: 1; }
+    85% { opacity: 0.97; }
+    87% { opacity: 1; }
+  }
+  .storm-flicker {
+    animation: stormFlicker 3s ease-in-out infinite;
+  }
 </style>
 </head>
 <body>
@@ -1012,6 +1031,8 @@
   // Run hero sequence
   (async function() {
     await wait(800);
+    // Add ominous storm flicker to hero
+    document.getElementById('hero').classList.add('storm-flicker');
 
     // Phase 1: Type "When systems fail, people show up."
     await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
@@ -1021,6 +1042,7 @@
     line1.innerHTML = 'When systems fail, people <span style="color: #e74c3c; text-decoration: underline; text-decoration-color: #e74c3c; text-underline-offset: 6px; text-decoration-thickness: 3px; transition: all 0.5s ease;">show up</span>.';
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
+    document.getElementById('hero').classList.remove('storm-flicker');
 
     // Phase 2: Words appear like stars scattered across screen, then glide together
     var words = ["but", "coordination", "is", "the", "key."];
@@ -1057,15 +1079,14 @@
     await new Promise(function(resolve) {
       gsap.to(wordSpans, {
         opacity: 0.25,
-        duration: 0.6,
-        stagger: { amount: 1.2, from: 'random' },
+        duration: 0.4,
+        stagger: { amount: 0.5, from: 'random' },
         ease: 'power1.in',
         onComplete: resolve
       });
     });
     
-    // Brief pause — stars are twinkling
-    await wait(400);
+    await wait(200);
     
     // Phase B: Brighten and pull together
     // First, reset container to relative for flow layout
@@ -1082,7 +1103,7 @@
     await new Promise(function(resolve) {
       gsap.to(wordSpans, {
         x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 1.5, ease: 'power2.inOut',
+        duration: 0.9, ease: 'power2.inOut',
         stagger: 0.08,
         onComplete: resolve
       });
@@ -1097,7 +1118,7 @@
     await wait(300);
     cw.style.animation = 'coordPulse 2s ease-in-out infinite';
     
-    await wait(1800);
+    await wait(1000);
     await gsapTo('#heroPhase2', { opacity: 0, duration: 0.8 });
 
     // Phase 3: SOS logomark + name
