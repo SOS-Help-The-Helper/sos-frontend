@@ -1114,19 +1114,16 @@
     mc.style.textAlign = 'center';
     mc.appendChild(typingSpan);
 
-    await typeInto(typingSpan, "when relief systems fail, people stand in the gap", 70, "people");
+    await typeInto(typingSpan, "when relief systems fail, people stand in the gap", 60, "people");
 
-    // ═══ TRANSITION 1→2: Broken sign fade ═══
+    // ═══ TRANSITION 1→2: 2 flickers then fade ═══
     hero.classList.remove('storm-flicker');
-    await anim(mc, { opacity: 0.6, duration: 0.4, ease: 'power1.in' });
-    await anim(mc, { opacity: 0.75, duration: 0.2 });
-    await anim(mc, { opacity: 0.35, duration: 0.5, ease: 'power1.in' });
-    await anim(mc, { opacity: 0.5, duration: 0.15 });
-    await anim(mc, { opacity: 0.15, duration: 0.6, ease: 'power2.in' });
-    await anim(mc, { opacity: 0.25, duration: 0.1 });
-    await anim(mc, { opacity: 0, duration: 0.5, ease: 'power2.in' });
+    await anim(mc, { opacity: 0.4, duration: 0.3, ease: 'power1.in' });
+    await anim(mc, { opacity: 0.7, duration: 0.15 });
+    await anim(mc, { opacity: 0.2, duration: 0.4, ease: 'power1.in' });
+    await anim(mc, { opacity: 0, duration: 0.4, ease: 'power2.in' });
 
-    // ═══ PHASE 2: Stars materialize ═══
+    // ═══ PHASE 2: Flicker in then stars materialize ═══
     mc.innerHTML = '';
     mc.style.display = 'flex';
     mc.style.flexWrap = 'wrap';
@@ -1166,13 +1163,8 @@
 
     await wait(1000);
 
-    // ═══ TRANSITION 2→3: Broken sign fade ═══
-    await anim(mc, { opacity: 0.6, duration: 0.4, ease: 'power1.in' });
-    await anim(mc, { opacity: 0.7, duration: 0.15 });
-    await anim(mc, { opacity: 0.3, duration: 0.5, ease: 'power1.in' });
-    await anim(mc, { opacity: 0.4, duration: 0.1 });
-    await anim(mc, { opacity: 0.1, duration: 0.5, ease: 'power2.in' });
-    await anim(mc, { opacity: 0, duration: 0.4, ease: 'power2.in' });
+    // ═══ TRANSITION 2→3: Clean fade out ═══
+    await anim(mc, { opacity: 0, duration: 0.8, ease: 'power2.inOut' });
     gsap.set(stage, { opacity: 0 });
 
     // ═══ PHASE 3: Logomark ═══
