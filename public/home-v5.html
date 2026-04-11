@@ -1090,118 +1090,131 @@
   // Run hero sequence
   (async function() {
     await wait(800);
-    // Add ominous storm flicker to hero
     document.getElementById('hero').classList.add('storm-flicker');
 
-    // Phase 1: Type "When systems fail, people show up."
-    await gsapTo('#heroPhase1', { opacity: 1, duration: 0.3 });
-    // Type with "people" glowing red as soon as it's typed
-    var t1 = document.getElementById('typedLine1');
-    var fullText = "When systems fail, people show up.";
-    var peopleEnd = 25; // index after "people" in the string
-    await new Promise(function(resolve) {
-      var i = 0;
-      function step() {
-        if (i < fullText.length) {
-          i++;
-          // Check if we just finished typing "people"
-          if (i === peopleEnd) {
-            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color: #EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">people</span>';
-          } else if (i > peopleEnd) {
-            t1.innerHTML = 'When systems fail, <span id="peopleWord" style="color: #EF4E4B; text-shadow: 0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15);">people</span>' + fullText.substring(peopleEnd, i);
-          } else {
-            t1.textContent = fullText.substring(0, i);
-          }
-          setTimeout(step, 65);
-        } else {
-          t1.style.borderRight = 'none';
-          t1.style.paddingRight = '0';
-          t1.style.animation = 'none';
-          setTimeout(resolve, 600);
-        }
-      }
-      step();
+    var stage = document.getElementById('heroTextStage');
+    var mc = document.getElementById('morphContainer');
+    gsap.set(stage, { opacity: 1 });
+
+    // === PHASE 1: Type "When systems fail, people show up." ===
+    var line1Words = ["When", "systems", "fail,", "people", "show", "up."];
+    var phase1Spans = [];
+    line1Words.forEach(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.style.opacity = '0';
+      mc.appendChild(s);
+      phase1Spans.push(s);
     });
-    await wait(800);
-    await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
+
+    // Type effect: words appear one by one
+    for (var wi = 0; wi < phase1Spans.length; wi++) {
+      await gsapTo(phase1Spans[wi], { opacity: 1, y: 0, duration: 0.15 });
+      await wait(100);
+      // "people" glows red immediately
+      if (line1Words[wi] === 'people') {
+        phase1Spans[wi].style.color = '#EF4E4B';
+        phase1Spans[wi].style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
+      }
+    }
+
+    await wait(600);
     document.getElementById('hero').classList.remove('storm-flicker');
 
-    // Phase 2: Words appear like stars scattered across screen, then glide together
-    var words = ["coordination", "is", "the", "missing", "piece."];
-    var container = document.getElementById('scrambleLine');
-    
-    var wordSpans = [];
-    words.forEach(function(word, i) {
-      var span = document.createElement('span');
-      span.textContent = word;
-      span.style.display = 'inline-block';
-      span.style.position = 'absolute';
-      span.style.opacity = '0';
-      span.style.whiteSpace = 'nowrap';
-      if (word === 'coordination') {
-        span.id = 'coordWord';
-      }
-      container.appendChild(span);
-      wordSpans.push(span);
-    });
-    
-    // Also add spaces between words for final layout
-    gsap.set('#heroPhase2', { opacity: 1 });
-    
-    // Scatter words to random positions across the viewport
+    // === TRANSITION: Words scatter outward ===
     var vw = window.innerWidth;
     var vh = window.innerHeight;
-    wordSpans.forEach(function(span) {
-      var rx = (Math.random() - 0.5) * vw * 0.6;
-      var ry = (Math.random() - 0.5) * vh * 0.5;
-      gsap.set(span, { x: rx, y: ry, scale: 0.7 });
-    });
     
-    // Phase A: Fade in each word like stars appearing — staggered, gentle
     await new Promise(function(resolve) {
-      gsap.to(wordSpans, {
-        opacity: 0.25,
-        duration: 0.4,
-        stagger: { amount: 0.5, from: 'random' },
+      gsap.to(phase1Spans, {
+        x: function() { return (Math.random() - 0.5) * vw * 0.7; },
+        y: function() { return (Math.random() - 0.5) * vh * 0.5; },
+        rotation: function() { return (Math.random() - 0.5) * 180; },
+        opacity: 0,
+        scale: 0.5,
+        duration: 0.7,
+        ease: 'power2.in',
+        stagger: { amount: 0.15, from: 'random' },
+        onComplete: resolve
+      });
+    });
+
+    // Clear phase 1 words
+    mc.innerHTML = '';
+    mc.style.display = 'flex';
+    mc.style.flexWrap = 'wrap';
+    mc.style.justifyContent = 'center';
+    mc.style.gap = '0 0.35em';
+
+    // === PHASE 2: New words materialize from the scattered positions ===
+    var line2Words = ["coordination", "is", "the", "missing", "piece."];
+    var phase2Spans = [];
+    line2Words.forEach(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.style.position = 'relative';
+      s.style.opacity = '0';
+      if (w === 'coordination') s.id = 'coordWord';
+      mc.appendChild(s);
+      phase2Spans.push(s);
+    });
+
+    // Scatter new words to random positions
+    phase2Spans.forEach(function(s) {
+      gsap.set(s, {
+        x: (Math.random() - 0.5) * vw * 0.6,
+        y: (Math.random() - 0.5) * vh * 0.5,
+        scale: 0.7
+      });
+    });
+
+    // Fade in as stars
+    await new Promise(function(resolve) {
+      gsap.to(phase2Spans, {
+        opacity: 0.25, duration: 0.3,
+        stagger: { amount: 0.4, from: 'random' },
         ease: 'power1.in',
         onComplete: resolve
       });
     });
-    
-    await wait(200);
-    
-    // Phase B: Brighten and pull together
-    // First, reset container to relative for flow layout
-    wordSpans.forEach(function(span) {
-      span.style.position = 'relative';
-    });
-    
-    // Add word spacing
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.justifyContent = 'center';
-    container.style.gap = '0 0.35em';
-    
+
+    await wait(150);
+
+    // Assemble into sentence
     await new Promise(function(resolve) {
-      gsap.to(wordSpans, {
+      gsap.to(phase2Spans, {
         x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 0.9, ease: 'power2.inOut',
-        stagger: 0.08,
+        duration: 0.8, ease: 'power2.inOut',
+        stagger: 0.06,
         onComplete: resolve
       });
     });
-    
-    // Make "coordination" glow red
-    await wait(300);
+
+    // "coordination" glows red
+    await wait(200);
     var cw = document.getElementById('coordWord');
-    cw.style.transition = 'color 0.6s, text-shadow 0.6s';
-    cw.style.color = '#e74c3c';
-    cw.style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
-    await wait(300);
+    cw.style.transition = 'color 0.5s, text-shadow 0.5s';
+    cw.style.color = '#EF4E4B';
+    cw.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
+    await wait(200);
     cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-    
-    await wait(1000);
-    await gsapTo('#heroPhase2', { opacity: 0, duration: 0.8 });
+
+    await wait(800);
+
+    // === TRANSITION TO PHASE 3: scatter phase 2 words ===
+    await new Promise(function(resolve) {
+      gsap.to(phase2Spans, {
+        x: function() { return (Math.random() - 0.5) * vw * 0.8; },
+        y: function() { return (Math.random() - 0.5) * vh * 0.6; },
+        opacity: 0, scale: 0.3,
+        duration: 0.6, ease: 'power2.in',
+        stagger: { amount: 0.1, from: 'random' },
+        onComplete: resolve
+      });
+    });
+    gsap.to(stage, { opacity: 0, duration: 0.3 });
 
     // Phase 3: SOS logomark + name
     gsap.set('#heroPhase3', { opacity: 1 });
