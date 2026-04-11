@@ -221,7 +221,7 @@
 
   .hero-title {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 64px; line-height: 1.08; color: #fff; font-weight: 400;
+    font-size: 44px; line-height: 1.2; color: #fff; font-weight: 400;
   }
   .hero-title .word {
     display: inline-block; opacity: 0; transform: translateY(24px);
@@ -463,7 +463,7 @@
   @media (max-width: 640px) {
     h1 { font-size: 36px; }
     h2 { font-size: 28px; }
-    .hero-title { font-size: 42px; }
+    .hero-title { font-size: 32px; }
     .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
     .stat-card .num { font-size: 44px; }
@@ -1114,16 +1114,17 @@
     mc.style.textAlign = 'center';
     mc.appendChild(typingSpan);
 
-    await typeInto(typingSpan, "when relief systems fail, people stand in the gap", 55, "people");
+    await typeInto(typingSpan, "when relief systems fail, people stand in the gap", 70, "people");
 
-    // ═══ TRANSITION 1→2: Flicker fade out ═══
+    // ═══ TRANSITION 1→2: Broken sign fade ═══
     hero.classList.remove('storm-flicker');
-    // Flicker the text opacity a few times then fade out
-    await anim(mc, { opacity: 0.3, duration: 0.1 });
-    await anim(mc, { opacity: 0.8, duration: 0.1 });
-    await anim(mc, { opacity: 0.15, duration: 0.08 });
-    await anim(mc, { opacity: 0.6, duration: 0.1 });
-    await anim(mc, { opacity: 0, duration: 0.3 });
+    await anim(mc, { opacity: 0.6, duration: 0.4, ease: 'power1.in' });
+    await anim(mc, { opacity: 0.75, duration: 0.2 });
+    await anim(mc, { opacity: 0.35, duration: 0.5, ease: 'power1.in' });
+    await anim(mc, { opacity: 0.5, duration: 0.15 });
+    await anim(mc, { opacity: 0.15, duration: 0.6, ease: 'power2.in' });
+    await anim(mc, { opacity: 0.25, duration: 0.1 });
+    await anim(mc, { opacity: 0, duration: 0.5, ease: 'power2.in' });
 
     // ═══ PHASE 2: Stars materialize ═══
     mc.innerHTML = '';
@@ -1165,11 +1166,13 @@
 
     await wait(1000);
 
-    // ═══ TRANSITION 2→3: Flicker fade out ═══
-    await anim(mc, { opacity: 0.3, duration: 0.1 });
-    await anim(mc, { opacity: 0.7, duration: 0.08 });
-    await anim(mc, { opacity: 0.1, duration: 0.1 });
-    await anim(mc, { opacity: 0, duration: 0.25 });
+    // ═══ TRANSITION 2→3: Broken sign fade ═══
+    await anim(mc, { opacity: 0.6, duration: 0.4, ease: 'power1.in' });
+    await anim(mc, { opacity: 0.7, duration: 0.15 });
+    await anim(mc, { opacity: 0.3, duration: 0.5, ease: 'power1.in' });
+    await anim(mc, { opacity: 0.4, duration: 0.1 });
+    await anim(mc, { opacity: 0.1, duration: 0.5, ease: 'power2.in' });
+    await anim(mc, { opacity: 0, duration: 0.4, ease: 'power2.in' });
     gsap.set(stage, { opacity: 0 });
 
     // ═══ PHASE 3: Logomark ═══
