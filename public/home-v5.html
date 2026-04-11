@@ -22,7 +22,7 @@
   }
 
   /* ── Nav ── */
-  nav {
+  nav { opacity: 0;
     position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
     transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
     background: transparent;
@@ -498,6 +498,18 @@
   .logo-flicker-glow.animate {
     animation-play-state: running;
   }
+
+  /* Typing cursor */
+  @keyframes blink {
+    0%, 100% { border-color: rgba(137,207,240,0.7); }
+    50% { border-color: transparent; }
+  }
+  #typedLine1, #typedLine2 {
+    animation: blink 0.8s step-end infinite;
+    font-family: 'DM Serif Display', Georgia, serif;
+  }
+  #typedLine1 { font-size: inherit; color: #fff; }
+  #typedLine2 { font-size: inherit; color: rgba(255,255,255,0.55); }
 </style>
 </head>
 <body>
@@ -527,17 +539,28 @@
 <section class="hero" id="hero">
   <div class="grain-overlay"></div>
 
-  <div class="hero-content">
-    <h1 class="hero-title" id="heroTitle">
-      <span class="word">When</span>
-      <span class="word">systems</span>
-      <span class="word">fail,</span>
-      <br>
-      <span class="word">people</span>
-      <span class="word">don't.</span>
-    </h1>
-    <p class="hero-sub" id="heroSub">They just need a way to coordinate.</p>
-    <p class="hero-tagline" id="heroTagline">Community Coordination Infrastructure</p>
+  <div class="hero-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+    <!-- Phase 1: When systems fail, people don't. -->
+    <div id="heroPhase1" style="opacity: 0; position: absolute;">
+      <h1 class="hero-title" style="opacity: 1;">
+        <span id="typedLine1" style="border-right: 2px solid rgba(137,207,240,0.7); padding-right: 4px;"></span>
+      </h1>
+    </div>
+    <!-- Phase 2: They just need a way to coordinate. -->
+    <div id="heroPhase2" style="opacity: 0; position: absolute;">
+      <p class="hero-sub" style="opacity: 1; transform: none;">
+        <span id="typedLine2" style="border-right: 2px solid rgba(137,207,240,0.7); padding-right: 4px;"></span>
+      </p>
+    </div>
+    <!-- Phase 3: SOS logomark + name -->
+    <div id="heroPhase3" style="opacity: 0; position: absolute; display: flex; flex-direction: column; align-items: center;">
+      <img src="/logomark-red.svg" alt="SOS" id="heroLogo" style="height: 120px; width: 120px; margin-bottom: 24px;">
+      <span id="heroSosText" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 48px; color: #fff; letter-spacing: 0.12em; opacity: 0;">SOS</span>
+    </div>
+    <!-- Phase 4: Community coordination infrastructure -->
+    <div id="heroPhase4" style="opacity: 0; position: absolute; margin-top: 240px;">
+      <p class="hero-tagline" style="opacity: 1; transform: none;">Community Coordination Infrastructure</p>
+    </div>
   </div>
   <div class="scroll-hint" id="scrollHint">↓</div>
 </section>
@@ -910,28 +933,61 @@
   }
   window.addEventListener('scroll', updateNav, { passive: true });
 
-  // ─── SECTION 1: HERO — word-by-word fade up ───
-  var words = document.querySelectorAll('.hero-title .word');
-  gsap.to(words, {
-    opacity: 1, y: 0,
-    duration: 0.6, stagger: 0.08,
-    ease: 'power3.out', delay: 0.6
-  });
-
-  // Subtitle and tagline
-  var totalWordTime = 0.6 + (words.length * 0.08) + 0.3;
-  gsap.to('#heroSub', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: totalWordTime });
-  gsap.to('#heroTagline', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', delay: totalWordTime + 0.6 });
-
-  // Scroll hint
-  gsap.to('#scrollHint', {
-    opacity: 1, duration: 0.6, delay: totalWordTime + 1.6,
-    onComplete: function() {
-      gsap.to('#scrollHint', {
-        y: 8, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1
-      });
+  // ─── SECTION 1: HERO — Sequential typing phases ───
+  function typeText(el, text, speed, callback) {
+    var i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent = text.substring(0, i + 1);
+        i++;
+        setTimeout(type, speed);
+      } else {
+        // Remove cursor after typing complete
+        el.style.borderRight = 'none';
+        el.style.paddingRight = '0';
+        el.style.animation = 'none';
+        if (callback) setTimeout(callback, 600);
+      }
     }
-  });
+    type();
+  }
+
+  var tl = gsap.timeline();
+
+  // Phase 1: Type "When systems fail, people don't."
+  tl.to('#heroPhase1', { opacity: 1, duration: 0.3, delay: 0.8, onComplete: function() {
+    typeText(document.getElementById('typedLine1'), "When systems fail, people don\'t.", 65, function() {
+      // Hold for a beat, then fade out
+      gsap.to('#heroPhase1', { opacity: 0, duration: 0.8, delay: 1.0, onComplete: function() {
+        // Phase 2: Type "They just need a way to coordinate."
+        gsap.to('#heroPhase2', { opacity: 1, duration: 0.3, onComplete: function() {
+          typeText(document.getElementById('typedLine2'), "They just need a way to coordinate.", 55, function() {
+            // Hold, then fade out
+            gsap.to('#heroPhase2', { opacity: 0, duration: 0.8, delay: 1.0, onComplete: function() {
+              // Phase 3: SOS logomark + text
+              gsap.to('#heroPhase3', { opacity: 1, duration: 1.2, ease: 'power2.inOut', onComplete: function() {
+                gsap.to('#heroSosText', { opacity: 1, duration: 0.8, delay: 0.4, onComplete: function() {
+                  // Phase 4: Community coordination infrastructure (below)
+                  gsap.to('#heroPhase4', { opacity: 1, duration: 0.8, delay: 0.8 });
+                  // Show nav
+                  gsap.to('nav', { opacity: 1, duration: 0.6, delay: 1.0 });
+                  // Show scroll hint
+                  gsap.to('#scrollHint', {
+                    opacity: 1, duration: 0.6, delay: 1.4,
+                    onComplete: function() {
+                      gsap.to('#scrollHint', {
+                        y: 8, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1
+                      });
+                    }
+                  });
+                }});
+              }});
+            }});
+          });
+        }});
+      });
+    });
+  }});
 
   // ─── GLOBAL: gs-fade elements ───
   document.querySelectorAll('.gs-fade').forEach(function(el) {
