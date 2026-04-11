@@ -528,6 +528,27 @@
     0%, 100% { text-shadow: 0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3); }
     50% { text-shadow: 0 0 30px rgba(231,76,60,0.7), 0 0 60px rgba(231,76,60,0.4), 0 0 80px rgba(231,76,60,0.2); }
   }
+
+  @keyframes motelFlicker {
+    0%   { opacity: 0; filter: brightness(0.3); }
+    4%   { opacity: 0.6; filter: brightness(1.2); }
+    6%   { opacity: 0.1; filter: brightness(0.4); }
+    10%  { opacity: 0.8; filter: brightness(1.1); }
+    12%  { opacity: 0.15; filter: brightness(0.3); }
+    18%  { opacity: 0.4; filter: brightness(0.8); }
+    22%  { opacity: 0.05; filter: brightness(0.2); }
+    30%  { opacity: 0.7; filter: brightness(1.0); }
+    33%  { opacity: 0.2; filter: brightness(0.5); }
+    40%  { opacity: 0.85; filter: brightness(1.1); }
+    44%  { opacity: 0.4; filter: brightness(0.7); }
+    52%  { opacity: 0.9; filter: brightness(1.15); }
+    58%  { opacity: 0.6; filter: brightness(0.9); }
+    65%  { opacity: 0.95; filter: brightness(1.1); }
+    72%  { opacity: 0.85; filter: brightness(1.0); }
+    80%  { opacity: 0.97; filter: brightness(1.05); }
+    90%  { opacity: 1; filter: brightness(1.0); }
+    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 15px rgba(231,76,60,0.4)) drop-shadow(0 0 30px rgba(231,76,60,0.2)); }
+  }
 </style>
 </head>
 <body>
@@ -569,11 +590,12 @@
       <h1 class="hero-title" id="scrambleLine" style="opacity: 1; white-space: nowrap;"></h1>
     </div>
     <!-- Phase 3: SOS logomark + name -->
-    <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
-      <img src="/logomark-red.svg" alt="SOS" id="heroLogo" style="height: 120px; width: 120px; margin-bottom: 24px;">
-      <span id="heroSosText" style="font-family: 'Nunito Sans', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0;">SOS</span>
-      <div style="height: 48px;"></div>
-      <p id="heroTagline" class="hero-tagline" style="opacity: 0;">Community Coordination Infrastructure</p>
+    <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div id="heroLogoWrap" style="opacity: 0;">
+        <img src="/logomark-red.svg" alt="SOS" style="height: 120px; width: 120px; display: block; margin: 0 auto;">
+      </div>
+      <div id="heroSosText" style="font-family: 'Nunito Sans', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0; margin-top: 24px; padding-right: 0.25em;">SOS</div>
+      <p id="heroTagline" class="hero-tagline" style="opacity: 0; margin-top: 48px;">Community Coordination Infrastructure</p>
     </div>
 
   </div>
@@ -1050,7 +1072,11 @@
     await gsapTo('#heroPhase2', { opacity: 0, duration: 0.8 });
 
     // Phase 3: SOS logomark + name
-    await gsapTo('#heroPhase3', { opacity: 1, duration: 1.2, ease: 'power2.inOut' });
+    gsap.set('#heroPhase3', { opacity: 1 });
+    // Motel light flicker on the logomark
+    var logoWrap = document.getElementById('heroLogoWrap');
+    logoWrap.style.animation = 'motelFlicker 2.5s ease-out forwards';
+    await wait(2500);
     await wait(400);
     await gsapTo('#heroSosText', { opacity: 1, duration: 0.8 });
 
