@@ -1050,202 +1050,154 @@
   }
   window.addEventListener('scroll', updateNav, { passive: true });
 
-  // ─── SECTION 1: HERO — Sequential typing phases ───
-  function typeText(el, text, speed) {
-    return new Promise(function(resolve) {
-      var i = 0;
-      function step() {
-        if (i < text.length) {
-          el.textContent = text.substring(0, i + 1);
-          i++;
-          setTimeout(step, speed);
-        } else {
-          el.style.borderRight = 'none';
-          el.style.paddingRight = '0';
-          el.style.animation = 'none';
-          setTimeout(resolve, 600);
-        }
-      }
-      step();
-    });
-  }
-
-  function gsapTo(target, vars) {
-    return new Promise(function(resolve) {
-      vars.onComplete = resolve;
-      gsap.to(target, vars);
-    });
-  }
-
-  function wait(ms) {
-    return new Promise(function(resolve) { setTimeout(resolve, ms); });
-  }
-
-  // Run hero sequence
-  (async function() {
-    await wait(800);
-    document.getElementById('hero').classList.add('storm-flicker');
-
+  // ─── SECTION 1: HERO — GSAP Timeline ───
+  (function() {
+    var hero = document.getElementById('hero');
     var stage = document.getElementById('heroTextStage');
     var mc = document.getElementById('morphContainer');
-    gsap.set(stage, { opacity: 1 });
-
-    // === PHASE 1: Type "When systems fail, people show up." ===
-    var line1Words = ["When", "systems", "fail,", "people", "show", "up."];
-    var phase1Spans = [];
-    line1Words.forEach(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.style.opacity = '0';
-      mc.appendChild(s);
-      phase1Spans.push(s);
-    });
-
-    // Type effect: words appear one by one
-    for (var wi = 0; wi < phase1Spans.length; wi++) {
-      await gsapTo(phase1Spans[wi], { opacity: 1, y: 0, duration: 0.15 });
-      await wait(100);
-      // "people" glows red immediately
-      if (line1Words[wi] === 'people') {
-        phase1Spans[wi].style.color = '#EF4E4B';
-        phase1Spans[wi].style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
-      }
-    }
-
-    await wait(600);
-    document.getElementById('hero').classList.remove('storm-flicker');
-
-    // === TRANSITION: Words scatter outward ===
     var vw = window.innerWidth;
     var vh = window.innerHeight;
-    
-    await new Promise(function(resolve) {
-      gsap.to(phase1Spans, {
-        x: function() { return (Math.random() - 0.5) * vw * 0.7; },
-        y: function() { return (Math.random() - 0.5) * vh * 0.5; },
-        rotation: function() { return (Math.random() - 0.5) * 180; },
-        opacity: 0,
-        scale: 0.5,
-        duration: 0.7,
-        ease: 'power2.in',
-        stagger: { amount: 0.15, from: 'random' },
-        onComplete: resolve
-      });
-    });
 
-    // Clear phase 1 words
-    mc.innerHTML = '';
-    mc.style.display = 'flex';
-    mc.style.flexWrap = 'wrap';
-    mc.style.justifyContent = 'center';
-    mc.style.gap = '0 0.35em';
-
-    // === PHASE 2: New words materialize from the scattered positions ===
-    var line2Words = ["coordination", "is", "the", "missing", "piece."];
-    var phase2Spans = [];
-    line2Words.forEach(function(w) {
+    // ── Build Phase 1 words ──
+    var line1 = ["When", "systems", "fail,", "people", "show", "up."];
+    var p1 = line1.map(function(w) {
       var s = document.createElement('span');
       s.textContent = w;
       s.style.display = 'inline-block';
-      s.style.position = 'relative';
-      s.style.opacity = '0';
-      if (w === 'coordination') s.id = 'coordWord';
+      s.className = 'p1word';
+      gsap.set(s, { opacity: 0, y: 12 });
       mc.appendChild(s);
-      phase2Spans.push(s);
+      return s;
     });
 
-    // Scatter new words to random positions
-    phase2Spans.forEach(function(s) {
-      gsap.set(s, {
-        x: (Math.random() - 0.5) * vw * 0.6,
-        y: (Math.random() - 0.5) * vh * 0.5,
-        scale: 0.7
-      });
+    // ── Build Phase 2 words (hidden) ──
+    var line2 = ["coordination", "is", "the", "missing", "piece."];
+    var p2 = line2.map(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.className = 'p2word';
+      if (w === 'coordination') s.id = 'coordWord';
+      gsap.set(s, { opacity: 0, position: 'absolute' });
+      mc.appendChild(s);
+      return s;
     });
 
-    // Fade in as stars
-    await new Promise(function(resolve) {
-      gsap.to(phase2Spans, {
-        opacity: 0.25, duration: 0.3,
-        stagger: { amount: 0.4, from: 'random' },
-        ease: 'power1.in',
-        onComplete: resolve
-      });
-    });
+    // ── MASTER TIMELINE ──
+    var tl = gsap.timeline({ delay: 0.8 });
 
-    await wait(150);
+    // PHASE 1: Words appear + storm flicker
+    tl.call(function() { hero.classList.add('storm-flicker'); })
+      .set(stage, { opacity: 1 })
+      .to(p1, {
+        opacity: 1, y: 0, duration: 0.2,
+        stagger: 0.12, ease: 'power2.out'
+      })
+      // "people" (index 3) glows red
+      .to(p1[3], {
+        color: '#EF4E4B',
+        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
+        duration: 0.3
+      }, '-=0.1')
+      // Hold
+      .to({}, { duration: 0.6 })
 
-    // Assemble into sentence
-    await new Promise(function(resolve) {
-      gsap.to(phase2Spans, {
-        x: 0, y: 0, opacity: 1, scale: 1,
-        duration: 0.8, ease: 'power2.inOut',
-        stagger: 0.06,
-        onComplete: resolve
-      });
-    });
-
-    // "coordination" glows red
-    await wait(200);
-    var cw = document.getElementById('coordWord');
-    cw.style.transition = 'color 0.5s, text-shadow 0.5s';
-    cw.style.color = '#EF4E4B';
-    cw.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
-    await wait(200);
-    cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-
-    await wait(800);
-
-    // === TRANSITION TO PHASE 3: scatter phase 2 words ===
-    await new Promise(function(resolve) {
-      gsap.to(phase2Spans, {
-        x: function() { return (Math.random() - 0.5) * vw * 0.8; },
-        y: function() { return (Math.random() - 0.5) * vh * 0.6; },
-        opacity: 0, scale: 0.3,
+      // SCATTER Phase 1 out
+      .call(function() { hero.classList.remove('storm-flicker'); })
+      .to(p1, {
+        x: function() { return gsap.utils.random(-vw*0.35, vw*0.35); },
+        y: function() { return gsap.utils.random(-vh*0.25, vh*0.25); },
+        rotation: function() { return gsap.utils.random(-90, 90); },
+        opacity: 0, scale: 0.5,
         duration: 0.6, ease: 'power2.in',
-        stagger: { amount: 0.1, from: 'random' },
-        onComplete: resolve
+        stagger: { amount: 0.12, from: 'random' }
+      })
+
+      // Remove Phase 1, prep Phase 2
+      .call(function() {
+        p1.forEach(function(s) { s.remove(); });
+        p2.forEach(function(s) {
+          s.style.position = 'relative';
+          gsap.set(s, {
+            x: gsap.utils.random(-vw*0.3, vw*0.3),
+            y: gsap.utils.random(-vh*0.25, vh*0.25),
+            scale: 0.7, opacity: 0
+          });
+        });
+      })
+
+      // PHASE 2: Stars appear
+      .to(p2, {
+        opacity: 0.2, duration: 0.3,
+        stagger: { amount: 0.35, from: 'random' },
+        ease: 'power1.in'
+      })
+
+      // Assemble into sentence
+      .to(p2, {
+        x: 0, y: 0, opacity: 1, scale: 1,
+        duration: 0.7, ease: 'power2.inOut',
+        stagger: 0.05
+      }, '+=0.1')
+
+      // "coordination" glows red
+      .to('#coordWord', {
+        color: '#EF4E4B',
+        textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)',
+        duration: 0.4
+      })
+      .call(function() {
+        var cw = document.getElementById('coordWord');
+        if (cw) cw.style.animation = 'coordPulse 2s ease-in-out infinite';
+      })
+
+      // Hold
+      .to({}, { duration: 0.8 })
+
+      // SCATTER Phase 2 out
+      .to(p2, {
+        x: function() { return gsap.utils.random(-vw*0.4, vw*0.4); },
+        y: function() { return gsap.utils.random(-vh*0.3, vh*0.3); },
+        opacity: 0, scale: 0.3,
+        duration: 0.5, ease: 'power2.in',
+        stagger: { amount: 0.08, from: 'random' }
+      })
+      .to(stage, { opacity: 0, duration: 0.2 }, '-=0.3')
+
+      // PHASE 3: Logomark
+      .set('#heroPhase3', { opacity: 1 })
+      .call(function() {
+        var lw = document.getElementById('heroLogoWrap');
+        lw.style.animation = 'flickerGlow 1.8s ease-out forwards';
+      })
+      .to({}, { duration: 1.8 })
+
+      // Pulse rings
+      .call(function() {
+        ['ring1','ring2','ring3'].forEach(function(id, i) {
+          var r = document.getElementById(id);
+          r.style.opacity = '0.5';
+          r.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
+        });
+      })
+
+      // Tagline glow (triggered by pulse reaching it)
+      .call(function() {
+        var ct = document.querySelector('.hero-card-text');
+        if (ct) ct.classList.add('glow');
+      }, null, '+=0.8')
+
+      // Show tagline
+      .to('#heroTagline', { opacity: 1, duration: 0.5 }, '-=0.3')
+
+      // Scroll hint
+      .to('#scrollHint', { opacity: 1, duration: 0.5 }, '+=0.4')
+      .to('#scrollHint', {
+        y: 8, duration: 1.2, ease: 'power1.inOut',
+        yoyo: true, repeat: -1
       });
-    });
-    gsap.to(stage, { opacity: 0, duration: 0.3 });
-
-    // Phase 3: SOS logomark + name
-    gsap.set('#heroPhase3', { opacity: 1 });
-    // Flicker on the logomark
-    var logoWrap = document.getElementById('heroLogoWrap');
-    logoWrap.style.animation = 'flickerGlow 2s ease-out forwards';
-    await wait(1600);
-    // Start pulse rings — staggered expanding circles
-    ['ring1','ring2','ring3'].forEach(function(id, i) {
-      var ring = document.getElementById(id);
-      ring.style.opacity = '0.5';
-      ring.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
-    });
-    await wait(400);
-
-    // When first pulse reaches the tagline area, glow the text soft red
-    var cardText = document.querySelector('.hero-card-text');
-    if (cardText) {
-      await wait(600);
-      cardText.classList.add('glow');
-    }
 
 
-    // Phase 4: Tagline
-    await wait(400);
-    gsap.to('#heroTagline', { opacity: 1, duration: 0.6 });
-
-
-
-    // Scroll hint
-    await wait(600);
-    gsap.to('#scrollHint', {
-      opacity: 1, duration: 0.6,
-      onComplete: function() {
-        gsap.to('#scrollHint', { y: 8, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1 });
-      }
-    });
   })();
 
   // ─── NAV: show after scrolling past hero ───
