@@ -131,7 +131,7 @@
     font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
     text-transform: uppercase; color: #89CFF0; margin-bottom: 8px;
   }
-  .eco-card p { font-size: 14px; color: #666; line-height: 1.7; }
+  .eco-card p { font-size: 15px; color: #3d4852; line-height: 1.7; }
 
   /* ── Coordination contrast ── */
   .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 48px 0; }
@@ -481,7 +481,8 @@
     .scenario-card::before { left: -28px; width: 10px; height: 10px; }
     .scenario-timeline-line { left: 12px; }
     .thesis-pin-container { flex-direction: column; width: 100%; }
-    .thesis-intro, .vignette-panel, .thesis-reveal-panel { width: 100%; min-height: auto; padding: 60px 24px; }
+    .thesis-intro, .vignette-panel, .thesis-reveal-panel { width: 100% !important; height: auto !important; min-height: 50vh; padding: 60px 24px; }
+    .thesis-pin-container { height: auto !important; }
     .btn-row-cta { flex-direction: column; align-items: center; }
     .timeline { padding-left: 36px; }
     .invitation-section { padding: 80px 20px; }
@@ -659,7 +660,7 @@
 <section id="ecosystem" class="bg-light">
   <div class="narrow">
     <p class="label gs-fade">The Help Exists</p>
-    <h2 class="gs-fade">The help exists.</h2>
+    <h2 class="gs-fade">Everyone responds. They just can't see each other.</h2>
     <div class="accent-line gs-fade"></div>
     <p class="body-lg gs-fade" style="margin-top: 24px;">
       The response to every disaster is bigger, faster, and more capable than any system gives it credit for. Everyone responds. They just can't see each other.
@@ -1098,8 +1099,8 @@
 
   // ─── NAV: show after scrolling past hero ───
   ScrollTrigger.create({
-    trigger: '#hero',
-    start: 'bottom top+=100',
+    trigger: '#crisis',
+    start: 'top bottom-=100',
     onEnter: function() { gsap.to('nav', { opacity: 1, duration: 0.4 }); },
     onLeaveBack: function() { gsap.to('nav', { opacity: 0, duration: 0.3 }); }
   });
