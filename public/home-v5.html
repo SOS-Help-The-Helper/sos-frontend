@@ -996,18 +996,57 @@
     await wait(800);
     await gsapTo('#heroPhase1', { opacity: 0, duration: 0.5 });
 
-    // Phase 2: Type "They just need a way to coordinate."
-    await gsapTo('#heroPhase2', { opacity: 1, duration: 0.3 });
-    await typeText(document.getElementById('typedLine2'), "Coordination is key.", 55);
-    // Make "coordinate" glow red
-    var line2 = document.getElementById('typedLine2');
-    line2.innerHTML = 'Coordination is <span id="coordWord" style="transition: all 0.8s ease;">key</span>.';
+    // Phase 2: Scramble letters then assemble "but coordination is the key."
+    var sentence = "but coordination is the key.";
+    var coordStart = 4;
+    var coordEnd = 16;
+    var container = document.getElementById('scrambleLine');
+    
+    var letters = [];
+    for (var ci = 0; ci < sentence.length; ci++) {
+      var span = document.createElement('span');
+      span.textContent = sentence[ci];
+      span.style.display = 'inline-block';
+      span.style.position = 'relative';
+      span.style.opacity = '0';
+      if (sentence[ci] === ' ') span.style.width = '0.3em';
+      container.appendChild(span);
+      letters.push(span);
+    }
+    
+    gsap.set('#heroPhase2', { opacity: 1 });
+    
+    letters.forEach(function(span) {
+      if (span.textContent.trim() === '') return;
+      var rx = (Math.random() - 0.5) * window.innerWidth * 0.8;
+      var ry = (Math.random() - 0.5) * window.innerHeight * 0.6;
+      var rr = (Math.random() - 0.5) * 360;
+      gsap.set(span, { x: rx, y: ry, rotation: rr, opacity: 0.15, scale: 0.5 + Math.random() * 1.5 });
+    });
+    
+    await wait(600);
+    
+    await new Promise(function(resolve) {
+      gsap.to(letters, {
+        x: 0, y: 0, rotation: 0, opacity: 1, scale: 1,
+        duration: 1.2, ease: 'power3.inOut',
+        stagger: { amount: 0.4, from: 'random' },
+        onComplete: resolve
+      });
+    });
+    
+    await wait(300);
+    for (var gi = coordStart; gi < coordEnd; gi++) {
+      letters[gi].style.color = '#e74c3c';
+      letters[gi].style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
+      letters[gi].style.transition = 'color 0.5s, text-shadow 0.5s';
+    }
     await wait(200);
-    var cw = document.getElementById('coordWord');
-    cw.style.color = '#e74c3c';
-    cw.style.textShadow = '0 0 20px rgba(231,76,60,0.5), 0 0 40px rgba(231,76,60,0.3)';
-    cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-    await wait(1000);
+    for (var pi = coordStart; pi < coordEnd; pi++) {
+      letters[pi].style.animation = 'coordPulse 2s ease-in-out infinite';
+    }
+    
+    await wait(1500);
     await gsapTo('#heroPhase2', { opacity: 0, duration: 0.8 });
 
     // Phase 3: SOS logomark + name
