@@ -1234,21 +1234,32 @@
     mc.style.textAlign = 'center';
     mc.style.opacity = '1';
 
-    var staticLine = document.createElement('div');
-    staticLine.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;margin-bottom:16px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 0.3em;';
-    mc.appendChild(staticLine);
+    var line1 = document.createElement('div');
+    line1.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;display:flex;justify-content:center;gap:0 0.3em;';
+    mc.appendChild(line1);
 
-    var promptPairs = [['what', 'if'], ['they', 'could']];
+    var line2 = document.createElement('div');
+    line2.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;margin-bottom:16px;display:flex;justify-content:center;gap:0 0.3em;';
+    mc.appendChild(line2);
+
     var allSpans = [];
-    promptPairs.forEach(function(pair) {
-      pair.forEach(function(w) {
-        var s = document.createElement('span');
-        s.textContent = w;
-        s.style.display = 'inline-block';
-        s.style.opacity = '0';
-        staticLine.appendChild(s);
-        allSpans.push(s);
-      });
+    // Row 1: "what if"
+    ['what', 'if'].forEach(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.style.opacity = '0';
+      line1.appendChild(s);
+      allSpans.push(s);
+    });
+    // Row 2: "they could"
+    ['they', 'could'].forEach(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.style.opacity = '0';
+      line2.appendChild(s);
+      allSpans.push(s);
     });
 
     var rotatingEl = document.createElement('div');
