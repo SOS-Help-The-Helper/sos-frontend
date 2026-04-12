@@ -1165,6 +1165,16 @@
 
     // Type line 1
     await typeInto(typingSpan, "when relief systems fail", 78, "");
+    // Wrap "fail" in a span for flickering
+    typingSpan.innerHTML = typingSpan.innerHTML.replace('fail', '<span id="failWord">fail</span>');
+    var fw = document.getElementById('failWord');
+    // Flicker 1: dip to 25%
+    await anim(fw, { opacity: 0.25, duration: 0.08 });
+    await anim(fw, { opacity: 1, duration: 0.12 });
+    await wait(200);
+    // Flicker 2: dip to 55%
+    await anim(fw, { opacity: 0.55, duration: 0.06 });
+    await anim(fw, { opacity: 1, duration: 0.1 });
     await wait(500);
     // Add line break
     typingSpan.innerHTML += '<br><span style="display:block;height:12px;"></span>';
@@ -1174,10 +1184,15 @@
     await new Promise(function(resolve) {
       var text2 = "communities step up";
       var i = 0;
+      var hlEnd = 11; // "communities".length
       function step() {
         if (i < text2.length) {
           i++;
-          line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text2.substring(0,i) + '</span>';
+          if (i <= hlEnd) {
+            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text2.substring(0,i) + '</span>';
+          } else {
+            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">communities</span>' + text2.substring(hlEnd,i);
+          }
           setTimeout(step, 78);
         } else { resolve(); }
       }
@@ -1230,7 +1245,22 @@
 
     // Stars fade in
     await anim(allSpans, { opacity: 0.2, duration: 0.5, stagger: { amount: 0.5, from: 'random' }, ease: 'power1.in' });
-    await wait(150);
+
+    // Float/drift while scattered
+    allSpans.forEach(function(s) {
+      gsap.to(s, {
+        x: '+=' + gsap.utils.random(-30, 30),
+        y: '+=' + gsap.utils.random(-20, 20),
+        duration: gsap.utils.random(1.5, 2.5),
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1
+      });
+    });
+    await wait(1500);
+
+    // Kill drift before assembling
+    allSpans.forEach(function(s) { gsap.killTweensOf(s); });
 
     // Assemble
     await anim(allSpans, { x: 0, y: 0, opacity: 1, scale: 1, duration: 1.0, ease: 'power2.inOut', stagger: 0.08 });
