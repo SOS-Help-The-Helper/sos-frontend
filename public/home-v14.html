@@ -1367,19 +1367,31 @@
     rainState.speed = 1.5;
     rainState.phase = 2;
 
-    // Static line: "what if they could"
+    // "what if they could" — word by word
     var staticLine = document.createElement('div');
-    staticLine.textContent = 'what if they could';
-    staticLine.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#fff;margin-bottom:16px;opacity:0;';
+    staticLine.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#fff;margin-bottom:16px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 0.3em;';
     mc.appendChild(staticLine);
+
+    var promptWords = ['what', 'if', 'they', 'could'];
+    var pwSpans = promptWords.map(function(w) {
+      var s = document.createElement('span');
+      s.textContent = w;
+      s.style.display = 'inline-block';
+      s.style.opacity = '0';
+      staticLine.appendChild(s);
+      return s;
+    });
 
     // Rotating completion word
     var rotatingEl = document.createElement('div');
     rotatingEl.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#89CFF0;min-height:50px;text-shadow:0 0 15px rgba(137,207,240,0.3);';
     mc.appendChild(rotatingEl);
 
-    // Fade in static line
-    await anim(staticLine, { opacity: 1, duration: 0.5 });
+    // Boom boom boom boom — each word crystallizes
+    for (var pwi = 0; pwi < pwSpans.length; pwi++) {
+      await anim(pwSpans[pwi], { opacity: 1, duration: 0.2, ease: 'power2.out' });
+      await wait(120);
+    }
 
     // Rotate through completions
     var completions = ['see the full picture', 'find each other', 'move as one'];
