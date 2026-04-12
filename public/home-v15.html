@@ -1018,7 +1018,7 @@
   };
 
   // Character pool — pre-built for performance
-  var charPool = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+  var charPool = '0011010011001110100101101001011010011100101010110100110101001011';
   var charArr = charPool.split('');
   function randChar() { return charArr[(Math.random() * charArr.length) | 0]; }
 
@@ -1249,7 +1249,7 @@
     mc.style.opacity = '1';
 
     // Type "when help doesn't show up"
-    var mxChars = '0123456789ABCDEFアイウエオカキクケコ'.split('');
+    var mxChars = '01001101001011001110100110'.split('');
     function mxChar() { return mxChars[(Math.random() * mxChars.length) | 0]; }
     
     await typeInto(typingSpan, "when help doesn't show up", 78, "");
@@ -1270,13 +1270,13 @@
       var el1 = dSpans1[d1i];
       if (el1.textContent === ' ') { gsap.to(el1, {opacity:0, duration:0.1}); continue; }
       (function(el) {
-        var sc=0, mx=4+Math.floor(Math.random()*4);
+        var sc=0, mx=5+Math.floor(Math.random()*5);
         var iv = setInterval(function() {
           el.textContent = mxChar();
-          el.style.color = 'rgba(137,207,240,0.5)';
+          el.style.color = 'rgba(137,207,240,0.4)';
           sc++;
-          if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.15}); }
-        }, 50);
+          if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.2}); }
+        }, 80);
       })(el1);
       await wait(25);
     }
@@ -1316,13 +1316,13 @@
       var el2 = dSpans2[d2i];
       if (el2.textContent.trim() === '') { gsap.to(el2, {opacity:0, duration:0.1}); continue; }
       (function(el) {
-        var sc=0, mx=4+Math.floor(Math.random()*4);
+        var sc=0, mx=5+Math.floor(Math.random()*5);
         var iv = setInterval(function() {
           el.textContent = mxChar();
-          el.style.color = 'rgba(137,207,240,0.5)';
+          el.style.color = 'rgba(137,207,240,0.4)';
           sc++;
-          if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.15}); }
-        }, 50);
+          if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.2}); }
+        }, 80);
       })(el2);
       await wait(25);
     }
@@ -1368,8 +1368,8 @@
     // SLAM — each word hits the screen
     for (var pwi = 0; pwi < pwSpans.length; pwi++) {
       gsap.set(pwSpans[pwi], { scale: 1.4, y: -15 });
-      await anim(pwSpans[pwi], { opacity: 1, scale: 1, y: 0, duration: 0.15, ease: 'back.out(2)' });
-      await wait(180);
+      await anim(pwSpans[pwi], { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(2)' });
+      await wait(300);
     }
 
     // Rotate through completions
