@@ -1189,8 +1189,9 @@
     typingSpan.appendChild(br);
     var spacer = document.createElement('span');
     spacer.style.display = 'block';
-    spacer.style.height = '12px';
+    spacer.style.height = '24px';
     typingSpan.appendChild(spacer);
+    await wait(500);
     // Type line 2 into a new span
     var line2Span = document.createElement('span');
     typingSpan.appendChild(line2Span);
@@ -1214,25 +1215,35 @@
 
     // Stop fail flicker
     failFlicker = false;
-    // Re-query failWord since innerHTML manipulation may have detached the original reference
     fw = document.getElementById('failWord');
-    if (fw) gsap.set(fw, { opacity: 1 });
+    if (fw) {
+      gsap.set(fw, { opacity: 1 });
+      // Add a space after "fail" so it doesn't overlap "systems" visually
+      fw.style.marginRight = '0.3em';
+      
+      // One crackle — something's breaking
+      await anim(fw, { opacity: 0.2, duration: 0.06 });
+      await anim(fw, { opacity: 0.9, duration: 0.08 });
+      await wait(100);
+      
+      // Fall — swing down from top-left pivot
+      await anim(fw, { 
+        rotation: 90, 
+        opacity: 0.5,
+        duration: 0.35, 
+        ease: 'power3.in'
+      });
+      // Bounce back 30%
+      await anim(fw, { rotation: 63, opacity: 0.7, duration: 0.25, ease: 'power2.out' });
+      // Bounce down to 15% from original
+      await anim(fw, { rotation: 77, opacity: 0.5, duration: 0.2, ease: 'power2.in' });
+      // Bounce back 15%
+      await anim(fw, { rotation: 72, opacity: 0.45, duration: 0.15, ease: 'power1.out' });
+      // Settle at final position
+      await anim(fw, { rotation: 80, opacity: 0.3, duration: 0.2, ease: 'sine.inOut' });
+    }
     
-    // "fail" breaks — swings down like a broken sign
-    if (!fw) fw = document.querySelector('#failWord');
-    await anim(fw, { 
-      rotation: 85, 
-      y: 10,
-      opacity: 0.6,
-      duration: 0.4, 
-      ease: 'power2.in'
-    });
-    // Slight bounce back
-    await anim(fw, { rotation: 70, duration: 0.2, ease: 'power1.out' });
-    // Settle and swing gently
-    await anim(fw, { rotation: 78, opacity: 0.3, duration: 0.3, ease: 'sine.inOut' });
-    
-    await wait(400);
+    await wait(300);
     
     // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
