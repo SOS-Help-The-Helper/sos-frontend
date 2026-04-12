@@ -1165,16 +1165,24 @@
 
     // Type line 1
     await typeInto(typingSpan, "when relief systems fail", 78, "");
-    // Wrap "fail" in a span for flickering
-    typingSpan.innerHTML = typingSpan.innerHTML.replace('fail', '<span id="failWord">fail</span>');
+    // Wrap "fail" in a span
+    typingSpan.innerHTML = typingSpan.innerHTML.replace('fail', '<span id="failWord" style="display:inline-block;transform-origin:top left;">fail</span>');
     var fw = document.getElementById('failWord');
-    // Flicker 1: dip to 25%
-    await anim(fw, { opacity: 0.25, duration: 0.08 });
-    await anim(fw, { opacity: 1, duration: 0.12 });
-    await wait(200);
-    // Flicker 2: dip to 55%
-    await anim(fw, { opacity: 0.55, duration: 0.06 });
-    await anim(fw, { opacity: 1, duration: 0.1 });
+    
+    // Start continuous random flicker on "fail"
+    var failFlicker = true;
+    (function flickerFail() {
+      if (!failFlicker) return;
+      var dip = 0.15 + Math.random() * 0.5;
+      var dipDur = 0.05 + Math.random() * 0.1;
+      var hold = 0.3 + Math.random() * 1.0;
+      gsap.to(fw, { opacity: dip, duration: dipDur, onComplete: function() {
+        gsap.to(fw, { opacity: 1, duration: dipDur * 2, onComplete: function() {
+          setTimeout(flickerFail, hold * 1000);
+        }});
+      }});
+    })();
+    
     await wait(500);
     // Add line break
     typingSpan.innerHTML += '<br><span style="display:block;height:12px;"></span>';
@@ -1199,6 +1207,25 @@
       step();
     });
 
+    // Stop fail flicker
+    failFlicker = false;
+    gsap.set(fw, { opacity: 1 });
+    
+    // "fail" breaks — swings down like a broken sign
+    await anim(fw, { 
+      rotation: 85, 
+      y: 10,
+      opacity: 0.6,
+      duration: 0.4, 
+      ease: 'power2.in'
+    });
+    // Slight bounce back
+    await anim(fw, { rotation: 70, duration: 0.2, ease: 'power1.out' });
+    // Settle and swing gently
+    await anim(fw, { rotation: 78, opacity: 0.3, duration: 0.3, ease: 'sine.inOut' });
+    
+    await wait(400);
+    
     // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
 
