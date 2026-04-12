@@ -648,6 +648,11 @@
     90%  { opacity: 0.75; }
     100% { opacity: 1; }
   }
+
+  @keyframes drawUnderline {
+    0% { width: 0; }
+    100% { width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -1162,23 +1167,17 @@
     await typeInto(typingSpan, "when relief systems fail", 68, "");
     await wait(500);
     // Add line break
-    typingSpan.innerHTML += '<br>';
+    typingSpan.innerHTML += '<br><span style="display:block;height:12px;"></span>';
     // Type line 2 into a new span
     var line2Span = document.createElement('span');
     typingSpan.appendChild(line2Span);
     await new Promise(function(resolve) {
       var text2 = "communities step up";
       var i = 0;
-      var hlWord = "communities";
-      var hs = 0, he = hlWord.length;
       function step() {
         if (i < text2.length) {
           i++;
-          if (i <= he) {
-            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text2.substring(0,i) + '</span>';
-          } else {
-            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + hlWord + '</span>' + text2.substring(he,i);
-          }
+          line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text2.substring(0,i) + '</span>';
           setTimeout(step, 68);
         } else { resolve(); }
       }
@@ -1241,11 +1240,12 @@
     await wait(400);
 
     // "force multipliers" crackles red
-    fmSpans.forEach(function(s) {
-      s.style.textDecoration = 'underline';
-      s.style.textDecorationColor = '#EF4E4B';
-      s.style.textUnderlineOffset = '6px';
-      s.style.textDecorationThickness = '2px';
+    fmSpans.forEach(function(s, idx) {
+      s.style.position = 'relative';
+      s.style.display = 'inline-block';
+      var line = document.createElement('span');
+      line.style.cssText = 'position:absolute;bottom:-4px;left:0;height:2px;background:#EF4E4B;width:0;animation:drawUnderline 0.6s ease-out ' + (idx * 0.15) + 's forwards;';
+      s.appendChild(line);
     });
 
     await wait(1200);
