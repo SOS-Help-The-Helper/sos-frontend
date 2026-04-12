@@ -465,6 +465,17 @@
   }
   .sos-icon-lg { width: 36px; height: 36px; }
 
+  /* ── Radar ping pulse (matches citizen portal) ── */
+  @keyframes radar-ping {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .radar-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid #EF4E4B;
+  }
+
   /* ── Will-change for animated hero elements ── */
   #heroTextStage, #heroPhase3, #heroLogoWrap { will-change: transform, opacity; }
 
@@ -597,6 +608,9 @@
     <!-- Phase 5: SOS logomark + name (no CSS pulse rings — drawn on canvas) -->
     <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
       <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; overflow: visible; z-index: 10;">
+        <span class="radar-ring" style="animation: radar-ping 3s ease-out infinite;"></span>
+        <span class="radar-ring" style="animation: radar-ping 3s ease-out 1s infinite;"></span>
+        <span class="radar-ring" style="animation: radar-ping 3s ease-out 2s infinite;"></span>
         <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
         <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
       </div>
@@ -1060,10 +1074,10 @@
             pending--;
             if (pending <= 0) resolve();
           } else {
-            setTimeout(tick, 40);
+            setTimeout(tick, 30);
           }
         }
-        setTimeout(tick, idx * 25);
+        setTimeout(tick, idx * 18);
       });
       if (pending === 0) resolve();
     });
@@ -1102,29 +1116,8 @@
 
   function drawPulse() {
     if (!heroVisible) { requestAnimationFrame(drawPulse); return; }
-
-    // Clear canvas
     ctx.fillStyle = '#0F1E2B';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw pulse rings
-    if (pulseState.startTime > 0) {
-      var elapsed = (performance.now() - pulseState.startTime) / 1000;
-      for (var ri = 0; ri < 3; ri++) {
-        var ringElapsed = elapsed - (ri * 0.6);
-        if (ringElapsed < 0) continue;
-        var progress = (ringElapsed % 3.0) / 3.0;
-        var ringRadius = 70 + progress * 180;
-        var ringOpacity = 0.5 * (1 - progress);
-        if (ringOpacity < 0.02) continue;
-        ctx.beginPath();
-        ctx.arc(pulseState.center.x, pulseState.center.y, ringRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(239, 78, 75, ' + ringOpacity + ')';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
-
     requestAnimationFrame(drawPulse);
   }
   requestAnimationFrame(drawPulse);
@@ -1164,7 +1157,7 @@
     var stage = document.getElementById('heroTextStage');
     var mc = document.getElementById('morphContainer');
     var isMobile = window.innerWidth < 640;
-    var p2FontSize = isMobile ? '24px' : '36px';
+    var p2FontSize = isMobile ? '28px' : '44px';
 
     function wipeCanvas() {
       ctx.fillStyle = '#0F1E2B';
@@ -1177,7 +1170,7 @@
       el.style.animation = 'blink 0.8s step-end infinite';
     }
 
-    await wait(800);
+    await wait(550);
 
     // ═══ PHASE 1: "when help doesn't show up" ═══
     gsap.set(stage, { opacity: 1 });
@@ -1190,26 +1183,26 @@
     mc.appendChild(typingSpan);
 
     await typeInto(typingSpan, "when help doesn't show up", 78, '');
-    await wait(600);
+    await wait(420);
 
     await dissolveText(typingSpan, function() { return 'rgba(255,255,255,0.5)'; });
-    await wait(300);
+    await wait(200);
     wipeCanvas();
 
     // ═══ PHASE 2: "people do" ═══
-    await wait(1000);
+    await wait(500);
     mc.innerHTML = '';
     typingSpan = document.createElement('span');
     makeCursor(typingSpan);
     mc.appendChild(typingSpan);
 
-    await typeInto(typingSpan, 'people do', 160, 'people');
-    await wait(1100);
+    await typeInto(typingSpan, 'people do', 100, 'people');
+    await wait(750);
 
     // Simple fade out
     typingSpan.style.borderRight = 'none';
     typingSpan.style.animation = 'none';
-    await anim(mc, { opacity: 0, duration: 1.2, ease: 'power2.inOut' });
+    await anim(mc, { opacity: 0, duration: 1.5, ease: 'power2.inOut' });
     wipeCanvas();
 
     // ═══ PHASE 3: "what if they could" + rotating completions ═══
@@ -1242,10 +1235,10 @@
     for (var pwi = 0; pwi < pwSpans.length; pwi++) {
       gsap.set(pwSpans[pwi], { scale: 1.4, y: -15 });
       await anim(pwSpans[pwi], { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(2)' });
-      await wait(300);
+      await wait(200);
     }
 
-    await wait(500);
+    await wait(350);
     // Rotate completions
     var completions = ['find each other', 'see the full picture', 'move as one'];
     for (var ci = 0; ci < completions.length; ci++) {
@@ -1253,18 +1246,18 @@
       gsap.set(rotatingEl, { opacity: 0, y: 12 });
       await anim(rotatingEl, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
       if (ci === completions.length - 1) {
-        await wait(200);
+        await wait(140);
         rotatingEl.style.color = '#EF4E4B';
         rotatingEl.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
         rotatingEl.style.transition = 'color 0.5s, text-shadow 0.5s';
-        await wait(1200);
+        await wait(840);
       } else {
-        await wait(700);
+        await wait(490);
         await anim(rotatingEl, { opacity: 0, y: -12, duration: 0.25, ease: 'power2.in' });
       }
     }
 
-    await wait(500);
+    await wait(350);
 
     // Rebuild as two lines for dissolve
     mc.innerHTML = '';
@@ -1278,10 +1271,10 @@
     dissL2.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35);';
     mc.appendChild(dissL2);
 
-    await wait(300);
+    await wait(200);
     await dissolveText(dissL1, function() { return 'rgba(255,255,255,0.5)'; });
     await dissolveText(dissL2, function() { return 'rgba(239,78,75,0.5)'; });
-    await wait(500);
+    await wait(350);
     wipeCanvas();
 
     // ═══ PHASE 4: "everyone is a helper / we help the helpers" — RAIN STARTS ═══
@@ -1298,7 +1291,7 @@
     mc.appendChild(line4a);
 
     await typeInto(line4a, 'everyone is a helper', 80, '');
-    await wait(500);
+    await wait(350);
 
     var line4b = document.createElement('div');
     line4b.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#89CFF0;text-shadow:0 0 15px rgba(137,207,240,0.3);';
@@ -1306,7 +1299,7 @@
     mc.appendChild(line4b);
 
     await typeInto(line4b, 'we help the helpers', 80, '');
-    await wait(800);
+    await wait(550);
 
     // Re-create as plain text for dissolve
     line4a.textContent = 'everyone is a helper';
@@ -1316,7 +1309,7 @@
 
     await dissolveText(line4a, function() { return 'rgba(255,255,255,0.5)'; });
     await dissolveText(line4b, function() { return 'rgba(137,207,240,0.5)'; });
-    await wait(500);
+    await wait(350);
 
     // ═══ PHASE 5: SOS Logomark + Full Rain + Canvas Pulse Rings ═══
     wipeCanvas();
@@ -1325,28 +1318,22 @@
     gsap.set('#heroPhase3', { opacity: 1 });
     var logoWrap = document.getElementById('heroLogoWrap');
     logoWrap.style.animation = 'motelFlicker 3s ease-out forwards';
-    await wait(1800);
+    await wait(1260);
 
-    // Set pulse center to logomark position (canvas coords)
-    var logoRect = canvasPos(logoWrap);
-    pulseState.center.x = logoRect.left + logoRect.width / 2;
-    pulseState.center.y = logoRect.top + logoRect.height / 2;
-
-    // Start canvas-drawn pulse rings
-    pulseState.startTime = performance.now();
+    // Pulse rings are CSS-driven (radar-ping animation on the spans inside heroLogoWrap)
 
     // Tagline
-    await wait(600);
+    await wait(420);
     gsap.set('#heroTagline', { opacity: 1 });
-    await anim('.tag-word', { opacity: 1, y: 0, duration: 0.4, stagger: 0.3, ease: 'power2.out' });
+    await anim('.tag-word', { opacity: 1, y: 0, duration: 0.5, stagger: 0.3, ease: 'power2.out' });
 
-    await wait(400);
+    await wait(280);
     document.querySelectorAll('.hero-card-text').forEach(function(el, i) {
       setTimeout(function() { el.classList.add('glow'); }, i * 400);
     });
 
     // Scroll hint
-    await wait(800);
+    await wait(550);
     gsap.to('#scrollHint', {
       opacity: 1, duration: 0.5,
       onComplete: function() {
