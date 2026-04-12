@@ -1301,6 +1301,18 @@
     mc.appendChild(typingSpan);
     mc.style.opacity = '1';
 
+    // Helper: get position relative to canvas
+    function canvasPos(el) {
+      var r = el.getBoundingClientRect();
+      var cr = canvas.getBoundingClientRect();
+      return { 
+        left: r.left - cr.left, 
+        top: r.top - cr.top, 
+        width: r.width, 
+        height: r.height 
+      };
+    }
+
     // Type "when help doesn't show up"
     var mxChars = '0123456789.:;=+<>|/\\{}[]~^*#@!?$%&'.split('');
     function mxChar() { return mxChars[(Math.random() * mxChars.length) | 0]; }
@@ -1332,7 +1344,7 @@
             clearInterval(iv);
             gsap.to(el, {opacity:0, duration:0.2});
             // Spawn rain streaks from this character's position
-            var rect = el.getBoundingClientRect();
+            var rect = canvasPos(el);
             for (var mp = 0; mp < 3; mp++) {
               mergeParticles.push({
                 x: rect.left + Math.random() * rect.width,
@@ -1397,7 +1409,7 @@
           if (sc>=mx) {
             clearInterval(iv);
             gsap.to(el, {opacity:0, duration:0.2});
-            var rect = el.getBoundingClientRect();
+            var rect = canvasPos(el);
             for (var mp = 0; mp < 3; mp++) {
               mergeParticles.push({
                 x: rect.left + Math.random() * rect.width,
@@ -1514,7 +1526,7 @@
           if (sc>=mx) {
             clearInterval(iv);
             gsap.to(el, {opacity:0, duration:0.15});
-            var rect = el.getBoundingClientRect();
+            var rect = canvasPos(el);
             for (var mp = 0; mp < 3; mp++) {
               mergeParticles.push({
                 x: rect.left + Math.random() * rect.width,
