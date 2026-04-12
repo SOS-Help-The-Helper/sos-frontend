@@ -1158,27 +1158,8 @@
 
     await typeInto(typingSpan, "when relief systems fail, communities step up", 68, "communities");
 
-    // ═══ PAUSE: Full text crackle on entire line, slower ═══
-    var textCrackle = true;
-    (function crackleLoop() {
-      if (!textCrackle) return;
-      var dip = 0.2 + Math.random() * 0.45; // 20-65%
-      var dipDur = 0.08 + Math.random() * 0.15; // 80-230ms dip
-      var holdDur = 0.5 + Math.random() * 1.5; // 500-2000ms between dips
-      gsap.to(mc, { opacity: dip, duration: dipDur, onComplete: function() {
-        gsap.to(mc, { opacity: 1, duration: dipDur * 2.5, onComplete: function() {
-          setTimeout(crackleLoop, holdDur * 1000);
-        }});
-      }});
-    })();
-    
-    await wait(4000);
-    textCrackle = false;
-    gsap.set(mc, { opacity: 1 });
-    
-    // ═══ TRANSITION 1→2: smooth fade out ═══
+    // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
-    await wait(400);
 
     // ═══ PHASE 2: Two rows — coordination, / turns communities into force multipliers ═══
     mc.innerHTML = '';
