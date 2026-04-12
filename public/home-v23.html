@@ -1210,20 +1210,19 @@
     await wait(200);
     wipeCanvas();
 
-    // ═══ PHASE 2: "people do" ═══
+    // ═══ PHASE 2: "people do" — slam on screen ═══
     await wait(500);
     mc.innerHTML = '';
-    typingSpan = document.createElement('span');
-    makeCursor(typingSpan);
-    mc.appendChild(typingSpan);
+    var slamSpan = document.createElement('span');
+    slamSpan.textContent = 'people do';
+    slamSpan.style.cssText = 'color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);font-size:' + (isMobile ? '32px' : '48px') + ';';
+    mc.appendChild(slamSpan);
+    gsap.set(slamSpan, { opacity: 0, scale: 1.4 });
+    await anim(slamSpan, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' });
+    await wait(1000);
 
-    await typeInto(typingSpan, 'people do', 100, 'people do');
-    await wait(750);
-
-    // Simple fade out
-    typingSpan.style.borderRight = 'none';
-    typingSpan.style.animation = 'none';
-    await anim(mc, { opacity: 0, duration: 1.5, ease: 'power2.inOut' });
+    // Fade out
+    await anim(mc, { opacity: 0, duration: 1.2, ease: 'power2.inOut' });
     wipeCanvas();
 
     // ═══ PHASE 3: "what if they could" + rotating completions ═══
@@ -1235,53 +1234,25 @@
     mc.style.opacity = '1';
 
     var line1 = document.createElement('div');
-    line1.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;display:flex;justify-content:center;gap:0 0.3em;';
+    line1.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;text-align:center;';
+    makeCursor(line1);
     mc.appendChild(line1);
 
     var line2 = document.createElement('div');
-    line2.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;margin-bottom:16px;display:flex;justify-content:center;gap:0 0.3em;';
+    line2.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;margin-bottom:16px;text-align:center;';
     mc.appendChild(line2);
-
-    var allSpans = [];
-    // Row 1: "what if"
-    ['what', 'if'].forEach(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.style.opacity = '0';
-      line1.appendChild(s);
-      allSpans.push(s);
-    });
-    // Row 2: "they could"
-    ['they', 'could'].forEach(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.style.opacity = '0';
-      line2.appendChild(s);
-      allSpans.push(s);
-    });
 
     var rotatingEl = document.createElement('div');
     rotatingEl.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#89CFF0;min-height:50px;text-shadow:0 0 15px rgba(137,207,240,0.3);';
     mc.appendChild(rotatingEl);
 
-    // Slam "what if" together, then "they could" together
-    // First pair: "what if"
-    gsap.set(allSpans[0], { scale: 1.4, y: -15 });
-    gsap.set(allSpans[1], { scale: 1.4, y: -15 });
-    await Promise.all([
-      anim(allSpans[0], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)' }),
-      anim(allSpans[1], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)', delay: 0.08 })
-    ]);
-    await wait(350);
-    // Second pair: "they could"
-    gsap.set(allSpans[2], { scale: 1.4, y: -15 });
-    gsap.set(allSpans[3], { scale: 1.4, y: -15 });
-    await Promise.all([
-      anim(allSpans[2], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)' }),
-      anim(allSpans[3], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)', delay: 0.08 })
-    ]);
+    // Type "what if" on row 1
+    await typeInto(line1, 'what if', 90, '');
+    await wait(300);
+
+    // Type "they could" on row 2
+    makeCursor(line2);
+    await typeInto(line2, 'they could', 90, '');
 
     await wait(350);
     // Rotate completions
