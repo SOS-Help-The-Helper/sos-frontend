@@ -1206,15 +1206,10 @@
     await typeInto(typingSpan, 'people do', 160, 'people');
     await wait(1100);
 
-    // Re-create as plain text for dissolve
-    typingSpan.textContent = 'people do';
+    // Simple fade out
     typingSpan.style.borderRight = 'none';
     typingSpan.style.animation = 'none';
-    await dissolveText(typingSpan, function(idx) {
-      return idx < 6 ? 'rgba(239,78,75,0.5)' : 'rgba(255,255,255,0.5)';
-    });
-    await wait(300);
-    await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
+    await anim(mc, { opacity: 0, duration: 1.2, ease: 'power2.inOut' });
     wipeCanvas();
 
     // ═══ PHASE 3: "what if they could" + rotating completions ═══
