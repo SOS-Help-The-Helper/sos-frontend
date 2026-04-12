@@ -1114,7 +1114,9 @@
     }
     function typeInto(el, text, speed, hlWord) {
       return new Promise(function(resolve) {
-        var i = 0, hs = text.indexOf(hlWord), he = hs + hlWord.length;
+        var hs = hlWord ? text.indexOf(hlWord) : -1;
+        var he = hs >= 0 ? hs + hlWord.length : -1;
+        var i = 0;
         function step() {
           if (i < text.length) {
             i++;
@@ -1156,9 +1158,31 @@
     mc.appendChild(typingSpan);
     mc.style.opacity = '1';
 
-    await typeInto(typingSpan, "when relief systems fail communities step up", 68, "communities");
-    // Force line break after "fail"
-    typingSpan.innerHTML = typingSpan.innerHTML.replace('fail ', 'fail<br>');
+    // Type line 1
+    await typeInto(typingSpan, "when relief systems fail", 68, "");
+    // Add line break
+    typingSpan.innerHTML += '<br>';
+    // Type line 2 into a new span
+    var line2Span = document.createElement('span');
+    typingSpan.appendChild(line2Span);
+    await new Promise(function(resolve) {
+      var text2 = "communities step up";
+      var i = 0;
+      var hlWord = "communities";
+      var hs = 0, he = hlWord.length;
+      function step() {
+        if (i < text2.length) {
+          i++;
+          if (i <= he) {
+            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + text2.substring(0,i) + '</span>';
+          } else {
+            line2Span.innerHTML = '<span style="color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15);">' + hlWord + '</span>' + text2.substring(he,i);
+          }
+          setTimeout(step, 68);
+        } else { resolve(); }
+      }
+      step();
+    });
 
     // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
