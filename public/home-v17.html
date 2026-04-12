@@ -1366,11 +1366,16 @@
     typingSpan.style.animation = 'none';
 
     // ═══ TRANSITION 1→2: Rain shifts red → blue, density increases ═══
+    // Wipe streaks from line 1
+    mergeParticles.length = 0;
+    ctx.fillStyle = '#0F1E2B';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     // Still no rain columns
     rainState.density = 0;
     rainState.phase = 1.5;
 
-    // Type line 2 "communities step up"
+    // Type line 2 "people do"
     typingSpan.innerHTML = '';
     typingSpan.style.opacity = '1';
     typingSpan.style.borderRight = '2px solid #EF4E4B';
