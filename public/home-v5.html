@@ -1162,46 +1162,62 @@
     // ═══ TRANSITION 1→2: smooth fade out ═══
     await anim(mc, { opacity: 0, duration: 0.6, ease: 'power2.inOut' });
 
-    // ═══ PHASE 2: Flicker in then stars materialize ═══
+    // ═══ PHASE 2: Two rows — coordination, / turns communities into force multipliers ═══
     mc.innerHTML = '';
     mc.style.display = 'flex';
-    mc.style.flexWrap = 'wrap';
-    mc.style.justifyContent = 'center';
-    mc.style.gap = '0 0.35em';
-    gsap.set(mc, { opacity: 1 });
+    mc.style.flexDirection = 'column';
+    mc.style.alignItems = 'center';
+    mc.style.gap = '8px';
+    mc.style.opacity = '1';
 
-    var line2row1 = ["coordination,"];
-    var line2row2 = ["turns", "communities", "into", "force", "multipliers"];
-    var p2 = line2.map(function(w) {
+    var row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;justify-content:center;gap:0 0.35em;';
+    mc.appendChild(row1);
+    var row2 = document.createElement('div');
+    row2.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;gap:0 0.35em;';
+    mc.appendChild(row2);
+
+    var allSpans = [];
+    var fmSpans = [];
+
+    // Row 1: coordination,
+    var cs = document.createElement('span');
+    cs.textContent = 'coordination,';
+    cs.style.display = 'inline-block';
+    cs.id = 'coordWord';
+    row1.appendChild(cs);
+    gsap.set(cs, { x: gsap.utils.random(-vw*0.3, vw*0.3), y: gsap.utils.random(-vh*0.2, vh*0.2), scale: 0.7, opacity: 0 });
+    allSpans.push(cs);
+
+    // Row 2: turns communities into force multipliers
+    ["turns", "communities", "into", "force", "multipliers"].forEach(function(w) {
       var s = document.createElement('span');
       s.textContent = w;
       s.style.display = 'inline-block';
-      if (w === 'coordination') s.id = 'coordWord';
-      mc.appendChild(s);
-      gsap.set(s, {
-        x: gsap.utils.random(-vw*0.3, vw*0.3),
-        y: gsap.utils.random(-vh*0.25, vh*0.25),
-        scale: 0.7, opacity: 0
-      });
-      return s;
+      row2.appendChild(s);
+      gsap.set(s, { x: gsap.utils.random(-vw*0.3, vw*0.3), y: gsap.utils.random(-vh*0.2, vh*0.2), scale: 0.7, opacity: 0 });
+      allSpans.push(s);
+      if (w === 'force' || w === 'multipliers') fmSpans.push(s);
     });
 
     // Stars fade in
-    await anim(p2, { opacity: 0.2, duration: 0.5, stagger: { amount: 0.5, from: 'random' }, ease: 'power1.in' });
+    await anim(allSpans, { opacity: 0.2, duration: 0.5, stagger: { amount: 0.5, from: 'random' }, ease: 'power1.in' });
     await wait(150);
 
     // Assemble
-    await anim(p2, { x: 0, y: 0, opacity: 1, scale: 1, duration: 1.0, ease: 'power2.inOut', stagger: 0.08 });
+    await anim(allSpans, { x: 0, y: 0, opacity: 1, scale: 1, duration: 1.0, ease: 'power2.inOut', stagger: 0.08 });
 
-    // "coordination" glows
-    var cw = document.getElementById('coordWord');
-    if (cw) {
-      gsap.to(cw, { color: '#EF4E4B', textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)', duration: 0.4 });
-      await wait(400);
-      cw.style.animation = 'coordPulse 2s ease-in-out infinite';
-    }
+    // "coordination" glows red
+    gsap.to(cs, { color: '#EF4E4B', textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)', duration: 0.4 });
+    await wait(400);
 
-    await wait(1000);
+    // "force multipliers" crackles red
+    fmSpans.forEach(function(s) {
+      s.style.color = '#EF4E4B';
+      s.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
+      s.style.animation = 'motelCrackle 1.5s ease-in-out infinite';
+    });
+    await wait(1200);
 
     // ═══ TRANSITION 2→3: Clean fade out ═══
     await anim(mc, { opacity: 0, duration: 0.8, ease: 'power2.inOut' });
