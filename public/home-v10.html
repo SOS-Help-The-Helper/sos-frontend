@@ -221,7 +221,7 @@
 
   .hero-title {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 44px; line-height: 1.2; color: #fff; font-weight: 400;
+    font-size: 36px; line-height: 1.25; color: #fff; font-weight: 400;
   }
   .hero-title .word {
     display: inline-block; opacity: 0; transform: translateY(24px);
@@ -463,7 +463,7 @@
   @media (max-width: 640px) {
     h1 { font-size: 36px; }
     h2 { font-size: 28px; }
-    .hero-title { font-size: 32px; }
+    .hero-title { font-size: 28px; }
     .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
     .stat-card .num { font-size: 44px; }
@@ -1177,53 +1177,60 @@
     
     await wait(300);
     
-    // ═══ DISSOLVE: text breaks into particles that scatter like dust in the wind ═══
-    // Get the bounding rect of the typing area
-    var textRect = typingSpan.getBoundingClientRect();
-    var mcRect = mc.getBoundingClientRect();
-    
-    // Create particle container
-    var particleLayer = document.createElement('div');
-    particleLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;';
-    mc.style.position = 'relative';
-    mc.appendChild(particleLayer);
-    
-    // Create particles based on text position
-    var particles = [];
-    var numParticles = 60;
-    for (var pi = 0; pi < numParticles; pi++) {
-      var dot = document.createElement('div');
-      dot.style.cssText = 'position:absolute;width:' + (2 + Math.random() * 3) + 'px;height:' + (2 + Math.random() * 3) + 'px;border-radius:50%;background:rgba(255,255,255,' + (0.3 + Math.random() * 0.7) + ');';
-      // Position particles across where the text was
-      var startX = (textRect.left - mcRect.left) + Math.random() * textRect.width;
-      var startY = (textRect.top - mcRect.top) + Math.random() * textRect.height;
-      dot.style.left = startX + 'px';
-      dot.style.top = startY + 'px';
-      particleLayer.appendChild(dot);
-      particles.push(dot);
+    // ═══ DISSOLVE: Characters disintegrate left-to-right into dust ═══
+    // Split text into individual character spans
+    var rawText = typingSpan.textContent || typingSpan.innerText;
+    typingSpan.innerHTML = '';
+    var charSpans = [];
+    for (var ci = 0; ci < rawText.length; ci++) {
+      var cs = document.createElement('span');
+      cs.textContent = rawText[ci];
+      cs.style.display = 'inline';
+      cs.style.position = 'relative';
+      typingSpan.appendChild(cs);
+      charSpans.push(cs);
     }
     
-    // Fade out text, show particles
-    gsap.to(typingSpan, { opacity: 0, duration: 0.3 });
+    mc.style.position = 'relative';
+    var particleLayer = document.createElement('div');
+    particleLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;';
+    mc.appendChild(particleLayer);
     
-    // Scatter particles to the right like dust in wind
-    await new Promise(function(resolve) {
-      gsap.to(particles, {
-        x: function() { return 150 + Math.random() * 400; },
-        y: function() { return (Math.random() - 0.3) * 100; },
-        opacity: 0,
-        scale: function() { return 0.3 + Math.random() * 0.5; },
-        duration: function() { return 1.0 + Math.random() * 0.8; },
-        ease: 'power1.out',
-        stagger: { amount: 0.3, from: 'random' },
-        onComplete: resolve
-      });
-    });
+    var mcRect = mc.getBoundingClientRect();
     
-    // Clean up particles
+    // Disintegrate each character progressively left-to-right
+    for (var di = 0; di < charSpans.length; di++) {
+      var ch = charSpans[di];
+      if (ch.textContent === ' ') { gsap.set(ch, { opacity: 0 }); continue; }
+      
+      var chRect = ch.getBoundingClientRect();
+      var cx = chRect.left - mcRect.left + chRect.width / 2;
+      var cy = chRect.top - mcRect.top + chRect.height / 2;
+      
+      // Create 3-5 particles per character
+      var numP = 3 + Math.floor(Math.random() * 3);
+      for (var pp = 0; pp < numP; pp++) {
+        var dot = document.createElement('div');
+        var size = 1.5 + Math.random() * 2.5;
+        dot.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;border-radius:50%;background:rgba(255,255,255,'+(0.4+Math.random()*0.6)+');left:'+cx+'px;top:'+cy+'px;';
+        particleLayer.appendChild(dot);
+        gsap.to(dot, {
+          x: 80 + Math.random() * 250,
+          y: (Math.random() - 0.4) * 60,
+          opacity: 0,
+          duration: 0.8 + Math.random() * 0.6,
+          ease: 'power1.out',
+          delay: Math.random() * 0.1
+        });
+      }
+      
+      // Fade out the character
+      gsap.to(ch, { opacity: 0, duration: 0.15 });
+      await wait(35); // stagger per character — slow disintegration
+    }
+    
+    await wait(400);
     particleLayer.remove();
-    
-    await wait(200);
     // Clear and type line 2 in same position
     typingSpan.innerHTML = '';
     typingSpan.style.opacity = '1';
@@ -1231,7 +1238,14 @@
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
     // Type line 2 into a new span
-    await typeInto(typingSpan, "communities step up", 78, "communities");
+    await typeInto(typingSpan, "communities step up", 78, "");
+    // Glow "communities" red after all text displayed
+    typingSpan.innerHTML = typingSpan.innerHTML.replace('communities', '<span id="commWord">communities</span>');
+    await wait(500);
+    var commW = document.getElementById('commWord');
+    if (commW) {
+      gsap.to(commW, { color: '#EF4E4B', textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)', duration: 0.5 });
+    }
 
     fw = document.getElementById('failWord');
     if (fw) {
@@ -1281,55 +1295,38 @@
     // Fade in container
     gsap.to(mc, { opacity: 1, duration: 0.4 });
 
-    // Words already visible and swirling fast like a tornado
+    // Words visible in mini-tornado clusters — 2-3 words per cluster
     allSpans.forEach(function(s) {
-      gsap.set(s, { opacity: 0.35 });
+      gsap.set(s, { opacity: 0.3 });
     });
     
-    // Tornado swirl — each word orbits in a circular/elliptical path at different speeds
-    allSpans.forEach(function(s, idx) {
-      var radius = 80 + Math.random() * 120;
-      var speed = 1.5 + Math.random() * 1.5;
-      var startAngle = (idx / allSpans.length) * Math.PI * 2;
-      var cx = parseFloat(gsap.getProperty(s, 'x')) || 0;
-      var cy = parseFloat(gsap.getProperty(s, 'y')) || 0;
-      gsap.to(s, {
-        duration: speed,
-        ease: 'none',
-        repeat: -1,
-        motionPath: {
-          path: function() {
-            // Generate circular path points
-            var pts = [];
-            for (var a = 0; a < Math.PI * 2; a += 0.3) {
-              pts.push({ x: cx + Math.cos(a + startAngle) * radius, y: cy + Math.sin(a + startAngle) * radius * 0.6 });
-            }
-            return pts;
-          }
-        }
-      });
-    });
-    // Actually motionPath needs the plugin — use simpler orbital approach
-    // Kill the above and do manual sine/cosine orbits
-    allSpans.forEach(function(s) { gsap.killTweensOf(s); });
+    // Group words into clusters of 2
+    var clusters = [];
+    for (var ci = 0; ci < allSpans.length; ci += 2) {
+      clusters.push(allSpans.slice(ci, Math.min(ci + 2, allSpans.length)));
+    }
     
+    // Each cluster has its own center point and rotation
     var tornadoActive = true;
     var tornadoStart = Date.now();
-    allSpans.forEach(function(s, idx) {
-      var baseX = parseFloat(gsap.getProperty(s, 'x')) || gsap.utils.random(-vw*0.25, vw*0.25);
-      var baseY = parseFloat(gsap.getProperty(s, 'y')) || gsap.utils.random(-vh*0.2, vh*0.2);
-      var orbRadius = 50 + Math.random() * 100;
-      var orbSpeed = 2 + Math.random() * 3; // radians per second
-      var phase = (idx / allSpans.length) * Math.PI * 2;
+    clusters.forEach(function(cluster, cIdx) {
+      // Each cluster orbits around its own center
+      var clusterCenterX = gsap.utils.random(-vw*0.2, vw*0.2);
+      var clusterCenterY = gsap.utils.random(-vh*0.15, vh*0.15);
+      var clusterSpeed = 3 + Math.random() * 4;
+      var clusterRadius = 25 + Math.random() * 40;
       
-      (function orbit() {
-        if (!tornadoActive) return;
-        var t = (Date.now() - tornadoStart) / 1000;
-        var nx = baseX + Math.cos(t * orbSpeed + phase) * orbRadius;
-        var ny = baseY + Math.sin(t * orbSpeed + phase) * orbRadius * 0.5;
-        gsap.set(s, { x: nx, y: ny });
-        requestAnimationFrame(orbit);
-      })();
+      cluster.forEach(function(s, sIdx) {
+        var phase = sIdx * Math.PI; // offset within cluster
+        (function orbit() {
+          if (!tornadoActive) return;
+          var t = (Date.now() - tornadoStart) / 1000;
+          var nx = clusterCenterX + Math.cos(t * clusterSpeed + phase) * clusterRadius;
+          var ny = clusterCenterY + Math.sin(t * clusterSpeed + phase) * clusterRadius * 0.6;
+          gsap.set(s, { x: nx, y: ny, rotation: Math.sin(t * clusterSpeed * 0.5) * 15 });
+          requestAnimationFrame(orbit);
+        })();
+      });
     });
     
     await wait(1500);
