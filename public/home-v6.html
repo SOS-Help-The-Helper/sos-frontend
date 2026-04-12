@@ -1182,7 +1182,7 @@
 
     // Row 1: coordination,
     var cs = document.createElement('span');
-    cs.textContent = 'coordination,';
+    cs.textContent = 'coordination';
     cs.style.display = 'inline-block';
     cs.id = 'coordWord';
     row1.appendChild(cs);
@@ -1190,14 +1190,14 @@
     allSpans.push(cs);
 
     // Row 2: turns communities into force multipliers
-    ["turns", "communities", "into", "force", "multipliers"].forEach(function(w) {
+    ["is", "the", "force", "multiplier"].forEach(function(w) {
       var s = document.createElement('span');
       s.textContent = w;
       s.style.display = 'inline-block';
       row2.appendChild(s);
       gsap.set(s, { x: gsap.utils.random(-vw*0.3, vw*0.3), y: gsap.utils.random(-vh*0.2, vh*0.2), scale: 0.7, opacity: 0 });
       allSpans.push(s);
-      if (w === 'force' || w === 'multipliers') fmSpans.push(s);
+      if (w === 'force' || w === 'multiplier') fmSpans.push(s);
     });
 
     // Stars fade in
