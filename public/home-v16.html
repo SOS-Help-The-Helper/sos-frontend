@@ -1421,15 +1421,51 @@
 
     await wait(500);
 
-// ═══ TRANSITION 2→3: Rain converges, density drops, speed slows ═══
-    rainState.converging = true;
-    rainState.convergenceX = canvas.width / 2;
-    rainState.convergenceY = canvas.height / 2;
-    rainState.density = 0.15;
-    rainState.speed = 0.5;
+    // Matrix dissolve "what if they could" + last rotating word
+    var allText2 = mc.textContent || '';
+    mc.innerHTML = '';
+    var d3Spans = [];
+    for (var d3i = 0; d3i < allText2.length; d3i++) {
+      var d3s = document.createElement('span');
+      d3s.textContent = allText2[d3i];
+      d3s.style.display = 'inline';
+      mc.appendChild(d3s);
+      d3Spans.push(d3s);
+    }
+    for (var d3j = 0; d3j < d3Spans.length; d3j++) {
+      var d3el = d3Spans[d3j];
+      if (d3el.textContent.trim() === '') { gsap.to(d3el, {opacity:0, duration:0.1}); continue; }
+      (function(el) {
+        var sc=0, mx=4+Math.floor(Math.random()*3);
+        var iv = setInterval(function() {
+          el.textContent = mxChar();
+          el.style.color = 'rgba(137,207,240,0.2)'; el.style.filter = 'blur(1.5px)'; el.style.transform = 'scaleX(1.3)';
+          sc++;
+          if (sc>=mx) {
+            clearInterval(iv);
+            gsap.to(el, {opacity:0, duration:0.15});
+            var rect = el.getBoundingClientRect();
+            for (var mp = 0; mp < 3; mp++) {
+              mergeParticles.push({
+                x: rect.left + Math.random() * rect.width,
+                y: rect.top,
+                vx: 0, vy: 1.5 + Math.random() * 2,
+                char: mxChar(), life: 0.8 + Math.random() * 0.4
+              });
+            }
+          }
+        }, 40);
+      })(d3el);
+      await wait(20);
+    }
+    await wait(400);
+
+// ═══ TRANSITION 2→3: Rain erupts for logomark ═══
+    rainState.density = 0.3;
+    rainState.color = 'rgba(137, 207, 240, 0.30)';
+    rainState.speed = 1.5;
     rainState.phase = 2.5;
 
-    await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
     await wait(300);
     gsap.set(stage, { opacity: 0 });
 
