@@ -1018,7 +1018,7 @@
   };
 
   // Character pool — pre-built for performance
-  var charPool = '0011010011001110100101101001011010011100101010110100110101001011';
+  var charPool = '0123456789.:;=+<>|/\\{}[]~^*#@!?$%&';
   var charArr = charPool.split('');
   function randChar() { return charArr[(Math.random() * charArr.length) | 0]; }
 
@@ -1249,7 +1249,7 @@
     mc.style.opacity = '1';
 
     // Type "when help doesn't show up"
-    var mxChars = '01001101001011001110100110'.split('');
+    var mxChars = '0123456789.:;=+<>|/\\{}[]~^*#@!?$%&'.split('');
     function mxChar() { return mxChars[(Math.random() * mxChars.length) | 0]; }
     
     await typeInto(typingSpan, "when help doesn't show up", 78, "");
