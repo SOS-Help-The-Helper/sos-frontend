@@ -516,7 +516,7 @@
 
   /* Typing cursor */
   @keyframes blink {
-    0%, 100% { border-color: rgba(137,207,240,0.7); }
+    0%, 100% { border-color: #EF4E4B; }
     50% { border-color: transparent; }
   }
   #typedLine1, #typedLine2 {
@@ -1161,7 +1161,7 @@
 
 
     var typingSpan = document.createElement('span');
-    typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
+    typingSpan.style.borderRight = '2px solid #EF4E4B';
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
     mc.style.display = 'block';
@@ -1234,18 +1234,12 @@
     // Clear and type line 2 in same position
     typingSpan.innerHTML = '';
     typingSpan.style.opacity = '1';
-    typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
+    typingSpan.style.borderRight = '2px solid #EF4E4B';
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
     // Type line 2 into a new span
-    await typeInto(typingSpan, "communities step up", 78, "");
-    // Glow "communities" red after all text displayed
-    typingSpan.innerHTML = typingSpan.innerHTML.replace('communities', '<span id="commWord">communities</span>');
+    await typeInto(typingSpan, "communities step up", 78, "step up");
     await wait(500);
-    var commW = document.getElementById('commWord');
-    if (commW) {
-      gsap.to(commW, { color: '#EF4E4B', textShadow: '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)', duration: 0.5 });
-    }
 
     fw = document.getElementById('failWord');
     if (fw) {
