@@ -1024,36 +1024,18 @@
 
   function typeInto(el, text, speed, hlWord) {
     return new Promise(function(resolve) {
-      var hlStyle = 'color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
-      var hs = (hlWord && hlWord.length) ? text.indexOf(hlWord) : -1;
-      var he = hs >= 0 ? hs + hlWord.length : -1;
-
-      // Pre-build character spans (avoids innerHTML rebuild every frame)
-      el.innerHTML = '';
+      var i = 0;
       el.style.borderRight = '2px solid #EF4E4B';
       el.style.paddingRight = '4px';
       el.style.animation = 'blink 0.8s step-end infinite';
-      var charSpans = [];
-      for (var c = 0; c < text.length; c++) {
-        var cs = document.createElement('span');
-        cs.textContent = text[c];
-        cs.style.opacity = '0';
-        cs.style.display = 'inline';
-        if (hs >= 0 && c >= hs && c < he) {
-          cs.style.color = '#EF4E4B';
-          cs.style.textShadow = '0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
-        }
-        el.appendChild(cs);
-        charSpans.push(cs);
-      }
-
-      var i = 0;
       function step() {
-        if (i < charSpans.length) {
-          charSpans[i].style.opacity = '1';
+        if (i < text.length) {
           i++;
-          // Tight variance: 90%-110% of base speed for smooth feel
-          var delay = speed * (0.9 + Math.random() * 0.2);
+          el.textContent = text.substring(0, i);
+          // Re-apply cursor (textContent wipes styles on the element content but not the element itself)
+          el.style.borderRight = '2px solid #EF4E4B';
+          el.style.paddingRight = '4px';
+          var delay = speed * (0.92 + Math.random() * 0.16);
           setTimeout(step, delay);
         } else {
           el.style.borderRight = 'none';
@@ -1061,6 +1043,11 @@
           el.style.animation = 'none';
           resolve();
         }
+      }
+      // Apply highlight color if full text is highlighted
+      if (hlWord && hlWord === text) {
+        el.style.color = '#EF4E4B';
+        el.style.textShadow = '0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
       }
       step();
     });
