@@ -1182,12 +1182,10 @@
 
     // ═══ PHASE 1: "when help doesn't show up" ═══
     gsap.set(stage, { opacity: 1 });
-    mc.style.display = 'block';
-    mc.style.textAlign = 'center';
-    mc.style.opacity = '1';
+    mc.style.cssText = 'display:block;text-align:center;opacity:1;';
 
     var typingSpan = document.createElement('span');
-    makeCursor(typingSpan);
+    typingSpan.style.display = 'inline';
     mc.appendChild(typingSpan);
 
     await typeInto(typingSpan, "when help doesn't show up", 78, '');
