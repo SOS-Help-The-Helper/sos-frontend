@@ -1169,21 +1169,21 @@
     typingSpan.innerHTML = typingSpan.innerHTML.replace('fail', '<span id="failWord" style="display:inline-block;transform-origin:top left;">fail</span>');
     var fw = document.getElementById('failWord');
     
-    // Start continuous random flicker on "fail"
-    var failFlicker = true;
-    (function flickerFail() {
-      if (!failFlicker) return;
-      var dip = 0.05 + Math.random() * 0.25;
-      var dipDur = 0.05 + Math.random() * 0.1;
-      var hold = 0.3 + Math.random() * 1.0;
-      gsap.to(fw, { opacity: dip, duration: dipDur, onComplete: function() {
-        gsap.to(fw, { opacity: 1, duration: dipDur * 2, onComplete: function() {
-          setTimeout(flickerFail, hold * 1000);
-        }});
-      }});
-    })();
+
     
-    await wait(500);
+    // "fail" falls — 50%, bounce to 75%, then falls 100%
+    fw = document.getElementById('failWord');
+    if (fw) {
+      fw.style.marginRight = '0.3em';
+      // Fall 50% (45 degrees)
+      await anim(fw, { rotation: 45, opacity: 0.5, duration: 0.3, ease: 'power2.in' });
+      // Bounce back to 75% (about 22 degrees — 25% of original)
+      await anim(fw, { rotation: 22, opacity: 0.7, duration: 0.2, ease: 'power2.out' });
+      // Fall 100% (90 degrees)
+      await anim(fw, { rotation: 90, opacity: 0.1, duration: 0.35, ease: 'power3.in' });
+    }
+    
+    await wait(400);
     // Add line break (using DOM to preserve failWord reference)
     var br = document.createElement('br');
     typingSpan.appendChild(br);
@@ -1213,37 +1213,9 @@
       step();
     });
 
-    // Stop fail flicker
-    failFlicker = false;
     fw = document.getElementById('failWord');
     if (fw) {
-      gsap.set(fw, { opacity: 1 });
-      // Add a space after "fail" so it doesn't overlap "systems" visually
-      fw.style.marginRight = '0.3em';
-      
-      // One crackle — something's breaking
-      await anim(fw, { opacity: 0.2, duration: 0.06 });
-      await anim(fw, { opacity: 0.9, duration: 0.08 });
-      await wait(100);
-      
-      // Fall — swing down from top-left pivot
-      await anim(fw, { 
-        rotation: 90, 
-        opacity: 0.3,
-        duration: 0.35, 
-        ease: 'power3.in'
-      });
-      // Bounce back 30%
-      await anim(fw, { rotation: 63, opacity: 0.4, duration: 0.25, ease: 'power2.out' });
-      // Bounce down to 15% from original
-      await anim(fw, { rotation: 77, opacity: 0.25, duration: 0.2, ease: 'power2.in' });
-      // Bounce back 15%
-      await anim(fw, { rotation: 72, opacity: 0.2, duration: 0.15, ease: 'power1.out' });
-      // Settle at final position
-      await anim(fw, { rotation: 80, opacity: 0.08, duration: 0.2, ease: 'sine.inOut' });
     }
-    
-    await wait(300);
     
     // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
