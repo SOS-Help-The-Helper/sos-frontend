@@ -1317,7 +1317,7 @@
 
     gsap.set('#heroPhase3', { opacity: 1 });
     var logoWrap = document.getElementById('heroLogoWrap');
-    logoWrap.style.animation = 'motelFlicker 3s ease-out forwards';
+    gsap.to(logoWrap, { opacity: 1, duration: 1.5, ease: 'power2.out' });
     await wait(1260);
 
     // Pulse rings are CSS-driven (radar-ping animation on the spans inside heroLogoWrap)
