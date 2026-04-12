@@ -1137,7 +1137,7 @@
       // Head character — brightest (boost opacity)
       ctx.globalAlpha = Math.min(rainState.fadeAlpha, 1);
       // Parse color and boost it for the head
-      ctx.fillStyle = rainState.color.replace(/[\d.]+\)$/, '0.8)');
+      ctx.fillStyle = rainState.color.replace(/[\d.]+\)$/, '0.9)');
       ctx.fillText(randChar(), drawX, drawY);
 
       // Trail characters — progressively dimmer
@@ -1355,7 +1355,7 @@
     typingSpan.style.borderRight = '2px solid #EF4E4B';
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
-    await typeInto(typingSpan, "people do", 78, "people");
+    await typeInto(typingSpan, "people do", 120, "people");
     await wait(600);
 
     // Matrix dissolve "people do"
@@ -1409,6 +1409,11 @@
 
     // ═══ TRANSITION 1→2 fade out ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
+
+    // Wipe all prior matrix streaks
+    mergeParticles.length = 0;
+    ctx.fillStyle = '#0F1E2B';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // ═══ PHASE 2: "what if they could: [rotating]" ═══
     mc.innerHTML = '';
@@ -1512,10 +1517,10 @@
     }
     await wait(400);
 
-// ═══ TRANSITION 2→3: Rain erupts for logomark ═══
-    rainState.density = 0.3;
-    rainState.color = 'rgba(137, 207, 240, 0.30)';
-    rainState.speed = 1.5;
+// ═══ TRANSITION 2→3: Rain erupts full screen ═══
+    rainState.density = 0.6;
+    rainState.color = 'rgba(137, 207, 240, 0.40)';
+    rainState.speed = 2;
     rainState.phase = 2.5;
 
     await wait(300);
