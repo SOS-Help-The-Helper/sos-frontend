@@ -693,7 +693,7 @@
         <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <span class="hero-card-text tag-word tag-line1" style="opacity: 0; white-space: nowrap;">Everyone is a helper</span>
+        <span class="tag-word tag-line1" style="opacity: 0; white-space: nowrap; font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.6);">Everyone is a helper</span>
         <span class="hero-card-text tag-word" style="opacity: 0; white-space: nowrap;">We help the helpers</span>
       </div>
     </div>
@@ -1154,12 +1154,25 @@
     mc.style.display = 'block';
     mc.style.textAlign = 'center';
     mc.appendChild(typingSpan);
-    typingSpan.classList.add('motel-crackle');
     mc.style.opacity = '1';
+    // Start random crackle effect on typing text
+    var crackleActive = true;
+    (function crackleLoop() {
+      if (!crackleActive) return;
+      var dip = 0.15 + Math.random() * 0.5; // dip to 15-65% opacity
+      var dipDur = 0.03 + Math.random() * 0.08; // dip lasts 30-110ms
+      var holdDur = 0.2 + Math.random() * 0.8; // hold full brightness 200-1000ms
+      gsap.to(typingSpan, { opacity: dip, duration: dipDur, onComplete: function() {
+        gsap.to(typingSpan, { opacity: 1, duration: dipDur * 1.5, onComplete: function() {
+          setTimeout(crackleLoop, holdDur * 1000);
+        }});
+      }});
+    })();
 
     await typeInto(typingSpan, "when relief systems fail, communities step up", 68, "communities");
 
-    typingSpan.classList.remove('motel-crackle');
+    crackleActive = false;
+    gsap.set(typingSpan, { opacity: 1 });
     // ═══ TRANSITION 1→2: smooth fade out ═══
     await anim(mc, { opacity: 0, duration: 0.6, ease: 'power2.inOut' });
 
@@ -1218,9 +1231,26 @@
       s.style.textDecorationColor = '#EF4E4B';
       s.style.textUnderlineOffset = '6px';
       s.style.textDecorationThickness = '2px';
-      s.style.animation = 'motelCrackle 1.5s ease-in-out infinite';
     });
+    // Random crackle on force multiplier
+    var fmCrackle = true;
+    (function fmLoop() {
+      if (!fmCrackle) return;
+      var dip = 0.2 + Math.random() * 0.5;
+      var dipDur = 0.03 + Math.random() * 0.08;
+      var holdDur = 0.15 + Math.random() * 0.6;
+      fmSpans.forEach(function(s) {
+        gsap.to(s, { opacity: dip, duration: dipDur });
+      });
+      setTimeout(function() {
+        fmSpans.forEach(function(s) {
+          gsap.to(s, { opacity: 1, duration: dipDur * 1.5 });
+        });
+        setTimeout(fmLoop, holdDur * 1000);
+      }, dipDur * 1000);
+    })();
     await wait(1200);
+    fmCrackle = false;
 
     // ═══ TRANSITION 2→3: Clean fade out ═══
     await anim(mc, { opacity: 0, duration: 0.8, ease: 'power2.inOut' });
