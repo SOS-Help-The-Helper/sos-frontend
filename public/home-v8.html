@@ -1184,8 +1184,13 @@
     })();
     
     await wait(500);
-    // Add line break
-    typingSpan.innerHTML += '<br><span style="display:block;height:12px;"></span>';
+    // Add line break (using DOM to preserve failWord reference)
+    var br = document.createElement('br');
+    typingSpan.appendChild(br);
+    var spacer = document.createElement('span');
+    spacer.style.display = 'block';
+    spacer.style.height = '12px';
+    typingSpan.appendChild(spacer);
     // Type line 2 into a new span
     var line2Span = document.createElement('span');
     typingSpan.appendChild(line2Span);
@@ -1209,9 +1214,12 @@
 
     // Stop fail flicker
     failFlicker = false;
-    gsap.set(fw, { opacity: 1 });
+    // Re-query failWord since innerHTML manipulation may have detached the original reference
+    fw = document.getElementById('failWord');
+    if (fw) gsap.set(fw, { opacity: 1 });
     
     // "fail" breaks — swings down like a broken sign
+    if (!fw) fw = document.querySelector('#failWord');
     await anim(fw, { 
       rotation: 85, 
       y: 10,
