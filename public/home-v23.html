@@ -1024,21 +1024,36 @@
 
   function typeInto(el, text, speed, hlWord) {
     return new Promise(function(resolve) {
+      var hlStyle = 'color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
       var hs = (hlWord && hlWord.length) ? text.indexOf(hlWord) : -1;
       var he = hs >= 0 ? hs + hlWord.length : -1;
+
+      // Pre-build character spans (avoids innerHTML rebuild every frame)
+      el.innerHTML = '';
+      el.style.borderRight = '2px solid #EF4E4B';
+      el.style.paddingRight = '4px';
+      el.style.animation = 'blink 0.8s step-end infinite';
+      var charSpans = [];
+      for (var c = 0; c < text.length; c++) {
+        var cs = document.createElement('span');
+        cs.textContent = text[c];
+        cs.style.opacity = '0';
+        cs.style.display = 'inline';
+        if (hs >= 0 && c >= hs && c < he) {
+          cs.style.color = '#EF4E4B';
+          cs.style.textShadow = '0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
+        }
+        el.appendChild(cs);
+        charSpans.push(cs);
+      }
+
       var i = 0;
-      var hlStyle = 'color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35),0 0 40px rgba(239,78,75,0.15)';
       function step() {
-        if (i < text.length) {
+        if (i < charSpans.length) {
+          charSpans[i].style.opacity = '1';
           i++;
-          var delay = speed * (0.7 + Math.random() * 0.6);
-          if (hs >= 0 && i > hs && i <= he) {
-            el.innerHTML = text.substring(0, hs) + '<span style="' + hlStyle + '">' + text.substring(hs, i) + '</span>';
-          } else if (hs >= 0 && i > he) {
-            el.innerHTML = text.substring(0, hs) + '<span style="' + hlStyle + '">' + hlWord + '</span>' + text.substring(he, i);
-          } else {
-            el.textContent = text.substring(0, i);
-          }
+          // Tight variance: 90%-110% of base speed for smooth feel
+          var delay = speed * (0.9 + Math.random() * 0.2);
           setTimeout(step, delay);
         } else {
           el.style.borderRight = 'none';
