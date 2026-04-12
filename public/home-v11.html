@@ -600,7 +600,7 @@
 
   <div class="hero-content" style="position: relative; width: 100%; max-width: 780px; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center;">
     <!-- Morphing text container -->
-    <div id="heroTextStage" style="position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 100%; opacity: 0;">
+    <div id="heroTextStage" style="position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); width: 100%; opacity: 0;">
       <h1 class="hero-title" id="morphContainer" style="opacity: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 0.35em;"></h1>
     </div>
     <!-- Phase 3: SOS logomark + name -->
@@ -1006,8 +1006,8 @@
 
   // Rain state — controlled by hero sequence
   var rainState = {
-    color: 'rgba(239, 78, 75, 0.06)',
-    density: 0.25,
+    color: 'rgba(239, 78, 75, 0.10)',
+    density: 0.15,
     speed: 1,
     converging: false,
     convergenceX: 0,
@@ -1022,13 +1022,13 @@
   var charArr = charPool.split('');
   function randChar() { return charArr[(Math.random() * charArr.length) | 0]; }
 
-  var COL_W = 16;
-  var FONT_SIZE = 14;
+  var COL_W = 12;
+  var FONT_SIZE = 10;
   var columns = [];
 
   function initColumns() {
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     var numCols = Math.floor(canvas.width / COL_W);
     if (isMobile) numCols = Math.floor(numCols * 0.5);
     columns = [];
@@ -1036,7 +1036,7 @@
       columns.push({
         x: i * COL_W,
         y: -Math.random() * canvas.height,
-        speed: 0.8 + Math.random() * 2.5,
+        speed: 0.4 + Math.random() * 1.2,
         length: 5 + ((Math.random() * 20) | 0),
         active: Math.random() < rainState.density,
         pauseFrames: 0,
@@ -1054,7 +1054,7 @@
 
   function drawRain() {
     // Fade trail — SOS Navy with low alpha
-    var fadeBase = rainState.fading ? 0.12 : 0.05;
+    var fadeBase = rainState.fading ? 0.15 : 0.07;
     ctx.fillStyle = 'rgba(15, 30, 43, ' + fadeBase + ')';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1123,7 +1123,7 @@
       if (col.y > ch + col.length * FONT_SIZE) {
         col.y = -Math.random() * 200 - col.length * FONT_SIZE;
         col.active = Math.random() < rainState.density;
-        col.speed = 0.8 + Math.random() * 2.5;
+        col.speed = 0.4 + Math.random() * 1.2;
       }
     }
 
@@ -1333,8 +1333,8 @@
     particleLayer.remove();
 
     // ═══ TRANSITION 1→2: Rain shifts red → blue, density increases ═══
-    rainState.color = 'rgba(137, 207, 240, 0.10)';
-    rainState.density = 0.4;
+    rainState.color = 'rgba(137, 207, 240, 0.06)';
+    rainState.density = 0.20;
     rainState.speed = 1.3;
     rainState.phase = 1.5;
 
@@ -1352,8 +1352,8 @@
 
     // ═══ PHASE 2: Rain = blue, 50-60% density, steady flow ═══
     rainState.phase = 2;
-    rainState.color = 'rgba(137, 207, 240, 0.15)';
-    rainState.density = 0.55;
+    rainState.color = 'rgba(137, 207, 240, 0.08)';
+    rainState.density = 0.25;
     rainState.speed = 1.8;
 
     mc.innerHTML = '';
