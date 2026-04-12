@@ -1156,7 +1156,9 @@
     mc.appendChild(typingSpan);
     mc.style.opacity = '1';
 
-    await typeInto(typingSpan, "when relief systems fail, communities step up", 68, "communities");
+    await typeInto(typingSpan, "when relief systems fail communities step up", 68, "communities");
+    // Force line break after "fail"
+    typingSpan.innerHTML = typingSpan.innerHTML.replace('fail ', 'fail<br>');
 
     // ═══ TRANSITION 1→2: fade out 1 second ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
