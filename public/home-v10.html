@@ -1170,66 +1170,73 @@
     mc.style.opacity = '1';
 
     // Type line 1
-    await typeInto(typingSpan, "when help doesn\'t show up", 78, "");
-
-    
-
-    
-    await wait(300);
-    
-    // ═══ DISSOLVE: Characters disintegrate left-to-right into dust ═══
-    // Split text into individual character spans
-    var rawText = typingSpan.textContent || typingSpan.innerText;
-    typingSpan.innerHTML = '';
+    // ═══ TYPE + DISSOLVE: characters typed as spans, dissolve from left once "show" starts ═══
+    var fullLine1 = "when help doesn't show up";
+    var showIdx = 20;
     var charSpans = [];
-    for (var ci = 0; ci < rawText.length; ci++) {
-      var cs = document.createElement('span');
-      cs.textContent = rawText[ci];
-      cs.style.display = 'inline';
-      cs.style.position = 'relative';
-      typingSpan.appendChild(cs);
-      charSpans.push(cs);
-    }
-    
     mc.style.position = 'relative';
     var particleLayer = document.createElement('div');
     particleLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;';
     mc.appendChild(particleLayer);
-    
-    var mcRect = mc.getBoundingClientRect();
-    
-    // Disintegrate each character progressively left-to-right
-    for (var di = 0; di < charSpans.length; di++) {
-      var ch = charSpans[di];
-      if (ch.textContent === ' ') { gsap.set(ch, { opacity: 0 }); continue; }
-      
-      var chRect = ch.getBoundingClientRect();
-      var cx = chRect.left - mcRect.left + chRect.width / 2;
-      var cy = chRect.top - mcRect.top + chRect.height / 2;
-      
-      // Create 3-5 particles per character
-      var numP = 3 + Math.floor(Math.random() * 3);
-      for (var pp = 0; pp < numP; pp++) {
-        var dot = document.createElement('div');
-        var size = 1.5 + Math.random() * 2.5;
-        dot.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;border-radius:50%;background:rgba(255,255,255,'+(0.4+Math.random()*0.6)+');left:'+cx+'px;top:'+cy+'px;';
-        particleLayer.appendChild(dot);
-        gsap.to(dot, {
-          x: 80 + Math.random() * 250,
-          y: (Math.random() - 0.4) * 60,
-          opacity: 0,
-          duration: 0.8 + Math.random() * 0.6,
-          ease: 'power1.out',
-          delay: Math.random() * 0.1
-        });
+    var dissolveIdx = 0;
+    var mcRect = null;
+
+    for (var ti = 0; ti < fullLine1.length; ti++) {
+      var cs = document.createElement('span');
+      cs.textContent = fullLine1[ti];
+      cs.style.display = 'inline';
+      cs.style.position = 'relative';
+      typingSpan.appendChild(cs);
+      charSpans.push(cs);
+
+      // Start dissolving from left once we reach "show"
+      if (ti >= showIdx) {
+        mcRect = mcRect || mc.getBoundingClientRect();
+        if (dissolveIdx < charSpans.length - 8) {
+          var dch = charSpans[dissolveIdx];
+          if (dch.textContent !== ' ') {
+            var cr = dch.getBoundingClientRect();
+            var px = cr.left - mcRect.left + cr.width/2;
+            var py = cr.top - mcRect.top + cr.height/2;
+            for (var pp = 0; pp < 4; pp++) {
+              var dot = document.createElement('div');
+              var sz = 1.5 + Math.random()*2.5;
+              dot.style.cssText = 'position:absolute;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:rgba(255,255,255,'+(0.4+Math.random()*0.6)+');left:'+px+'px;top:'+py+'px;';
+              particleLayer.appendChild(dot);
+              gsap.to(dot, {x:80+Math.random()*250, y:(Math.random()-0.4)*60, opacity:0, duration:0.8+Math.random()*0.6, ease:'power1.out'});
+            }
+            gsap.to(dch, {opacity:0, duration:0.15});
+          }
+          dissolveIdx++;
+        }
       }
-      
-      // Fade out the character
-      gsap.to(ch, { opacity: 0, duration: 0.15 });
-      await wait(35); // stagger per character — slow disintegration
+      await wait(78 * (0.7 + Math.random()*0.6));
     }
-    
-    await wait(400);
+
+    // Dissolve remaining chars
+    mcRect = mcRect || mc.getBoundingClientRect();
+    while (dissolveIdx < charSpans.length) {
+      var dch2 = charSpans[dissolveIdx];
+      if (dch2.textContent !== ' ') {
+        var cr2 = dch2.getBoundingClientRect();
+        var px2 = cr2.left - mcRect.left + cr2.width/2;
+        var py2 = cr2.top - mcRect.top + cr2.height/2;
+        for (var pp2 = 0; pp2 < 4; pp2++) {
+          var dot2 = document.createElement('div');
+          var sz2 = 1.5 + Math.random()*2.5;
+          dot2.style.cssText = 'position:absolute;width:'+sz2+'px;height:'+sz2+'px;border-radius:50%;background:rgba(255,255,255,'+(0.4+Math.random()*0.6)+');left:'+px2+'px;top:'+py2+'px;';
+          particleLayer.appendChild(dot2);
+          gsap.to(dot2, {x:80+Math.random()*250, y:(Math.random()-0.4)*60, opacity:0, duration:0.8+Math.random()*0.6, ease:'power1.out'});
+        }
+        gsap.to(dch2, {opacity:0, duration:0.15});
+      }
+      dissolveIdx++;
+      await wait(35);
+    }
+
+    typingSpan.style.borderRight = 'none';
+    typingSpan.style.animation = 'none';
+    await wait(300);
     particleLayer.remove();
     // Clear and type line 2 in same position
     typingSpan.innerHTML = '';
