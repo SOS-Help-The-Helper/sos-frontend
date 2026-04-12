@@ -1294,7 +1294,7 @@
                 vy: 2 + Math.random() * 3,
                 char: mxChar(),
                 life: 1.0,
-                color: 'rgba(137, 207, 240, 0.5)'
+                color: 'rgba(255, 255, 255, 0.5)'
               });
             }
           }
@@ -1333,6 +1333,11 @@
       typingSpan.appendChild(s);
       return s;
     });
+    // Tag original colors — "people" chars (0-5) are red
+    dSpans2.forEach(function(s, idx) {
+      if (idx < 6) s.origColor = 'rgba(239, 78, 75, 0.5)';
+      else s.origColor = 'rgba(255, 255, 255, 0.5)';
+    });
     for (var d2i = 0; d2i < dSpans2.length; d2i++) {
       var el2 = dSpans2[d2i];
       if (el2.textContent.trim() === '') { gsap.to(el2, {opacity:0, duration:0.1}); continue; }
@@ -1354,7 +1359,7 @@
                 vy: 2 + Math.random() * 3,
                 char: mxChar(),
                 life: 1.0,
-                color: 'rgba(137, 207, 240, 0.5)'
+                color: el.origColor || 'rgba(255, 255, 255, 0.5)'
               });
             }
           }
@@ -1459,7 +1464,7 @@
                 y: rect.top,
                 vx: 0, vy: 2 + Math.random() * 3,
                 char: mxChar(), life: 1.0,
-                color: 'rgba(137, 207, 240, 0.5)'
+                color: (window.getComputedStyle(el).color.indexOf('239') > -1 || window.getComputedStyle(el).color.indexOf('ef4e4b') > -1) ? 'rgba(239, 78, 75, 0.5)' : 'rgba(255, 255, 255, 0.5)'
               });
             }
           }
