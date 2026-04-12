@@ -1223,26 +1223,39 @@
     staticLine.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;margin-bottom:16px;display:flex;flex-wrap:wrap;justify-content:center;gap:0 0.3em;';
     mc.appendChild(staticLine);
 
-    var promptWords = ['what', 'if', 'they', 'could'];
-    var pwSpans = promptWords.map(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.style.opacity = '0';
-      staticLine.appendChild(s);
-      return s;
+    var promptPairs = [['what', 'if'], ['they', 'could']];
+    var allSpans = [];
+    promptPairs.forEach(function(pair) {
+      pair.forEach(function(w) {
+        var s = document.createElement('span');
+        s.textContent = w;
+        s.style.display = 'inline-block';
+        s.style.opacity = '0';
+        staticLine.appendChild(s);
+        allSpans.push(s);
+      });
     });
 
     var rotatingEl = document.createElement('div');
     rotatingEl.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#89CFF0;min-height:50px;text-shadow:0 0 15px rgba(137,207,240,0.3);';
     mc.appendChild(rotatingEl);
 
-    // Slam words
-    for (var pwi = 0; pwi < pwSpans.length; pwi++) {
-      gsap.set(pwSpans[pwi], { scale: 1.4, y: -15 });
-      await anim(pwSpans[pwi], { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(2)' });
-      await wait(200);
-    }
+    // Slam "what if" together, then "they could" together
+    // First pair: "what if"
+    gsap.set(allSpans[0], { scale: 1.4, y: -15 });
+    gsap.set(allSpans[1], { scale: 1.4, y: -15 });
+    await Promise.all([
+      anim(allSpans[0], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)' }),
+      anim(allSpans[1], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)', delay: 0.08 })
+    ]);
+    await wait(350);
+    // Second pair: "they could"
+    gsap.set(allSpans[2], { scale: 1.4, y: -15 });
+    gsap.set(allSpans[3], { scale: 1.4, y: -15 });
+    await Promise.all([
+      anim(allSpans[2], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)' }),
+      anim(allSpans[3], { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(2)', delay: 0.08 })
+    ]);
 
     await wait(350);
     // Rotate completions
