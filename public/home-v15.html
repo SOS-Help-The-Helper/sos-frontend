@@ -1273,10 +1273,10 @@
         var sc=0, mx=5+Math.floor(Math.random()*5);
         var iv = setInterval(function() {
           el.textContent = mxChar();
-          el.style.color = 'rgba(137,207,240,0.4)';
+          el.style.color = 'rgba(137,207,240,0.2)'; el.style.filter = 'blur(1.5px)'; el.style.transform = 'scaleX(1.3)';
           sc++;
           if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.2}); }
-        }, 80);
+        }, 40);
       })(el1);
       await wait(25);
     }
@@ -1319,10 +1319,10 @@
         var sc=0, mx=5+Math.floor(Math.random()*5);
         var iv = setInterval(function() {
           el.textContent = mxChar();
-          el.style.color = 'rgba(137,207,240,0.4)';
+          el.style.color = 'rgba(137,207,240,0.2)'; el.style.filter = 'blur(1.5px)'; el.style.transform = 'scaleX(1.3)';
           sc++;
           if (sc>=mx) { clearInterval(iv); gsap.to(el, {opacity:0, duration:0.2}); }
-        }, 80);
+        }, 40);
       })(el2);
       await wait(25);
     }
