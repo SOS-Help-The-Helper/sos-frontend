@@ -183,7 +183,7 @@ function FleetCard({
   const weight = resource.metadata?.weight;
 
   return (
-    <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
+    <div className="bg-white rounded-xl shadow-sm border-2 border-sos-gray-300/80 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all active:scale-[0.97]">
       {/* Top row: status dot + description + sleeps badge */}
       <div className="flex items-start gap-3">
         <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5 ${dotColor}`} />
@@ -210,7 +210,7 @@ function FleetCard({
             {sourceLabel && (
               <span className="text-xs text-sos-gray-500">{sourceLabel}</span>
             )}
-            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase ${badgeColor}`}>
+            <span className={`text-[9px] font-semibold px-2.5 py-0.5 rounded-full uppercase ${badgeColor}`}>
               {(resource.status || 'unknown').replace(/_/g, ' ')}
             </span>
           </div>
@@ -230,19 +230,19 @@ function FleetCard({
           <div className="flex items-center gap-2 mt-2.5">
             <button
               onClick={onView}
-              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
             >
               <Eye className="h-3 w-3" /> View
             </button>
             <button
               onClick={onEdit}
-              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-gray-300 text-sos-gray-700 hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
             >
               <Edit3 className="h-3 w-3" /> Edit
             </button>
             <button
               onClick={onMatch}
-              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-all active:scale-[0.97]"
             >
               <GitCompare className="h-3 w-3" /> Match
             </button>
@@ -354,12 +354,12 @@ export default function FleetPage() {
       <DashboardShell title="Fleet Management" subtitle="Loading fleet...">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 h-16 animate-pulse" />
+            <div key={i} className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-4 h-16 animate-pulse animate-shimmer" />
           ))}
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-28 animate-pulse" />
+            <div key={i} className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-5 h-28 animate-pulse animate-shimmer" />
           ))}
         </div>
       </DashboardShell>
@@ -387,7 +387,7 @@ export default function FleetPage() {
     <DashboardShell title="Fleet Management" subtitle={`${stats.total} units across your fleet`}>
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <div className="bg-[#FDFCFA] border border-sos-gray-300 rounded-xl p-4 text-center">
+        <div className="bg-white shadow-sm border-2 border-sos-gray-300/80 rounded-xl p-4 text-center">
           <p className="text-xl font-bold text-sos-blue-800">{stats.total}</p>
           <p className="text-[10px] text-sos-gray-500 font-medium">Total Units</p>
         </div>
@@ -406,7 +406,7 @@ export default function FleetPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-1 mb-4 bg-sos-gray-200 rounded-xl p-1 w-fit overflow-x-auto">
+      <div className="flex gap-1 mb-4 bg-white rounded-xl border-2 border-sos-gray-300/80 p-1 w-fit overflow-x-auto">
         {TABS.map(tab => {
           const count = tab.key === 'all'
             ? resources.length
@@ -415,9 +415,9 @@ export default function FleetPage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] whitespace-nowrap ${
                 statusFilter === tab.key
-                  ? 'bg-white text-sos-blue-800 shadow-sm'
+                  ? 'bg-sos-blue-800 text-white'
                   : 'text-sos-gray-600 hover:text-sos-blue-800'
               }`}
             >
@@ -436,14 +436,14 @@ export default function FleetPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by VIN, description, or location..."
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sos-gray-300 bg-[#FDFCFA] text-sm text-sos-blue-800 placeholder:text-sos-gray-400 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300"
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sos-gray-300 bg-white text-sm text-sos-blue-800 placeholder:text-sos-gray-400 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300"
           />
         </div>
         <div className="relative">
           <select
             value={sortField}
             onChange={e => setSortField(e.target.value as SortField)}
-            className="appearance-none pl-3 pr-8 py-2.5 rounded-xl border border-sos-gray-300 bg-[#FDFCFA] text-sm font-medium text-sos-blue-800 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300 cursor-pointer"
+            className="appearance-none pl-3 pr-8 py-2.5 rounded-xl border border-sos-gray-300 bg-white text-sm font-medium text-sos-blue-800 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300 cursor-pointer"
           >
             {SORT_OPTIONS.map(opt => (
               <option key={opt.key} value={opt.key}>{opt.label}</option>
@@ -466,22 +466,31 @@ export default function FleetPage() {
             />
           ))
         ) : (
-          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
-            <p className="text-sm text-sos-gray-500">
+          <div className="bg-white rounded-xl shadow-sm border-2 border-sos-gray-300/80 p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-sos-gray-200 flex items-center justify-center mx-auto mb-3">
+              <span className="text-lg">🚐</span>
+            </div>
+            <h3 className="text-sm font-bold text-sos-blue-800">
               {search.trim()
                 ? `No units matching "${search}"`
                 : statusFilter !== 'all'
                   ? `No units with status "${statusFilter.replace(/_/g, ' ')}"`
                   : 'No fleet units found'}
-            </p>
-            {(search.trim() || statusFilter !== 'all') && (
-              <button
-                onClick={() => { setSearch(''); setStatusFilter('all'); }}
-                className="mt-2 text-xs font-medium text-sos-accent-700 hover:text-sos-accent-900"
-              >
-                Clear filters
-              </button>
-            )}
+            </h3>
+            <p className="text-xs text-sos-gray-500 mt-1">Try adjusting your search or filters</p>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              {(search.trim() || statusFilter !== 'all') && (
+                <button
+                  onClick={() => { setSearch(''); setStatusFilter('all'); }}
+                  className="text-xs font-semibold px-4 py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
+                >
+                  Clear filters
+                </button>
+              )}
+              <a href="/agent" className="text-xs font-semibold px-4 py-2 rounded-lg bg-sos-accent-600 text-white hover:bg-sos-accent-700 transition-all active:scale-[0.97]">
+                Ask Agent
+              </a>
+            </div>
           </div>
         )}
       </div>

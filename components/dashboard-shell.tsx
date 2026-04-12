@@ -27,10 +27,17 @@ export function DashboardShell({ title, subtitle, children, currentView, onViewC
 
       {/* Content */}
       <div className="md:ml-56">
+        {/* Mobile header */}
+        <div className="md:hidden sticky top-0 z-30 bg-sos-blue-800 px-4 py-3 pt-[env(safe-area-inset-top)]">
+          <h1 className="text-base font-bold text-white leading-tight">{title}</h1>
+          {subtitle && <p className="text-[10px] text-sos-accent-400 mt-0.5">{subtitle}</p>}
+        </div>
+
+        {/* Desktop header */}
         <div className="hidden md:block">
           <Topbar title={title} subtitle={subtitle} currentView={currentView} onViewChange={onViewChange} />
         </div>
-        <main className="pt-[env(safe-area-inset-top)] p-2 md:p-6 pb-24 md:pb-6">
+        <main className="p-4 md:p-6 pb-24 md:pb-6 animate-fade-in">
           {children}
         </main>
       </div>

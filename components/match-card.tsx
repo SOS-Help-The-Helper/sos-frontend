@@ -57,7 +57,7 @@ export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer transition-all hover:shadow-md hover:border-sos-accent-400 shadow-sm"
+      className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-4 cursor-pointer transition-all hover:shadow-md hover:border-sos-accent-400 shadow-sm active:scale-[0.97]"
     >
       {/* Header: Score + Status */}
       <div className="flex items-center justify-between mb-3">
@@ -137,11 +137,11 @@ export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
 
         {action && (
           <div className="flex gap-1.5">
-            <button className={`text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md transition-colors ${action.style}`}>
+            <button className={`text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md transition-all active:scale-[0.97] ${action.style}`}>
               {action.label}
             </button>
             {action.secondary && (
-              <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors">
+              <button className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]">
                 {action.secondary}
               </button>
             )}
@@ -161,7 +161,7 @@ export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
                   );
                   // Refresh handled by parent re-fetch
                 }}
-                className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-colors"
+                className="text-xs font-semibold px-3 py-2 md:text-[10px] md:py-1 rounded-md border border-sos-accent-300 text-sos-accent-700 hover:bg-sos-accent-50 transition-all active:scale-[0.97]"
               >
                 {action.tertiary}
               </button>

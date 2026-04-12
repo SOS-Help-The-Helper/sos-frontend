@@ -32,7 +32,7 @@ export function StatCard({ label, value, subtitle, trend, trendValue, accent = '
   }, [label]);
 
   return (
-    <div className={`bg-[#FDFCFA] rounded-xl border border-sos-gray-300 border-l-4 ${accentStyles[accent]} p-5 transition-shadow hover:shadow-sm`}>
+    <div className={`bg-white rounded-xl shadow-sm border-2 border-sos-gray-300/80 border-l-4 ${accentStyles[accent]} p-5 transition-all hover:shadow-md`}>
       <p
         ref={labelRef}
         className="font-medium text-sos-gray-600 uppercase tracking-wider whitespace-nowrap"

@@ -177,13 +177,13 @@ export function SwipeCard({ children, onAccept, onDecline, acceptLabel = 'Accept
       <div className="flex gap-3 mt-4 justify-center">
         <button
           onClick={() => { setExiting('left'); setTimeout(onDecline, 300); }}
-          className="px-6 py-3 rounded-xl border-2 border-sos-gray-300 text-sos-gray-600 font-semibold hover:bg-sos-gray-200 transition-colors"
+          className="px-6 py-3 rounded-xl border-2 border-sos-gray-300 text-sos-gray-600 font-semibold hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
         >
           ← {declineLabel}
         </button>
         <button
           onClick={() => { setExiting('right'); setTimeout(onAccept, 300); }}
-          className="px-6 py-3 rounded-xl bg-sos-red-500 text-white font-semibold hover:bg-sos-red-600 transition-colors shadow-sm"
+          className="px-6 py-3 rounded-xl bg-sos-red-500 text-white font-semibold hover:bg-sos-red-600 transition-all active:scale-[0.97] shadow-sm"
         >
           {acceptLabel} →
         </button>

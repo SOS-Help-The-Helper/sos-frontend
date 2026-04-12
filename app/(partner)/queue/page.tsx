@@ -138,7 +138,7 @@ function SurvivorCard({
   const flags = getFlags(survivor);
 
   return (
-    <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
+    <div className="bg-white rounded-xl border border-sos-gray-300 p-4 hover:shadow-md hover:border-sos-accent-300 transition-all">
       <div className="flex items-start gap-4">
         {/* Score circle */}
         <div
@@ -300,7 +300,7 @@ export default function QueuePage() {
       <DashboardShell title="Priority Queue" subtitle="Loading queue...">
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-24 animate-pulse" />
+            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-24 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -342,7 +342,7 @@ export default function QueuePage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                   active
                     ? 'bg-sos-blue-800 text-white border-sos-blue-800'
-                    : 'bg-[#FDFCFA] text-sos-gray-600 border-sos-gray-300 hover:border-sos-blue-800 hover:text-sos-blue-800'
+                    : 'bg-white text-sos-gray-600 border-sos-gray-300 hover:border-sos-blue-800 hover:text-sos-blue-800'
                 }`}
               >
                 {chip.label}
@@ -356,7 +356,7 @@ export default function QueuePage() {
           <select
             value={disasterFilter}
             onChange={e => setDisasterFilter(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-sos-gray-300 bg-[#FDFCFA] text-xs font-medium text-sos-blue-800 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300 cursor-pointer"
+            className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-sos-gray-300 bg-white text-xs font-medium text-sos-blue-800 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300 cursor-pointer"
           >
             <option value="all">All Disasters</option>
             {disasters.map(d => (
@@ -375,7 +375,7 @@ export default function QueuePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, location, or disaster..."
-          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sos-gray-300 bg-[#FDFCFA] text-sm text-sos-blue-800 placeholder:text-sos-gray-400 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300"
+          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sos-gray-300 bg-white text-sm text-sos-blue-800 placeholder:text-sos-gray-400 focus:outline-none focus:ring-2 focus:ring-sos-accent-300 focus:border-sos-accent-300"
         />
       </div>
 
@@ -406,7 +406,7 @@ export default function QueuePage() {
             />
           ))
         ) : (
-          <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-8 text-center">
+          <div className="bg-white rounded-xl border border-sos-gray-300 p-8 text-center">
             <p className="text-sm text-sos-gray-500">
               {search.trim()
                 ? `No survivors matching "${search}"`

@@ -63,14 +63,14 @@ export function PersonaToggle({ selectedPersonas, onPersonaChange }: PersonaTogg
   }, [selectedPersonas, onPersonaChange]);
 
   return (
-    <div className="flex rounded-xl border-2 border-sos-gray-300/80 bg-[#FDFCFA] p-1 dark:bg-slate-800 dark:border-slate-600">
+    <div className="flex rounded-xl border-2 border-sos-gray-300/80 bg-white p-1 dark:bg-slate-800 dark:border-slate-600">
       {PERSONA_CONFIG.map(({ id, label, shortLabel, Icon }) => {
         const active = selectedPersonas.includes(id);
         return (
           <button
             key={id}
             onClick={() => handleToggle(id)}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
               active
                 ? 'bg-sos-blue-800 text-white dark:bg-sos-accent-600'
                 : 'text-sos-gray-600 hover:text-sos-blue-800 dark:text-slate-400 dark:hover:text-white'

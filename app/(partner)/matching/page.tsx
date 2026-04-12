@@ -182,10 +182,10 @@ function Matching() {
     >
       {/* Mode Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div className="flex bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-1">
+        <div className="flex bg-white rounded-xl border-2 border-sos-gray-300/80 p-1">
           <button
             onClick={() => setMode('swipe')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
               mode === 'swipe' ? 'bg-sos-blue-800 text-white' : 'text-sos-gray-600 hover:text-sos-blue-800'
             }`}
           >
@@ -193,7 +193,7 @@ function Matching() {
           </button>
           <button
             onClick={() => setMode('map')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
               mode === 'map' ? 'bg-sos-blue-800 text-white' : 'text-sos-gray-600 hover:text-sos-blue-800'
             }`}
           >
@@ -201,7 +201,7 @@ function Matching() {
           </button>
           <button
             onClick={() => setMode('list')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
               mode === 'list' ? 'bg-sos-blue-800 text-white' : 'text-sos-gray-600 hover:text-sos-blue-800'
             }`}
           >
@@ -210,7 +210,7 @@ function Matching() {
           {effectiveOrgType === 'admin' && (
             <button
               onClick={() => setMode('admin')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] ${
                 mode === 'admin' ? 'bg-sos-blue-800 text-white' : 'text-sos-gray-600 hover:text-sos-blue-800'
               }`}
             >
@@ -223,7 +223,7 @@ function Matching() {
         <select
           value={disasterFilter}
           onChange={e => setDisasterFilter(e.target.value)}
-          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-blue-800 font-medium"
+          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-white text-sos-blue-800 font-medium"
         >
           <option value="all">All Disasters</option>
           {disasters.map(d => (
@@ -238,10 +238,10 @@ function Matching() {
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                className={`text-xs font-medium px-3 py-1.5 rounded-full transition-all active:scale-[0.97] ${
                   filter === f.value
                     ? 'bg-sos-blue-800 text-white'
-                    : 'bg-[#FDFCFA] text-sos-gray-600 border border-sos-gray-300 hover:bg-sos-gray-200'
+                    : 'bg-white text-sos-gray-600 border border-sos-gray-300 hover:bg-sos-gray-200'
                 }`}
               >
                 {f.label}
@@ -339,6 +339,14 @@ function Matching() {
               {matches.length > 0 && (
                 <p className="text-xs text-sos-gray-400 mt-3">{matches.length} total matches · {stats?.byStatus?.fulfilled || 0} fulfilled</p>
               )}
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <button onClick={() => setMode('list')} className="text-xs font-semibold px-4 py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]">
+                  View All Matches
+                </button>
+                <a href="/agent" className="text-xs font-semibold px-4 py-2 rounded-lg bg-sos-accent-600 text-white hover:bg-sos-accent-700 transition-all active:scale-[0.97]">
+                  Open Agent Chat
+                </a>
+              </div>
             </div>
           )}
         </div>
@@ -346,7 +354,7 @@ function Matching() {
 
       {/* MAP MODE */}
       {mode === 'map' && (
-        <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
+        <div className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
           <div className="w-12 h-12 rounded-full bg-sos-accent-50 flex items-center justify-center mx-auto mb-3">
             <Map className="w-6 h-6 text-sos-accent-600" />
           </div>
@@ -369,14 +377,14 @@ function Matching() {
                   if (selectedIds.size === matches.length) setSelectedIds(new Set());
                   else setSelectedIds(new Set(matches.map(m => m.id)));
                 }}
-                className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-gray-600 hover:bg-sos-gray-200"
+                className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-sos-gray-300/80 bg-white text-sos-gray-600 hover:bg-sos-gray-200"
               >
                 {selectedIds.size === matches.length ? 'Deselect All' : 'Select All'}
               </button>
               {selectedIds.size > 0 && (
                 <>
                   <span className="text-xs text-sos-gray-500">{selectedIds.size} selected</span>
-                  <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700">
+                  <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all active:scale-[0.97]">
                     Accept Selected
                   </button>
                   <button
@@ -384,7 +392,7 @@ function Matching() {
                       const highScore = matches.filter(m => m.match_score >= 80 && ['proposed','viewed'].includes(m.status));
                       setSelectedIds(new Set(highScore.map(m => m.id)));
                     }}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-green-300 text-green-700 hover:bg-green-50"
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-green-300 text-green-700 hover:bg-green-50 transition-all active:scale-[0.97]"
                   >
                     Select 80+ Scores ({matches.filter(m => m.match_score >= 80 && ['proposed','viewed'].includes(m.status)).length})
                   </button>
@@ -396,7 +404,7 @@ function Matching() {
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as any)}
-                className="text-xs px-2 py-1 rounded-lg border border-sos-gray-300 bg-[#FDFCFA] text-sos-blue-800"
+                className="text-xs px-2 py-1 rounded-lg border border-sos-gray-300 bg-white text-sos-blue-800"
               >
                 <option value="score">Score ↓</option>
                 <option value="date">Newest</option>
@@ -433,12 +441,15 @@ function Matching() {
               </div>
             ))}
             {matches.length === 0 && (
-              <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
+              <div className="bg-white rounded-xl shadow-sm border-2 border-sos-gray-300/80 p-8 text-center">
                 <div className="w-12 h-12 rounded-full bg-sos-gray-200 flex items-center justify-center mx-auto mb-3">
                   <span className="text-lg">📋</span>
                 </div>
                 <h3 className="text-sm font-bold text-sos-blue-800">No coordination tasks yet</h3>
                 <p className="text-xs text-sos-gray-500 mt-1">When citizens submit needs in your area, assignments will appear here.</p>
+                <a href="/agent" className="inline-block mt-3 text-xs font-semibold px-4 py-2 rounded-lg bg-sos-accent-600 text-white hover:bg-sos-accent-700 transition-all active:scale-[0.97]">
+                  Open Agent Chat
+                </a>
               </div>
             )}
           </div>
@@ -446,7 +457,7 @@ function Matching() {
           <div className="space-y-4 md:sticky md:top-20 md:self-start md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
             {selectedMatch ? (
               <>
-                <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-5">
+                <div className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-5">
                   <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Match Detail</h3>
                   <div className="space-y-2.5">
                     <div>
@@ -489,7 +500,7 @@ function Matching() {
                       });
                       alert('Match shared to Slack');
                     }}
-                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors"
+                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
                   >
                     💬 Share to Slack
                   </button>
@@ -498,20 +509,20 @@ function Matching() {
                       navigator.clipboard.writeText(`${window.location.origin}/matching?match=${selectedMatch.id}`);
                       alert('Link copied!');
                     }}
-                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-colors"
+                    className="flex-1 text-xs font-semibold py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]"
                   >
                     🔗 Copy Link
                   </button>
                 </div>
 
                 {chainMatches.length > 1 && <ChainView matches={chainMatches} />}
-                <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-5">
+                <div className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-5">
                   <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Timeline</h3>
                   <MatchTimeline events={matchEvents} />
                 </div>
               </>
             ) : (
-              <div className="bg-[#FDFCFA] rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
+              <div className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-8 text-center">
                 <p className="text-xs text-sos-gray-500">Select a match to view details</p>
               </div>
             )}

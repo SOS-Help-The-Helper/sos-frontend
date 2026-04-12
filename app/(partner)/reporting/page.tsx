@@ -96,7 +96,7 @@ export default function Reporting() {
       <DashboardShell title="Reporting" subtitle="Loading...">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-28 animate-pulse" />
+            <div key={i} className="bg-white rounded-xl border border-sos-gray-300 p-5 h-28 animate-pulse" />
           ))}
         </div>
       </DashboardShell>
@@ -110,7 +110,7 @@ export default function Reporting() {
         <select
           value={disasterFilter}
           onChange={e => setDisasterFilter(e.target.value)}
-          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-[#FDFCFA] text-sos-blue-800 font-medium"
+          className="text-xs px-3 py-2 rounded-lg border-2 border-sos-gray-300/80 bg-white text-sos-blue-800 font-medium"
         >
           <option value="all">All Disasters</option>
           {disasters.map(d => (
@@ -148,7 +148,7 @@ export default function Reporting() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
         {/* Match Score Distribution */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Score Distribution</h3>
           <div className="space-y-3">
             {Object.entries(data.scoreRanges).map(([range, count]) => {
@@ -178,7 +178,7 @@ export default function Reporting() {
         </div>
 
         {/* Match Outcome Breakdown */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Outcomes</h3>
           <div className="space-y-3">
             {[
@@ -206,7 +206,7 @@ export default function Reporting() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4">
         {/* Category Distribution */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Requests by Category</h3>
           <div className="space-y-2">
             {Object.entries(data.categoryDist)
@@ -229,7 +229,7 @@ export default function Reporting() {
         </div>
 
         {/* Urgency Distribution */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Urgency Breakdown</h3>
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(data.urgencyDist)
@@ -254,7 +254,7 @@ export default function Reporting() {
 
       {/* Per-Org Stats — Admin + Coordinators only */}
       {showPartnerTable && (
-      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 mb-4">
+      <div className="bg-white rounded-xl border border-sos-gray-300 p-5 mb-4">
         <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Partner Performance</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -306,7 +306,7 @@ export default function Reporting() {
       )}
 
       {/* All Resources Summary */}
-      <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 mb-4">
+      <div className="bg-white rounded-xl border border-sos-gray-300 p-5 mb-4">
         <h3 className="text-sm font-bold text-sos-blue-800 mb-3">All Resources</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-3 rounded-lg bg-sos-accent-50 text-center">
@@ -334,7 +334,7 @@ export default function Reporting() {
 
       {/* System Intelligence */}
       {data.learnings.length > 0 && (
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
+        <div className="bg-white rounded-xl border border-sos-gray-300 p-5">
           <h3 className="text-sm font-bold text-sos-blue-800 mb-4">System Intelligence — {data.learnings.length} Active Learnings</h3>
           <div className="space-y-2.5">
             {data.learnings.map((learning: any) => (
