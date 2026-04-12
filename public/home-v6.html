@@ -1158,47 +1158,23 @@
 
     await typeInto(typingSpan, "when relief systems fail, communities step up", 68, "communities");
 
-    // ═══ PAUSE: Crackle individual letters of "when relief systems fail" ═══
-    // Replace typed text with individual letter spans for the first part
-    var fullText = typingSpan.innerHTML;
-    var crackleText = 'when relief systems fail';
-    var restText = fullText.substring(fullText.indexOf(', '));
-    
-    // Build letter spans for the crackle portion
-    typingSpan.innerHTML = '';
-    var crackleLetters = [];
-    for (var ci = 0; ci < crackleText.length; ci++) {
-      var ls = document.createElement('span');
-      ls.textContent = crackleText[ci];
-      ls.style.display = 'inline';
-      if (crackleText[ci] === ' ') ls.innerHTML = '&nbsp;';
-      typingSpan.appendChild(ls);
-      crackleLetters.push(ls);
-    }
-    // Add the rest (", communities step up") as a single span
-    var restSpan = document.createElement('span');
-    restSpan.innerHTML = restText;
-    typingSpan.appendChild(restSpan);
-    
-    // Random crackle on individual letters
-    var letterCrackle = true;
-    crackleLetters.forEach(function(ls) {
-      (function letterLoop() {
-        if (!letterCrackle) return;
-        var dip = 0.1 + Math.random() * 0.55;
-        var dipDur = 0.04 + Math.random() * 0.1;
-        var holdDur = 0.3 + Math.random() * 1.2;
-        gsap.to(ls, { opacity: dip, duration: dipDur, onComplete: function() {
-          gsap.to(ls, { opacity: 1, duration: dipDur * 2, onComplete: function() {
-            setTimeout(letterLoop, holdDur * 1000);
-          }});
+    // ═══ PAUSE: Full text crackle on entire line, slower ═══
+    var textCrackle = true;
+    (function crackleLoop() {
+      if (!textCrackle) return;
+      var dip = 0.2 + Math.random() * 0.45; // 20-65%
+      var dipDur = 0.08 + Math.random() * 0.15; // 80-230ms dip
+      var holdDur = 0.5 + Math.random() * 1.5; // 500-2000ms between dips
+      gsap.to(mc, { opacity: dip, duration: dipDur, onComplete: function() {
+        gsap.to(mc, { opacity: 1, duration: dipDur * 2.5, onComplete: function() {
+          setTimeout(crackleLoop, holdDur * 1000);
         }});
-      })();
-    });
+      }});
+    })();
     
     await wait(4000);
-    letterCrackle = false;
-    crackleLetters.forEach(function(ls) { gsap.set(ls, { opacity: 1 }); });
+    textCrackle = false;
+    gsap.set(mc, { opacity: 1 });
     
     // ═══ TRANSITION 1→2: smooth fade out ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
@@ -1263,25 +1239,8 @@
       s.style.textUnderlineOffset = '6px';
       s.style.textDecorationThickness = '2px';
     });
-    // Random crackle on force multiplier
-    var fmCrackle = true;
-    (function fmLoop() {
-      if (!fmCrackle) return;
-      var dip = 0.2 + Math.random() * 0.5;
-      var dipDur = 0.03 + Math.random() * 0.08;
-      var holdDur = 0.15 + Math.random() * 0.6;
-      fmSpans.forEach(function(s) {
-        gsap.to(s, { opacity: dip, duration: dipDur });
-      });
-      setTimeout(function() {
-        fmSpans.forEach(function(s) {
-          gsap.to(s, { opacity: 1, duration: dipDur * 1.5 });
-        });
-        setTimeout(fmLoop, holdDur * 1000);
-      }, dipDur * 1000);
-    })();
+
     await wait(1200);
-    fmCrackle = false;
 
     // ═══ TRANSITION 2→3: Clean fade out ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
