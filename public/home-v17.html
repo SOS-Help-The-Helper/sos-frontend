@@ -1108,35 +1108,44 @@
         drawX += dx * 0.01;
       }
 
-      // Clear zone check — skip if inside any cleared area
+      // Clear zone — only affect the HEAD character draw, not the whole column
+      // Column still advances, but characters near the logo are dimmed/hidden
+      var headClearMult = 1;
       if (rainState.clearRadius > 0) {
         var distFromCenter = Math.sqrt(
           Math.pow(drawX - rainState.clearCenterX, 2) + 
           Math.pow(drawY - rainState.clearCenterY, 2)
         );
-        if (distFromCenter < rainState.clearRadius) continue;
-        // Fade near the edge of the clear zone
-        if (distFromCenter < rainState.clearRadius + 60) {
-          var edgeFade = (distFromCenter - rainState.clearRadius) / 60;
-          ctx.globalAlpha *= edgeFade;
+        if (distFromCenter < rainState.clearRadius) {
+          headClearMult = 0; // inside clear zone — don't draw this char
+        } else if (distFromCenter < rainState.clearRadius + 40) {
+          headClearMult = (distFromCenter - rainState.clearRadius) / 40; // fade at edge
         }
       }
-      
-      // Also check text clear zones (tagline area)
-      var skipForText = false;
+      // Text clear zones
       for (var tz = 0; tz < rainState.clearZones.length; tz++) {
         var zone = rainState.clearZones[tz];
         if (drawX > zone.x - zone.pad && drawX < zone.x + zone.w + zone.pad &&
             drawY > zone.y - zone.pad && drawY < zone.y + zone.h + zone.pad) {
-          skipForText = true;
+          headClearMult = 0;
           break;
         }
       }
-      if (skipForText) continue;
+      if (headClearMult <= 0) {
+        // Still advance the column position even though we don't draw
+        col.y += col.speed * rainState.speed * FONT_SIZE * 0.15;
+        if (col.y > ch + col.length * FONT_SIZE) {
+          col.y = -Math.random() * 200 - col.length * FONT_SIZE;
+          col.active = Math.random() < rainState.density;
+          col.speed = 0.4 + Math.random() * 1.2;
+        }
+        continue;
+      }
 
       // Head character — brightest (boost opacity)
       ctx.globalAlpha = Math.min(rainState.fadeAlpha, 1);
       // Parse color and boost it for the head
+      ctx.globalAlpha *= headClearMult;
       ctx.fillStyle = rainState.color.replace(/[\d.]+\)$/, '0.9)');
       ctx.fillText(randChar(), drawX, drawY);
 
@@ -1145,7 +1154,7 @@
       for (var t = 1; t < col.length; t++) {
         var trailY = drawY - t * FONT_SIZE;
         if (trailY < -FONT_SIZE) break;
-        var trailAlpha = (1 - t / col.length) * 0.6;
+        var trailAlpha = (1 - t / col.length) * 0.6 * headClearMult;
         ctx.globalAlpha = trailAlpha * rainState.fadeAlpha;
         ctx.fillText(randChar(), drawX, trailY);
       }
@@ -1562,10 +1571,10 @@
       r.style.animation = 'pulseRing 2.8s ease-out ' + (i * 0.5) + 's infinite';
     });
     
-    // Expand clear radius with each pulse
-    gsap.to(rainState, { clearRadius: 80, duration: 1.0, ease: 'power2.out', delay: 0.2 });
-    gsap.to(rainState, { clearRadius: 140, duration: 1.0, ease: 'power2.out', delay: 0.7 });
-    gsap.to(rainState, { clearRadius: 220, duration: 1.2, ease: 'power2.out', delay: 1.2 });
+    // Expand clear radius with each pulse — keep it tight around the logo
+    gsap.to(rainState, { clearRadius: 90, duration: 1.2, ease: 'power2.out', delay: 0.3 });
+    gsap.to(rainState, { clearRadius: 120, duration: 1.2, ease: 'power2.out', delay: 1.0 });
+    gsap.to(rainState, { clearRadius: 160, duration: 1.5, ease: 'power2.out', delay: 1.8 });
 
     // Tagline
     await wait(600);
