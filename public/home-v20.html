@@ -1051,7 +1051,10 @@
         length: 5 + ((Math.random() * 20) | 0),
         active: Math.random() < rainState.density,
         pauseFrames: 0,
-        toggleTimer: 60 + ((Math.random() * 180) | 0)
+        toggleTimer: 60 + ((Math.random() * 180) | 0),
+        bounced: false,
+        vy: 1,
+        prevDist: 9999
       });
     }
     // Clear canvas to navy
@@ -1117,14 +1120,21 @@
         drawX += dx * 0.01;
       }
 
-      // Clear zone — only affect the HEAD character draw, not the whole column
-      // Column still advances, but characters near the logo are dimmed/hidden
+      // Clear zone + bounce
       var headClearMult = 1;
       if (rainState.clearRadius > 0) {
-        // Elliptical clear — tight horizontally (0.7x), normal vertically
         var edx = (drawX - rainState.clearCenterX) / 0.7;
         var edy = drawY - rainState.clearCenterY;
         var distFromCenter = Math.sqrt(edx * edx + edy * edy);
+        
+        // Bounce detection: was outside, now inside → collision
+        if (!col.bounced && col.prevDist > rainState.clearRadius && distFromCenter <= rainState.clearRadius + 15) {
+          col.bounced = true;
+          col.vy = -1; // reverse direction
+          col.speed = 0.8 + Math.random() * 1.5; // bounce speed
+        }
+        col.prevDist = distFromCenter;
+        
         if (distFromCenter < rainState.clearRadius) {
           headClearMult = 0;
         } else if (distFromCenter < rainState.clearRadius + 30) {
@@ -1140,13 +1150,14 @@
           break;
         }
       }
-      if (headClearMult <= 0) {
-        // Still advance the column position even though we don't draw
-        col.y += col.speed * rainState.speed * FONT_SIZE * 0.15;
+      if (headClearMult <= 0 && !col.bounced) {
+        // Inside clear zone and not bounced — advance silently
+        col.y += col.speed * rainState.speed * FONT_SIZE * 0.15 * (col.vy || 1);
         if (col.y > ch + col.length * FONT_SIZE) {
           col.y = -Math.random() * 200 - col.length * FONT_SIZE;
           col.active = Math.random() < rainState.density;
           col.speed = 0.4 + Math.random() * 1.2;
+          col.bounced = false; col.vy = 1; col.prevDist = 9999;
         }
         continue;
       }
@@ -1170,12 +1181,26 @@
 
       ctx.globalAlpha = 1;
 
-      // Advance position
-      col.y += col.speed * rainState.speed * FONT_SIZE * 0.15;
+      // Advance position (vy controls direction: 1=down, -1=bounced up)
+      col.y += col.speed * rainState.speed * FONT_SIZE * 0.15 * (col.vy || 1);
+      
+      // Off screen bottom — reset
       if (col.y > ch + col.length * FONT_SIZE) {
         col.y = -Math.random() * 200 - col.length * FONT_SIZE;
         col.active = Math.random() < rainState.density;
         col.speed = 0.4 + Math.random() * 1.2;
+        col.bounced = false;
+        col.vy = 1;
+        col.prevDist = 9999;
+      }
+      // Off screen top (bounced out) — reset
+      if (col.bounced && col.y < -col.length * FONT_SIZE) {
+        col.y = -Math.random() * 200 - col.length * FONT_SIZE;
+        col.active = Math.random() < rainState.density;
+        col.speed = 0.4 + Math.random() * 1.2;
+        col.bounced = false;
+        col.vy = 1;
+        col.prevDist = 9999;
       }
     }
 
