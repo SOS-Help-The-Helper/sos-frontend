@@ -1141,11 +1141,11 @@
     // ═══ PHASE 1: Typing ═══
     // storm flicker removed
     gsap.set(stage, { opacity: 1 });
-    gsap.set(mc, { opacity: 0 });
 
     // Crackle in the text container like a motel sign warming up
-    mc.style.animation = 'crackleIn 1.5s ease-out forwards';
-    await wait(800);
+    mc.style.opacity = '0';
+    mc.style.animation = 'crackleIn 1.8s ease-out forwards';
+    await wait(1200);
 
     var typingSpan = document.createElement('span');
     typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
@@ -1170,7 +1170,8 @@
     mc.style.gap = '0 0.35em';
     gsap.set(mc, { opacity: 1 });
 
-    var line2 = ["coordination", "turns", "communities", "into", "force", "multipliers"];
+    var line2row1 = ["coordination,"];
+    var line2row2 = ["turns", "communities", "into", "force", "multipliers"];
     var p2 = line2.map(function(w) {
       var s = document.createElement('span');
       s.textContent = w;
