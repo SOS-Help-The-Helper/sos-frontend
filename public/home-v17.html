@@ -1355,8 +1355,8 @@
     typingSpan.style.borderRight = '2px solid #EF4E4B';
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
-    await typeInto(typingSpan, "people do", 120, "people");
-    await wait(600);
+    await typeInto(typingSpan, "people do", 160, "people");
+    await wait(1100);
 
     // Matrix dissolve "people do"
     var rawT2 = typingSpan.textContent || typingSpan.innerText || 'people do';
@@ -1480,12 +1480,17 @@
     // Matrix dissolve "what if they could" + last rotating word
     var allText2 = mc.textContent || '';
     mc.innerHTML = '';
+    mc.style.display = 'block';
+    mc.style.textAlign = 'center';
+    var d3Wrapper = document.createElement('div');
+    d3Wrapper.style.cssText = 'display:inline;';
+    mc.appendChild(d3Wrapper);
     var d3Spans = [];
     for (var d3i = 0; d3i < allText2.length; d3i++) {
       var d3s = document.createElement('span');
       d3s.textContent = allText2[d3i];
       d3s.style.display = 'inline';
-      mc.appendChild(d3s);
+      d3Wrapper.appendChild(d3s);
       d3Spans.push(d3s);
     }
     for (var d3j = 0; d3j < d3Spans.length; d3j++) {
@@ -1521,6 +1526,12 @@
     rainState.density = 0.6;
     rainState.color = 'rgba(137, 207, 240, 0.40)';
     rainState.speed = 2;
+    // Force-activate columns since they've been at density 0
+    columns.forEach(function(col) {
+      col.active = Math.random() < 0.6;
+      col.y = -Math.random() * 200;
+      col.speed = 0.4 + Math.random() * 1.2;
+    });
     rainState.phase = 2.5;
 
     await wait(300);
