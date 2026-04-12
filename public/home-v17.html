@@ -1065,10 +1065,7 @@
     ctx.fillStyle = 'rgba(15, 30, 43, ' + fadeBase + ')';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (rainState.fadeAlpha <= 0.01) {
-      requestAnimationFrame(drawRain);
-      return;
-    }
+
 
     ctx.font = FONT_SIZE + 'px monospace';
     var cw = window.innerWidth;
@@ -1569,7 +1566,7 @@
     rainState.density = 0.08;
     rainState.speed = 0.3;
     // Gradually fade rain out
-    gsap.to(rainState, { fadeAlpha: 0, duration: 3, ease: 'power2.in' });
+    // Rain stays persistent — pulse clear zone handles the logo area
 
     gsap.set('#heroPhase3', { opacity: 1 });
     var logoWrap = document.getElementById('heroLogoWrap');
