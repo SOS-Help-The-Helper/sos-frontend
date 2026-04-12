@@ -1142,10 +1142,27 @@
     // storm flicker removed
     gsap.set(stage, { opacity: 1 });
 
-    // Crackle in the text container like a motel sign warming up
-    mc.style.opacity = '0';
-    mc.style.animation = 'crackleIn 1.8s ease-out forwards';
-    await wait(1200);
+    // Crackle in: use GSAP keyframes for the motel sign warm-up
+    gsap.fromTo(mc, 
+      { opacity: 0 },
+      { opacity: 1, duration: 1.8, ease: 'none',
+        keyframes: [
+          { opacity: 0, duration: 0 },
+          { opacity: 0.15, duration: 0.15 },
+          { opacity: 0.03, duration: 0.08 },
+          { opacity: 0.3, duration: 0.15 },
+          { opacity: 0.08, duration: 0.1 },
+          { opacity: 0.5, duration: 0.2 },
+          { opacity: 0.2, duration: 0.1 },
+          { opacity: 0.65, duration: 0.2 },
+          { opacity: 0.45, duration: 0.1 },
+          { opacity: 0.8, duration: 0.2 },
+          { opacity: 0.7, duration: 0.1 },
+          { opacity: 1, duration: 0.3 }
+        ]
+      }
+    );
+    await wait(800);
 
     var typingSpan = document.createElement('span');
     typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
@@ -1156,7 +1173,7 @@
     mc.appendChild(typingSpan);
     typingSpan.classList.add('motel-crackle');
 
-    await typeInto(typingSpan, "when relief systems fail… communities step up", 60, "communities");
+    await typeInto(typingSpan, "when relief systems fail, communities step up", 60, "communities");
 
     typingSpan.classList.remove('motel-crackle');
     // ═══ TRANSITION 1→2: smooth fade out ═══
