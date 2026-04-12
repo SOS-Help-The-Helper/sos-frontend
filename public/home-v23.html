@@ -1260,22 +1260,9 @@
 
     await wait(350);
 
-    // Rebuild as two lines for dissolve
-    mc.innerHTML = '';
-    mc.style.gap = '12px';
-    var dissL1 = document.createElement('div');
-    dissL1.textContent = 'what if they could';
-    dissL1.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#fff;';
-    mc.appendChild(dissL1);
-    var dissL2 = document.createElement('div');
-    dissL2.textContent = 'move as one';
-    dissL2.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#EF4E4B;text-shadow:0 0 20px rgba(239,78,75,0.35);';
-    mc.appendChild(dissL2);
-
+    // Simple fade out (no scrub/dissolve)
     await wait(200);
-    await dissolveText(dissL1, function() { return 'rgba(255,255,255,0.5)'; });
-    await dissolveText(dissL2, function() { return 'rgba(239,78,75,0.5)'; });
-    await wait(350);
+    await anim(mc, { opacity: 0, duration: 1.2, ease: 'power2.inOut' });
     wipeCanvas();
 
     // ═══ PHASE 4: "everyone is a helper / we help the helpers" — RAIN STARTS ═══
