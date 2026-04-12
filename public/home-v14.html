@@ -1347,15 +1347,17 @@
     typingSpan.style.borderRight = '2px solid #EF4E4B';
     typingSpan.style.paddingRight = '4px';
     typingSpan.style.animation = 'blink 0.8s step-end infinite';
-    await typeInto(typingSpan, "people show up", 78, "people");
+    await typeInto(typingSpan, "people do", 78, "people");
     await wait(500);
 
     // ═══ TRANSITION 1→2 fade out ═══
     await anim(mc, { opacity: 0, duration: 1.0, ease: 'power2.inOut' });
 
-    // ═══ PHASE 2: "what if they could find each other" — crystallize from rain ═══
+    // ═══ PHASE 2: "what if they could: [rotating]" ═══
     mc.innerHTML = '';
-    mc.style.display = 'block';
+    mc.style.display = 'flex';
+    mc.style.flexDirection = 'column';
+    mc.style.alignItems = 'center';
     mc.style.textAlign = 'center';
     mc.style.opacity = '1';
 
@@ -1365,36 +1367,41 @@
     rainState.speed = 1.5;
     rainState.phase = 2;
 
-    // Build text as individual word spans
-    var p2words = ['what', 'if', 'they', 'could', 'find', 'each', 'other'];
-    var p2container = document.createElement('div');
-    p2container.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;gap:0 0.35em;font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#fff;';
-    mc.appendChild(p2container);
+    // Static line: "what if they could"
+    var staticLine = document.createElement('div');
+    staticLine.textContent = 'what if they could';
+    staticLine.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#fff;margin-bottom:16px;opacity:0;';
+    mc.appendChild(staticLine);
 
-    var p2spans = p2words.map(function(w) {
-      var s = document.createElement('span');
-      s.textContent = w;
-      s.style.display = 'inline-block';
-      s.style.opacity = '0';
-      p2container.appendChild(s);
-      return s;
-    });
+    // Rotating completion word
+    var rotatingEl = document.createElement('div');
+    rotatingEl.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:36px;color:#89CFF0;min-height:50px;text-shadow:0 0 15px rgba(137,207,240,0.3);';
+    mc.appendChild(rotatingEl);
 
-    // Crystallize — words emerge one by one from the rain
-    for (var wi = 0; wi < p2spans.length; wi++) {
-      await anim(p2spans[wi], { opacity: 1, duration: 0.25, ease: 'power2.out' });
-      await wait(80);
+    // Fade in static line
+    await anim(staticLine, { opacity: 1, duration: 0.5 });
+
+    // Rotate through completions
+    var completions = ['find each other', 'coordinate', 'work together'];
+    for (var ci = 0; ci < completions.length; ci++) {
+      rotatingEl.textContent = completions[ci];
+      gsap.set(rotatingEl, { opacity: 0, y: 12 });
+      await anim(rotatingEl, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+      
+      // Last one ("work together") holds longer and glows
+      if (ci === completions.length - 1) {
+        await wait(200);
+        rotatingEl.style.color = '#EF4E4B';
+        rotatingEl.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
+        rotatingEl.style.transition = 'color 0.5s, text-shadow 0.5s';
+        await wait(1200);
+      } else {
+        await wait(700);
+        await anim(rotatingEl, { opacity: 0, y: -12, duration: 0.25, ease: 'power2.in' });
+      }
     }
 
-    // "find each other" glows subtly
-    await wait(300);
-    for (var gi = 4; gi < p2spans.length; gi++) {
-      p2spans[gi].style.color = '#89CFF0';
-      p2spans[gi].style.textShadow = '0 0 15px rgba(137,207,240,0.3)';
-      p2spans[gi].style.transition = 'color 0.5s, text-shadow 0.5s';
-    }
-
-    await wait(1500);
+    await wait(500);
 
 // ═══ TRANSITION 2→3: Rain converges, density drops, speed slows ═══
     rainState.converging = true;
