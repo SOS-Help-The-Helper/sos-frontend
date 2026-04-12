@@ -1014,7 +1014,11 @@
     convergenceY: 0,
     fading: false,
     fadeAlpha: 1,
-    phase: 1
+    phase: 1,
+    clearRadius: 0,
+    clearCenterX: 0,
+    clearCenterY: 0,
+    clearZones: []
   };
 
   // Character pool — pre-built for performance
@@ -1104,6 +1108,32 @@
         drawX += dx * 0.01;
       }
 
+      // Clear zone check — skip if inside any cleared area
+      if (rainState.clearRadius > 0) {
+        var distFromCenter = Math.sqrt(
+          Math.pow(drawX - rainState.clearCenterX, 2) + 
+          Math.pow(drawY - rainState.clearCenterY, 2)
+        );
+        if (distFromCenter < rainState.clearRadius) continue;
+        // Fade near the edge of the clear zone
+        if (distFromCenter < rainState.clearRadius + 60) {
+          var edgeFade = (distFromCenter - rainState.clearRadius) / 60;
+          ctx.globalAlpha *= edgeFade;
+        }
+      }
+      
+      // Also check text clear zones (tagline area)
+      var skipForText = false;
+      for (var tz = 0; tz < rainState.clearZones.length; tz++) {
+        var zone = rainState.clearZones[tz];
+        if (drawX > zone.x - zone.pad && drawX < zone.x + zone.w + zone.pad &&
+            drawY > zone.y - zone.pad && drawY < zone.y + zone.h + zone.pad) {
+          skipForText = true;
+          break;
+        }
+      }
+      if (skipForText) continue;
+
       // Head character — brightest (boost opacity)
       ctx.globalAlpha = Math.min(rainState.fadeAlpha, 1);
       // Parse color and boost it for the head
@@ -1145,6 +1175,14 @@
       // Fade out gradually as they fall
       var fadeProgress = mp.y / ch; // 0 at top, 1 at bottom
       ctx.globalAlpha = Math.max(0, mp.life * 0.6 * (1 - fadeProgress * 0.3));
+      // Skip if inside clear zone
+      if (rainState.clearRadius > 0) {
+        var mpDist = Math.sqrt(
+          Math.pow(mp.x - rainState.clearCenterX, 2) + 
+          Math.pow(mp.y - rainState.clearCenterY, 2)
+        );
+        if (mpDist < rainState.clearRadius) { continue; }
+      }
       ctx.fillStyle = mp.color || 'rgba(137, 207, 240, 0.5)';
       ctx.font = FONT_SIZE + 'px monospace';
       ctx.fillText(mp.char, mp.x, mp.y);
@@ -1496,17 +1534,38 @@
     logoWrap.style.animation = 'motelFlicker 3s ease-out forwards';
     await wait(1800);
 
-    // Pulse rings
+    // Set clear center to logomark position
+    var logoRect = document.getElementById('heroLogoWrap').getBoundingClientRect();
+    rainState.clearCenterX = logoRect.left + logoRect.width / 2;
+    rainState.clearCenterY = logoRect.top + logoRect.height / 2;
+    
+    // Pulse rings — each one expands the clear radius
     ['ring1','ring2','ring3'].forEach(function(id, i) {
       var r = document.getElementById(id);
       r.style.opacity = '0.5';
       r.style.animation = 'pulseRing 2.8s ease-out ' + (i * 0.5) + 's infinite';
     });
+    
+    // Expand clear radius with each pulse
+    gsap.to(rainState, { clearRadius: 80, duration: 1.0, ease: 'power2.out', delay: 0.2 });
+    gsap.to(rainState, { clearRadius: 140, duration: 1.0, ease: 'power2.out', delay: 0.7 });
+    gsap.to(rainState, { clearRadius: 220, duration: 1.2, ease: 'power2.out', delay: 1.2 });
 
     // Tagline
     await wait(600);
     gsap.set('#heroTagline', { opacity: 1 });
     await anim('.tag-word', { opacity: 1, y: 0, duration: 0.4, stagger: 0.3, ease: 'power2.out' });
+    
+    // Add rain shield around tagline text
+    var taglineEl = document.getElementById('heroTagline');
+    if (taglineEl) {
+      var tRect = taglineEl.getBoundingClientRect();
+      rainState.clearZones.push({
+        x: tRect.left, y: tRect.top,
+        w: tRect.width, h: tRect.height,
+        pad: 20
+      });
+    }
 
     await wait(400);
     document.querySelectorAll('.hero-card-text').forEach(function(el, i) {
