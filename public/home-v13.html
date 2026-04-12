@@ -1006,7 +1006,7 @@
 
   // Rain state — controlled by hero sequence
   var rainState = {
-    color: 'rgba(239, 78, 75, 0.10)',
+    color: 'rgba(239, 78, 75, 0.35)',
     density: 0.15,
     speed: 1,
     converging: false,
@@ -1032,7 +1032,7 @@
     var screenW = window.innerWidth;
     var screenH = window.innerHeight;
     var numCols = Math.floor(screenW / COL_W);
-    if (isMobile) numCols = Math.floor(numCols * 0.5);
+    if (isMobile) numCols = Math.floor(numCols * 0.8);
     columns = [];
     for (var i = 0; i < numCols; i++) {
       columns.push({
@@ -1056,7 +1056,7 @@
 
   function drawRain() {
     // Fade trail — SOS Navy with low alpha
-    var fadeBase = rainState.fading ? 0.15 : 0.07;
+    var fadeBase = rainState.fading ? 0.20 : 0.12;
     ctx.fillStyle = 'rgba(15, 30, 43, ' + fadeBase + ')';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1103,9 +1103,10 @@
         drawX += dx * 0.01;
       }
 
-      // Head character — brightest
-      ctx.globalAlpha = rainState.fadeAlpha;
-      ctx.fillStyle = rainState.color;
+      // Head character — brightest (boost opacity)
+      ctx.globalAlpha = Math.min(rainState.fadeAlpha, 1);
+      // Parse color and boost it for the head
+      ctx.fillStyle = rainState.color.replace(/[\d.]+\)$/, '0.8)');
       ctx.fillText(randChar(), drawX, drawY);
 
       // Trail characters — progressively dimmer
@@ -1335,7 +1336,7 @@
     particleLayer.remove();
 
     // ═══ TRANSITION 1→2: Rain shifts red → blue, density increases ═══
-    rainState.color = 'rgba(137, 207, 240, 0.06)';
+    rainState.color = 'rgba(137, 207, 240, 0.20)';
     rainState.density = 0.20;
     rainState.speed = 1.3;
     rainState.phase = 1.5;
@@ -1395,7 +1396,7 @@
     mc.style.opacity = '1';
 
     // Update rain to phase 2 density
-    rainState.color = 'rgba(137, 207, 240, 0.08)';
+    rainState.color = 'rgba(137, 207, 240, 0.30)';
     rainState.density = 0.25;
     rainState.speed = 1.5;
     rainState.phase = 2;
