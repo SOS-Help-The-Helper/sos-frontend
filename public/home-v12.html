@@ -1027,12 +1027,8 @@
   var columns = [];
 
   function initColumns() {
-    var dpr = window.devicePixelRatio || 1;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    ctx.scale(dpr, dpr);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     var screenW = window.innerWidth;
     var screenH = window.innerHeight;
     var numCols = Math.floor(screenW / COL_W);
@@ -1051,7 +1047,7 @@
     }
     // Clear canvas to navy
     ctx.fillStyle = '#0F1E2B';
-    ctx.fillRect(0, 0, cw || window.innerWidth, ch || window.innerHeight);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   initColumns();
 
@@ -1062,7 +1058,7 @@
     // Fade trail — SOS Navy with low alpha
     var fadeBase = rainState.fading ? 0.15 : 0.07;
     ctx.fillStyle = 'rgba(15, 30, 43, ' + fadeBase + ')';
-    ctx.fillRect(0, 0, cw || window.innerWidth, ch || window.innerHeight);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (rainState.fadeAlpha <= 0.01) {
       requestAnimationFrame(drawRain);
@@ -1126,7 +1122,7 @@
 
       // Advance position
       col.y += col.speed * rainState.speed * FONT_SIZE * 0.15;
-      if (col.y > (ch || window.innerHeight) + col.length * FONT_SIZE) {
+      if (col.y > ch + col.length * FONT_SIZE) {
         col.y = -Math.random() * 200 - col.length * FONT_SIZE;
         col.active = Math.random() < rainState.density;
         col.speed = 0.4 + Math.random() * 1.2;
