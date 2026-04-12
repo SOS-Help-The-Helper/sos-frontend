@@ -1021,6 +1021,7 @@
   var charPool = '0123456789.:;=+<>|/\\{}[]~^*#@!?$%&';
   var charArr = charPool.split('');
   function randChar() { return charArr[(Math.random() * charArr.length) | 0]; }
+  function mxCharCanvas() { return charArr[(Math.random() * charArr.length) | 0]; }
 
   var COL_W = 12;
   var FONT_SIZE = 10;
@@ -1130,20 +1131,25 @@
       }
     }
 
-    // Draw merge particles (dissolve → rain)
+    // Draw merge particles — fall all the way down and off screen
     for (var p = mergeParticles.length - 1; p >= 0; p--) {
       var mp = mergeParticles[p];
       mp.y += mp.vy;
       mp.x += mp.vx;
-      mp.life -= 0.02;
-      if (mp.life <= 0) {
+      mp.life -= 0.005;
+      // Remove when off screen or dead
+      if (mp.life <= 0 || mp.y > ch + 50) {
         mergeParticles.splice(p, 1);
         continue;
       }
-      ctx.globalAlpha = mp.life * 0.5;
-      ctx.fillStyle = rainState.color;
+      // Fade out gradually as they fall
+      var fadeProgress = mp.y / ch; // 0 at top, 1 at bottom
+      ctx.globalAlpha = Math.max(0, mp.life * 0.6 * (1 - fadeProgress * 0.3));
+      ctx.fillStyle = mp.color || 'rgba(137, 207, 240, 0.5)';
       ctx.font = FONT_SIZE + 'px monospace';
       ctx.fillText(mp.char, mp.x, mp.y);
+      // Occasionally change character for matrix effect
+      if (Math.random() < 0.05) mp.char = mxCharCanvas();
     }
     ctx.globalAlpha = 1;
 
@@ -1285,9 +1291,10 @@
                 x: rect.left + Math.random() * rect.width,
                 y: rect.top + Math.random() * rect.height,
                 vx: 0,
-                vy: 1.5 + Math.random() * 2,
+                vy: 2 + Math.random() * 3,
                 char: mxChar(),
-                life: 0.8 + Math.random() * 0.4
+                life: 1.0,
+                color: 'rgba(137, 207, 240, 0.5)'
               });
             }
           }
@@ -1344,9 +1351,10 @@
                 x: rect.left + Math.random() * rect.width,
                 y: rect.top + Math.random() * rect.height,
                 vx: 0,
-                vy: 1.5 + Math.random() * 2,
+                vy: 2 + Math.random() * 3,
                 char: mxChar(),
-                life: 0.8 + Math.random() * 0.4
+                life: 1.0,
+                color: 'rgba(137, 207, 240, 0.5)'
               });
             }
           }
@@ -1449,8 +1457,9 @@
               mergeParticles.push({
                 x: rect.left + Math.random() * rect.width,
                 y: rect.top,
-                vx: 0, vy: 1.5 + Math.random() * 2,
-                char: mxChar(), life: 0.8 + Math.random() * 0.4
+                vx: 0, vy: 2 + Math.random() * 3,
+                char: mxChar(), life: 1.0,
+                color: 'rgba(137, 207, 240, 0.5)'
               });
             }
           }
