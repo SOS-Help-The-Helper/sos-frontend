@@ -613,17 +613,20 @@
 
   @keyframes motelCrackle {
     0%, 100% { opacity: 1; }
-    5% { opacity: 0.85; }
-    10% { opacity: 1; }
-    25% { opacity: 0.9; }
-    30% { opacity: 1; }
-    45% { opacity: 0.8; }
-    47% { opacity: 0.95; }
-    50% { opacity: 1; }
-    65% { opacity: 0.88; }
-    68% { opacity: 1; }
-    80% { opacity: 0.92; }
-    85% { opacity: 1; }
+    4% { opacity: 0.6; }
+    6% { opacity: 0.9; }
+    15% { opacity: 1; }
+    22% { opacity: 0.5; }
+    25% { opacity: 0.85; }
+    35% { opacity: 1; }
+    42% { opacity: 0.65; }
+    45% { opacity: 1; }
+    55% { opacity: 0.7; }
+    58% { opacity: 0.95; }
+    70% { opacity: 1; }
+    78% { opacity: 0.55; }
+    80% { opacity: 0.9; }
+    90% { opacity: 1; }
   }
   .motel-crackle {
     animation: motelCrackle 2.5s ease-in-out infinite;
@@ -690,7 +693,7 @@
         <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <span class="hero-card-text tag-word" style="opacity: 0; white-space: nowrap;">Everyone is a helper</span>
+        <span class="hero-card-text tag-word tag-line1" style="opacity: 0; white-space: nowrap;">Everyone is a helper</span>
         <span class="hero-card-text tag-word" style="opacity: 0; white-space: nowrap;">We help the helpers</span>
       </div>
     </div>
@@ -1142,27 +1145,7 @@
     // storm flicker removed
     gsap.set(stage, { opacity: 1 });
 
-    // Crackle in: use GSAP keyframes for the motel sign warm-up
-    gsap.fromTo(mc, 
-      { opacity: 0 },
-      { opacity: 1, duration: 1.8, ease: 'none',
-        keyframes: [
-          { opacity: 0, duration: 0 },
-          { opacity: 0.15, duration: 0.15 },
-          { opacity: 0.03, duration: 0.08 },
-          { opacity: 0.3, duration: 0.15 },
-          { opacity: 0.08, duration: 0.1 },
-          { opacity: 0.5, duration: 0.2 },
-          { opacity: 0.2, duration: 0.1 },
-          { opacity: 0.65, duration: 0.2 },
-          { opacity: 0.45, duration: 0.1 },
-          { opacity: 0.8, duration: 0.2 },
-          { opacity: 0.7, duration: 0.1 },
-          { opacity: 1, duration: 0.3 }
-        ]
-      }
-    );
-    await wait(800);
+
 
     var typingSpan = document.createElement('span');
     typingSpan.style.borderRight = '2px solid rgba(137,207,240,0.7)';
@@ -1172,8 +1155,9 @@
     mc.style.textAlign = 'center';
     mc.appendChild(typingSpan);
     typingSpan.classList.add('motel-crackle');
+    mc.style.opacity = '1';
 
-    await typeInto(typingSpan, "when relief systems fail, communities step up", 60, "communities");
+    await typeInto(typingSpan, "when relief systems fail, communities step up", 68, "communities");
 
     typingSpan.classList.remove('motel-crackle');
     // ═══ TRANSITION 1→2: smooth fade out ═══
@@ -1230,8 +1214,10 @@
 
     // "force multipliers" crackles red
     fmSpans.forEach(function(s) {
-      s.style.color = '#EF4E4B';
-      s.style.textShadow = '0 0 20px rgba(239,78,75,0.35), 0 0 40px rgba(239,78,75,0.15)';
+      s.style.textDecoration = 'underline';
+      s.style.textDecorationColor = '#EF4E4B';
+      s.style.textUnderlineOffset = '6px';
+      s.style.textDecorationThickness = '2px';
       s.style.animation = 'motelCrackle 1.5s ease-in-out infinite';
     });
     await wait(1200);
@@ -1244,13 +1230,13 @@
     gsap.set('#heroPhase3', { opacity: 1 });
     var logoWrap = document.getElementById('heroLogoWrap');
     logoWrap.style.animation = 'motelFlicker 3s ease-out forwards';
-    await wait(2800);
+    await wait(1800);
 
     // Pulse rings
     ['ring1','ring2','ring3'].forEach(function(id, i) {
       var r = document.getElementById(id);
       r.style.opacity = '0.5';
-      r.style.animation = 'pulseRing 2s ease-out ' + (i * 0.4) + 's infinite';
+      r.style.animation = 'pulseRing 2.8s ease-out ' + (i * 0.5) + 's infinite';
     });
 
     // Tagline words appear one by one
