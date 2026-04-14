@@ -603,14 +603,7 @@ export default function CitizenMapPage() {
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-white border border-white/50" /> Reports</span>
       </div>
 
-      {/* Alert banner */}
-      {alerts.length > 0 && (
-        <div className="absolute top-16 left-3 right-3 z-20">
-          <div className={`rounded-xl p-3 backdrop-blur-sm ${hasExtreme ? 'bg-sos-red-500/90' : 'bg-yellow-500/90'}`}>
-            <p className={`text-xs font-bold ${hasExtreme ? 'text-white' : 'text-yellow-900'}`}>{alerts[0].headline}</p>
-          </div>
-        </div>
-      )}
+      {/* Alert banner — disabled for now */}
 
       {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
