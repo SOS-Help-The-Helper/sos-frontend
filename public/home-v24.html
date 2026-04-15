@@ -530,12 +530,12 @@
     <!-- Phase 5: SOS logomark + name (no CSS pulse rings — drawn on canvas) -->
     <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
       <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; overflow: visible; z-index: 10;">
-        <span class="radar-ring" style="animation: radar-ping 4.5s ease-out infinite;"></span>
-        <span class="radar-ring" style="animation: radar-ping 4.5s ease-out 1.2s infinite;"></span>
-        <span class="radar-ring" style="animation: radar-ping 4.5s ease-out 2.7s infinite;"></span>
-        <span class="radar-ring" style="animation: radar-ping 4.5s ease-out 3.8s infinite;"></span>
-        <img src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2;">
-        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px;">SOS</span>
+        <span class="radar-ring" id="ring1" style="animation: none; opacity: 0;"></span>
+        <span class="radar-ring" id="ring2" style="animation: none; opacity: 0;"></span>
+        <span class="radar-ring" id="ring3" style="animation: none; opacity: 0;"></span>
+        <span class="radar-ring" id="ring4" style="animation: none; opacity: 0;"></span>
+        <img id="heroLogoImg" src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2; opacity: 0;">
+        <span id="heroSosText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px; opacity: 0;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 180px; display: flex; flex-direction: column; align-items: center; gap: 28px;">
         <div class="tag-word" style="opacity: 0; display: flex; align-items: center; gap: 32px;">
@@ -1229,32 +1229,59 @@
 
     await wait(700);
 
-    // Logo scales up from the convergence point
+    // ═══ PHASE 5: Gentle reveal — rings → logo → SOS → CTAs → learn more ═══
     wipeCanvas();
     mc.innerHTML = '';
     gsap.set(stage, { opacity: 0 });
-    gsap.to(logoWrap, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.4)' });
+
+    // Make logoWrap visible (container) but children still hidden
+    gsap.set(logoWrap, { opacity: 1, scale: 1 });
+
+    // Ring 1 — first ping emerges from center
+    var ring1 = document.getElementById('ring1');
+    ring1.style.animation = 'radar-ping 4.5s ease-out infinite';
+    gsap.to(ring1, { opacity: 1, duration: 0.3 });
+    await wait(600);
+
+    // Ring 2
+    var ring2 = document.getElementById('ring2');
+    ring2.style.animation = 'radar-ping 4.5s ease-out infinite';
+    ring2.style.animationDelay = '1.2s';
+    gsap.to(ring2, { opacity: 1, duration: 0.3 });
     await wait(500);
 
-    // Pulse rings are CSS-driven (radar-ping animation on the spans inside heroLogoWrap)
+    // Logomark fades in gently while rings are pulsing
+    await anim('#heroLogoImg', { opacity: 1, duration: 1.2, ease: 'power2.out' });
 
-    // Tagline
-    await wait(420);
+    // Ring 3
+    var ring3 = document.getElementById('ring3');
+    ring3.style.animation = 'radar-ping 4.5s ease-out infinite';
+    ring3.style.animationDelay = '2.7s';
+    gsap.to(ring3, { opacity: 1, duration: 0.3 });
+    await wait(400);
+
+    // Ring 4
+    var ring4 = document.getElementById('ring4');
+    ring4.style.animation = 'radar-ping 4.5s ease-out infinite';
+    ring4.style.animationDelay = '3.8s';
+    gsap.to(ring4, { opacity: 1, duration: 0.3 });
+    await wait(300);
+
+    // "SOS" text fades in
+    await anim('#heroSosText', { opacity: 0.6, duration: 0.8, ease: 'power2.out' });
+    await wait(400);
+
+    // Get Help | Give Help fade in
     gsap.set('#heroTagline', { opacity: 1 });
-    await anim('.tag-word', { opacity: 1, y: 0, duration: 0.5, stagger: 0.3, ease: 'power2.out' });
+    await anim('.tag-word:first-child', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+    await wait(300);
+
+    // Learn more fades in last
+    await anim('#learnMoreLink', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
 
     // Bounce the learn more arrow
-    await wait(400);
+    await wait(200);
     gsap.to('#learnMoreArrow', { y: 6, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1 });
-
-    // Scroll hint (bottom of viewport)
-    await wait(300);
-    gsap.to('#scrollHint', {
-      opacity: 1, duration: 0.5,
-      onComplete: function() {
-        gsap.to('#scrollHint', { y: 8, duration: 1.2, ease: 'power1.inOut', yoyo: true, repeat: -1 });
-      }
-    });
 
   })();
 
