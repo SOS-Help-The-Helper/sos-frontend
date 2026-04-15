@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/home-v23.html',
+        destination: '/home-v24.html',
       },
     ];
   },
