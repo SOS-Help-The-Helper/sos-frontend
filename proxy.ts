@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set([
   '/home-v21.html',
   '/home-v22.html',
   '/home-v23.html',
+  '/home-v24.html',
 ]);
 
 const PUBLIC_PREFIXES = [
