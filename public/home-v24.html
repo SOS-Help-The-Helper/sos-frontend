@@ -371,7 +371,7 @@
     background: #060d14; border-top: 1px solid rgba(255,255,255,0.04);
   }
   footer p { font-size: 13px; color: rgba(255,255,255,0.3); }
-  footer a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+  footer a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; padding: 12px 8px; }
   footer a:hover { color: #fff; }
 
   /* ── Backdrop-filter fallbacks ── */
@@ -406,6 +406,110 @@
   /* ── Will-change for animated hero elements ── */
   #heroTextStage, #heroPhase3, #heroLogoWrap { will-change: transform, opacity; }
 
+  /* ── Section dividers ── */
+  .wave-divider { line-height: 0; margin-top: -1px; position: relative; z-index: 2; }
+  .wave-divider svg { display: block; width: 100%; }
+
+  /* ── Crisis angled bottom ── */
+  #crisis { clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%); padding-bottom: 160px; }
+
+  /* ── Coordination pull quote ── */
+  .coord-pull-quote {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 32px;
+    font-style: italic;
+    text-align: center;
+    color: #0F1E2B;
+    line-height: 1.4;
+    margin-bottom: 48px;
+  }
+
+  /* ── Light alt background ── */
+  .bg-light-alt { background: #f1f3f5; }
+
+  /* ── Solution 2-column layout ── */
+  .solution-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .solution-grid .flywheel-svg { max-width: 100%; margin: 0; }
+
+  /* ── About section — white with dot grid ── */
+  .about-section {
+    background: #fff;
+    background-image: radial-gradient(circle, rgba(15,30,43,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 32px;
+  }
+
+  /* ── About timeline ── */
+  .about-timeline {
+    text-align: left;
+    max-width: 520px;
+    margin: 0 auto;
+    padding-left: 40px;
+    position: relative;
+  }
+  .about-timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(15,30,43,0.12);
+  }
+  .about-timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+  }
+  .about-timeline-item:last-child { margin-bottom: 0; }
+  .about-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -34px;
+    top: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #89CFF0;
+    box-shadow: 0 0 0 3px rgba(137,207,240,0.15);
+  }
+  .about-timeline-year {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #89CFF0;
+    margin-bottom: 6px;
+  }
+  .about-timeline-item p {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ── Hero CTA touch targets ── */
+  .hero-cta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ── Are you heading ── */
+  .are-you-heading {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 42px;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+
   /* ── Mobile ── */
   @media (max-width: 640px) {
     h1 { font-size: 36px; }
@@ -429,6 +533,12 @@
     .convergence-grid { grid-template-columns: 1fr !important; }
     .flywheel-svg { max-width: 300px; }
     .invitation-section { padding: 80px 20px; }
+    .scenario-header h2 { font-size: 28px; }
+    .are-you-heading { font-size: 32px; }
+    .solution-grid { grid-template-columns: 1fr; }
+    #crisis { clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%); padding-bottom: 120px; }
+    .coord-pull-quote { font-size: 24px; }
+    .about-section { padding: 80px 20px; }
   }
 
   /* Typing cursor */
@@ -542,9 +652,9 @@
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 180px; display: flex; flex-direction: column; align-items: center; gap: 28px;">
         <div class="tag-word" style="opacity: 0; display: flex; align-items: center; gap: 32px;">
-          <a href="/c?flow=get-help" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(239,78,75,0.4);">Get Help</a>
+          <a href="/c?flow=get-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(239,78,75,0.4);">Get Help</a>
           <span style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></span>
-          <a href="/c?flow=give-help" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(137,207,240,0.3);">Give Help</a>
+          <a href="/c?flow=give-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(137,207,240,0.3);">Give Help</a>
         </div>
         <a href="#crisis" class="tag-word" id="learnMoreLink" style="opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
           <span style="font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Learn more</span>
@@ -561,15 +671,7 @@
      ════════════════════════════════════════════ -->
 <section id="crisis" class="bg-white">
   <div class="narrow">
-    <p class="label gs-fade">The Crisis</p>
-    <h2 class="gs-fade">The Great Aid Recession</h2>
-    <div class="accent-line gs-fade"></div>
-
-    <p class="body-lg gs-fade" style="margin-top: 32px; font-weight: 300; color: #3d4852;">
-      For the first time in modern history, the global humanitarian system is contracting — not because disasters are slowing down, but because funding, infrastructure, and political will are collapsing simultaneously. FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Global humanitarian funding dropped 40% in a single year<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> — the largest shortfall ever recorded.
-    </p>
-
-    <div class="stat-row" style="margin-top: 48px;">
+    <div class="stat-row" style="margin-bottom: 48px;">
       <div class="stat-card gs-fade">
         <div class="num" data-count="305" data-suffix="M+" data-prefix="">0</div>
         <div class="desc">people needed humanitarian assistance globally in 2025<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
@@ -583,14 +685,24 @@
         <div class="desc">funding shortfall — the largest on record<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a></div>
       </div>
     </div>
+
+    <p class="label gs-fade">The Crisis</p>
+    <h2 class="gs-fade">The Great Aid Recession</h2>
+    <div class="accent-line gs-fade"></div>
+
+    <p class="body-lg gs-fade" style="margin-top: 32px; font-weight: 300; color: #3d4852;">
+      For the first time in modern history, the global humanitarian system is contracting — not because disasters are slowing down, but because funding, infrastructure, and political will are collapsing simultaneously. FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Global humanitarian funding dropped 40% in a single year<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> — the largest shortfall ever recorded.
+    </p>
   </div>
 </section>
 
 <!-- ════════════════════════════════════════════
      SECTION 3: COORDINATION — The Problem
      ════════════════════════════════════════════ -->
-<section id="coordination" class="bg-white">
+<section id="coordination" class="bg-light">
   <div class="narrow">
+    <p class="coord-pull-quote gs-fade">"The help always shows up. The coordination doesn't."</p>
+
     <p class="label gs-fade">The Problem</p>
     <h2 class="gs-fade">When coordination fails, help scatters.</h2>
     <div class="accent-line gs-fade"></div>
@@ -645,10 +757,17 @@
   </div>
 </section>
 
+<!-- Wave: Convergence (navy) → Ecosystem (white) -->
+<div class="wave-divider" style="background: #fff;">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#0F1E2B"/>
+  </svg>
+</div>
+
 <!-- ════════════════════════════════════════════
      SECTION 5: ECOSYSTEM — The Help Exists
      ════════════════════════════════════════════ -->
-<section id="ecosystem" class="bg-light">
+<section id="ecosystem" class="bg-white">
   <div class="narrow">
     <p class="label gs-fade">The Help Exists</p>
     <h2 class="gs-fade">Everyone responds. They just can't see each other.</h2>
@@ -683,70 +802,75 @@
 <!-- ════════════════════════════════════════════
      SECTION 6: SOLUTION — Flywheel
      ════════════════════════════════════════════ -->
-<section id="solution" class="bg-light">
-  <div class="narrow">
-    <p class="label gs-fade">The Solution</p>
-    <h2 class="gs-fade">Relief as permaculture.</h2>
-    <div class="accent-line gs-fade"></div>
-    <p class="body-lg gs-fade" style="margin-top: 24px;">
-      SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, emergency services, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.
-    </p>
+<section id="solution" class="bg-light-alt">
+  <div class="wide">
+    <div class="solution-grid">
+      <div>
+        <svg viewBox="0 0 400 420" class="flywheel-svg" id="flywheelSvg">
+          <defs>
+            <marker id="fw-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#89CFF0" opacity="0.6"/>
+            </marker>
+          </defs>
 
-    <svg viewBox="0 0 400 420" class="flywheel-svg" id="flywheelSvg">
-      <defs>
-        <marker id="fw-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-          <polygon points="0 0, 10 3.5, 0 7" fill="#89CFF0" opacity="0.6"/>
-        </marker>
-      </defs>
+          <!-- Background ring -->
+          <circle cx="200" cy="200" r="140" fill="none" stroke="#89CFF0" stroke-width="1" opacity="0.15" class="flywheel-ring-anim"/>
 
-      <!-- Background ring -->
-      <circle cx="200" cy="200" r="140" fill="none" stroke="#89CFF0" stroke-width="1" opacity="0.15" class="flywheel-ring-anim"/>
+          <!-- Directional arcs with arrows -->
+          <path class="flywheel-arc" d="M 224 62 A 140 140 0 0 1 324 134" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
+          <path class="flywheel-arc" d="M 339 181 A 140 140 0 0 1 301 297" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
+          <path class="flywheel-arc" d="M 261 326 A 140 140 0 0 1 139 326" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
+          <path class="flywheel-arc" d="M 99 297 A 140 140 0 0 1 61 181" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
+          <path class="flywheel-arc" d="M 76 134 A 140 140 0 0 1 176 62" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
 
-      <!-- Directional arcs with arrows -->
-      <path class="flywheel-arc" d="M 224 62 A 140 140 0 0 1 324 134" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-      <path class="flywheel-arc" d="M 339 181 A 140 140 0 0 1 301 297" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-      <path class="flywheel-arc" d="M 261 326 A 140 140 0 0 1 139 326" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-      <path class="flywheel-arc" d="M 99 297 A 140 140 0 0 1 61 181" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-      <path class="flywheel-arc" d="M 76 134 A 140 140 0 0 1 176 62" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
+          <!-- Node 1: Intake (top) -->
+          <g class="flywheel-node">
+            <circle cx="200" cy="60" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="200" y="56" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">01</text>
+            <text x="200" y="70" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Intake</text>
+          </g>
 
-      <!-- Node 1: Intake (top) -->
-      <g class="flywheel-node">
-        <circle cx="200" cy="60" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
-        <text x="200" y="56" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">01</text>
-        <text x="200" y="70" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Intake</text>
-      </g>
+          <!-- Node 2: Match (top-right) -->
+          <g class="flywheel-node">
+            <circle cx="333" cy="157" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="333" y="153" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">02</text>
+            <text x="333" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Match</text>
+          </g>
 
-      <!-- Node 2: Match (top-right) -->
-      <g class="flywheel-node">
-        <circle cx="333" cy="157" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
-        <text x="333" y="153" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">02</text>
-        <text x="333" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Match</text>
-      </g>
+          <!-- Node 3: Coordinate (bottom-right) -->
+          <g class="flywheel-node">
+            <circle cx="282" cy="313" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="282" y="309" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">03</text>
+            <text x="282" y="323" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Coordinate</text>
+          </g>
 
-      <!-- Node 3: Coordinate (bottom-right) -->
-      <g class="flywheel-node">
-        <circle cx="282" cy="313" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
-        <text x="282" y="309" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">03</text>
-        <text x="282" y="323" text-anchor="middle" fill="#0F1E2B" font-size="9" font-weight="600" font-family="'Nunito Sans', sans-serif">Coordinate</text>
-      </g>
+          <!-- Node 4: Fulfill (bottom-left) -->
+          <g class="flywheel-node">
+            <circle cx="118" cy="313" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="118" y="309" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">04</text>
+            <text x="118" y="323" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Fulfill</text>
+          </g>
 
-      <!-- Node 4: Fulfill (bottom-left) -->
-      <g class="flywheel-node">
-        <circle cx="118" cy="313" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
-        <text x="118" y="309" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">04</text>
-        <text x="118" y="323" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Fulfill</text>
-      </g>
+          <!-- Node 5: Learn (top-left) -->
+          <g class="flywheel-node">
+            <circle cx="67" cy="157" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="67" y="153" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">05</text>
+            <text x="67" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Learn</text>
+          </g>
 
-      <!-- Node 5: Learn (top-left) -->
-      <g class="flywheel-node">
-        <circle cx="67" cy="157" r="28" fill="#f8f9fa" stroke="#89CFF0" stroke-width="1.5"/>
-        <text x="67" y="153" text-anchor="middle" fill="#89CFF0" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">05</text>
-        <text x="67" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Learn</text>
-      </g>
-
-      <!-- Center: SOS logo -->
-      <image href="/logomark-red.svg" x="172" y="172" width="56" height="56" class="flywheel-center"/>
-    </svg>
+          <!-- Center: SOS logo -->
+          <image href="/logomark-red.svg" x="172" y="172" width="56" height="56" class="flywheel-center"/>
+        </svg>
+      </div>
+      <div>
+        <p class="label gs-fade">The Solution</p>
+        <h2 class="gs-fade">Relief as permaculture.</h2>
+        <div class="accent-line gs-fade"></div>
+        <p class="body-lg gs-fade" style="margin-top: 24px;">
+          SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, emergency services, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.
+        </p>
+      </div>
+    </div>
 
     <div class="result-card gs-fade">
       <p>
@@ -755,6 +879,13 @@
     </div>
   </div>
 </section>
+
+<!-- Wave: Solution (gray) → Scenario (navy) -->
+<div class="wave-divider" style="background: #0F1E2B;">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#f1f3f5"/>
+  </svg>
+</div>
 
 <!-- ════════════════════════════════════════════
      SECTION 7: SCENARIO — It All Comes Together
@@ -820,24 +951,26 @@
 <!-- ════════════════════════════════════════════
      SECTION 8: ABOUT — Origin Story
      ════════════════════════════════════════════ -->
-<section id="about" class="invitation-section">
-  <div class="grain-overlay"></div>
+<section id="about" class="about-section">
   <div class="narrow" style="position: relative; z-index: 2;">
 
-    <p class="invitation-moment gs-fade">
-      SOS started during Hurricane Helene. Our founder's farmhouse was damaged. He lived in a donated RV for three months.
-    </p>
-
-    <p class="invitation-moment gs-fade">
-      Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026,<a href="https://www.foxweather.com/watch/fmc-pc525bwm58bnkvy1" class="cite" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.35);">¹⁰</a> coordinating hundreds of resources across 12 states.
-    </p>
-
-    <p class="invitation-moment gs-fade">
-      The values are structural, not aspirational. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them.
-    </p>
+    <div class="about-timeline">
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2024</p>
+        <p>SOS started during Hurricane Helene. Our founder's farmhouse was damaged. He lived in a donated RV for three months.</p>
+      </div>
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2025</p>
+        <p>Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026,<a href="https://www.foxweather.com/watch/fmc-pc525bwm58bnkvy1" class="cite" target="_blank" rel="noopener">¹⁰</a> coordinating hundreds of resources across 12 states.</p>
+      </div>
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2026</p>
+        <p>The values are structural, not aspirational. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them.</p>
+      </div>
+    </div>
 
     <div class="gs-fade" style="margin-top: 48px;">
-      <img src="/logomark-red.svg" alt="SOS" class="logo-flicker-glow" id="invitationLogo" style="height: 80px;">
+      <img src="/logomark-red.svg" alt="SOS" id="invitationLogo" style="height: 80px;">
     </div>
   </div>
 </section>
@@ -879,7 +1012,7 @@
       <img src="/logomark-red.svg" alt="SOS" style="height: 80px;">
     </div>
 
-    <h1 class="gs-fade" style="font-size: 42px; color: #fff; margin-bottom: 16px;">Are you?</h1>
+    <h1 class="gs-fade are-you-heading">Are you?</h1>
 
     <div class="gs-fade btn-row-cta" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px;">
       <a href="/c" class="btn btn-red">I need help</a>
