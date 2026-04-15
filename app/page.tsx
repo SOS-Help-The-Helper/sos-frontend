@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
-
+// Root page handled by rewrite in next.config.ts → /home-v23.html
+// This file exists to prevent Next.js from generating a default page
 export default function HomePage() {
-  redirect('/home-v23.html');
+  return null;
 }
