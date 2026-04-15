@@ -1277,19 +1277,25 @@
     mc.style.opacity = '1';
 
     var line4a = document.createElement('div');
-    line4a.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:rgba(255,255,255,0.6);';
-    makeCursor(line4a);
+    line4a.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:rgba(255,255,255,0.6);opacity:0;transition:opacity 0.8s ease;';
     mc.appendChild(line4a);
+    line4a.textContent = 'everyone is a helper';
 
-    await typeInto(line4a, 'everyone is a helper', 80, '');
-    await wait(350);
+    // Fade in (not typing)
+    await wait(50);
+    line4a.style.opacity = '1';
+    await wait(600);
 
     var line4b = document.createElement('div');
-    line4b.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#89CFF0;text-shadow:0 0 15px rgba(137,207,240,0.3);';
-    makeCursor(line4b);
+    line4b.style.cssText = 'font-family:"DM Serif Display",Georgia,serif;font-size:' + p2FontSize + ';color:#89CFF0;opacity:0;transition:opacity 0.8s ease, text-shadow 1.5s ease;text-shadow:0 0 15px rgba(137,207,240,0.3);';
     mc.appendChild(line4b);
+    line4b.textContent = 'we help the helpers';
 
-    await typeInto(line4b, 'we help the helpers', 80, '');
+    // Fade in with glow
+    await wait(50);
+    line4b.style.opacity = '1';
+    await wait(400);
+    line4b.style.textShadow = '0 0 20px rgba(137,207,240,0.5), 0 0 40px rgba(137,207,240,0.3), 0 0 60px rgba(137,207,240,0.15)';
     await wait(550);
 
     // Re-create as plain text for dissolve
