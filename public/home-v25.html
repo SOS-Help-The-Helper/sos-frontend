@@ -547,6 +547,7 @@
     .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
     .crisis-points { grid-template-columns: 1fr !important; gap: 20px !important; }
+    #crisisCards { grid-template-columns: 1fr !important; }
     .stat-card .num { font-size: 44px; }
     .eco-grid { grid-template-columns: 1fr; }
     .coord-grid { grid-template-columns: 1fr; }
@@ -710,18 +711,18 @@
       <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Facebook became the missing persons database — not by design, but because nothing else worked.</p>
     </div>
 
-    <div class="eco-grid" style="margin-top: 40px;">
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
+    <div id="crisisCards" style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+      <div class="eco-card crisis-card-reveal" style="border-left: 3px solid #EF4E4B; opacity: 0; transform: translateY(20px);">
         <p class="eco-label" style="color: #EF4E4B;">Funding Collapsed</p>
         <h3 style="font-size: 18px;">40% drop in one year</h3>
         <p>The largest humanitarian funding shortfall ever recorded. $24.4 billion gap.</p>
       </div>
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
+      <div class="eco-card crisis-card-reveal" style="border-left: 3px solid #EF4E4B; opacity: 0; transform: translateY(20px);">
         <p class="eco-label" style="color: #EF4E4B;">FEMA Is Retreating</p>
         <h3 style="font-size: 18px;">Recovery defunded</h3>
         <p>Non-lifesaving disaster recovery cut. Twenty states suing to restart preparedness grants.</p>
       </div>
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
+      <div class="eco-card crisis-card-reveal" style="border-left: 3px solid #EF4E4B; opacity: 0; transform: translateY(20px);">
         <p class="eco-label" style="color: #EF4E4B;">Disasters Accelerating</p>
         <h3 style="font-size: 18px;">The gap is widening</h3>
         <p>The safety net is contracting at the exact moment communities need it most.</p>
@@ -1475,9 +1476,15 @@
   /* ═══════════════════════════════════════════
      Ecosystem cards stagger
      ═══════════════════════════════════════════ */
-  gsap.from('.eco-card', {
+  gsap.from('.eco-grid .eco-card', {
     scrollTrigger: { trigger: '.eco-grid', start: 'top 80%' },
     opacity: 0, y: 30, duration: 0.6, stagger: 0.15, ease: 'power2.out'
+  });
+
+  /* Crisis cards — one by one reveal */
+  gsap.to('.crisis-card-reveal', {
+    scrollTrigger: { trigger: '#crisisCards', start: 'top 80%' },
+    opacity: 1, y: 0, duration: 0.5, stagger: 0.3, ease: 'power2.out'
   });
 
   /* ═══════════════════════════════════════════
