@@ -10,6 +10,7 @@ const PUBLIC_PATHS = new Set([
   '/home-v22.html',
   '/home-v23.html',
   '/home-v24.html',
+  '/home-v25.html',
   '/case.html',
 ]);
 
