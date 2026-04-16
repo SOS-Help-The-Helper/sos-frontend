@@ -9,7 +9,7 @@ function JoinChat() {
   const params = useSearchParams();
   const ref = params.get('ref');
   const [input, setInput] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
@@ -41,35 +41,45 @@ function JoinChat() {
     }
   }, [sendMessage]);
 
-  // Force navy background on html/body to prevent any white/cream flash or gap
+  // visualViewport resize: set --vh so the flex column compresses when keyboard opens
   useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.background;
-    const prevBody = body.style.background;
-    html.style.background = '#0F1E2B';
-    body.style.background = '#0F1E2B';
+    if (typeof window === 'undefined') return;
+
+    const setVh = () => {
+      const vh = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+      containerRef.current?.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVh();
+
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', setVh);
+      vv.addEventListener('scroll', setVh);
+    }
+    window.addEventListener('resize', setVh);
+
     return () => {
-      html.style.background = prevHtml;
-      body.style.background = prevBody;
+      if (vv) {
+        vv.removeEventListener('resize', setVh);
+        vv.removeEventListener('scroll', setVh);
+      }
+      window.removeEventListener('resize', setVh);
     };
   }, []);
 
-  // Mobile keyboard handling
+  // Scroll to bottom when keyboard opens (viewport shrinks)
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
-    const viewport = window.visualViewport;
+    const vv = window.visualViewport;
     const onResize = () => {
-      const diff = window.innerHeight - viewport.height;
-      setKeyboardHeight(diff > 50 ? diff : 0);
+      const diff = window.innerHeight - vv.height;
       if (diff > 50) setTimeout(() => scrollToBottom('instant'), 100);
     };
-    viewport.addEventListener('resize', onResize);
-    viewport.addEventListener('scroll', onResize);
-    return () => {
-      viewport.removeEventListener('resize', onResize);
-      viewport.removeEventListener('scroll', onResize);
-    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
   }, [scrollToBottom]);
 
   // Auto-scroll on new messages
@@ -95,31 +105,28 @@ function JoinChat() {
     send(input.trim());
   }
 
-  // Check if running inside an iframe
-  const isIframe = typeof window !== 'undefined' && window.parent !== window;
-
   return (
     <div
+      ref={containerRef}
       className="flex flex-col bg-[#0F1E2B] text-white"
-      style={{
-        minHeight: isIframe ? '100%' : '100dvh',
-        height: isIframe ? '100%' : '100dvh',
-      }}
+      style={{ height: 'var(--vh, 100dvh)', overflow: 'hidden' }}
     >
-      {/* Messages — flex-1 fills all space above fixed input bar */}
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 flex-shrink-0">
+        <img src="/logomark.svg" alt="" className="h-6 w-6" />
+        <span className="text-sm font-bold tracking-wide text-white/80">SOS</span>
+      </div>
+
+      {/* Messages area */}
       <div
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: `calc(76px + env(safe-area-inset-bottom, 0px) + ${keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'})`,
-        }}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {messages.map(msg => (
           <div key={msg.id}>
             {(msg as any).parts?.map((part: any, pi: number) => {
               if (part.type === 'text' && part.text) {
                 const isUser = (msg as any).role === 'user';
-                // Hide the initial [JOIN_SOS] trigger message
                 if (isUser && part.text.includes('[JOIN_SOS]')) return null;
                 return (
                   <div key={pi} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`}>
@@ -169,17 +176,10 @@ function JoinChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar — fixed to bottom, above safe area */}
+      {/* Input bar */}
       <div
         className="bg-[#1A3850] px-4 py-3 border-t border-white/10 flex-shrink-0"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingBottom: `calc(12px + env(safe-area-inset-bottom, 0px))`,
-          zIndex: 50,
-        }}
+        style={{ paddingBottom: `calc(12px + env(safe-area-inset-bottom, 0px))` }}
       >
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
