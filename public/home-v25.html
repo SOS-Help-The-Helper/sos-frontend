@@ -787,7 +787,7 @@
     <h2 class="gs-fade">Everyone responds. They just can't see each other.</h2>
     <div class="accent-line gs-fade"></div>
     <p class="body-lg gs-fade" style="margin-top: 24px;">
-      The response to every disaster is bigger, faster, and more capable than any system gives it credit for. Everyone responds. They just can't see each other.
+      People respond. They always do. But they are overwhelmed.
     </p>
 
   </div>
@@ -1633,14 +1633,20 @@
     btn.textContent = 'Submitting…';
     msg.style.display = 'none';
 
+    var nameVal = form.querySelector('[name="name"]').value.trim();
+    var nameParts = nameVal.split(' ');
     var data = {
-      name: form.name.value.trim(),
+      display_name: nameVal,
+      first_name: nameParts[0] || null,
+      last_name: nameParts.slice(1).join(' ') || null,
       phone: form.phone.value.trim(),
-      skills: form.skills.value.trim(),
-      organization: form.organization.value.trim()
+      phone_canonical: form.phone.value.trim().replace(/[^\d+]/g, ''),
+      bio: (form.skills.value.trim() ? 'Skills: ' + form.skills.value.trim() : '') + (form.organization.value.trim() ? ' | Org: ' + form.organization.value.trim() : ''),
+      helper_status: 'interested',
+      consent_contact: true
     };
 
-    fetch('https://rtduqguwhkczexnoawej.supabase.co/rest/v1/homepage_signups', {
+    fetch('https://rtduqguwhkczexnoawej.supabase.co/rest/v1/persons', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
