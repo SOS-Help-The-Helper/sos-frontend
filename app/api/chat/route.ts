@@ -196,10 +196,18 @@ RULES FOR MATCH FLOW:
 export async function POST(req: Request) {
   try {
   const body = await req.json();
-  const uiMessages = body.messages || [];
-  if (!uiMessages.length) {
+  const rawMessages = body.messages || [];
+  if (!rawMessages.length) {
     return new Response(JSON.stringify({ error: 'No messages provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
+  // Normalize messages — ensure parts array format for AI SDK v6
+  const uiMessages = rawMessages.map((m: any, i: number) => ({
+    id: m.id || `msg-${i}`,
+    role: m.role,
+    parts: m.parts || [{ type: 'text', text: typeof m.content === 'string' ? m.content : '' }],
+    createdAt: m.createdAt ? new Date(m.createdAt) : new Date(),
+    ...(m.content !== undefined && { content: m.content }),
+  }));
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
   // Detect JOIN flow from first message content: [JOIN_SOS]
