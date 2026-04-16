@@ -1041,9 +1041,20 @@
 
     <h1 class="gs-fade are-you-heading" style="margin-bottom: 48px;">Are you?</h1>
 
-    <!-- Embedded Agent Chat -->
-    <div id="joinChatContainer" style="width: 100%; max-width: 480px; margin: 0 auto 48px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); height: 500px;">
-      <iframe id="joinChatFrame" src="/c/agent?initialMessage=%5BJOIN_SOS%5D%20I%20want%20to%20join%20the%20SOS%20community" style="width: 100%; height: 100%; border: none;" allow="microphone"></iframe>
+    <!-- Inline Join Chat -->
+    <div id="joinChat" style="width: 100%; max-width: 480px; margin: 0 auto 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); overflow: hidden;">
+      <div id="chatMessages" style="height: 360px; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="text-align: center; padding: 24px 0;">
+          <img src="/logomark-red.svg" alt="SOS" style="height: 32px; opacity: 0.4; margin-bottom: 8px;">
+          <p style="font-size: 13px; color: rgba(255,255,255,0.3);">SOS Community</p>
+        </div>
+      </div>
+      <form id="chatForm" style="display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);">
+        <input type="text" id="chatInput" placeholder="Say hello..." style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none;" autocomplete="off">
+        <button type="submit" style="background: #EF4E4B; border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+        </button>
+      </form>
     </div>
 
     <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: rgba(255,255,255,0.4);">
@@ -1595,6 +1606,81 @@
      Refresh ScrollTrigger on load
      ═══════════════════════════════════════════ */
   window.addEventListener('load', function() { ScrollTrigger.refresh(); });
+
+  /* ═══════════════════════════════════════════
+     Join Chat — lightweight inline chat
+     ═══════════════════════════════════════════ */
+  (function() {
+    var messages = [{ role: 'user', content: '[JOIN_SOS] I want to join the SOS community' }];
+    var chatBox = document.getElementById('chatMessages');
+    var chatForm = document.getElementById('chatForm');
+    var chatInput = document.getElementById('chatInput');
+    if (!chatBox || !chatForm) return;
+
+    function addMsg(role, text) {
+      var div = document.createElement('div');
+      div.style.cssText = role === 'assistant'
+        ? 'align-self: flex-start; background: rgba(137,207,240,0.1); border: 1px solid rgba(137,207,240,0.15); border-radius: 12px 12px 12px 4px; padding: 12px 16px; max-width: 85%; font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.6;'
+        : 'align-self: flex-end; background: rgba(239,78,75,0.15); border: 1px solid rgba(239,78,75,0.2); border-radius: 12px 12px 4px 12px; padding: 12px 16px; max-width: 85%; font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.6;';
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
+    }
+
+    async function sendToAgent(msgs) {
+      try {
+        var resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: msgs })
+        });
+        var reader = resp.body.getReader();
+        var decoder = new TextDecoder();
+        var fullText = '';
+        var msgDiv = addMsg('assistant', '');
+        
+        while (true) {
+          var result = await reader.read();
+          if (result.done) break;
+          var chunk = decoder.decode(result.value, { stream: true });
+          // Parse SSE text chunks — look for text content
+          var lines = chunk.split('\n');
+          for (var li = 0; li < lines.length; li++) {
+            var line = lines[li];
+            if (line.startsWith('0:')) {
+              try {
+                var parsed = JSON.parse(line.slice(2));
+                if (typeof parsed === 'string') {
+                  fullText += parsed;
+                  msgDiv.textContent = fullText;
+                  chatBox.scrollTop = chatBox.scrollHeight;
+                }
+              } catch(e) {}
+            }
+          }
+        }
+        if (fullText) {
+          messages.push({ role: 'assistant', content: fullText });
+        }
+      } catch(e) {
+        addMsg('assistant', 'Something went wrong. Try again.');
+      }
+    }
+
+    // Auto-start conversation
+    sendToAgent(messages);
+
+    chatForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = '';
+      addMsg('user', text);
+      messages.push({ role: 'user', content: text });
+      sendToAgent(messages);
+    });
+  })();
 
   );
     });
