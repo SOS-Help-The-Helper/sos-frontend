@@ -587,23 +587,7 @@
 </head>
 <body>
 
-<!-- ════════ NAV ════════ -->
-<nav id="navbar">
-  <div class="nav-inner">
-    <a href="/" class="nav-brand">
-      <img src="/logomark-red.svg" alt="SOS" style="height: 24px;">
-      SOS
-    </a>
-    <div class="nav-links">
-      <a href="#crisis" data-section="crisis">Crisis</a>
-      <a href="#ecosystem" data-section="ecosystem">Help Exists</a>
-      <a href="#gap" data-section="gap">The Gap</a>
-      <a href="#solution" data-section="solution">Solution</a>
-      <a href="#scenario" data-section="scenario">Proof</a>
-      <a href="#invitation" data-section="invitation">Join</a>
-    </div>
-  </div>
-</nav>
+
 
 <!-- ════════════════════════════════════════════
      SECTION 1: HERO — Dark, Full Viewport
@@ -1098,24 +1082,7 @@
     resizeTimer = setTimeout(initCanvas, 200);
   });
 
-  /* ═══════════════════════════════════════════
-     NAV: scroll effect + active section
-     ═══════════════════════════════════════════ */
-  var nav = document.getElementById('navbar');
-  var navLinks = document.querySelectorAll('.nav-links a');
-  var sectionIds = ['crisis','ecosystem','gap','solution','scenario','invitation'];
-
-  function updateNav() {
-    var scrollY = window.scrollY;
-    nav.classList.toggle('scrolled', scrollY > 60);
-    var current = '';
-    for (var i = sectionIds.length - 1; i >= 0; i--) {
-      var el = document.getElementById(sectionIds[i]);
-      if (el && el.getBoundingClientRect().top <= 140) { current = sectionIds[i]; break; }
-    }
-    navLinks.forEach(function(link) {
-      link.classList.toggle('active', link.getAttribute('data-section') === current);
-    });
+  
   }
   window.addEventListener('scroll', updateNav, { passive: true });
 
@@ -1358,15 +1325,7 @@
 
   })();
 
-  /* ═══════════════════════════════════════════
-     NAV: show after scrolling past hero
-     ═══════════════════════════════════════════ */
-  ScrollTrigger.create({
-    trigger: '#crisis',
-    start: 'top bottom-=100',
-    onEnter: function() { gsap.to('nav', { opacity: 1, duration: 0.4 }); },
-    onLeaveBack: function() { gsap.to('nav', { opacity: 0, duration: 0.3 }); }
-  });
+  
 
   /* ═══════════════════════════════════════════
      GLOBAL: gs-fade elements
