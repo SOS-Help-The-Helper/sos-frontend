@@ -67,7 +67,7 @@ function JoinChat() {
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '12px 16px',
+        padding: 'calc(12px + env(safe-area-inset-top, 0px)) 16px 12px',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         flexShrink: 0,
       }}>
@@ -137,7 +137,7 @@ function JoinChat() {
 
       {/* Input */}
       <div style={{
-        padding: '12px 16px',
+        padding: 'calc(12px + env(safe-area-inset-top, 0px)) 16px 12px',
         paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         borderTop: '1px solid rgba(255,255,255,0.1)',
         background: '#1A3850',
