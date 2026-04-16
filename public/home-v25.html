@@ -1618,6 +1618,21 @@
      ═══════════════════════════════════════════ */
   window.addEventListener('load', function() { ScrollTrigger.refresh(); });
 
+  // Join SOS button — opens embedded chat
+  var joinBtn = document.getElementById('joinSosBtn');
+  var chatContainer = document.getElementById('joinChatContainer');
+  var chatFrame = document.getElementById('joinChatFrame');
+  if (joinBtn && chatContainer && chatFrame) {
+    joinBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      chatContainer.style.display = 'block';
+      chatFrame.src = '/c?flow=join&embed=true';
+      joinBtn.style.pointerEvents = 'none';
+      joinBtn.style.opacity = '0.5';
+      chatContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
 })();
 </script>
 
