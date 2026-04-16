@@ -521,6 +521,61 @@
   }
   .chat-loading span:nth-child(2) { animation-delay: 0.16s; }
   .chat-loading span:nth-child(3) { animation-delay: 0.32s; }
+
+  /* ── Floating chat bubble ── */
+  @keyframes bubblePulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.8); opacity: 0; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+  #chatBubble {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #EF4E4B; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(239,78,75,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #chatBubble:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 28px rgba(239,78,75,0.5);
+  }
+  #chatBubble::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(239,78,75,0.4);
+    animation: bubblePulse 4s ease-out infinite;
+    pointer-events: none;
+  }
+  #chatPanel {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    width: 400px; height: 520px;
+    background: #0F1E2B; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; display: none; flex-direction: column;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  #chatPanel.open { display: flex; }
+  .chat-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+  }
+  .chat-panel-header span {
+    font-family: 'Nunito Sans', sans-serif; font-size: 14px;
+    font-weight: 600; color: rgba(255,255,255,0.7);
+  }
+  .chat-panel-close {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.4); font-size: 20px; line-height: 1;
+    padding: 4px 8px; transition: color 0.2s;
+  }
+  .chat-panel-close:hover { color: #fff; }
+  @media (max-width: 640px) {
+    #chatPanel { width: calc(100vw - 32px); height: calc(100vh - 120px); bottom: 16px; right: 16px; }
+    #chatBubble { bottom: 16px; right: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -902,29 +957,47 @@
 
     <h1 class="gs-fade are-you-heading" style="margin-bottom: 48px;">Are you?</h1>
 
-    <!-- Inline Join Chat -->
-    <div id="joinChat" style="width: 100%; max-width: 480px; margin: 0 auto 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); overflow: hidden;">
-      <div id="chatMessages" style="height: 360px; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px;">
-        <div style="text-align: center; padding: 24px 0;">
-          <img src="/logomark-red.svg" alt="SOS" style="height: 32px; opacity: 0.4; margin-bottom: 8px;">
-          <p style="font-size: 13px; color: rgba(255,255,255,0.3);">SOS Community</p>
-        </div>
-      </div>
-      <form id="chatForm" style="display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);">
-        <input type="text" id="chatInput" placeholder="Say hello..." aria-label="Type your message" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none;" autocomplete="off">
-        <button type="submit" aria-label="Send message" style="background: #EF4E4B; border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
-        </button>
-      </form>
-    </div>
-
     <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: rgba(255,255,255,0.4);">
       We help the helpers.
     </p>
   </div>
 </section>
 
+<!-- ════════ FLOATING CHAT ════════ -->
+<button id="chatBubble" aria-label="Chat with SOS">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div id="chatPanel">
+  <div class="chat-panel-header">
+    <span>SOS Community</span>
+    <button class="chat-panel-close" aria-label="Close chat">&times;</button>
+  </div>
+  <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="text-align: center; padding: 24px 0;">
+      <img src="/logomark-red.svg" alt="SOS" style="height: 32px; opacity: 0.4; margin-bottom: 8px;">
+      <p style="font-size: 13px; color: rgba(255,255,255,0.3);">SOS Community</p>
+    </div>
+  </div>
+  <form id="chatForm" style="display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);">
+    <input type="text" id="chatInput" placeholder="Say hello..." aria-label="Type your message" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none;" autocomplete="off">
+    <button type="submit" aria-label="Send message" style="background: #EF4E4B; border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+    </button>
+  </form>
+</div>
 
+<!-- ════════ FOOTER ════════ -->
+<footer style="background: #0F1E2B; border-top: 1px solid rgba(255,255,255,0.06); padding: 48px 32px 32px; text-align: center;">
+  <img src="/logomark-red.svg" alt="SOS" style="height: 24px; opacity: 0.5; margin-bottom: 16px;">
+  <p style="font-family: DM Serif Display, Georgia, serif; font-size: 18px; color: rgba(255,255,255,0.4); margin-bottom: 4px;">Everyone is a helper.</p>
+  <p style="font-size: 13px; color: rgba(255,255,255,0.25); margin-bottom: 24px;">We help the helpers.</p>
+  <div style="display: flex; gap: 24px; justify-content: center; font-size: 13px;">
+    <a href="/c" style="color: rgba(255,255,255,0.35); text-decoration: none;">Citizens</a>
+    <a href="/case.html" style="color: rgba(255,255,255,0.35); text-decoration: none;">Our Story</a>
+    <a href="mailto:info@sos-help.org" style="color: rgba(255,255,255,0.35); text-decoration: none;">Contact</a>
+  </div>
+  <p style="margin-top: 24px; font-size: 11px; color: rgba(255,255,255,0.15);">sosconnect.org · © 2026 SOS Global</p>
+</footer>
 
 <!-- ════════ SCRIPTS ════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1455,14 +1528,17 @@
   window.addEventListener('load', function() { ScrollTrigger.refresh(); });
 
   /* ═══════════════════════════════════════════
-     Join Chat — lightweight inline chat
+     Floating Chat — bubble + panel
      ═══════════════════════════════════════════ */
   (function() {
-    var messages = [{ role: 'user', content: '[JOIN_SOS] I want to join the SOS community' }];
+    var bubble = document.getElementById('chatBubble');
+    var panel = document.getElementById('chatPanel');
+    var closeBtn = panel.querySelector('.chat-panel-close');
     var chatBox = document.getElementById('chatMessages');
     var chatForm = document.getElementById('chatForm');
     var chatInput = document.getElementById('chatInput');
-    if (!chatBox || !chatForm) return;
+    var chatInitialized = false;
+    var messages = [{ role: 'user', content: '[JOIN_SOS] I want to join the SOS community' }];
 
     function addMsg(role, text) {
       var div = document.createElement('div');
@@ -1507,7 +1583,6 @@
           var result = await reader.read();
           if (result.done) break;
           var chunk = decoder.decode(result.value, { stream: true });
-          // Parse SSE text chunks — look for text content
           var lines = chunk.split('\n');
           for (var li = 0; li < lines.length; li++) {
             var line = lines[li];
@@ -1532,17 +1607,23 @@
       }
     }
 
-    // Start chat only when user scrolls to #invitation (fire once)
-    var invitationEl = document.getElementById('invitation');
-    if (invitationEl) {
-      var chatObserver = new IntersectionObserver(function(entries) {
-        if (entries[0].isIntersecting) {
-          chatObserver.disconnect();
-          sendToAgent(messages);
-        }
-      }, { threshold: 0.1 });
-      chatObserver.observe(invitationEl);
+    function openChat() {
+      bubble.style.display = 'none';
+      panel.classList.add('open');
+      if (!chatInitialized) {
+        chatInitialized = true;
+        sendToAgent(messages);
+      }
+      chatInput.focus();
     }
+
+    function closeChat() {
+      panel.classList.remove('open');
+      bubble.style.display = 'flex';
+    }
+
+    bubble.addEventListener('click', openChat);
+    closeBtn.addEventListener('click', closeChat);
 
     chatForm.addEventListener('submit', function(e) {
       e.preventDefault();
