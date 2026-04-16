@@ -235,7 +235,7 @@
   }
 
   /* ══════════════════════════════════
-     THESIS — Vertical fade (used in closing section)
+     SECTION 5: THESIS — Vertical fade
      ══════════════════════════════════ */
   .thesis-section {
     background: #0F1E2B; position: relative; overflow: hidden;
@@ -267,7 +267,7 @@
     line-height: 1.8; font-weight: 300;
   }
 
-  /* ── Scenario cards ── */
+  /* ── Scenario cards (inside thesis) ── */
   .scenario-container {
     max-width: 680px; width: 100%; margin: 0 auto;
     position: relative; padding-left: 48px;
@@ -325,7 +325,7 @@
   }
 
   /* ══════════════════════════════════
-     SOLUTION — Flywheel
+     SECTION 6: SOLUTION — Flywheel
      ══════════════════════════════════ */
   .flywheel-svg {
     max-width: 380px; margin: 48px auto 0; display: block;
@@ -347,7 +347,7 @@
   .result-card strong { color: #0F1E2B; font-weight: 600; }
 
   /* ══════════════════════════════════
-     INVITATION (closing section)
+     SECTION 8: INVITATION
      ══════════════════════════════════ */
   .invitation-section {
     background: #0a141f; text-align: center; position: relative; overflow: hidden;
@@ -410,6 +410,9 @@
   .wave-divider { line-height: 0; margin-top: -1px; position: relative; z-index: 2; }
   .wave-divider svg { display: block; width: 100%; }
 
+  /* ── Crisis angled bottom ── */
+  #crisis { clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%); padding-bottom: 160px; }
+
   /* ── Coordination pull quote ── */
   .coord-pull-quote {
     font-family: 'DM Serif Display', Georgia, serif;
@@ -433,7 +436,18 @@
   }
   .solution-grid .flywheel-svg { max-width: 100%; margin: 0; }
 
-  /* ── About timeline (used in closing section) ── */
+  /* ── About section — white with dot grid ── */
+  .about-section {
+    background: #fff;
+    background-image: radial-gradient(circle, rgba(15,30,43,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 32px;
+  }
+
+  /* ── About timeline ── */
   .about-timeline {
     text-align: left;
     max-width: 520px;
@@ -448,7 +462,7 @@
     top: 0;
     bottom: 0;
     width: 1.5px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(15,30,43,0.12);
   }
   .about-timeline-item {
     position: relative;
@@ -476,7 +490,7 @@
   }
   .about-timeline-item p {
     font-size: 16px;
-    color: rgba(255,255,255,0.55);
+    color: #555;
     line-height: 1.8;
     font-weight: 300;
   }
@@ -494,18 +508,6 @@
     font-size: 42px;
     color: #fff;
     margin-bottom: 16px;
-  }
-
-  /* ── Crisis transition ── */
-  .crisis-transition {
-    text-align: center;
-    padding: 64px 32px;
-    background: linear-gradient(180deg, #f8f9fa 0%, #0F1E2B 100%);
-  }
-  .crisis-transition p {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 24px;
-    color: rgba(255,255,255,0.6);
   }
 
   /* ── Mobile ── */
@@ -535,8 +537,9 @@
     .scenario-header h2 { font-size: 28px; }
     .are-you-heading { font-size: 32px; }
     .solution-grid { grid-template-columns: 1fr; }
+    #crisis { clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%); padding-bottom: 120px; }
     .coord-pull-quote { font-size: 24px; }
-    .crisis-transition { padding: 48px 20px; }
+    .about-section { padding: 80px 20px; }
   }
 
   /* Typing cursor */
@@ -614,10 +617,13 @@
     </a>
     <div class="nav-links">
       <a href="#crisis" data-section="crisis">Crisis</a>
-      <a href="#ecosystem" data-section="ecosystem">Help Exists</a>
-      <a href="#gap" data-section="gap">The Gap</a>
+      <a href="#coordination" data-section="coordination">Coordination</a>
+      <a href="#convergence" data-section="convergence">Convergence</a>
+      <a href="#ecosystem" data-section="ecosystem">Ecosystem</a>
       <a href="#solution" data-section="solution">Solution</a>
-      <a href="#scenario" data-section="scenario">Proof</a>
+      <a href="#scenario" data-section="scenario">Scenario</a>
+      <a href="#about" data-section="about">About</a>
+      <a href="#stories" data-section="stories">Stories</a>
       <a href="#invitation" data-section="invitation">Join</a>
     </div>
   </div>
@@ -662,69 +668,110 @@
 </section>
 
 <!-- ════════════════════════════════════════════
-     SECTION 2: THE CRISIS — Two beats in one section
+     SECTION 2: CRISIS — The Great Aid Recession
      ════════════════════════════════════════════ -->
-
-<!-- Beat 1: White background — domestic disaster failures -->
 <section id="crisis" class="bg-white">
   <div class="narrow">
+    <div class="stat-row" style="margin-bottom: 48px;">
+      <div class="stat-card gs-fade">
+        <div class="num" data-count="305" data-suffix="M+" data-prefix="">0</div>
+        <div class="desc">people needed humanitarian assistance globally in 2025<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
+      </div>
+      <div class="stat-card gs-fade">
+        <div class="num" data-count="68" data-suffix="%" data-prefix="">0</div>
+        <div class="desc">didn't receive it<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
+      </div>
+      <div class="stat-card gs-fade">
+        <div class="num" data-count="24" data-suffix="B" data-prefix="$">0</div>
+        <div class="desc">funding shortfall — the largest on record<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a></div>
+      </div>
+    </div>
+
     <p class="label gs-fade">The Crisis</p>
-    <h2 class="gs-fade">When systems fail, people fall through the cracks.</h2>
+    <h2 class="gs-fade">The Great Aid Recession</h2>
+    <div class="accent-line gs-fade"></div>
+
+    <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" class="gs-fade crisis-points">
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FUNDING COLLAPSED</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> The largest shortfall ever recorded.</p>
+      </div>
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FEMA IS RETREATING</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Non-lifesaving recovery defunded. Twenty states have sued to restart preparedness grants.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a></p>
+      </div>
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">DISASTERS ACCELERATING</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">The safety net is contracting at the exact moment communities need it most.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 3: COORDINATION — The Problem
+     ════════════════════════════════════════════ -->
+<section id="coordination" class="bg-light">
+  <div class="narrow">
+    <p class="coord-pull-quote gs-fade">"The help always shows up. The coordination doesn't."</p>
+
+    <p class="label gs-fade">The Problem</p>
+    <h2 class="gs-fade">When coordination fails, help scatters.</h2>
     <div class="accent-line gs-fade"></div>
 
     <div style="margin-top: 32px;" class="gs-fade">
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">After Hurricane Helene, FEMA's resource tracking system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a></p>
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Search and rescue teams checked the same homes three times. Others were never checked at all.</p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">After Helene, FEMA's resource system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a></p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Search and rescue checked the same homes three times. Others were never checked at all.</p>
       <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Facebook became the missing persons database — not by design, but because nothing else worked.</p>
     </div>
 
-    <div class="eco-grid" style="margin-top: 40px;">
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
-        <p class="eco-label" style="color: #EF4E4B;">Funding Collapsed</p>
-        <h3 style="font-size: 18px;">40% drop in one year</h3>
-        <p>The largest humanitarian funding shortfall ever recorded. $24.4 billion gap.</p>
+    <div class="coord-grid" id="coordParallax">
+      <div class="coord-block coord-fail gs-fade">
+        <h4>When coordination fails</h4>
+        <p>Three organizations can help one family. Without coordination, two never hear about the need. The third shows up a week late. The family called nine hotlines. Nobody tracks what was spent.</p>
       </div>
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
-        <p class="eco-label" style="color: #EF4E4B;">FEMA Is Retreating</p>
-        <h3 style="font-size: 18px;">Recovery defunded</h3>
-        <p>Non-lifesaving disaster recovery cut. Twenty states suing to restart preparedness grants.</p>
-      </div>
-      <div class="eco-card gs-fade" style="border-left: 3px solid #EF4E4B;">
-        <p class="eco-label" style="color: #EF4E4B;">Disasters Accelerating</p>
-        <h3 style="font-size: 18px;">The gap is widening</h3>
-        <p>The safety net is contracting at the exact moment communities need it most.</p>
+      <div class="coord-block coord-work gs-fade">
+        <h4>When coordination works</h4>
+        <p>The shelter, food team, and medical transport all receive the same match simultaneously. Each knows what the other is doing. Every dollar traced. Every contribution attributed. The system learns.</p>
       </div>
     </div>
+
+    <p class="body-lg gs-fade" style="text-align: center; margin-top: 16px;">
+      <em style="color: #89CFF0; font-style: normal; font-weight: 600;">The technology to make this possible didn't exist two years ago. It does now.</em>
+    </p>
   </div>
 </section>
 
-<!-- Beat 2: Transition to dark — global zoom-out -->
-<div class="crisis-transition gs-fade">
-  <p>This pattern isn't local. It's global.</p>
-</div>
-
-<section class="bg-navy" style="padding-top: 80px;">
+<!-- ════════════════════════════════════════════
+     SECTION 4: CONVERGENCE — Three Things
+     ════════════════════════════════════════════ -->
+<section id="convergence" class="bg-navy">
   <div class="narrow">
-    <div class="stat-row" style="margin-bottom: 48px;">
-      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
-        <div class="num" data-count="305" data-suffix="M+" data-prefix="" style="color: #fff;">0</div>
-        <div class="desc" style="color: rgba(255,255,255,0.5);">people needed humanitarian assistance globally in 2025<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
+    <p class="label gs-fade" style="text-align: center;">The Convergence</p>
+    <h2 class="gs-fade" style="text-align: center;">Three things are converging at once</h2>
+    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
+
+    <div class="convergence-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px;">
+      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Systems Are Failing</h4>
+        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">²</a></p>
       </div>
-      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
-        <div class="num" data-count="68" data-suffix="%" data-prefix="" style="color: #fff;">0</div>
-        <div class="desc" style="color: rgba(255,255,255,0.5);">didn't receive it<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
+      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Communities Respond First</h4>
+        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">Three out of four people turn to neighbors before any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">⁶</a> The largest coordination network already exists — it just has no infrastructure.</p>
       </div>
-      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
-        <div class="num" data-count="24" data-suffix="B" data-prefix="$" style="color: #fff;">0</div>
-        <div class="desc" style="color: rgba(255,255,255,0.5);">funding shortfall — the largest on record<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a></div>
+      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="11" opacity="0.4"/></svg>
+        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Coordination Is Now Possible</h4>
+        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">AI coordination — conversational intake, real-time matching, multi-channel orchestration — is feasible today. None of this was possible two years ago.</p>
       </div>
     </div>
-
-
   </div>
 </section>
 
-<!-- Wave: Crisis navy → Ecosystem white -->
+<!-- Wave: Convergence (navy) → Ecosystem (white) -->
 <div class="wave-divider" style="background: #fff;">
   <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#0F1E2B"/>
@@ -732,7 +779,7 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     SECTION 3: THE HELP EXISTS — Ecosystem
+     SECTION 5: ECOSYSTEM — The Help Exists
      ════════════════════════════════════════════ -->
 <section id="ecosystem" class="bg-white">
   <div class="narrow">
@@ -766,41 +813,8 @@
   </div>
 </section>
 
-<!-- Wave: Ecosystem white → Gap navy -->
-<div class="wave-divider" style="background: #0F1E2B;">
-  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#fff"/>
-  </svg>
-</div>
-
 <!-- ════════════════════════════════════════════
-     SECTION 4: THE GAP — Infrastructure was never built
-     ════════════════════════════════════════════ -->
-<section id="gap" class="bg-navy">
-  <div class="narrow" style="text-align: center;">
-    <p class="label gs-fade">The Gap</p>
-    <h2 class="gs-fade">The infrastructure was never built.</h2>
-    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
-
-    <p class="body-lg gs-fade" style="margin-top: 32px;">
-      In 1986, Congress passed Goldwater-Nichols to force the military branches to coordinate. It worked. Nobody ever passed the equivalent for civilian disaster response. The organizations doing this work are extraordinary — they just can't see each other.
-    </p>
-
-    <p class="gs-fade" style="margin-top: 48px; text-align: center;">
-      <em style="color: #89CFF0; font-style: normal; font-weight: 600; font-size: 18px;">The technology to close this gap didn't exist two years ago. It does now.</em>
-    </p>
-  </div>
-</section>
-
-<!-- Wave: Gap navy → Solution light -->
-<div class="wave-divider" style="background: #f1f3f5;">
-  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#0F1E2B"/>
-  </svg>
-</div>
-
-<!-- ════════════════════════════════════════════
-     SECTION 5: THE SOLUTION — Flywheel
+     SECTION 6: SOLUTION — Flywheel
      ════════════════════════════════════════════ -->
 <section id="solution" class="bg-light-alt">
   <div class="wide">
@@ -888,7 +902,7 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     SECTION 6: IT ALL COMES TOGETHER — Scenario
+     SECTION 7: SCENARIO — It All Comes Together
      ════════════════════════════════════════════ -->
 <section id="scenario" class="thesis-section">
   <div class="scenario-container">
@@ -949,15 +963,38 @@
 </section>
 
 <!-- ════════════════════════════════════════════
-     SECTION 7: EVERYONE IS A HELPER — Unified closing
-     Vignettes → Origin → Thesis → CTA
+     SECTION 8: ABOUT — Origin Story
      ════════════════════════════════════════════ -->
-<section id="invitation" class="invitation-section">
-  <div class="grain-overlay"></div>
-  <div style="max-width: 640px; margin: 0 auto; text-align: center; position: relative; z-index: 2;">
+<section id="about" class="about-section">
+  <div class="narrow" style="position: relative; z-index: 2;">
 
-    <!-- Vignette cards -->
-    <div style="margin-bottom: 64px;">
+    <div class="about-timeline">
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2024</p>
+        <p>SOS started during Hurricane Helene. Our founder's farmhouse was damaged. He lived in a donated RV for three months.</p>
+      </div>
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2025</p>
+        <p>Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026,<a href="https://www.foxweather.com/watch/fmc-pc525bwm58bnkvy1" class="cite" target="_blank" rel="noopener">¹⁰</a> coordinating hundreds of resources across 12 states.</p>
+      </div>
+      <div class="about-timeline-item gs-fade">
+        <p class="about-timeline-year">2026</p>
+        <p>The values are structural, not aspirational. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them.</p>
+      </div>
+    </div>
+
+    <div class="gs-fade" style="margin-top: 48px;">
+      <img src="/logomark-red.svg" alt="SOS" id="invitationLogo" style="height: 80px;">
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 9: STORIES — Vignette Cards
+     ════════════════════════════════════════════ -->
+<section id="stories" class="thesis-section">
+  <div class="thesis-vertical">
+    <div style="margin-top: 64px;">
       <div class="vignette-card gs-fade">
         <p>A displaced family finds temporary housing in a stranger's guest room — then clears roads with their truck by morning.</p>
       </div>
@@ -969,32 +1006,22 @@
       </div>
     </div>
 
-    <!-- Thesis closing text -->
-    <p class="thesis-closing gs-fade" style="margin-bottom: 64px;">
+    <p class="thesis-closing gs-fade" style="margin-top: 48px;">
       Needs and offers coexist on the same person, sometimes on the same day. The instinct is already there. What they lack isn't motivation —
       <strong style="color: #89CFF0;">it's infrastructure.</strong>
     </p>
+  </div>
+</section>
 
-    <!-- Origin story timeline -->
-    <div class="about-timeline" style="margin-bottom: 64px;">
-      <div class="about-timeline-item gs-fade">
-        <p class="about-timeline-year">2024</p>
-        <p>SOS started during Hurricane Helene. Our founder's farmhouse was damaged. He lived in a donated RV for three months.</p>
-      </div>
-      <div class="about-timeline-item gs-fade">
-        <p class="about-timeline-year">2025</p>
-        <p>Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026,<a href="https://www.foxweather.com/watch/fmc-pc525bwm58bnkvy1" class="cite" style="color: rgba(255,255,255,0.35);" target="_blank" rel="noopener">¹⁰</a> coordinating hundreds of resources across 12 states.</p>
-      </div>
-      <div class="about-timeline-item gs-fade">
-        <p class="about-timeline-year">2026</p>
-        <p>The values are structural, not aspirational. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them.</p>
-      </div>
-    </div>
+<!-- ════════════════════════════════════════════
+     SECTION 10: INVITATION — Everyone Is A Helper
+     ════════════════════════════════════════════ -->
+<section id="invitation" class="invitation-section">
+  <div class="grain-overlay"></div>
+  <div class="narrow" style="position: relative; z-index: 2;">
 
-    <!-- Thesis headline -->
     <h1 class="thesis-headline gs-fade" style="margin-bottom: 48px;">Everyone is a helper.</h1>
 
-    <!-- Logo + CTA -->
     <div class="gs-fade" style="margin-bottom: 48px;">
       <img src="/logomark-red.svg" alt="SOS" style="height: 80px;">
     </div>
@@ -1172,7 +1199,7 @@
      ═══════════════════════════════════════════ */
   var nav = document.getElementById('navbar');
   var navLinks = document.querySelectorAll('.nav-links a');
-  var sectionIds = ['crisis','ecosystem','gap','solution','scenario','invitation'];
+  var sectionIds = ['crisis','coordination','convergence','ecosystem','solution','scenario','about','stories','invitation'];
 
   function updateNav() {
     var scrollY = window.scrollY;
@@ -1448,7 +1475,7 @@
   });
 
   /* ═══════════════════════════════════════════
-     Animated counters
+     SECTION 2: Animated counters
      ═══════════════════════════════════════════ */
   document.querySelectorAll('.stat-card .num').forEach(function(numEl) {
     var target = parseInt(numEl.getAttribute('data-count'));
@@ -1469,7 +1496,7 @@
   });
 
   /* ═══════════════════════════════════════════
-     Ecosystem cards stagger
+     SECTION 3: Ecosystem cards stagger
      ═══════════════════════════════════════════ */
   gsap.from('.eco-card', {
     scrollTrigger: { trigger: '.eco-grid', start: 'top 80%' },
@@ -1477,7 +1504,7 @@
   });
 
   /* ═══════════════════════════════════════════
-     Parallax on coordination blocks
+     SECTION 4: Parallax on coordination blocks
      ═══════════════════════════════════════════ */
   gsap.to('#coordParallax', {
     scrollTrigger: { trigger: '#coordParallax', start: 'top bottom', end: 'bottom top', scrub: true },
@@ -1485,7 +1512,7 @@
   });
 
   /* ═══════════════════════════════════════════
-     Flywheel — sequential node reveal + rotation
+     SECTION 6: Flywheel — sequential node reveal + rotation
      ═══════════════════════════════════════════ */
   var flywheelTriggered = false;
   ScrollTrigger.create({
