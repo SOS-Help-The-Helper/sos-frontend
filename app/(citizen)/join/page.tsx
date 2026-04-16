@@ -9,31 +9,26 @@ function JoinChat() {
   const params = useSearchParams();
   const ref = params.get('ref');
   const [input, setInput] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
 
-  // Store referral code if present
   useEffect(() => {
     if (ref) localStorage.setItem('sos-referral-code', ref);
   }, [ref]);
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-    }),
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior });
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     });
   }, []);
 
-  // Send [JOIN_SOS] as first message to trigger the join flow
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -41,87 +36,56 @@ function JoinChat() {
     }
   }, [sendMessage]);
 
-  // visualViewport resize: set --vh so the flex column compresses when keyboard opens
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const setVh = () => {
-      const vh = window.visualViewport
-        ? window.visualViewport.height
-        : window.innerHeight;
-      containerRef.current?.style.setProperty('--vh', `${vh}px`);
-    };
-
-    setVh();
-
-    const vv = window.visualViewport;
-    if (vv) {
-      vv.addEventListener('resize', setVh);
-      vv.addEventListener('scroll', setVh);
-    }
-    window.addEventListener('resize', setVh);
-
-    return () => {
-      if (vv) {
-        vv.removeEventListener('resize', setVh);
-        vv.removeEventListener('scroll', setVh);
-      }
-      window.removeEventListener('resize', setVh);
-    };
-  }, []);
-
-  // Scroll to bottom when keyboard opens (viewport shrinks)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return;
-    const vv = window.visualViewport;
-    const onResize = () => {
-      const diff = window.innerHeight - vv.height;
-      if (diff > 50) setTimeout(() => scrollToBottom('instant'), 100);
-    };
-    vv.addEventListener('resize', onResize);
-    return () => vv.removeEventListener('resize', onResize);
-  }, [scrollToBottom]);
-
-  // Auto-scroll on new messages
   useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
-
-  // Auto-scroll while streaming
   useEffect(() => {
     if (status === 'streaming') {
-      const interval = setInterval(() => scrollToBottom('instant'), 200);
-      return () => clearInterval(interval);
+      const i = setInterval(() => scrollToBottom(), 200);
+      return () => clearInterval(i);
     }
   }, [status, scrollToBottom]);
-
-  function send(text: string) {
-    sendMessage({ text });
-    setInput('');
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    send(input.trim());
+    sendMessage({ text: input.trim() });
+    setInput('');
+    setTimeout(() => inputRef.current?.focus(), 50);
   }
 
   return (
     <div
-      ref={containerRef}
-      className="flex flex-col bg-[#0F1E2B] text-white"
-      style={{ height: 'var(--vh, 100dvh)', overflow: 'hidden' }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#0F1E2B',
+        color: '#fff',
+        zIndex: 1,
+      }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 flex-shrink-0">
-        <img src="/logomark.svg" alt="" className="h-6 w-6" />
-        <span className="text-sm font-bold tracking-wide text-white/80">SOS</span>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        flexShrink: 0,
+      }}>
+        <img src="/logomark.svg" alt="" style={{ height: '24px', width: '24px' }} />
+        <span style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>SOS</span>
+        {isLoading && <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginLeft: 'auto' }}>typing...</span>}
       </div>
 
-      {/* Messages area */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
+      {/* Messages */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+      }}>
         {messages.map(msg => (
           <div key={msg.id}>
             {(msg as any).parts?.map((part: any, pi: number) => {
@@ -129,17 +93,23 @@ function JoinChat() {
                 const isUser = (msg as any).role === 'user';
                 if (isUser && part.text.includes('[JOIN_SOS]')) return null;
                 return (
-                  <div key={pi} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                      isUser ? 'bg-[#EF4E4B] text-white rounded-br-md' : 'bg-white/10 text-white rounded-bl-md'
-                    }`}>
+                  <div key={pi} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', marginBottom: '4px' }}>
+                    <div style={{
+                      maxWidth: '85%',
+                      borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      padding: '10px 16px',
+                      background: isUser ? '#EF4E4B' : 'rgba(255,255,255,0.1)',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap' as const,
+                    }}>
                       {!isUser && (
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <img src="/logomark.svg" alt="" className="h-3.5 w-3.5" />
-                          <span className="text-[9px] font-bold text-white/40">SOS</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <img src="/logomark.svg" alt="" style={{ height: '14px', width: '14px' }} />
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>SOS</span>
                         </div>
                       )}
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
+                      {part.text}
                     </div>
                   </div>
                 );
@@ -148,40 +118,32 @@ function JoinChat() {
             })}
           </div>
         ))}
-
-        {/* Error */}
         {chatError && !isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl rounded-bl-md px-4 py-2.5">
-              <p className="text-xs text-red-400">Something went wrong.</p>
-              <button onClick={() => sendMessage({ text: 'continue' })}
-                className="text-[10px] text-red-300 underline mt-1">Retry</button>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ background: 'rgba(239,78,75,0.1)', border: '1px solid rgba(239,78,75,0.2)', borderRadius: '16px', padding: '10px 16px' }}>
+              <p style={{ fontSize: '12px', color: '#EF4E4B' }}>Something went wrong.</p>
             </div>
           </div>
         )}
-
-        {/* Typing indicator */}
         {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="flex justify-start">
-            <div className="bg-white/10 rounded-2xl rounded-bl-md px-4 py-2.5">
-              <div className="flex gap-1.5 items-center">
-                <span className="text-[9px] text-white/30 mr-1">SOS is thinking</span>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#89CFF0] animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-[#89CFF0] animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-[#89CFF0] animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '10px 16px', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>
+              SOS is thinking...
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div
-        className="bg-[#1A3850] px-4 py-3 border-t border-white/10 flex-shrink-0"
-        style={{ paddingBottom: `calc(12px + env(safe-area-inset-bottom, 0px))` }}
-      >
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      {/* Input */}
+      <div style={{
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        background: '#1A3850',
+        flexShrink: 0,
+      }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
           <input
             ref={inputRef}
             type="text"
@@ -191,15 +153,25 @@ function JoinChat() {
             disabled={isLoading}
             enterKeyHint="send"
             autoComplete="off"
-            autoCorrect="on"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0] disabled:opacity-50"
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: '12px',
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fff', fontSize: '14px', outline: 'none',
+              fontFamily: 'inherit',
+            }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="w-10 h-10 rounded-xl bg-[#EF4E4B] text-white flex items-center justify-center disabled:opacity-30 transition-colors flex-shrink-0 active:scale-95"
+            style={{
+              width: '40px', height: '40px', borderRadius: '12px',
+              background: '#EF4E4B', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: (!input.trim() || isLoading) ? 0.3 : 1,
+              flexShrink: 0,
+            }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
           </button>
         </form>
       </div>
@@ -210,8 +182,8 @@ function JoinChat() {
 export default function JoinPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center h-screen bg-[#0F1E2B]">
-        <div className="w-8 h-8 border-3 border-[#89CFF0] border-t-transparent rounded-full animate-spin" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0F1E2B' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #89CFF0', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     }>
       <JoinChat />
