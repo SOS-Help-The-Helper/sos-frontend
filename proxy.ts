@@ -6,6 +6,7 @@ const PUBLIC_PATHS = new Set([
   '/',
   '/c',
   '/home-v25.html',
+  '/join',
 ]);
 
 const PUBLIC_PREFIXES = [
