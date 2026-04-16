@@ -64,7 +64,6 @@
   /* ── Sections ── */
   section { padding: 120px 32px; }
   .narrow { max-width: 720px; margin: 0 auto; }
-  .wide { max-width: 1080px; margin: 0 auto; }
 
   /* ── Typography ── */
   .serif { font-family: 'DM Serif Display', Georgia, serif; }
@@ -77,7 +76,6 @@
     text-transform: uppercase; color: #0F1E2B; margin-bottom: 16px;
   }
   .body-lg { font-size: 18px; font-weight: 300; color: #555; line-height: 1.8; }
-  .body-sm { font-size: 14px; color: #6b7280; line-height: 1.7; }
 
   /* ── Backgrounds ── */
   .bg-white { background: #fff; }
@@ -105,14 +103,6 @@
   }
   .stat-card .desc { font-size: 14px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
 
-  /* ── Insight cards ── */
-  .insight {
-    border-left: 3px solid #89CFF0; padding: 24px 24px 24px 28px; margin: 16px 0;
-    background: #f8f9fa; border-radius: 12px;
-  }
-  .insight h4 { font-size: 15px; font-weight: 700; color: #0F1E2B; margin-bottom: 6px; }
-  .insight p { font-size: 14px; color: #666; line-height: 1.7; }
-
   /* ── Ecosystem cards ── */
   .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
   .eco-card {
@@ -134,51 +124,6 @@
     text-transform: uppercase; color: #89CFF0; margin-bottom: 8px;
   }
   .eco-card p { font-size: 15px; color: #3d4852; line-height: 1.7; }
-
-  /* ── Coordination contrast ── */
-  .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 48px 0; }
-  .coord-block { padding: 32px; border-radius: 16px; }
-  .coord-fail {
-    background: #fff;
-    border-left: 4px solid rgba(231,76,60,0.2);
-    border-top: 1px solid rgba(231,76,60,0.08);
-    border-right: 1px solid rgba(231,76,60,0.08);
-    border-bottom: 1px solid rgba(231,76,60,0.08);
-  }
-  .coord-work {
-    background: #fff;
-    border-left: 4px solid rgba(52,211,153,0.3);
-    border-top: 1px solid rgba(52,211,153,0.1);
-    border-right: 1px solid rgba(52,211,153,0.1);
-    border-bottom: 1px solid rgba(52,211,153,0.1);
-  }
-  .coord-block h4 {
-    font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 16px;
-  }
-  .coord-fail h4 { color: #EF4E4B; }
-  .coord-work h4 { color: #34d399; }
-  .coord-block p { font-size: 15px; color: #555; line-height: 1.75; }
-
-  /* ── Buttons ── */
-  .btn {
-    display: inline-block; padding: 16px 40px; border-radius: 8px;
-    font-size: 14px; font-weight: 700; text-decoration: none;
-    transition: all 0.3s; cursor: pointer; border: none;
-    letter-spacing: 0.02em;
-  }
-  .btn-red { background: #e74c3c; color: #fff; }
-  .btn-red:hover {
-    background: #c0392b; transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(231,76,60,0.35);
-  }
-  .btn-outline-white {
-    background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.3);
-  }
-  .btn-outline-white:hover {
-    border-color: #fff; transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255,255,255,0.08);
-  }
 
   /* ══════════════════════════════════
      SECTION 1: HERO
@@ -206,11 +151,6 @@
 
   .hero-content { position: relative; z-index: 2; max-width: 780px; }
 
-  .hero-logo {
-    position: absolute; top: 32px; left: 32px; z-index: 10;
-  }
-  .hero-logo img { height: 32px; opacity: 0.7; }
-
   .hero-title {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: clamp(22px, 6.5vw, 36px); line-height: 1.25; color: #fff; font-weight: 400;
@@ -219,21 +159,10 @@
     display: inline-block; opacity: 0; transform: translateY(24px);
   }
 
-  .hero-sub {
-    font-size: 21px; font-weight: 300; color: rgba(255,255,255,0.55);
-    margin-top: 28px; opacity: 0;
-  }
-
   .hero-tagline {
     font-size: 13px; font-weight: 700; letter-spacing: 0.2em;
     text-transform: uppercase; color: #89CFF0;
     margin-top: 12px; opacity: 0;
-  }
-
-  .scroll-hint {
-    position: absolute; bottom: 40px; left: 50%; margin-left: -14px;
-    z-index: 2; color: rgba(255,255,255,0.3); font-size: 28px;
-    opacity: 0;
   }
 
   /* ══════════════════════════════════
@@ -399,15 +328,6 @@
     color: #89CFF0; text-decoration: none;
   }
 
-  /* ── Footer ── */
-  footer {
-    text-align: center; padding: 48px 32px;
-    background: #060d14; border-top: 1px solid rgba(255,255,255,0.04);
-  }
-  footer p { font-size: 13px; color: rgba(255,255,255,0.3); }
-  footer a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; padding: 12px 8px; }
-  footer a:hover { color: #fff; }
-
   /* ── Backdrop-filter fallbacks ── */
   @supports not (backdrop-filter: blur(8px)) {
     .vignette-card { background: rgba(30,50,70,0.85); }
@@ -446,28 +366,8 @@
   .wave-divider { line-height: 0; margin-top: -1px; position: relative; z-index: 2; }
   .wave-divider svg { display: block; width: 100%; }
 
-  /* ── Coordination pull quote ── */
-  .coord-pull-quote {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 32px;
-    font-style: italic;
-    text-align: center;
-    color: #0F1E2B;
-    line-height: 1.4;
-    margin-bottom: 48px;
-  }
-
   /* ── Light alt background ── */
   .bg-light-alt { background: #f1f3f5; }
-
-  /* ── Solution 2-column layout ── */
-  .solution-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: start;
-  }
-  .solution-grid .flywheel-svg { max-width: 100%; margin: 0; }
 
   /* ── About timeline (used in closing section) ── */
   .about-timeline {
@@ -532,23 +432,10 @@
     margin-bottom: 16px;
   }
 
-  /* ── Crisis transition ── */
-  .crisis-transition {
-    text-align: center;
-    padding: 64px 32px;
-    background: linear-gradient(180deg, #f8f9fa 0%, #0F1E2B 100%);
-  }
-  .crisis-transition p {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 24px;
-    color: rgba(255,255,255,0.6);
-  }
-
   /* ── Mobile ── */
   @media (max-width: 640px) {
     h1 { font-size: 36px; }
     h2 { font-size: 28px; }
-    .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
     .crisis-points { grid-template-columns: 1fr !important; gap: 20px !important; }
     #crisisCards { grid-template-columns: 1fr !important; }
@@ -556,7 +443,6 @@
     #aboutGrid { grid-template-columns: 1fr !important; }
     .stat-card .num { font-size: 44px; }
     .eco-grid { grid-template-columns: 1fr; }
-    .coord-grid { grid-template-columns: 1fr; }
     section { padding: 80px 20px; }
     .nav-links { display: none; }
     .vignette-card { padding: 32px; }
@@ -567,15 +453,10 @@
     .scenario-card { padding: 24px; }
     .scenario-card::before { left: -28px; width: 10px; height: 10px; }
     .scenario-timeline-line { left: 12px; }
-    .btn-row-cta { flex-direction: column; align-items: center; }
-    .convergence-grid { grid-template-columns: 1fr !important; }
     .flywheel-svg { max-width: 300px; }
     .invitation-section { padding: 80px 20px; }
     .scenario-header h2 { font-size: 28px; }
     .are-you-heading { font-size: 32px; }
-    .solution-grid { grid-template-columns: 1fr; }
-    .coord-pull-quote { font-size: 24px; }
-    .crisis-transition { padding: 48px 20px; }
   }
 
   /* Typing cursor */
@@ -625,40 +506,21 @@
     100% { width: 100%; }
   }
 
-  .hero-card-text {
-    font-family: 'Nunito Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-    -webkit-text-fill-color: rgba(255,255,255,0.4);
-    transition: color 0.8s, text-shadow 0.8s, -webkit-text-fill-color 0.8s;
+  /* ── Chat loading dots ── */
+  @keyframes chatDots {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
   }
-  .hero-card-text.glow {
-    color: #89CFF0;
-    -webkit-text-fill-color: #89CFF0;
-    text-shadow: 0 0 20px rgba(137,207,240,0.4), 0 0 40px rgba(137,207,240,0.2);
+  .chat-loading span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(137,207,240,0.6);
+    margin: 0 2px;
+    animation: chatDots 1.4s infinite ease-in-out both;
   }
-
-  /* ── Intake form inputs ── */
-  .intake-input {
-    background: rgba(255,255,255,0.08);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 8px;
-    padding: 14px 18px;
-    font-size: 15px;
-    font-family: 'Nunito Sans', sans-serif;
-    width: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-  }
-  .intake-input::placeholder { color: rgba(255,255,255,0.35); }
-  .intake-input:focus {
-    outline: none;
-    border-color: #89CFF0;
-  }
+  .chat-loading span:nth-child(2) { animation-delay: 0.16s; }
+  .chat-loading span:nth-child(3) { animation-delay: 0.32s; }
 </style>
 </head>
 <body>
@@ -754,10 +616,9 @@
         <p>The safety net is contracting at the exact moment communities need it most.</p>
       </div>
     </div>
-  </div>
 </section>
 
-<section class="bg-navy" style="padding-top: 120px;">
+<section id="stats" class="bg-navy" style="padding-top: 120px;">
   <div class="narrow" style="text-align: center; margin-bottom: 64px;">
     <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: rgba(255,255,255,0.6); font-weight: 400;">This pattern isn't local. It's global.</p>
   </div>
@@ -796,19 +657,19 @@
 
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px;" id="ecoGridWide">
       <div class="eco-card" style="background: #f4f5f7;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
         <p class="eco-label">Citizens</p>
         <h3>The actual first responders</h3>
         <p>Three out of four people turn to neighbors before any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" target="_blank" rel="noopener">⁶</a> People with trucks clear roads. Nurses triage on front porches.</p>
       </div>
       <div class="eco-card" style="background: #f4f5f7;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <p class="eco-label">Organizations</p>
         <h3>Deployed within hours</h3>
         <p>Small nonprofits manage thousands of requests on spreadsheets. Faith-based groups self-organize through group chats. Everyone responds.</p>
       </div>
       <div class="eco-card" style="background: #f4f5f7;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
         <p class="eco-label">Emergency Services</p>
         <h3>Overwhelmed &amp; underfunded</h3>
         <p>85% of state emergency agencies cite infrastructure limitations.<a href="https://www.deloitte.com/us/en/insights/industry/government-public-sector-services/emergency-management-preparedness-response.html" class="cite" target="_blank" rel="noopener">⁷</a> Working with tools from a different era.</p>
@@ -941,42 +802,42 @@
     <div class="scenario-timeline-line"></div>
 
     <div class="scenario-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg></span>
       <span class="sc-role">Citizen</span>
       <p class="sc-text">Maria texts: <em>"my roof collapsed. Three kids, no car, no power."</em></p>
       <p class="sc-time">2:14 PM</p>
     </div>
 
     <div class="scenario-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" opacity="0.6"/><circle cx="12" cy="12" r="10" opacity="0.3"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" opacity="0.6"/><circle cx="12" cy="12" r="10" opacity="0.3"/></svg></span>
       <span class="sc-role">SOS Intelligence</span>
       <p class="sc-text">Matched to Riverside Community Shelter (2.1 mi). Capacity confirmed. Three open beds.</p>
       <p class="sc-time">2:14 PM — instant</p>
     </div>
 
     <div class="scenario-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 17V7a2 2 0 0 1 2-2h9v12H3z"/><path d="M14 5h3l3 4v8h-6V5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><path d="M3 17V7a2 2 0 0 1 2-2h9v12H3z"/><path d="M14 5h3l3 4v8h-6V5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span>
       <span class="sc-role">Volunteer</span>
       <p class="sc-text">David — retired teacher with a truck — gets the route. ETA 12 minutes.</p>
       <p class="sc-time">2:15 PM</p>
     </div>
 
     <div class="scenario-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>
       <span class="sc-role">Nonprofit</span>
       <p class="sc-text">Red Cross case worker notified. Maria's intake pre-filled from her initial text.</p>
       <p class="sc-time">2:15 PM</p>
     </div>
 
     <div class="scenario-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg></span>
       <span class="sc-role">Government</span>
       <p class="sc-text">FEMA resource tracker updated. Maria's request no longer duplicated across 3 agencies.</p>
       <p class="sc-time">2:16 PM</p>
     </div>
 
     <div class="scenario-card resolution-card scenario-card--hidden">
-      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg></span>
+      <span class="sc-icon-wrap"><svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg></span>
       <span class="sc-role" style="color: #34d399;">Resolution</span>
       <p class="sc-text">Three kids confirmed safe. Maria connected to long-term housing pipeline.</p>
       <p class="sc-time" style="color: #34d399;">4:47 PM</p>
@@ -1050,8 +911,8 @@
         </div>
       </div>
       <form id="chatForm" style="display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);">
-        <input type="text" id="chatInput" placeholder="Say hello..." style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none;" autocomplete="off">
-        <button type="submit" style="background: #EF4E4B; border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+        <input type="text" id="chatInput" placeholder="Say hello..." aria-label="Type your message" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: 'Nunito Sans', sans-serif; outline: none;" autocomplete="off">
+        <button type="submit" aria-label="Send message" style="background: #EF4E4B; border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
         </button>
       </form>
@@ -1189,13 +1050,7 @@
     heroVisible = entries[0].isIntersecting;
   }, { threshold: 0 }).observe(document.getElementById('hero'));
 
-  function drawPulse() {
-    if (!heroVisible) { requestAnimationFrame(drawPulse); return; }
-    ctx.fillStyle = '#0F1E2B';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    requestAnimationFrame(drawPulse);
-  }
-  requestAnimationFrame(drawPulse);
+  // Canvas is initialized via initCanvas(); no continuous draw needed
 
   // Resize handler
   var resizeTimer;
@@ -1520,14 +1375,6 @@
   });
 
   /* ═══════════════════════════════════════════
-     Parallax on coordination blocks
-     ═══════════════════════════════════════════ */
-  gsap.to('#coordParallax', {
-    scrollTrigger: { trigger: '#coordParallax', start: 'top bottom', end: 'bottom top', scrub: true },
-    y: -30, ease: 'none'
-  });
-
-  /* ═══════════════════════════════════════════
      Flywheel — sequential node reveal + rotation
      ═══════════════════════════════════════════ */
   var flywheelTriggered = false;
@@ -1628,18 +1475,34 @@
       return div;
     }
 
+    function showLoading() {
+      var div = document.createElement('div');
+      div.className = 'chat-loading';
+      div.style.cssText = 'align-self: flex-start; padding: 12px 16px;';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
+    }
+
     async function sendToAgent(msgs) {
+      var loader = showLoading();
       try {
         var resp = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: msgs })
         });
+        loader.remove();
+        if (!resp.ok) {
+          addMsg('assistant', 'Something went wrong. Try again.');
+          return;
+        }
         var reader = resp.body.getReader();
         var decoder = new TextDecoder();
         var fullText = '';
         var msgDiv = addMsg('assistant', '');
-        
+
         while (true) {
           var result = await reader.read();
           if (result.done) break;
@@ -1664,12 +1527,22 @@
           messages.push({ role: 'assistant', content: fullText });
         }
       } catch(e) {
+        loader.remove();
         addMsg('assistant', 'Something went wrong. Try again.');
       }
     }
 
-    // Auto-start conversation
-    sendToAgent(messages);
+    // Start chat only when user scrolls to #invitation (fire once)
+    var invitationEl = document.getElementById('invitation');
+    if (invitationEl) {
+      var chatObserver = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) {
+          chatObserver.disconnect();
+          sendToAgent(messages);
+        }
+      }, { threshold: 0.1 });
+      chatObserver.observe(invitationEl);
+    }
 
     chatForm.addEventListener('submit', function(e) {
       e.preventDefault();
