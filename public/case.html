@@ -27,20 +27,27 @@
 
         /* ── Header (navy) ── */
         .article-header {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             background: #0F1E2B;
             padding: 64px 32px 72px;
             text-align: center;
+            position: relative;
         }
         .header-logo {
-            display: inline-block;
-            margin-bottom: 40px;
+            position: absolute;
+            top: 32px;
+            left: 32px;
         }
         .header-logo img {
-            height: 28px;
-            opacity: 0.5;
+            height: 32px;
+            opacity: 0.6;
             transition: opacity 0.3s;
         }
-        .header-logo img:hover { opacity: 0.85; }
+        .header-logo img:hover { opacity: 1; }
         .article-category {
             font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
             text-transform: uppercase; color: #EF4E4B;
@@ -189,7 +196,9 @@
 
         /* ── Mobile ── */
         @media (max-width: 640px) {
-            .article-header { padding: 48px 20px 56px; }
+            .article-header { padding: 48px 20px 56px; min-height: 100svh; }
+            .header-logo { top: 20px; left: 20px; }
+            .header-logo img { height: 24px; }
             .article-header h1 { font-size: 34px; }
             .subtitle { font-size: 17px; }
             .essay { padding: 48px 20px 64px; }
@@ -210,11 +219,12 @@
     <a href="/" class="header-logo">
         <img src="/logomark-red.svg" alt="SOS">
     </a>
-    <div class="article-category">Investigation</div>
     <h1>The Case for SOS</h1>
     <p class="subtitle">The humanitarian system is contracting. The disasters are accelerating. And the biggest coordination network on earth has no infrastructure.</p>
     <div class="article-byline"><span class="author">SOS Research Team</span> &middot; April 2026 &middot; 11 min read</div>
+    <div style="position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.2); font-size: 20px; animation: bounce 2s ease-in-out infinite;">↓</div>
 </header>
+<style>@keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }</style>
 
 <article class="essay">
 
