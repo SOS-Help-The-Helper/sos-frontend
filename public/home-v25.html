@@ -1626,7 +1626,7 @@
     joinBtn.addEventListener('click', function(e) {
       e.preventDefault();
       chatContainer.style.display = 'block';
-      chatFrame.src = '/c?flow=join&embed=true';
+      chatFrame.src = '/c/agent?initialMessage=' + encodeURIComponent('[JOIN_SOS] I want to join the SOS community');
       joinBtn.style.pointerEvents = 'none';
       joinBtn.style.opacity = '0.5';
       chatContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
