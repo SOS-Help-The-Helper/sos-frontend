@@ -540,6 +540,7 @@
 
   /* ── Floating chat bubble ── */
   #chatBubble {
+    display: none;
     position: fixed; bottom: 24px; right: 24px; z-index: 999;
     width: 56px; height: 56px; border-radius: 50%;
     background: transparent; border: none; cursor: pointer;
@@ -1450,6 +1451,19 @@
   /* ═══════════════════════════════════════════
      Refresh ScrollTrigger on load
      ═══════════════════════════════════════════ */
+  // Show chat bubble after scrolling past hero
+  ScrollTrigger.create({
+    trigger: '#crisis',
+    start: 'top bottom',
+    onEnter: function() { document.getElementById('chatBubble').style.display = 'flex'; },
+    onLeaveBack: function() {
+      var panel = document.getElementById('chatPanel');
+      if (!panel.classList.contains('open')) {
+        document.getElementById('chatBubble').style.display = 'none';
+      }
+    }
+  });
+
   window.addEventListener('load', function() { ScrollTrigger.refresh(); });
 
   /* ═══════════════════════════════════════════
