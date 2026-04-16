@@ -9,70 +9,77 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #0F1E2B;
-            color: rgba(255,255,255,0.75);
+            background: #ffffff;
+            color: #1a1a1a;
             font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 18px;
+            font-size: 19px;
             font-weight: 300;
-            line-height: 1.95;
+            line-height: 2.0;
             -webkit-font-smoothing: antialiased;
         }
 
         /* ── Progress bar ── */
         .progress-bar {
-            position: fixed; top: 0; left: 0; height: 3px; z-index: 100;
+            position: fixed; top: 0; left: 0; height: 2px; z-index: 100;
             background: linear-gradient(90deg, #89CFF0, #EF4E4B);
             width: 0%; transition: width 0.1s linear;
         }
 
-        /* ── Category label + byline (Vice style) ── */
-        .article-meta {
-            text-align: center;
-            padding: 64px 32px 0;
-        }
-        .article-category {
-            font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
-            text-transform: uppercase; color: #EF4E4B;
-            margin-bottom: 12px;
-        }
-        .article-byline {
-            font-size: 13px; color: rgba(255,255,255,0.4);
-            font-weight: 400; letter-spacing: 0.02em;
-        }
-        .article-byline .author { color: rgba(255,255,255,0.7); font-weight: 600; }
-
-        .logo {
-            display: block;
-            padding: 32px 32px 0;
+        /* ── Header (navy) ── */
+        .article-header {
+            background: #0F1E2B;
+            padding: 64px 32px 72px;
             text-align: center;
         }
-        .logo img {
+        .header-logo {
+            display: inline-block;
+            margin-bottom: 40px;
+        }
+        .header-logo img {
             height: 28px;
             opacity: 0.5;
             transition: opacity 0.3s;
         }
-        .logo img:hover { opacity: 0.85; }
-
-        .essay {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 48px 32px 160px;
+        .header-logo img:hover { opacity: 0.85; }
+        .article-category {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+            text-transform: uppercase; color: #EF4E4B;
+            margin-bottom: 24px;
         }
-
-        h1 {
+        .article-header h1 {
             font-family: 'DM Serif Display', Georgia, serif;
             font-size: 52px;
             font-weight: 400;
             line-height: 1.08;
             color: #fff;
-            margin-bottom: 16px;
-            text-align: center;
+            margin-bottom: 20px;
+            max-width: 760px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .subtitle {
+            font-size: 19px; color: rgba(255,255,255,0.5);
+            font-weight: 300;
+            margin-bottom: 32px; line-height: 1.6;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .article-byline {
+            font-size: 13px; color: rgba(255,255,255,0.35);
+            font-weight: 400; letter-spacing: 0.02em;
+        }
+        .article-byline .author { color: rgba(255,255,255,0.6); font-weight: 600; }
+
+        /* ── Article body ── */
+        .essay {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 64px 32px 80px;
         }
 
-        .subtitle {
-            font-size: 19px; color: rgba(255,255,255,0.45);
-            text-align: center; font-weight: 300;
-            margin-bottom: 56px; line-height: 1.6;
+        p {
+            margin-bottom: 32px;
         }
 
         /* ── Drop cap ── */
@@ -82,100 +89,116 @@
             float: left;
             line-height: 0.8;
             padding-right: 12px;
-            padding-top: 6px;
-            color: #fff;
-        }
-
-        @media (max-width: 600px) {
-            h1 { font-size: 36px; }
-            .essay { padding: 36px 20px 120px; }
-            .pullquote { font-size: 22px; margin: 40px -4px; padding: 24px 20px; }
-            .lead::first-letter { font-size: 56px; padding-right: 8px; }
-            .full-bleed { margin: 40px -20px; padding: 40px 20px; }
-        }
-
-        p {
-            margin-bottom: 28px;
-        }
-
-        /* ── Full-bleed color breaks between sections ── */
-        .full-bleed {
-            margin: 56px -32px;
-            padding: 48px 40px;
-            background: rgba(137,207,240,0.04);
-            border-top: 1px solid rgba(137,207,240,0.08);
-            border-bottom: 1px solid rgba(137,207,240,0.08);
-        }
-
-        .separator {
-            width: 48px;
-            height: 2px;
-            background: #89CFF0;
-            margin: 56px auto;
+            padding-top: 8px;
+            color: #1a1a1a;
         }
 
         .lead {
             font-size: 20px;
             font-weight: 400;
-            color: rgba(255,255,255,0.85);
-            line-height: 1.75;
+            color: #1a1a1a;
+            line-height: 1.85;
         }
 
+        /* ── Block quotes ── */
         .quote {
             border-left: 3px solid #89CFF0;
             padding: 4px 0 4px 24px;
             margin: 32px 0;
             font-style: italic;
-            color: rgba(255,255,255,0.65);
+            color: #444;
         }
 
+        /* ── Pull quotes (full-width gray band) ── */
         .pullquote {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 28px;
-            line-height: 1.35;
-            color: #89CFF0;
-            text-align: center;
-            margin: 64px -64px;
-            padding: 40px 48px;
-            border-top: 1px solid rgba(137,207,240,0.12);
-            border-bottom: 1px solid rgba(137,207,240,0.12);
-            position: relative;
-        }
-        .pullquote::before {
-            content: '\201C';
-            font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 80px;
-            position: absolute;
-            top: -10px; left: 48px;
-            color: rgba(137,207,240,0.15);
-            line-height: 1;
+            font-size: 24px;
+            line-height: 1.45;
+            color: #1a1a1a;
+            margin: 48px -32px;
+            padding: 40px 48px 40px 51px;
+            background: #f8f9fa;
+            border-left: 3px solid #89CFF0;
         }
 
         .accent {
             color: #89CFF0;
         }
+        .accent-dark {
+            color: #0F1E2B;
+            font-weight: 600;
+        }
 
+        /* ── Section dividers ── */
+        .divider {
+            text-align: center;
+            margin: 56px 0;
+            color: #ccc;
+            font-size: 18px;
+            letter-spacing: 0.5em;
+        }
+
+        /* ── Full-width navy band for key reveals ── */
+        .reveal-band {
+            margin: 56px -32px;
+            padding: 56px 48px;
+            background: #0F1E2B;
+            text-align: center;
+        }
+        .reveal-band p {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 32px;
+            line-height: 1.3;
+            color: #fff;
+            margin-bottom: 0;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── Footer (navy) ── */
+        .article-footer {
+            background: #0F1E2B;
+            padding: 80px 32px;
+            text-align: center;
+        }
         .closing {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 24px;
+            font-size: 28px;
             color: #fff;
             line-height: 1.4;
-            text-align: center;
-            margin-top: 64px;
+            margin-bottom: 48px;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
         }
-
-        .footer {
-            text-align: center;
-            padding: 0 32px 80px;
+        .footer-logo img {
+            height: 32px;
+            opacity: 0.4;
+            margin-bottom: 16px;
+        }
+        .footer-link {
+            display: block;
             color: rgba(255,255,255,0.35);
+            text-decoration: none;
             font-size: 14px;
         }
-        .footer a {
+        .footer-link:hover {
             color: #89CFF0;
-            text-decoration: none;
         }
-        .footer a:hover {
-            text-decoration: underline;
+
+        /* ── Mobile ── */
+        @media (max-width: 640px) {
+            .article-header { padding: 48px 20px 56px; }
+            .article-header h1 { font-size: 34px; }
+            .subtitle { font-size: 17px; }
+            .essay { padding: 48px 20px 64px; }
+            .lead::first-letter { font-size: 56px; padding-right: 8px; }
+            .pullquote { margin: 40px -20px; padding: 32px 24px 32px 27px; font-size: 21px; }
+            .reveal-band { margin: 40px -20px; padding: 40px 24px; }
+            .reveal-band p { font-size: 26px; }
+            .article-footer { padding: 56px 20px; }
+            .closing { font-size: 24px; }
         }
     </style>
 </head>
@@ -183,19 +206,17 @@
 
 <div class="progress-bar" id="progressBar"></div>
 
-<a href="/" class="logo">
-    <img src="/logomark-red.svg" alt="SOS">
-</a>
-
-<div class="article-meta">
+<header class="article-header">
+    <a href="/" class="header-logo">
+        <img src="/logomark-red.svg" alt="SOS">
+    </a>
     <div class="article-category">Investigation</div>
-    <div class="article-byline"><span class="author">SOS Research Team</span> · April 2026 · 12 min read</div>
-</div>
-
-<article class="essay">
-
     <h1>The Case for SOS</h1>
     <p class="subtitle">The humanitarian system is contracting. The disasters are accelerating. And the biggest coordination network on earth has no infrastructure.</p>
+    <div class="article-byline"><span class="author">SOS Research Team</span> &middot; April 2026 &middot; 11 min read</div>
+</header>
+
+<article class="essay">
 
     <p class="lead">When Lt. General Russel Honor&eacute; arrived at the New Orleans Convention Center on the fourth day after Hurricane Katrina, he found thirty thousand people stranded in hundred-degree heat, and he found soldiers and police pointing weapons at them. A mother named Alexandra Wheeler was holding her dehydrated five-month-old twins in terror. Honor&eacute;&mdash;born during a hurricane himself, raised on a subsistence farm in Lakeland, Louisiana, one of twelve children&mdash;barked a command that would define the entire federal response:</p>
 
@@ -203,121 +224,111 @@
 
     <p>Then he did something no general is supposed to do. He took one of Wheeler&rsquo;s twins in his arms and walked the family to a Coast Guard vessel for medical treatment. The twins are in their twenties now. Both went on to military careers.</p>
 
-    <p>Nobody remembers this part of Katrina. What they remember is the failure. FEMA&rsquo;s director promised the governor of Louisiana 500 buses to evacuate the Superdome. The buses never came Monday. They never came Tuesday. They never came Wednesday. FEMA didn&rsquo;t actually request buses from the Department of Transportation until 1:45 AM on Wednesday. The buses arrived Thursday. Four days. Thirty thousand people. Not because buses didn&rsquo;t exist, but because no one tracked the promise through delivery. Three million customers lost phone service. Active duty forces and National Guard operated under separate command structures with zero visibility of each other&rsquo;s positions. The military sent search-and-rescue teams to the same neighborhoods while others went uncovered entirely. The NOPD chief reported snipers firing at rescue helicopters&mdash;Honor&eacute; investigated and determined the gunshots were actually distress signals from people stranded on rooftops. The chief later admitted he&rsquo;d been repeating rumors.</p>
+    <p>Nobody remembers this part of Katrina. What they remember is the failure. FEMA&rsquo;s director promised the governor of Louisiana 500 buses to evacuate the Superdome. The buses never came Monday. They never came Tuesday. They never came Wednesday. FEMA didn&rsquo;t actually request buses from the Department of Transportation until 1:45 AM on Wednesday. The buses arrived Thursday. Four days. Thirty thousand people. Not because buses didn&rsquo;t exist, but because no one tracked the promise through delivery.</p>
 
-    <p>It was not a failure of effort. It was not a failure of will. <span class="accent">It was a failure of coordination.</span></p>
+    <p>It was not a failure of effort. It was not a failure of will. <span class="accent-dark">It was a failure of coordination.</span></p>
 
-    <p>Honor&eacute; understood this better than anyone in the room. &ldquo;This storm beat everything that we pride ourselves in,&rdquo; he told the Senate afterward. &ldquo;Our transportation system, our airline system, our ability to communicate, our ability to take care of Americans with the proper healthcare.&rdquo; But his most important observation wasn&rsquo;t about what Katrina broke. It was about why it kept breaking.</p>
+    <p>Honor&eacute; understood this better than anyone in the room. Congress, he reminded the Senate, had passed the Goldwater-Nichols Act in 1986 to force the military branches to work together. Before Goldwater-Nichols, the Army, Navy, Air Force, and Marines fought their own wars, in their own lanes, with their own budgets. The result was catastrophic redundancy and catastrophic gaps&mdash;the same territory covered three times, the territory next door not covered at all.</p>
 
-    <p>Congress, he reminded the committee, had passed the Goldwater-Nichols Act in 1986 to force the military branches to work together. Before Goldwater-Nichols, the Army, Navy, Air Force, and Marines fought their own wars, in their own lanes, with their own budgets. The result was catastrophic redundancy and catastrophic gaps&mdash;the same territory covered three times, the territory next door not covered at all. Congress said: enough. You will be joint. You will share information. You will coordinate.</p>
-
-    <p class="quote">&ldquo;You gave us Goldwater-Nichols, and it was a bitter pill to swallow. You&rsquo;ve got a joint, dependent, interagency, knock-&rsquo;em-down Department of Defense. You don&rsquo;t have that in the interagency. Our friends in the interagency don&rsquo;t approach the joint interdependence the same way you forced us down that road.&rdquo;</p>
+    <p class="quote">&ldquo;You gave us Goldwater-Nichols, and it was a bitter pill to swallow. You&rsquo;ve got a joint, dependent, interagency, knock-&rsquo;em-down Department of Defense. You don&rsquo;t have that in the interagency.&rdquo;</p>
 
     <div class="pullquote">Nobody ever passed a Goldwater-Nichols for civilian disaster response.</div>
 
-    <div class="separator"></div>
+    <div class="divider">&bull; &bull; &bull;</div>
 
-    <p>If that failure were a one-time event&mdash;a single storm that overwhelmed a system caught off guard&mdash;you could write it off as a learning moment. But it wasn&rsquo;t. The pattern has repeated, almost identically, for twenty years.</p>
+    <p>If that failure were a one-time event, you could write it off as a learning moment. But the pattern has repeated, almost identically, for twenty years.</p>
 
-    <p>Twelve years after Katrina, Hurricane Harvey hit Houston. Record rainfall displaced 780,000 people. Eighty percent lacked flood insurance. Harris County received 26,000 calls for service in seven days. Multiple rescue agencies were dispatched to the same calls because there was no shared dispatch system. A thousand civilian responders self-deployed without coordination, creating additional fuel and logistics burdens. Fifty-four independent fire departments, seven standalone EMS agencies, and over a hundred law enforcement agencies tried to work together in a single county with no common operating picture.</p>
+    <p>Hurricane Harvey, 2017. Record rainfall displaced 780,000 people in Houston. Fifty-four independent fire departments, seven standalone EMS agencies, and over a hundred law enforcement agencies tried to work together in a single county with no common operating picture. Hurricane Maria, the same year. Ninety-five percent of Puerto Rico&rsquo;s cell towers went down. The entire power grid went offline. FEMA had 695 generators for 2,273 requests.</p>
 
-    <p>The same year, Hurricane Maria hit Puerto Rico. Ninety-five percent of cell towers went down. A hundred percent of the power grid went offline. Handwritten resource requests had to be reviewed manually because the digital systems failed. Shipping containers arrived labeled simply &ldquo;disaster supplies&rdquo;&mdash;they had to be unloaded to determine what was inside. FEMA had 695 generators for 2,273 requests.</p>
-
-    <p>We tracked fourteen core structural problems across the after-action reports from Katrina through Maria: no real-time resource tracking, competing command structures, plans that assumed single incidents, duplicate rescue efforts, communications failures, no electronic health records, housing delays, no single point of contact for victims, vulnerable populations hit hardest, behavioral health underserved, exercise lessons not incorporated, insufficient pre-disaster relationships. The number of those fourteen problems that were solved between 2005 and 2017 is <span class="accent">zero</span>. Every single one repeated. Most got worse.</p>
+    <p>We tracked fourteen core structural problems across the after-action reports from Katrina through Maria. The number solved between 2005 and 2017 is <span class="accent-dark">zero</span>. Every single one repeated. Most got worse.</p>
 
     <p>Then came Helene.</p>
 
-    <p>In September 2024, Hurricane Helene hit western North Carolina&mdash;the mountains, not the coast, which is part of why nobody saw it coming the way they should have. FEMA&rsquo;s resource tracking system, WebEOC, crashed under roughly ten times its normal volume. The 211 system was overwhelmed. Two search-and-rescue platforms operated with zero integration, so teams checked the same homes three and four times while others were never checked at all. Facebook became the missing persons database. Not by design. Because nothing else worked.</p>
+    <p>In September 2024, Hurricane Helene hit western North Carolina&mdash;the mountains, not the coast, which is part of why nobody saw it coming the way they should have. FEMA&rsquo;s resource tracking system, WebEOC, crashed under roughly ten times its normal volume. Two search-and-rescue platforms operated with zero integration, so teams checked the same homes three and four times while others were never checked at all. Facebook became the missing persons database. Not by design. Because nothing else worked.</p>
 
-    <p>And then came the volunteers. Thousands of them, from across the country, driving trucks loaded with supplies into the mountains. Researchers call what happened next &ldquo;volunteer convergence&rdquo;&mdash;the secondary disaster within the disaster. Not because help wasn&rsquo;t needed. Because nobody could tell them where to bring it. Volunteers were turned away at the edge of the damage zone. Drop sites overflowed. The same pattern had played out weeks earlier during the Nebraska and Oklahoma wildfires, where hay convoys organized via Facebook DMs stretched across fourteen states&mdash;seven-hour drives to staging areas that were already full, coordinated through nothing more sophisticated than group messages and goodwill.</p>
+    <p>And then came the volunteers. Thousands of them, driving trucks loaded with supplies into the mountains. Researchers call what happened next &ldquo;volunteer convergence&rdquo;&mdash;the secondary disaster within the disaster. Not because help wasn&rsquo;t needed. Because nobody could tell them where to bring it. Drop sites overflowed. The same pattern had played out weeks earlier during the Nebraska and Oklahoma wildfires, where hay convoys organized via Facebook DMs stretched across fourteen states&mdash;seven-hour drives to staging areas that were already full.</p>
 
     <div class="pullquote">The help was massive. The help was real. And the help had nowhere to go.</div>
 
-    <div class="separator"></div>
+    <div class="divider">&bull; &bull; &bull;</div>
 
     <p>Here&rsquo;s what the after-action reports never capture.</p>
 
-    <p>Jonathan Greenberg&rsquo;s farmhouse in Burnsville, North Carolina was damaged by Helene. He lived in a donated RV for three months. When roads washed out and isolated mountain communities from supplies, his neighbors didn&rsquo;t wait for FEMA. They carved access trails through the terrain with ATVs. His team scraped over 4,000 missing persons posts from Facebook because no system existed to track them. They delivered RVs. They brought Starlink terminals to people who&rsquo;d been cut off from the outside world for weeks. And they started building the coordination tools that should have existed before the storm hit.</p>
+    <p>Jonathan Greenberg&rsquo;s farmhouse in Burnsville, North Carolina was damaged by Helene. He lived in a donated RV for three months. His neighbors didn&rsquo;t wait for FEMA&mdash;they carved access trails through the terrain with ATVs. His team scraped over 4,000 missing persons posts from Facebook because no system existed to track them. They delivered RVs. They brought Starlink terminals to people who&rsquo;d been cut off from the outside world for weeks. And they started building the coordination tools that should have existed before the storm hit.</p>
 
     <p>But Greenberg&rsquo;s experience wasn&rsquo;t unusual. It was the norm.</p>
 
-    <p>Research shows that after a major emergency, three out of four people turn to family, neighbors, and friends before they turn to any agency. Most search and rescue in the first twenty-four hours is performed by community members, not professional responders. People with trucks clear roads. Nurses triage injuries on front porches. Teenagers who speak three languages become the only translators for miles. An elderly couple in their eighties&mdash;their own home damaged&mdash;gets up before dawn to care for the properties of people who had to evacuate.</p>
+    <p>Eighty-five percent of survivors get initial help from neighbors, not agencies. Most search and rescue in the first twenty-four hours is performed by community members. People with trucks clear roads. Nurses triage injuries on front porches. Teenagers who speak three languages become the only translators for miles.</p>
 
-    <p>In Bald Creek, North Carolina, a grassroots food distribution network emerged where volunteers photographed incoming donations and used AI to calculate servings&mdash;not because someone designed a system, but because the people on the ground needed to know how much food they actually had. In another part of the disaster zone, a University of Tennessee geography PhD student and a thrift store owner created Operation Love Your Neighbor&mdash;a systematic door-to-door welfare check system built on county address data. They knocked on every door. They didn&rsquo;t wait for an app or a government directive. They used what they had: a database, a car, and the conviction that someone should be checking.</p>
+    <p>In Bald Creek, North Carolina, a grassroots food distribution network emerged where volunteers photographed incoming donations and used AI to calculate servings&mdash;not because someone designed a system, but because the people on the ground needed to know how much food they actually had. In another part of the disaster zone, a University of Tennessee geography PhD student and a thrift store owner created Operation Love Your Neighbor&mdash;a systematic door-to-door welfare check system built on county address data. They knocked on every door. They used what they had: a database, a car, and the conviction that someone should be checking.</p>
 
-    <p>Paul and Amy Dubuque donated their personal camper to a young couple named Dante and Raven through Emergency RV, one of the grassroots organizations that had been matching displaced families with donated recreational vehicles since the Camp Fire in Paradise, California in 2018. &ldquo;I think they both were a little bit overwhelmed to receive the camper,&rdquo; Amy said afterward. &ldquo;They seem like a wonderful young couple.&rdquo; That&rsquo;s the texture of real disaster response&mdash;not press conferences and situation rooms, but a retired couple handing the keys to their camper to strangers because it was the right thing to do.</p>
+    <p>Paul and Amy Dubuque donated their personal camper to a young couple named Dante and Raven through Emergency RV, one of the grassroots organizations matching displaced families with donated recreational vehicles since the Camp Fire in Paradise, California in 2018. &ldquo;I think they both were a little bit overwhelmed to receive the camper,&rdquo; Amy said afterward. That&rsquo;s the texture of real disaster response&mdash;not press conferences and situation rooms, but a retired couple handing the keys to their camper to strangers because it was the right thing to do.</p>
 
-    <p>The help is there. It has always been there. The willingness, the capacity, the raw human impulse to show up&mdash;none of that is missing.</p>
+    <p>The help is there. It has always been there. <span class="accent-dark">What&rsquo;s missing is the ability for all of these people to see each other.</span></p>
 
-    <p><span class="accent">What&rsquo;s missing is the ability for all of these people to see each other.</span></p>
+    <p>According to OCHA, 305 million people needed humanitarian assistance in 2025. 207 million didn&rsquo;t receive it. Humanitarian funding dropped 40 percent in the first half of 2025&mdash;the Council on Foreign Relations calls it &ldquo;The Great Aid Recession.&rdquo; In the United States, the GAO added disaster assistance to its high-risk list for the first time. FEMA is being restructured: twelve senior leaders departed, $600 million in grants clawed back, North Carolina residents still waiting over a year for aid. The federal safety net is not expanding to meet the moment. It is contracting.</p>
 
-    <p>According to OCHA, 305 million people needed humanitarian assistance in 2025. 207 million of them didn&rsquo;t receive it. The funding shortfall hit $24.4 billion. Humanitarian funding dropped 40 percent in a single year&mdash;the Council on Foreign Relations calls it &ldquo;The Great Aid Recession.&rdquo; In the United States, FEMA has stopped funding non-lifesaving disaster recovery. Reimbursements to states are halting. Twenty states have sued to restart the largest federal preparedness grant program. The GAO added disaster assistance to its high-risk list for the first time in the program&rsquo;s history. The federal safety net is not expanding to meet the moment. It is contracting.</p>
+    <p>And the response from the ground? It&rsquo;s growing. Every disaster produces more volunteers, more mutual aid networks, more grassroots organizations than the one before. The gap between what people are willing to do and what the infrastructure allows them to do is the defining crisis of modern disaster response.</p>
 
-    <p>And the response from the ground? It&rsquo;s growing. Every disaster produces more volunteers, more mutual aid networks, more grassroots organizations than the one before. The formal systems are shrinking while the informal systems are expanding. The gap between what people are willing to do and what the infrastructure allows them to do is the defining crisis of modern disaster response.</p>
-
-    <p>A recent study by Candid and Points of Light surveyed 2,200 nonprofits and volunteers and found the numbers that should keep every emergency manager awake at night: fifty-four percent of nonprofits can&rsquo;t measure or communicate the impact of their volunteers. Seventy-six percent of volunteers say knowing they had genuine impact is what makes the experience meaningful. Forty-three percent of volunteers quit because they didn&rsquo;t feel they belonged. Forty-four percent of potential volunteers never even started because they weren&rsquo;t sure they&rsquo;d be welcome. The desire to help is everywhere. The infrastructure to channel it doesn&rsquo;t exist.</p>
-
-    <div class="separator"></div>
+    <div class="divider">&bull; &bull; &bull;</div>
 
     <p>If you want to understand why this problem hasn&rsquo;t been solved, you have to understand the trust deficit.</p>
 
-    <p>In Appalachia&mdash;the region hit hardest by Helene&mdash;communities have watched extraction for generations. Coal companies stripped the mountains, took the wealth, and left environmental devastation. Timber companies did the same thing a generation earlier. Now the rare earth minerals in coal refuse are a federal priority, FEMA buyouts offer below-market prices to flood-damaged families, data centers are expanding into cheap-power Appalachian land, and tourism trails are being built through cleared former mining areas. Nobody is orchestrating this. Multiple systems&mdash;FEMA, the Department of Energy, the Department of Transportation, private capital&mdash;are independently optimizing for their own incentives on the same geography. But the cumulative effect on communities is the same whether it&rsquo;s coordinated or not.</p>
+    <p>In Appalachia&mdash;the region hit hardest by Helene&mdash;communities have watched extraction for generations. Coal companies stripped the mountains and left devastation. Now FEMA buyouts offer below-market prices to flood-damaged families, data centers are expanding into cheap-power Appalachian land, and multiple federal systems are independently optimizing for their own incentives on the same geography. People who&rsquo;ve watched every wave of extraction see another platform from the outside showing up to &ldquo;help&rdquo; and they have zero reason to trust it.</p>
 
-    <p>People who&rsquo;ve watched every wave of extraction see another platform from the outside showing up to &ldquo;help&rdquo; and they have zero reason to trust it. Eighty-five percent of state emergency management agencies cite infrastructure limitations as a barrier to adopting coordination tools, according to a 2025 Deloitte-NEMA survey of forty-two agencies. But the real barrier isn&rsquo;t infrastructure. The real barrier is that communities have been burned so many times that any new system has to earn the right to exist.</p>
+    <p>You can see this playing out at disaster recovery centers right now. Survivors sit down at table after table, filling out the same twenty fields at ten different organizational booths&mdash;over and over, to organizations that have no way of knowing what the others have already collected. The technology to prevent this exists. The trust to deploy it hasn&rsquo;t been built yet.</p>
 
-    <p>You can see this trust deficit playing out at disaster recovery centers right now. At SBCVOAD&mdash;a long-term recovery group&mdash;survivors sit down at table after table, filling out the same twenty fields at ten different organizational booths. Name, address, damage type, insurance status, household size&mdash;over and over, to organizations that have no way of knowing what the others have already collected. &ldquo;Ideally it wouldn&rsquo;t require them to download an app,&rdquo; one coordinator said. &ldquo;You&rsquo;re able to get basic information via text.&rdquo; The technology to prevent this exists. The trust to deploy it hasn&rsquo;t been built yet.</p>
+    <p>This is what Honor&eacute; understood at the Convention Center. Before you can coordinate, you have to stop treating people like threats. The posture of most disaster technology is extraction: collect data upward, aggregate it centrally, use it for institutional purposes. Communities can feel the difference between infrastructure that works for them and infrastructure that works on them.</p>
 
-    <p>This is also what Honor&eacute; understood at the Convention Center. Before you can coordinate, you have to stop treating people like threats. The first step in any coordination system isn&rsquo;t the technology. It&rsquo;s the posture. And the posture of most disaster technology is extraction: collect data upward, aggregate it centrally, use it for institutional purposes. Communities can feel the difference between infrastructure that works for them and infrastructure that works on them.</p>
+    <p>There is a field insight that changed everything about how SOS was designed, and it came from months of living in the disaster zone, working alongside the people affected by it.</p>
 
-    <p>There is a field insight that changed everything about how SOS was designed, and it came not from a whiteboard session or a product sprint but from months of living in the disaster zone, working alongside the people affected by it.</p>
+    <p>There is no clean line between the people who need help and the people who give it. The same person who needs shelter today volunteers their generator tomorrow. The displaced family with a truck is clearing roads by morning. A nurse triaging injuries on her porch needs someone to watch her kids. Paul and Amy Dubuque donated their camper&mdash;and they&rsquo;d been through their own losses.</p>
 
-    <p>There is no clean line between the people who need help and the people who give it. The same person who needs shelter today volunteers their generator tomorrow. The displaced family with a truck is clearing roads by morning. The person who called for help last week is running supply deliveries this week. A nurse triaging injuries on her porch needs someone to watch her kids. The volunteer driving an RV across two states also had their own roof damaged. Paul and Amy Dubuque donated their camper&mdash;and they&rsquo;d been through their own losses. The Operation Love Your Neighbor team was checking on others while their own county was still in recovery.</p>
+    <div class="reveal-band"><p>Everyone is a helper.</p></div>
 
-    <div class="pullquote">Everyone is a helper.</div>
+    <p>That&rsquo;s not a tagline. It&rsquo;s an observation about how human beings actually behave in crisis&mdash;one that overturns the fundamental assumption of every disaster response system ever built. Needs and offers coexist on the same person, sometimes on the same day. Any coordination system that doesn&rsquo;t see both sides of every person is leaving most of the available capacity invisible.</p>
 
-    <p>That&rsquo;s not a tagline. It&rsquo;s an observation about how human beings actually behave in crisis&mdash;one that overturns the fundamental assumption of every disaster response system ever built. The traditional model categorizes people as either survivors or responders, either asking for help or providing it. That binary is wrong. Needs and offers coexist on the same person, sometimes on the same day. Any coordination system that doesn&rsquo;t see both sides of every person&mdash;what they need and what they can offer&mdash;is leaving most of the available capacity invisible.</p>
+    <div class="divider">&bull; &bull; &bull;</div>
 
-    <p>Luke, a veteran of the Army&rsquo;s Irregular Warfare program and an experienced search-and-rescue operator, spent three weeks running real SAR operations during Helene. He came back with eighteen product ideas&mdash;not theoretical feature requests, but specific coordination gaps he watched people fall through in the field. He&rsquo;s presenting those findings at a FEMA/DHS symposium in August 2026. When someone with that background tells you the coordination layer doesn&rsquo;t exist, you don&rsquo;t need a market study.</p>
+    <p>SOS is community coordination infrastructure powered by agentic AI. It manages the full coordination lifecycle: intake, intelligent matching, logistics, fulfillment, and institutional learning&mdash;through decision traces that compound across every event.</p>
 
-    <div class="separator"></div>
+    <p>Someone texts a number from a shelter. Someone else scans a QR code on a flyer. Someone calls from a landline because their cell service is gone. Conversational AI agents replace multi-page government forms with two-minute natural language intake across SMS, WhatsApp, web, and voice. No app to download. No account to create. Works on any phone, in any language. People who want to help go through the same flow&mdash;&ldquo;I have a truck and I&rsquo;m in Asheville,&rdquo; &ldquo;I can translate Spanish and Creole,&rdquo; &ldquo;I have three pallets of water.&rdquo; The system captures what they can offer, where they are, when they&rsquo;re available.</p>
 
-    <p>SOS is what happens when you build the coordination layer that twenty years of after-action reports said someone should build.</p>
+    <p>A matching engine inspired by UNOS&mdash;the organ transplant network&mdash;scores connections across proximity, capability, urgency, and vulnerability. One family. Three helpers. Connected simultaneously. Each gets the match through their existing tools. Every match is traced. Every outcome recorded. Every coordination event makes the next one smarter.</p>
 
-    <p>Someone texts a number from a shelter. Someone else scans a QR code on a flyer. Someone calls a phone line from a landline because their cell service is gone. They talk naturally&mdash;&ldquo;my family needs a place to stay, we lost everything&rdquo;&mdash;and the system extracts the need. No app to download. No account to create. Works on any phone, in any language. People who want to help go through the same flow. &ldquo;I have a truck and I&rsquo;m in Asheville.&rdquo; &ldquo;I can translate Spanish and Creole.&rdquo; &ldquo;I have three pallets of water.&rdquo; The system captures what they can offer, where they are, and when they&rsquo;re available.</p>
+    <p>Each partner organization gets its own AI coordination agent, trained on their specific inventory, workflows, and rhythm. These agents retain context across every conversation, building institutional knowledge that previously lived only in one overworked coordinator&rsquo;s head&mdash;the kind of knowledge that, in Bald Creek, had to be reinvented from scratch by volunteers counting servings from photographs.</p>
 
-    <p>The system finds the closest people who can respond&mdash;a neighbor with a spare room, a nonprofit with available housing, a volunteer driver, an agency with open case management. One family. Three helpers. Connected simultaneously. Each gets the match through their existing tools and accepts, declines, or reassigns. Every match is traced. Every outcome recorded. Every coordination event makes the next one smarter.</p>
+    <p>The way SOS pays for itself matters as much as how it works. The $41.2 billion disaster restoration market is rampant with price gouging and recovery fraud&mdash;the GAO flagged disaster assistance as high-risk in 2025, and over $3 billion in FEMA payments went to unverified applicants. SOS builds trust scoring into the vendor layer. Revenue from connecting homeowners with vetted contractors funds coordination for people who have no insurance, no savings, and no safety net. The mission is protected through a dual structure: a 501(c)(3) that is always free for citizens and the organizations that serve them, and a Public Benefit Corporation that generates revenue and reinvests it.</p>
 
-    <p>Each partner organization gets its own AI coordination agent, trained on their specific inventory, workflows, and rhythm. One agent knows that food distribution is time-sensitive and a match proposed at the wrong hour is useless. Another tracks warehouse inventory down to the pallet. These agents retain context across every conversation, building institutional knowledge that previously lived only in one overworked coordinator&rsquo;s head&mdash;the kind of knowledge that, in Bald Creek, had to be reinvented from scratch by volunteers counting servings from photographs.</p>
+    <p>The system doesn&rsquo;t just respond to disasters. It learns from them. After each event, it knows which neighborhoods surge first, which partners respond within the hour, which resources run dry. That accumulated intelligence&mdash;earned through real coordination, not extracted&mdash;becomes the most valuable dataset in disaster response. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them.</p>
 
-    <p>The way SOS pays for itself matters as much as how it works. The disaster restoration market&mdash;contractors, equipment suppliers, insurance adjusters, materials vendors&mdash;is $45 billion annually. After Katrina, the GAO documented over a billion dollars in fraudulent disaster payments, with broader estimates reaching $6 to $8 billion. Every major disaster produces a wave of price gouging, unlicensed contractors, and recovery fraud that drains money from the communities that need it most. SOS builds trust scoring into the vendor layer. Verified outcomes. Reviews that compound. Accountability that follows. The revenue generated by connecting homeowners with vetted contractors flows back into funding coordination for people who have no insurance, no savings, and no safety net. The mission is legally protected through a dual structure: a 501(c)(3) that is always free for citizens and the organizations that serve them, and a Public Benefit Corporation that generates revenue and reinvests it into the mission. Paul Spencer, a journalist who&rsquo;s written for the New York Times, WIRED, and Vice News, looked at this model and called it &ldquo;permaculture for disaster relief.&rdquo; The system doesn&rsquo;t just respond to disasters. It learns from them. Every cycle feeds the next. The intelligence compounds.</p>
+    <p>Since Helene, SOS has activated for every major disaster. During the Blizzard of 2026, the platform compiled 292 geocoded resources across nine states with automated weather monitoring&mdash;Fox Weather covered the deployment nationally. Five partner organizations are doing real three-way matching&mdash;survivor to resource to volunteer&mdash;across housing, food, and multi-org coordination. The coordination loop is running. AI agents are in production.</p>
 
-    <p>After the first disaster season, the system knows which neighborhoods surge first, which partners respond within the hour, which resources run dry, which skills resolve needs faster. That accumulated understanding of how communities coordinate in crisis becomes the most valuable dataset in disaster response&mdash;not because it was extracted, but because it was earned through real coordination. Communities that have watched extraction happen for generations deserve infrastructure that works for them, not on them. That principle isn&rsquo;t in the marketing. It&rsquo;s in the architecture. Partners keep their data. If they leave, it goes with them. Citizens control their privacy. No profile required. Location data expires. Every coordination decision is logged with reasoning. SOS doesn&rsquo;t sell data, build profiles, or optimize for engagement.</p>
-
-    <p>Since Helene, SOS has activated for every major disaster. During the Blizzard of 2026, the platform coordinated hundreds of resources across twelve states&mdash;warming shelters, power outage tracking, emergency supply distribution. Fox Weather featured SOS during the storm. The partner ecosystem includes organizations working across housing, food, medical, supplies, transport, and coordination. The citizen portal is live. The coordination loop is running. AI coordination agents are in production.</p>
-
-    <div class="separator"></div>
+    <div class="divider">&bull; &bull; &bull;</div>
 
     <p>Twenty years of after-action reports say the same thing: the problems are known, the solutions are obvious, and nobody builds the infrastructure. The military had to be forced by legislation to coordinate. Civilian agencies never were. Honor&eacute; saw this in 2005 and said it plainly to the United States Senate. Every disaster since has proved him right.</p>
 
-    <p>But here&rsquo;s what&rsquo;s different now. The technology to match needs with offers in real time&mdash;across languages, across channels, across organizational boundaries&mdash;didn&rsquo;t exist when Honor&eacute; was carrying Alexandra Wheeler&rsquo;s baby to a Coast Guard vessel. It didn&rsquo;t exist when hay convoys were organized through Facebook DMs across fourteen states. It didn&rsquo;t exist when volunteers in Bald Creek were photographing donations to count servings, or when a geography PhD and a thrift store owner were building a welfare check system from county address data. It didn&rsquo;t exist when Paul and Amy Dubuque were figuring out how to get their camper to a couple they&rsquo;d never met.</p>
+    <p>But here&rsquo;s what&rsquo;s different now. The technology to match needs with offers in real time&mdash;across languages, across channels, across organizational boundaries&mdash;didn&rsquo;t exist when Honor&eacute; was carrying Alexandra Wheeler&rsquo;s baby to a Coast Guard vessel. It didn&rsquo;t exist when hay convoys were organized through Facebook DMs across fourteen states. It didn&rsquo;t exist when Paul and Amy Dubuque were figuring out how to get their camper to a couple they&rsquo;d never met.</p>
 
-    <p>It exists now.</p>
+    <div class="reveal-band"><p>It exists now.</p></div>
 
-    <p>The formal systems are contracting. The federal safety net is shrinking. The funding is drying up. And every disaster, without fail, produces the same extraordinary response from ordinary people who show up with whatever they have&mdash;trucks, campers, translating skills, medical training, county address databases, pallets of water, seven-hour drives across state lines. They&rsquo;ve been doing this forever. They&rsquo;ll keep doing it whether or not anyone builds them infrastructure.</p>
+    <p>The formal systems are contracting. The funding is drying up. And every disaster, without fail, produces the same extraordinary response from ordinary people who show up with whatever they have. They&rsquo;ve been doing this forever. They&rsquo;ll keep doing it whether or not anyone builds them infrastructure.</p>
 
-    <p>But the gap between what they&rsquo;re willing to do and what they&rsquo;re able to coordinate is the gap where people fall through. It&rsquo;s the gap where the same house gets checked four times and the house next door never gets checked at all. It&rsquo;s the gap where hay convoys drive seven hours to overflowing drop sites. It&rsquo;s the gap where survivors fill out the same twenty fields at ten different booths. It&rsquo;s the gap where forty-three percent of volunteers quit because nobody made them feel like they belonged.</p>
+    <p>But the gap between what they&rsquo;re willing to do and what they&rsquo;re able to coordinate is the gap where people fall through. It&rsquo;s where the same house gets checked four times and the house next door never gets checked at all. It&rsquo;s where hay convoys drive seven hours to overflowing drop sites. It&rsquo;s where survivors fill out the same twenty fields at ten different booths.</p>
 
-    <p>That gap has been documented in every after-action report for two decades. Honor&eacute; named it. The GAO flagged it. The research quantified it. The field proved it, over and over, in the stories of people who improvised coordination because the systems that were supposed to provide it didn&rsquo;t exist.</p>
+    <p>That gap has been documented in every after-action report for two decades. Honor&eacute; named it. The GAO flagged it. The field proved it.</p>
 
     <p>SOS closes the gap. Not by replacing the people who show up&mdash;they don&rsquo;t need replacing&mdash;but by giving them the one thing they&rsquo;ve never had: a way to find each other.</p>
 
-    <p class="closing">Everyone is a helper. The helpers just need infrastructure.</p>
-
 </article>
 
-<div class="footer">
-    <a href="https://sosconnect.org">sosconnect.org</a>
-</div>
+<footer class="article-footer">
+    <p class="closing">Everyone is a helper.<br>The helpers just need infrastructure.</p>
+    <a href="/" class="footer-logo">
+        <img src="/logomark-red.svg" alt="SOS">
+    </a>
+    <a href="https://sosconnect.org" class="footer-link">sosconnect.org</a>
+</footer>
 
 <script>
 (function() {
