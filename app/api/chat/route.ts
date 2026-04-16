@@ -194,6 +194,7 @@ RULES FOR MATCH FLOW:
 - No bullet points. No lists. No paragraphs. Conversational.`;
 
 export async function POST(req: Request) {
+  try {
   const { messages: uiMessages } = await req.json();
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
@@ -1315,4 +1316,11 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
   });
 
   return result.toUIMessageStreamResponse();
+  } catch (error: any) {
+    console.error('Chat API error:', error);
+    return new Response(JSON.stringify({ error: error?.message || 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
