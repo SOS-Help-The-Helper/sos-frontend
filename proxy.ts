@@ -5,14 +5,7 @@ import type { NextRequest } from 'next/server'
 const PUBLIC_PATHS = new Set([
   '/',
   '/c',
-  '/home-v20.html',
-  '/home-v21.html',
-  '/home-v22.html',
-  '/home-v23.html',
-  '/home-v24.html',
   '/home-v25.html',
-  '/home-v25b.html',
-  '/case.html',
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -29,6 +22,8 @@ const PUBLIC_PREFIXES = [
 const ASSET_REGEX = /\.(ico|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|css|js|json|mp4|webm)$/;
 
 function isPublicRoute(path: string): boolean {
+  const BLOCKED_PATHS = new Set(['/c/test-agent']);
+  if (BLOCKED_PATHS.has(path)) return false;
   if (PUBLIC_PATHS.has(path)) return true;
   for (const prefix of PUBLIC_PREFIXES) {
     if (path.startsWith(prefix)) return true;
