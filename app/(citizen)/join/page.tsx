@@ -41,6 +41,20 @@ function JoinChat() {
     }
   }, [sendMessage]);
 
+  // Force navy background on html/body to prevent any white/cream flash or gap
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.background;
+    const prevBody = body.style.background;
+    html.style.background = '#0F1E2B';
+    body.style.background = '#0F1E2B';
+    return () => {
+      html.style.background = prevHtml;
+      body.style.background = prevBody;
+    };
+  }, []);
+
   // Mobile keyboard handling
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
@@ -88,8 +102,8 @@ function JoinChat() {
     <div
       className="flex flex-col bg-[#0F1E2B] text-white"
       style={{
+        minHeight: isIframe ? '100%' : '100dvh',
         height: isIframe ? '100%' : '100dvh',
-        paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : undefined,
       }}
     >
       {/* Header */}
@@ -102,10 +116,13 @@ function JoinChat() {
         {isLoading && <span className="text-[10px] text-white/30 ml-auto">typing...</span>}
       </div>
 
-      {/* Messages */}
+      {/* Messages — flex-1 fills all space above fixed input bar */}
       <div
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: `calc(76px + env(safe-area-inset-bottom, 0px) + ${keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'})`,
+        }}
       >
         {messages.map(msg => (
           <div key={msg.id}>
@@ -162,8 +179,18 @@ function JoinChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="bg-[#1A3850] px-4 py-3 border-t border-white/10 flex-shrink-0">
+      {/* Input bar — fixed to bottom, above safe area */}
+      <div
+        className="bg-[#1A3850] px-4 py-3 border-t border-white/10 flex-shrink-0"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: `calc(12px + env(safe-area-inset-bottom, 0px))`,
+          zIndex: 50,
+        }}
+      >
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             ref={inputRef}
