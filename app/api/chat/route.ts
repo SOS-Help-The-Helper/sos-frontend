@@ -195,7 +195,11 @@ RULES FOR MATCH FLOW:
 
 export async function POST(req: Request) {
   try {
-  const { messages: uiMessages } = await req.json();
+  const body = await req.json();
+  const uiMessages = body.messages || [];
+  if (!uiMessages.length) {
+    return new Response(JSON.stringify({ error: 'No messages provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
   // Detect JOIN flow from first message content: [JOIN_SOS]
