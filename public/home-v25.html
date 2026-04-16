@@ -539,31 +539,24 @@
   .chat-loading span:nth-child(3) { animation-delay: 0.32s; }
 
   /* ── Floating chat bubble ── */
-  @keyframes bubblePulse {
-    0% { transform: scale(1); opacity: 0.6; }
-    50% { transform: scale(1.8); opacity: 0; }
-    100% { transform: scale(1.8); opacity: 0; }
-  }
   #chatBubble {
     position: fixed; bottom: 24px; right: 24px; z-index: 999;
-    width: 60px; height: 60px; border-radius: 50%;
-    background: #EF4E4B; border: none; cursor: pointer;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: transparent; border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 20px rgba(239,78,75,0.35);
-    transition: transform 0.2s, box-shadow 0.2s;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    transition: transform 0.2s;
   }
-  #chatBubble:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 28px rgba(239,78,75,0.5);
-  }
-  #chatBubble::after {
-    content: '';
-    position: absolute; inset: -4px;
+  #chatBubble:hover { transform: scale(1.08); }
+  #chatBubble .bubble-ring {
+    position: absolute; inset: 0;
     border-radius: 50%;
-    border: 2px solid rgba(239,78,75,0.4);
-    animation: bubblePulse 4s ease-out infinite;
+    border: 2px solid rgba(239,78,75,0.55);
+    animation: radar-ping 6s ease-out infinite;
     pointer-events: none;
   }
+  #chatBubble .bubble-ring:nth-child(2) { animation-delay: 2s; }
+  #chatBubble .bubble-ring:nth-child(3) { animation-delay: 4s; }
   #chatPanel {
     position: fixed; bottom: 24px; right: 24px; z-index: 999;
     width: 400px; height: 560px;
@@ -950,7 +943,10 @@
 
 <!-- ════════ FLOATING CHAT ════════ -->
 <button id="chatBubble" aria-label="Chat with SOS">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span class="bubble-ring"></span>
+  <span class="bubble-ring"></span>
+  <span class="bubble-ring"></span>
+  <img src="/logomark-red.svg" alt="SOS" style="width: 40px; height: 40px; position: relative; z-index: 1;">
 </button>
 <div id="chatPanel">
   <button class="chat-panel-close-float" id="chatClose" aria-label="Close chat">&times;</button>

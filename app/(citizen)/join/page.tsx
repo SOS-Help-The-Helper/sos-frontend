@@ -106,16 +106,6 @@ function JoinChat() {
         height: isIframe ? '100%' : '100dvh',
       }}
     >
-      {/* Header */}
-      <div className="bg-[#1A3850] px-4 py-3 flex items-center gap-2.5 flex-shrink-0 z-10">
-        <img src="/logomark.svg" alt="SOS" className="h-6 w-6" />
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-white leading-tight">Join SOS</span>
-          <span className="text-[10px] text-white/40 leading-tight">Community Coordination Platform</span>
-        </div>
-        {isLoading && <span className="text-[10px] text-white/30 ml-auto">typing...</span>}
-      </div>
-
       {/* Messages — flex-1 fills all space above fixed input bar */}
       <div
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3"
