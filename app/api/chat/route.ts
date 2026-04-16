@@ -221,12 +221,15 @@ export async function POST(req: Request) {
     if (ervMatch) { ervFlow = ervMatch[1]; ervFor = ervMatch[2]; }
     if (firstMsg.content.includes('[JOIN_SOS]')) { joinFlow = true; }
   }
-  // Also check parts array
-  if (!ervFlow && firstMsg?.parts) {
+  // Also check parts array (useChat v6 sends parts, not content)
+  if (firstMsg?.parts) {
     for (const p of firstMsg.parts) {
       if (p.type === 'text' && typeof p.text === 'string') {
-        const m = p.text.match(/\[ERV_INTAKE:(\w+):(\w+)\]/);
-        if (m) { ervFlow = m[1]; ervFor = m[2]; break; }
+        if (!ervFlow) {
+          const m = p.text.match(/\[ERV_INTAKE:(\w+):(\w+)\]/);
+          if (m) { ervFlow = m[1]; ervFor = m[2]; }
+        }
+        if (!joinFlow && p.text.includes('[JOIN_SOS]')) { joinFlow = true; }
       }
     }
   }
