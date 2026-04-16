@@ -1041,18 +1041,9 @@
 
     <h1 class="gs-fade are-you-heading" style="margin-bottom: 48px;">Are you?</h1>
 
-    <!-- Intake Form -->
-    <div class="gs-fade" style="margin-bottom: 80px;">
-      <p style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.45); margin-bottom: 24px; font-weight: 600;">Join the SOS community</p>
-      <form id="signupForm" style="max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
-        <input type="text" name="name" placeholder="Your name" class="intake-input">
-        <input type="tel" name="phone" placeholder="Phone number *" required class="intake-input">
-        <textarea name="skills" placeholder="What skills or resources can you contribute? (e.g., truck driver, nurse, translator, supplies...)" rows="3" class="intake-input" style="resize: vertical;"></textarea>
-        <input type="text" name="organization" placeholder="Organization name (if applicable)" class="intake-input">
-        <button type="submit" id="signupBtn" style="background: #EF4E4B; color: #fff; border: none; border-radius: 8px; padding: 16px 18px; font-size: 16px; font-weight: 700; font-family: 'Nunito Sans', sans-serif; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.2s;">Count me in</button>
-        <p id="signupMsg" style="display: none; font-size: 14px; margin-top: 4px;"></p>
-      </form>
-      <!-- NOTE: Supabase table 'homepage_signups' must be created with columns: id (auto), name (text), phone (text), skills (text), organization (text), created_at (timestamptz default now()) -->
+    <!-- Embedded Agent Chat -->
+    <div id="joinChatContainer" style="width: 100%; max-width: 480px; margin: 0 auto 48px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); height: 500px;">
+      <iframe id="joinChatFrame" src="/c/agent?initialMessage=%5BJOIN_SOS%5D%20I%20want%20to%20join%20the%20SOS%20community" style="width: 100%; height: 100%; border: none;" allow="microphone"></iframe>
     </div>
 
     <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: rgba(255,255,255,0.4);">
@@ -1061,21 +1052,7 @@
   </div>
 </section>
 
-<!-- ════════ FOOTER ════════ -->
-<footer>
-  <p style="margin-bottom: 12px;">
-    <a href="/" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4);">
-      <img src="/logomark-red.svg" alt="SOS" style="height: 18px; opacity: 0.5;">
-      SOS GLOBAL
-    </a>
-  </p>
-  <p>
-    <a href="/c">Citizens</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/matching">Partners</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="mailto:info@sos-help.org">Contact</a>
-  </p>
-  <p style="margin-top: 16px; font-size: 11px;">
-    sosconnect.org &middot; © 2026 SOS Global
-  </p>
-</footer>
+
 
 <!-- ════════ SCRIPTS ════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1619,18 +1596,7 @@
      ═══════════════════════════════════════════ */
   window.addEventListener('load', function() { ScrollTrigger.refresh(); });
 
-  // Join SOS button — opens embedded chat
-  var joinBtn = document.getElementById('joinSosBtn');
-  var chatContainer = document.getElementById('joinChatContainer');
-  var chatFrame = document.getElementById('joinChatFrame');
-  if (joinBtn && chatContainer && chatFrame) {
-    joinBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      chatContainer.style.display = 'block';
-      chatFrame.src = '/c/agent?initialMessage=' + encodeURIComponent('[JOIN_SOS] I want to join the SOS community');
-      joinBtn.style.pointerEvents = 'none';
-      joinBtn.style.opacity = '0.5';
-      chatContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  );
     });
   }
 
@@ -1639,54 +1605,7 @@
 
 <script>
 (function() {
-  var form = document.getElementById('signupForm');
-  var msg = document.getElementById('signupMsg');
-  var btn = document.getElementById('signupBtn');
-
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    btn.disabled = true;
-    btn.style.opacity = '0.6';
-    btn.textContent = 'Submitting…';
-    msg.style.display = 'none';
-
-    var nameVal = form.querySelector('[name="name"]').value.trim();
-    var nameParts = nameVal.split(' ');
-    var data = {
-      display_name: nameVal,
-      first_name: nameParts[0] || null,
-      last_name: nameParts.slice(1).join(' ') || null,
-      phone: form.phone.value.trim(),
-      phone_canonical: form.phone.value.trim().replace(/[^\d+]/g, ''),
-      bio: form.skills.value.trim() || null,
-      helper_status: 'interested',
-      consent_contact: true
-    };
-
-    fetch('https://rtduqguwhkczexnoawej.supabase.co/rest/v1/persons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzNTMxMjgsImV4cCI6MjA0ODkyOTEyOH0.aGTlWLfCMgfmMwBM3fMCgLaDqFqSMJL3MpExCX7dnYc',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzNTMxMjgsImV4cCI6MjA0ODkyOTEyOH0.aGTlWLfCMgfmMwBM3fMCgLaDqFqSMJL3MpExCX7dnYc',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(data)
-    }).then(function(res) {
-      if (res.ok) {
-        // If org was provided, log it (affiliation creation is a follow-up)
-        var orgName = form.organization.value.trim();
-        if (orgName) {
-          fetch('https://rtduqguwhkczexnoawej.supabase.co/rest/v1/organizations', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzNTMxMjgsImV4cCI6MjA0ODkyOTEyOH0.aGTlWLfCMgfmMwBM3fMCgLaDqFqSMJL3MpExCX7dnYc',
-              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzNTMxMjgsImV4cCI6MjA0ODkyOTEyOH0.aGTlWLfCMgfmMwBM3fMCgLaDqFqSMJL3MpExCX7dnYc',
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ name: orgName, type: 'homepage_signup' })
-          }).catch(function() {}); // best-effort, don't block success
+   // best-effort, don't block success
         }
         form.innerHTML = '<div style="padding: 32px 0;"><span style="font-size: 40px;">✓</span><p style="margin-top: 16px; font-size: 18px; color: rgba(255,255,255,0.8);">Thank you! We\'ll be in touch.</p></div>';
       } else {
