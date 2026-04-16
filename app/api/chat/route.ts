@@ -197,8 +197,6 @@ export async function POST(req: Request) {
   const { messages: uiMessages } = await req.json();
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
-  // Detect JOIN flow from first message content: [JOIN_SOS]
-  let joinFlow = false;
   // Detect ERV flow from first message content: [ERV_INTAKE:survivor:myself]
   let ervFlow = req.headers.get('x-erv-flow') || '';
   let ervFor = req.headers.get('x-erv-for') || '';
@@ -206,7 +204,6 @@ export async function POST(req: Request) {
   if (firstMsg?.content && typeof firstMsg.content === 'string') {
     const ervMatch = firstMsg.content.match(/\[ERV_INTAKE:(\w+):(\w+)\]/);
     if (ervMatch) { ervFlow = ervMatch[1]; ervFor = ervMatch[2]; }
-    if (firstMsg.content.includes('[JOIN_SOS]')) { joinFlow = true; }
   }
   // Also check parts array
   if (!ervFlow && firstMsg?.parts) {
@@ -323,32 +320,7 @@ INTAKE FLOW — ONE question at a time:
 RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic. ALWAYS use show_sos_confirmation before submit.${ervFor === 'someone' ? '\nBeing filled out ON BEHALF of the volunteer.' : ''}`,
   };
 
-  const JOIN_PROMPT = `You are SOS — a community coordination platform that connects people who want to help with the communities that need them. You're having a friendly, conversational chat with someone who's interested in joining the SOS community.
-
-GOAL: Understand who they are, what motivates them, what skills or resources they can contribute, and whether they're part of an organization. By the end of the conversation, you should have their name, phone number, and a clear picture of how they can help.
-
-STYLE:
-- Warm, genuine, conversational. Like talking to a friend who's excited about what they're building.
-- ONE question at a time. Never stack questions.
-- Keep responses to 1-3 sentences. Be human, not corporate.
-- Share brief context about SOS when relevant — we coordinate disaster response by connecting citizens, nonprofits, and government agencies so help actually reaches people.
-- "Everyone is a helper" is our thesis — people who need help and people who give it aren't separate categories. Needs and offers coexist on the same person.
-
-FLOW:
-1. Start by welcoming them and asking what brought them here / what interests them about SOS
-2. Ask about their background — what they do, what skills they have
-3. Ask if they're part of an organization (nonprofit, faith-based, government, volunteer group, etc.)
-4. Ask what motivates them — why disaster response, why community coordination
-5. Collect their name and phone number (frame it as "so we can keep you in the loop")
-6. Thank them genuinely. Tell them someone from the team will reach out.
-
-After collecting info, call submit_person to save their details.
-
-DO NOT use tools like show_categories, show_chips, or search_resources. This is a pure conversation — no UI widgets.`;
-
-  const activeSystemPrompt = joinFlow
-    ? JOIN_PROMPT
-    : ervFlow && ERV_PROMPTS[ervFlow]
+  const activeSystemPrompt = ervFlow && ERV_PROMPTS[ervFlow]
     ? ERV_PROMPTS[ervFlow] + authContext + locationContext
     : SYSTEM_PROMPT + authContext + locationContext;
 
@@ -669,65 +641,6 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
             success: resp.ok,
             title: resp.ok ? 'Helper Profile Created' : 'Submission Failed',
             message: resp.ok ? 'You\'re registered as a helper. We\'ll notify you when someone nearby needs help.' : 'Something went wrong. Please try again.',
-          });
-        },
-      },
-
-      submit_person: {
-        description: 'Save a person who wants to join the SOS community. Use in the join flow after collecting name, phone, skills, and optionally organization.',
-        inputSchema: z.object({
-          name: z.string().describe('Full name'),
-          phone: z.string().describe('Phone number'),
-          skills: z.string().optional().describe('Skills, resources, or what they can contribute'),
-          organization: z.string().optional().describe('Organization name if they are part of one'),
-          motivation: z.string().optional().describe('Why they want to join / what motivates them'),
-        }),
-        execute: async function({ name, phone, skills, organization, motivation }) {
-          const nameParts = name.trim().split(' ');
-          const phoneCan = phone.replace(/[^\d+]/g, '');
-          const bio = [skills, motivation ? `Motivation: ${motivation}` : ''].filter(Boolean).join('. ');
-          
-          // Insert person
-          const resp = await fetch(`${SUPABASE_URL}/rest/v1/persons`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${SUPABASE_ANON}`,
-              'apikey': SUPABASE_ANON,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation',
-            },
-            body: JSON.stringify({
-              display_name: name.trim(),
-              first_name: nameParts[0] || null,
-              last_name: nameParts.slice(1).join(' ') || null,
-              phone: phone.trim(),
-              phone_canonical: phoneCan,
-              bio: bio || null,
-              helper_status: 'interested',
-              consent_contact: true,
-            }),
-          });
-          const persons = await resp.json();
-          const personId = persons?.[0]?.id;
-
-          // If organization provided, create org record
-          if (organization && organization.trim()) {
-            await fetch(`${SUPABASE_URL}/rest/v1/organizations`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${SUPABASE_ANON}`,
-                'apikey': SUPABASE_ANON,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal',
-              },
-              body: JSON.stringify({ name: organization.trim(), type: 'community_signup' }),
-            }).catch(() => {});
-          }
-
-          return JSON.stringify({
-            success: resp.ok,
-            personId,
-            message: resp.ok ? 'Person saved to SOS community.' : 'Failed to save. Try again.',
           });
         },
       },
