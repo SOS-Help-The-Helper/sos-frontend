@@ -12,46 +12,99 @@
             background: #0F1E2B;
             color: rgba(255,255,255,0.75);
             font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 300;
-            line-height: 1.85;
+            line-height: 1.95;
             -webkit-font-smoothing: antialiased;
         }
 
+        /* ── Progress bar ── */
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 100;
+            background: linear-gradient(90deg, #89CFF0, #EF4E4B);
+            width: 0%; transition: width 0.1s linear;
+        }
+
+        /* ── Category label + byline (Vice style) ── */
+        .article-meta {
+            text-align: center;
+            padding: 64px 32px 0;
+        }
+        .article-category {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+            text-transform: uppercase; color: #EF4E4B;
+            margin-bottom: 12px;
+        }
+        .article-byline {
+            font-size: 13px; color: rgba(255,255,255,0.4);
+            font-weight: 400; letter-spacing: 0.02em;
+        }
+        .article-byline .author { color: rgba(255,255,255,0.7); font-weight: 600; }
+
         .logo {
             display: block;
-            padding: 48px 32px 0;
+            padding: 32px 32px 0;
             text-align: center;
         }
         .logo img {
-            height: 40px;
-            opacity: 0.85;
+            height: 28px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
         }
+        .logo img:hover { opacity: 0.85; }
 
         .essay {
             max-width: 680px;
             margin: 0 auto;
-            padding: 80px 32px 160px;
+            padding: 48px 32px 160px;
         }
 
         h1 {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 400;
-            line-height: 1.1;
+            line-height: 1.08;
             color: #fff;
-            margin-bottom: 48px;
+            margin-bottom: 16px;
             text-align: center;
+        }
+
+        .subtitle {
+            font-size: 19px; color: rgba(255,255,255,0.45);
+            text-align: center; font-weight: 300;
+            margin-bottom: 56px; line-height: 1.6;
+        }
+
+        /* ── Drop cap ── */
+        .lead::first-letter {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 72px;
+            float: left;
+            line-height: 0.8;
+            padding-right: 12px;
+            padding-top: 6px;
+            color: #fff;
         }
 
         @media (max-width: 600px) {
             h1 { font-size: 36px; }
-            .essay { padding: 48px 20px 120px; }
+            .essay { padding: 36px 20px 120px; }
             .pullquote { font-size: 22px; margin: 40px -4px; padding: 24px 20px; }
+            .lead::first-letter { font-size: 56px; padding-right: 8px; }
+            .full-bleed { margin: 40px -20px; padding: 40px 20px; }
         }
 
         p {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+        }
+
+        /* ── Full-bleed color breaks between sections ── */
+        .full-bleed {
+            margin: 56px -32px;
+            padding: 48px 40px;
+            background: rgba(137,207,240,0.04);
+            border-top: 1px solid rgba(137,207,240,0.08);
+            border-bottom: 1px solid rgba(137,207,240,0.08);
         }
 
         .separator {
@@ -78,14 +131,24 @@
 
         .pullquote {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 26px;
+            font-size: 28px;
             line-height: 1.35;
             color: #89CFF0;
             text-align: center;
-            margin: 48px -32px;
-            padding: 32px 40px;
-            border-top: 1px solid rgba(137,207,240,0.15);
-            border-bottom: 1px solid rgba(137,207,240,0.15);
+            margin: 64px -64px;
+            padding: 40px 48px;
+            border-top: 1px solid rgba(137,207,240,0.12);
+            border-bottom: 1px solid rgba(137,207,240,0.12);
+            position: relative;
+        }
+        .pullquote::before {
+            content: '\201C';
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 80px;
+            position: absolute;
+            top: -10px; left: 48px;
+            color: rgba(137,207,240,0.15);
+            line-height: 1;
         }
 
         .accent {
@@ -118,13 +181,21 @@
 </head>
 <body>
 
+<div class="progress-bar" id="progressBar"></div>
+
 <a href="/" class="logo">
-    <img src="/logomark-white.svg" alt="SOS">
+    <img src="/logomark-red.svg" alt="SOS">
 </a>
+
+<div class="article-meta">
+    <div class="article-category">Investigation</div>
+    <div class="article-byline"><span class="author">SOS Research Team</span> · April 2026 · 12 min read</div>
+</div>
 
 <article class="essay">
 
     <h1>The Case for SOS</h1>
+    <p class="subtitle">The humanitarian system is contracting. The disasters are accelerating. And the biggest coordination network on earth has no infrastructure.</p>
 
     <p class="lead">When Lt. General Russel Honor&eacute; arrived at the New Orleans Convention Center on the fourth day after Hurricane Katrina, he found thirty thousand people stranded in hundred-degree heat, and he found soldiers and police pointing weapons at them. A mother named Alexandra Wheeler was holding her dehydrated five-month-old twins in terror. Honor&eacute;&mdash;born during a hurricane himself, raised on a subsistence farm in Lakeland, Louisiana, one of twelve children&mdash;barked a command that would define the entire federal response:</p>
 
@@ -248,5 +319,15 @@
     <a href="https://sosconnect.org">sosconnect.org</a>
 </div>
 
+<script>
+(function() {
+    var bar = document.getElementById('progressBar');
+    window.addEventListener('scroll', function() {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        var pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+        bar.style.width = pct + '%';
+    }, { passive: true });
+})();
+</script>
 </body>
 </html>
