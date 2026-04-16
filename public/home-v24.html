@@ -516,6 +516,7 @@
     h2 { font-size: 28px; }
     .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
+    .crisis-points { grid-template-columns: 1fr !important; gap: 20px !important; }
     .stat-card .num { font-size: 44px; }
     .eco-grid { grid-template-columns: 1fr; }
     .coord-grid { grid-template-columns: 1fr; }
@@ -690,9 +691,20 @@
     <h2 class="gs-fade">The Great Aid Recession</h2>
     <div class="accent-line gs-fade"></div>
 
-    <p class="body-lg gs-fade" style="margin-top: 32px; font-weight: 300; color: #3d4852;">
-      For the first time in modern history, the global humanitarian system is contracting — not because disasters are slowing down, but because funding, infrastructure, and political will are collapsing simultaneously. FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Global humanitarian funding dropped 40% in a single year<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> — the largest shortfall ever recorded.
-    </p>
+    <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" class="gs-fade crisis-points">
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FUNDING COLLAPSED</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> The largest shortfall ever recorded.</p>
+      </div>
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FEMA IS RETREATING</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Non-lifesaving recovery defunded. Twenty states have sued to restart preparedness grants.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a></p>
+      </div>
+      <div>
+        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">DISASTERS ACCELERATING</p>
+        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">The safety net is contracting at the exact moment communities need it most.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -707,9 +719,11 @@
     <h2 class="gs-fade">When coordination fails, help scatters.</h2>
     <div class="accent-line gs-fade"></div>
 
-    <p class="body-lg gs-fade" style="margin-top: 32px; font-weight: 300; color: #3d4852;">
-      The help always shows up. After Hurricane Helene, FEMA's system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a> Search and rescue checked the same homes three times. Facebook became the missing persons database — not by design, but because nothing else worked. Volunteers converge on visible damage while isolated communities go unserved. This pattern repeats every disaster, everywhere.
-    </p>
+    <div style="margin-top: 32px;" class="gs-fade">
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">After Helene, FEMA's resource system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a></p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Search and rescue checked the same homes three times. Others were never checked at all.</p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Facebook became the missing persons database — not by design, but because nothing else worked.</p>
+    </div>
 
     <div class="coord-grid" id="coordParallax">
       <div class="coord-block coord-fail gs-fade">
