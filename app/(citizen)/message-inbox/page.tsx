@@ -11,7 +11,7 @@ type Message = {
   direction: 'inbound' | 'outbound';
 };
 
-export default function TestInboxPage() {
+export default function MessageInboxPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [recipient, setRecipient] = useState('');
   const [messageText, setMessageText] = useState('');
@@ -19,7 +19,6 @@ export default function TestInboxPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch messages
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch('/api/textbubbles/messages');
@@ -32,14 +31,12 @@ export default function TestInboxPage() {
     }
   }, []);
 
-  // Poll for messages every 3 seconds
   useEffect(() => {
     fetchMessages();
     const interval = setInterval(fetchMessages, 3000);
     return () => clearInterval(interval);
   }, [fetchMessages]);
 
-  // Send message
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!recipient.trim() || !messageText.trim()) return;
@@ -63,7 +60,6 @@ export default function TestInboxPage() {
       if (data.success) {
         setSuccess(`Message sent to ${recipient}`);
         setMessageText('');
-        // Add sent message to local list
         setMessages((prev) => [
           ...prev,
           {
@@ -94,7 +90,6 @@ export default function TestInboxPage() {
           Send and receive iMessages via TextBubbles
         </p>
 
-        {/* Send Message Form */}
         <form onSubmit={sendMessage} className="mb-8 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -129,7 +124,6 @@ export default function TestInboxPage() {
           </button>
         </form>
 
-        {/* Status Messages */}
         {error && (
           <div className="mb-4 p-4 rounded-lg bg-red-900/50 border border-red-700 text-red-200">
             {error}
@@ -141,7 +135,6 @@ export default function TestInboxPage() {
           </div>
         )}
 
-        {/* Messages List */}
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Messages</h2>
@@ -190,14 +183,13 @@ export default function TestInboxPage() {
           )}
         </div>
 
-        {/* Webhook Info */}
         <div className="mt-12 p-4 rounded-lg bg-gray-800/50 border border-gray-700">
           <h3 className="font-medium mb-2">Webhook Configuration</h3>
           <p className="text-sm text-gray-400">
             Configure your TextBubbles webhook URL to:
           </p>
           <code className="block mt-2 p-2 bg-gray-900 rounded text-sm text-green-400">
-            https://your-domain.com/api/webhook/textbubbles
+            https://sosconnect.org/api/webhook/textbubbles
           </code>
         </div>
       </div>
