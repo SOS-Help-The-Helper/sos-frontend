@@ -5,143 +5,99 @@ import { messageStore } from '@/lib/textbubbles/message-store';
 
 const TEXTBUBBLES_WEBHOOK_SECRET = process.env.TEXTBUBBLES_WEBHOOK_SECRET;
 const TEXTBUBBLES_API_KEY = process.env.TEXTBUBBLES_API_KEY;
-const OPENCLAW_GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://159.203.70.230:18789';
-const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN;
+const PROXY_URL = 'http://159.203.70.230:3847';
 
-function verifyTextBubblesWebhook(request: NextRequest, rawBody: string): boolean {
+function verifyWebhook(request: NextRequest, rawBody: string): boolean {
   if (!TEXTBUBBLES_WEBHOOK_SECRET) return false;
   const signature = request.headers.get('x-signature');
   const timestamp = request.headers.get('x-timestamp');
   if (!signature || !timestamp) return false;
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
-  const signedPayload = `${timestamp}.${rawBody}`;
-  const expectedSignature = 'sha256=' + crypto
-    .createHmac('sha256', TEXTBUBBLES_WEBHOOK_SECRET)
-    .update(signedPayload)
-    .digest('hex');
+  const signed = `${timestamp}.${rawBody}`;
+  const expected = 'sha256=' + crypto.createHmac('sha256', TEXTBUBBLES_WEBHOOK_SECRET).update(signed).digest('hex');
   const a = Buffer.from(signature);
-  const b = Buffer.from(expectedSignature);
+  const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }
 
-function normalizePhoneNumber(phoneNumber: string): string {
-  if (!phoneNumber) return phoneNumber;
-  const trimmed = phoneNumber.trim();
-  const digitsOnly = trimmed.replace(/\D/g, '');
-  if (digitsOnly.length === 10) return `+1${digitsOnly}`;
-  if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) return `+${digitsOnly}`;
-  if (trimmed.startsWith('+')) return trimmed;
-  return `+${digitsOnly}`;
+function normalizePhone(p: string): string {
+  if (!p) return p;
+  const d = p.trim().replace(/\D/g, '');
+  if (d.length === 10) return `+1${d}`;
+  if (d.length === 11 && d.startsWith('1')) return `+${d}`;
+  return p.startsWith('+') ? p : `+${d}`;
 }
 
-async function sendTextBubblesReply(to: string, text: string) {
+async function sendReply(to: string, text: string) {
   if (!TEXTBUBBLES_API_KEY) return;
-  try {
-    await fetch('https://api.textbubbles.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TEXTBUBBLES_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ to, content: { text } }),
-    });
-  } catch (err) {
-    console.error('[TextBubbles] Failed to send reply:', err);
-  }
+  await fetch('https://api.textbubbles.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TEXTBUBBLES_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, content: { text } }),
+  });
 }
 
-async function routeToCitizenAgent(message: string, phoneNumber: string): Promise<string> {
-  if (!OPENCLAW_GATEWAY_TOKEN) return '';
+async function askCitizenAgent(message: string, phone: string): Promise<string> {
   try {
-    const resp = await fetch(`${OPENCLAW_GATEWAY_URL}/v1/responses`, {
+    const resp = await fetch(`${PROXY_URL}/citizen`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
-        'Content-Type': 'application/json',
-        'x-openclaw-agent-id': 'sos-citizen',
-        'x-openclaw-session-key': `agent:sos-citizen:sms:${phoneNumber}`,
-      },
-      body: JSON.stringify({
-        model: 'openclaw',
-        input: message,
-        user: phoneNumber,
-        stream: false,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sessionId: phone }),
     });
     const data = await resp.json() as any;
-    if (data.error) return '';
-    for (const item of data.output || []) {
-      if (item.type === 'message') {
-        for (const content of item.content || []) {
-          if (content.type === 'output_text') return content.text || '';
-        }
-      }
-    }
-    return '';
+    return data.response || '';
   } catch (err) {
-    console.error('[CitizenAgent] Failed:', err);
+    console.error('[CitizenAgent]', err);
     return '';
   }
 }
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
-
-  if (!verifyTextBubblesWebhook(request, rawBody)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!verifyWebhook(request, rawBody)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const event = JSON.parse(rawBody);
-    const eventType: string = event.type;
-    const eventData = event.data || {};
+  const event = JSON.parse(rawBody);
+  const eventType: string = event.type;
+  const eventData = event.data || {};
 
-    if (['message.queued', 'message.sent', 'message.delivered', 'message.read', 'message.failed'].includes(eventType)) {
-      return NextResponse.json({ success: true });
-    }
-
-    if (eventType === 'message.inbound') {
-      const messageText = eventData.text || '';
-      const tbMessageId = eventData.messageId || Date.now().toString();
-      const fanPhoneNumber = eventData.from || '';
-      const creatorPhoneNumber = eventData.to || '';
-      const normalizedFanPhone = normalizePhoneNumber(fanPhoneNumber.replace(/^sms:/, '').trim());
-      const normalizedCreatorPhone = normalizePhoneNumber(creatorPhoneNumber.replace(/^sms:/, '').trim());
-
-      messageStore.addMessage({
-        id: tbMessageId, from: normalizedFanPhone, to: normalizedCreatorPhone,
-        text: messageText, timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
-        direction: 'inbound', attachments: eventData.attachments,
-      });
-
-      // AWAIT the agent call — don't fire and forget
-      if (messageText.trim()) {
-        const agentReply = await routeToCitizenAgent(messageText, normalizedFanPhone);
-        if (agentReply) {
-          messageStore.addMessage({
-            id: `reply-${tbMessageId}`, from: normalizedCreatorPhone, to: normalizedFanPhone,
-            text: agentReply, timestamp: new Date(), direction: 'outbound',
-          });
-          await sendTextBubblesReply(normalizedFanPhone, agentReply);
-        }
-      }
-
-      return NextResponse.json({ success: true, message: 'Processed' });
-    }
-
+  if (eventType !== 'message.inbound') {
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ success: false }, { status: 200 });
   }
+
+  const text = eventData.text || '';
+  const from = normalizePhone((eventData.from || '').replace(/^sms:/, ''));
+  const to = normalizePhone((eventData.to || '').replace(/^sms:/, ''));
+
+  messageStore.addMessage({
+    id: eventData.messageId || Date.now().toString(),
+    from, to, text,
+    timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
+    direction: 'inbound',
+    attachments: eventData.attachments,
+  });
+
+  if (text.trim()) {
+    const reply = await askCitizenAgent(text, from);
+    if (reply) {
+      await sendReply(from, reply);
+      messageStore.addMessage({
+        id: `reply-${Date.now()}`, from: to, to: from, text: reply,
+        timestamp: new Date(), direction: 'outbound',
+      });
+    }
+  }
+
+  return NextResponse.json({ success: true });
 }
 
 export async function GET() {
   return NextResponse.json({
     success: true, status: 'active',
-    agentEnabled: !!OPENCLAW_GATEWAY_TOKEN,
+    agentEnabled: true,
     messagesReceived: messageStore.count(),
   });
 }
