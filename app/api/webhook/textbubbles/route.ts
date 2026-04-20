@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { messageStore } from '@/lib/textbubbles/message-store';
+import { logMessage, uploadMediaToS3 } from '@/lib/textbubbles/message-logger';
 
 const TEXTBUBBLES_WEBHOOK_SECRET = process.env.TEXTBUBBLES_WEBHOOK_SECRET;
 
@@ -116,7 +117,23 @@ export async function POST(request: NextRequest) {
 
       console.log(`[TextBubbles] Inbound message from ${normalizedFanPhone}: ${messageText}`);
 
-      // Store the message
+      // Process attachments - upload to S3
+      const tbAttachments: { guid: string; mimeType: string; filename: string; totalBytes: number; downloadUrl: string }[] = eventData.attachments || [];
+      const s3Keys: string[] = [];
+      const mediaUrls: string[] = [];
+
+      if (tbAttachments.length > 0) {
+        console.log(`[TextBubbles] Processing ${tbAttachments.length} attachment(s)`);
+        for (const att of tbAttachments) {
+          mediaUrls.push(att.downloadUrl);
+          const s3Result = await uploadMediaToS3(att.downloadUrl, att.mimeType, att.filename);
+          if (s3Result) {
+            s3Keys.push(s3Result.s3_key);
+          }
+        }
+      }
+
+      // Store the message in memory store
       messageStore.addMessage({
         id: tbMessageId,
         from: normalizedFanPhone,
@@ -125,6 +142,18 @@ export async function POST(request: NextRequest) {
         timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
         direction: 'inbound',
         attachments: eventData.attachments,
+      });
+
+      // Log inbound message to Supabase
+      logMessage({
+        direction: 'inbound',
+        from_number: normalizedFanPhone,
+        to_number: normalizedCreatorPhone,
+        message_text: messageText,
+        message_id: tbMessageId,
+        status: 'success',
+        media_urls: mediaUrls.length > 0 ? mediaUrls : undefined,
+        media_s3_keys: s3Keys.length > 0 ? s3Keys : undefined,
       });
 
       return NextResponse.json({

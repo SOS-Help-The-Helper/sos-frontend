@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logMessage } from '@/lib/textbubbles/message-logger';
 
 export const maxDuration = 60;
 
@@ -82,6 +83,17 @@ export async function POST(request: NextRequest) {
       const errorDetail = data.error?.message || data.message || 'Unknown error';
       console.error(`[TextBubbles] Send failed: ${errorDetail}`);
 
+      // Log failed outbound message
+      logMessage({
+        direction: 'outbound',
+        from_number: senderPhoneNumber,
+        to_number: normalizedRecipient,
+        message_text: text,
+        message_id: messageId,
+        status: 'error',
+        error_message: errorDetail,
+      });
+
       return NextResponse.json(
         {
           error: 'Failed to send iMessage via TextBubbles',
@@ -91,6 +103,16 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    // Log successful outbound message
+    logMessage({
+      direction: 'outbound',
+      from_number: senderPhoneNumber,
+      to_number: normalizedRecipient,
+      message_text: text,
+      message_id: messageId,
+      status: 'success',
+    });
 
     return NextResponse.json({
       success: true,
