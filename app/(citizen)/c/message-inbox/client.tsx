@@ -11,7 +11,7 @@ type Message = {
   direction: 'inbound' | 'outbound';
 };
 
-export default function MessageInboxPage() {
+export default function MessageInboxClient() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [recipient, setRecipient] = useState('');
   const [messageText, setMessageText] = useState('');
