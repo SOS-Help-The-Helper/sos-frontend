@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { messageStore } from '@/lib/textbubbles/message-store';
@@ -8,10 +9,7 @@ const OPENCLAW_GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://159.203
 const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN;
 
 function verifyTextBubblesWebhook(request: NextRequest, rawBody: string): boolean {
-  if (!TEXTBUBBLES_WEBHOOK_SECRET) {
-    console.error('TEXTBUBBLES_WEBHOOK_SECRET is not configured');
-    return false;
-  }
+  if (!TEXTBUBBLES_WEBHOOK_SECRET) return false;
   const signature = request.headers.get('x-signature');
   const timestamp = request.headers.get('x-timestamp');
   if (!signature || !timestamp) return false;
@@ -38,16 +36,10 @@ function normalizePhoneNumber(phoneNumber: string): string {
   return `+${digitsOnly}`;
 }
 
-/**
- * Send a message to the citizen via TextBubbles API
- */
 async function sendTextBubblesReply(to: string, text: string) {
-  if (!TEXTBUBBLES_API_KEY) {
-    console.error('TEXTBUBBLES_API_KEY not configured');
-    return;
-  }
+  if (!TEXTBUBBLES_API_KEY) return;
   try {
-    const resp = await fetch('https://api.textbubbles.com/v1/messages', {
+    await fetch('https://api.textbubbles.com/v1/messages', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${TEXTBUBBLES_API_KEY}`,
@@ -55,23 +47,13 @@ async function sendTextBubblesReply(to: string, text: string) {
       },
       body: JSON.stringify({ to, content: { text } }),
     });
-    const data = await resp.json();
-    console.log(`[TextBubbles] Reply sent to ${to}: ${data?.data?.id || 'unknown'}`);
   } catch (err) {
     console.error('[TextBubbles] Failed to send reply:', err);
   }
 }
 
-/**
- * Route message to the SOS citizen agent via OpenClaw gateway
- * Returns the agent's response text
- */
 async function routeToCitizenAgent(message: string, phoneNumber: string): Promise<string> {
-  if (!OPENCLAW_GATEWAY_TOKEN) {
-    console.error('OPENCLAW_GATEWAY_TOKEN not configured — cannot route to citizen agent');
-    return '';
-  }
-
+  if (!OPENCLAW_GATEWAY_TOKEN) return '';
   try {
     const resp = await fetch(`${OPENCLAW_GATEWAY_URL}/v1/responses`, {
       method: 'POST',
@@ -88,27 +70,18 @@ async function routeToCitizenAgent(message: string, phoneNumber: string): Promis
         stream: false,
       }),
     });
-
-    const data = await resp.json();
-
-    if (data.error) {
-      console.error('[CitizenAgent] Error:', data.error.message);
-      return '';
-    }
-
-    // Extract text response
+    const data = await resp.json() as any;
+    if (data.error) return '';
     for (const item of data.output || []) {
       if (item.type === 'message') {
         for (const content of item.content || []) {
-          if (content.type === 'output_text') {
-            return content.text || '';
-          }
+          if (content.type === 'output_text') return content.text || '';
         }
       }
     }
     return '';
   } catch (err) {
-    console.error('[CitizenAgent] Failed to route:', err);
+    console.error('[CitizenAgent] Failed:', err);
     return '';
   }
 }
@@ -117,7 +90,6 @@ export async function POST(request: NextRequest) {
   const rawBody = await request.text();
 
   if (!verifyTextBubblesWebhook(request, rawBody)) {
-    console.error('Invalid TextBubbles webhook signature');
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -126,73 +98,49 @@ export async function POST(request: NextRequest) {
     const eventType: string = event.type;
     const eventData = event.data || {};
 
-    console.log(`[TextBubbles Webhook] Event type: ${eventType}`);
-
-    // Handle delivery status events
     if (['message.queued', 'message.sent', 'message.delivered', 'message.read', 'message.failed'].includes(eventType)) {
-      return NextResponse.json({ success: true, message: 'Status update received' });
+      return NextResponse.json({ success: true });
     }
 
-    // Handle inbound messages
     if (eventType === 'message.inbound') {
       const messageText = eventData.text || '';
-      const tbMessageId = eventData.messageId || eventData.externalMessageId || Date.now().toString();
+      const tbMessageId = eventData.messageId || Date.now().toString();
       const fanPhoneNumber = eventData.from || '';
       const creatorPhoneNumber = eventData.to || '';
-
       const normalizedFanPhone = normalizePhoneNumber(fanPhoneNumber.replace(/^sms:/, '').trim());
       const normalizedCreatorPhone = normalizePhoneNumber(creatorPhoneNumber.replace(/^sms:/, '').trim());
 
-      console.log(`[TextBubbles] Inbound message from ${normalizedFanPhone}: ${messageText}`);
-
-      // Store the message
       messageStore.addMessage({
-        id: tbMessageId,
-        from: normalizedFanPhone,
-        to: normalizedCreatorPhone,
-        text: messageText,
-        timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
-        direction: 'inbound',
-        attachments: eventData.attachments,
+        id: tbMessageId, from: normalizedFanPhone, to: normalizedCreatorPhone,
+        text: messageText, timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
+        direction: 'inbound', attachments: eventData.attachments,
       });
 
-      // Route to citizen agent and reply
+      // AWAIT the agent call — don't fire and forget
       if (messageText.trim()) {
-        // Don't await — respond to webhook immediately, process async
-        routeToCitizenAgent(messageText, normalizedFanPhone)
-          .then((agentReply) => {
-            if (agentReply) {
-              // Store the outbound reply
-              messageStore.addMessage({
-                id: `reply-${tbMessageId}`,
-                from: normalizedCreatorPhone,
-                to: normalizedFanPhone,
-                text: agentReply,
-                timestamp: new Date(),
-                direction: 'outbound',
-              });
-              // Send via TextBubbles
-              return sendTextBubblesReply(normalizedFanPhone, agentReply);
-            }
-          })
-          .catch((err) => console.error('[CitizenAgent] Async error:', err));
+        const agentReply = await routeToCitizenAgent(messageText, normalizedFanPhone);
+        if (agentReply) {
+          messageStore.addMessage({
+            id: `reply-${tbMessageId}`, from: normalizedCreatorPhone, to: normalizedFanPhone,
+            text: agentReply, timestamp: new Date(), direction: 'outbound',
+          });
+          await sendTextBubblesReply(normalizedFanPhone, agentReply);
+        }
       }
 
-      return NextResponse.json({ success: true, message: 'Message received, routing to agent' });
+      return NextResponse.json({ success: true, message: 'Processed' });
     }
 
-    return NextResponse.json({ success: true, message: `Event type ${eventType} ignored` });
-
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('TextBubbles webhook error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to process webhook' }, { status: 200 });
+    console.error('Webhook error:', error);
+    return NextResponse.json({ success: false }, { status: 200 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    success: true,
-    status: 'active',
+    success: true, status: 'active',
     agentEnabled: !!OPENCLAW_GATEWAY_TOKEN,
     messagesReceived: messageStore.count(),
   });
