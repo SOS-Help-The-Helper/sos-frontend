@@ -637,6 +637,15 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
           });
           const result = await resp.json();
 
+          // Fire-and-forget: trigger matching for the new request
+          if (resp.ok && result.sos_id) {
+            fetch(`${SUPABASE_URL}/rest/v1/rpc/run_matching_v2`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ p_entity_type: 'request', p_entity_id: result.sos_id }),
+            }).catch(() => {});
+          }
+
           return JSON.stringify({
             __tool: 'submit_confirmation',
             __mapCommand: resp.ok ? { type: 'focus' as const, center: [lng, lat] as [number, number], zoom: 14 } : undefined,

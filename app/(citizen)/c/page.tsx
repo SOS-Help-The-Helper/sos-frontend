@@ -26,6 +26,9 @@ export default function CitizenMapPage() {
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
   const mapboxglRef = useRef<any>(null);
+  const requestFeaturesRef = useRef<any[]>([]);
+  const resourceFeaturesRef = useRef<any[]>([]);
+  const realtimeChannelRef = useRef<any>(null);
 
   const [lat, setLat] = useState(39);
   const [lng, setLng] = useState(-98);
@@ -157,6 +160,7 @@ export default function CitizenMapPage() {
           geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
           properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
         }));
+        requestFeaturesRef.current = requestFeatures;
 
         map.addSource('requests-source', {
           type: 'geojson',
@@ -190,6 +194,7 @@ export default function CitizenMapPage() {
             properties: { id: p.id, name: p.name, category: p.org_type, type: 'resource', source_type: 'partner' },
           })),
         ];
+        resourceFeaturesRef.current = resourceFeatures;
 
         map.addSource('resources-source', {
           type: 'geojson',
@@ -347,13 +352,46 @@ export default function CitizenMapPage() {
         } else if (dlLat && dlLng) {
           map.flyTo({ center: [parseFloat(dlLng), parseFloat(dlLat)], zoom: dlZoom ? parseFloat(dlZoom) : 13, duration: 1200 });
         }
+
+        // === REALTIME SUBSCRIPTIONS ===
+        const channel = supabase
+          .channel('map-realtime')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests', filter: 'map_visible=eq.true' }, (payload: any) => {
+            const r = payload.new;
+            if (!r.latitude || !r.longitude) return;
+            const feature = {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+              properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
+            };
+            requestFeaturesRef.current = [...requestFeaturesRef.current, feature];
+            const src = map.getSource('requests-source') as any;
+            if (src) src.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'resources', filter: 'map_visible=eq.true' }, (payload: any) => {
+            const r = payload.new;
+            if (!r.latitude || !r.longitude) return;
+            const feature = {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+              properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
+            };
+            resourceFeaturesRef.current = [...resourceFeaturesRef.current, feature];
+            const src = map.getSource('resources-source') as any;
+            if (src) src.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (_payload: any) => {
+            // For future use
+          })
+          .subscribe();
+        realtimeChannelRef.current = channel;
       });
 
       setLoading(false);
     };
 
     initMap();
-    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [isAdmin]);
 
   // Map command subscription (for search results)

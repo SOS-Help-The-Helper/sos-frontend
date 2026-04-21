@@ -79,6 +79,17 @@ export default function MatchPage() {
     else setLoading(false);
   }, [personId]);
 
+  useEffect(() => {
+    if (!personId) return;
+    const channel = supabase
+      .channel('matches-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, () => {
+        loadProposals();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [personId]);
+
   async function loadProposals() {
     setLoading(true);
     try {
