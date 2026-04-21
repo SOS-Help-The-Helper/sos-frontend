@@ -318,6 +318,35 @@ export default function CitizenMapPage() {
             map.setFilter(layer, ['!', ['has', 'point_count']]);
           }
         });
+
+        // === DEEP LINK: /c?pin=UUID&type=request|resource  or  /c?lat=X&lng=Y&zoom=Z ===
+        const dlParams = new URLSearchParams(window.location.search);
+        const dlPin = dlParams.get('pin');
+        const dlType = dlParams.get('type') || 'request';
+        const dlLat = dlParams.get('lat');
+        const dlLng = dlParams.get('lng');
+        const dlZoom = dlParams.get('zoom');
+
+        if (dlPin) {
+          // Find the pin in loaded data and select it
+          const allFeatures = [...(requests || []), ...(resources || [])];
+          const match = allFeatures.find((f: any) => f.id === dlPin);
+          if (match) {
+            const pinType = requests.some((r: any) => r.id === dlPin) ? 'request' : 'resource';
+            map.flyTo({ center: [match.longitude, match.latitude], zoom: 14, duration: 1200 });
+            setTimeout(() => {
+              setSelectedPin({
+                type: pinType, id: match.id,
+                properties: pinType === 'request'
+                  ? { id: match.id, category: match.category, urgency: match.urgency, status: match.status, details: match.public_display_text || match.details_sanitized, triage: match.triage_score, household: match.household_size, type: 'request', person_id: match.person_id }
+                  : { id: match.id, category: match.category, status: match.status, capacity: match.capacity_available, details: match.details_sanitized, type: 'resource', source_type: 'sos' }
+              });
+              setDetailMode('card');
+            }, 1300);
+          }
+        } else if (dlLat && dlLng) {
+          map.flyTo({ center: [parseFloat(dlLng), parseFloat(dlLat)], zoom: dlZoom ? parseFloat(dlZoom) : 13, duration: 1200 });
+        }
       });
 
       setLoading(false);
