@@ -672,96 +672,115 @@ export default function CitizenMapPage() {
 
       {/* Alert banner — disabled for now */}
 
-      {/* === Part 2: Detail Card === */}
+      {/* === Part 2: Detail Card — Centered circular popup === */}
       {selectedPin && !matchMode && (
-        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto bottom-[calc(56px+env(safe-area-inset-bottom,0px))]`}
-          style={{ maxHeight: '360px' }}>
-          <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 h-full flex flex-col overflow-hidden">
-            {/* Drag handle — swipe down to close */}
-            <button 
-              onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
-              className="py-2 flex justify-center flex-shrink-0 cursor-grab active:cursor-grabbing"
-            >
-              <div className="w-10 h-1 bg-white/30 rounded-full" />
-            </button>
+        <>
+          {/* Backdrop */}
+          <div className="absolute inset-0 z-25 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300"
+            onClick={() => { setSelectedPin(null); setDetailMode('card'); }} />
 
-            <div className="flex-1 px-5 overflow-hidden">
-              {/* Row 1: Type label + close */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                    selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
-                    selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-white'
-                  }`} />
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${
-                    selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
-                    selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
-                  }`}>
-                    SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
+          {/* Centered card */}
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
+            <div className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out]"
+              style={{
+                background: 'rgba(26, 56, 80, 0.92)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                border: `2px solid ${
+                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' :
+                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'
+                }`,
+                boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${
+                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' :
+                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.05)'
+                }`,
+              }}>
+
+              {/* Top accent ring */}
+              <div className="flex justify-center -mt-5">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{
+                    background: selectedPin.type === 'request' ? '#EF4E4B' : selectedPin.type === 'resource' ? '#89CFF0' : '#fff',
+                    boxShadow: `0 0 20px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.5)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.5)' : 'rgba(255,255,255,0.3)'}`,
+                  }}>
+                  <span className="text-white text-sm font-bold">
+                    {selectedPin.type === 'request' ? 'SOS' : selectedPin.type === 'resource' ? '✦' : '◉'}
                   </span>
                 </div>
-                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none p-1">✕</button>
               </div>
 
-              {/* Row 2: Summary text */}
-              <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-3">
-                {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
-              </p>
+              <div className="px-6 pt-3 pb-5">
+                {/* Close button */}
+                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
+                  className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors">✕</button>
 
-              {/* Row 3: Metadata — single row, consistent sizing */}
-              <div className="flex items-center gap-2 flex-wrap mb-4">
-                {p.category && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
-                    Category: {p.category.replace(/_/g, ' ')}
-                  </span>
-                )}
-                {selectedPin.type === 'request' && p.household && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">People: {p.household}</span>
-                )}
-                {selectedPin.type === 'request' && p.urgency && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">Urgency: {p.urgency}</span>
-                )}
-                {selectedPin.type === 'resource' && p.source_type && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
-                    {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
-                  </span>
-                )}
-                {selectedPin.type === 'resource' && p.capacity != null && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
-                )}
-              </div>
-            </div>
+                {/* Type label */}
+                <p className={`text-center text-[11px] font-bold uppercase tracking-[0.2em] mb-3 ${
+                  selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
+                  selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
+                }`}>
+                  SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
+                </p>
 
-            {/* Match button — locked to bottom, no scrolling past it */}
-            <div className="px-5 pb-3 pt-3 flex-shrink-0">
+                {/* Summary */}
+                <p className="text-center text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
+                  {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
+                </p>
+
+                {/* Metadata pills */}
+                <div className="flex items-center justify-center gap-2 flex-wrap mb-5">
+                  {p.category && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
+                      {p.category.replace(/_/g, ' ')}
+                    </span>
+                  )}
+                  {selectedPin.type === 'request' && p.household && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">👨‍👩‍👧‍👦 {p.household}</span>
+                  )}
+                  {selectedPin.type === 'request' && p.urgency && (
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
+                      p.urgency === 'critical' ? 'bg-red-500/20 text-red-300' :
+                      p.urgency === 'high' ? 'bg-orange-500/20 text-orange-300' :
+                      'bg-white/10 text-white/60'
+                    }`}>{p.urgency}</span>
+                  )}
+                  {selectedPin.type === 'resource' && p.source_type && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
+                      {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
+                    </span>
+                  )}
+                  {selectedPin.type === 'resource' && p.capacity != null && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
+                  )}
+                </div>
+
+                {/* Match button */}
                 <button onClick={() => {
                     const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
-                    // Pass structured match context with IDs
                     const matchContext = JSON.stringify({
-                      action: 'match', 
+                      action: 'match',
                       intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
-                      type: pinData.type,
-                      id: pinData.id,
-                      category: pinData.properties?.category,
-                      urgency: pinData.properties?.urgency,
-                      name: pinData.properties?.name,
-                      details: pinData.properties?.details?.substring(0, 100),
+                      type: pinData.type, id: pinData.id,
+                      category: pinData.properties?.category, urgency: pinData.properties?.urgency,
+                      name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
                     });
-                    setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext }));
-                    }, 500);
+                    setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
+                  className="w-full py-3 rounded-2xl text-white text-xs font-bold tracking-wide active:scale-[0.97] transition-transform"
+                  style={{
+                    background: selectedPin.type === 'request' ? '#EF4E4B' : '#89CFF0',
+                    boxShadow: `0 4px 20px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' : 'rgba(137,207,240,0.3)'}`,
+                  }}>
                   Match
                 </button>
-                <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')}
-                  className="hidden">
-                  {detailMode === 'card' ? 'Details →' : 'Collapse'}
-                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          <style>{`@keyframes cardPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }`}</style>
+        </>
       )}
 
       {/* Results slide-up */}
