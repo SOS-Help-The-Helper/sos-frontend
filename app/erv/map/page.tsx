@@ -91,7 +91,18 @@ function ErvMap() {
     return data.filter(r => r.latitude && r.longitude).map(r => ({
       type: 'Feature' as const,
       geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-      properties: { id: r.id, type: key === 'needs' ? 'need' : key === 'housed' ? 'housed' : key === 'rvs' ? 'rv' : 'driver', ...r },
+      properties: {
+        id: r.id,
+        type: key === 'needs' ? 'need' : key === 'housed' ? 'housed' : key === 'rvs' ? 'rv' : 'driver',
+        display_name: r.persons?.display_name || r.display_name || '',
+        status: r.status, priority_score: r.priority_score, household_size: r.household_size,
+        state: r.state, is_veteran: r.is_veteran, is_first_responder: r.is_first_responder,
+        is_fema_replacement: r.is_fema_replacement, source: r.source,
+        vehicle_type: r.vehicle_type, sleeps: r.sleeps, vin: r.vin,
+        year: r.year, make: r.make, model: r.model,
+        tow_capability: key === 'drivers' ? JSON.stringify(r.tow_capability || []) : undefined,
+        has_class_a: r.has_class_a,
+      },
     }));
   };
 
@@ -269,11 +280,12 @@ function ErvMap() {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: selectedPin.type === 'need' ? RED : selectedPin.type === 'housed' ? GREEN : selectedPin.type === 'rv' ? BLUE : WHITE }} />
                   <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: selectedPin.type === 'need' ? RED : selectedPin.type === 'housed' ? GREEN : selectedPin.type === 'rv' ? BLUE : WHITE }}>
-                    {selectedPin.type === 'need' ? 'Family Needing Help' : selectedPin.type === 'housed' ? 'Family Housed ✓' : selectedPin.type === 'rv' ? 'RV' : 'Volunteer Driver'}
+                    {selectedPin.type === 'need' ? 'Needs Help' : selectedPin.type === 'housed' ? 'Housed ✓' : selectedPin.type === 'rv' ? 'RV' : 'Driver'}
                   </span>
                 </div>
                 {(selectedPin.type === 'need' || selectedPin.type === 'housed') && (
                   <>
+                    {p.display_name && <p className="text-sm text-white/90 font-semibold mb-1">{p.display_name}</p>}
                     <div className="flex gap-1.5 flex-wrap mb-2">
                       {p.is_veteran && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">🎖️ Veteran</span>}
                       {p.is_first_responder && <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">🚒 First Responder</span>}
@@ -283,6 +295,20 @@ function ErvMap() {
                       {p.priority_score && <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${p.priority_score >= 80 ? 'bg-red-500/20 text-red-300' : p.priority_score >= 50 ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>Priority {p.priority_score}</span>}
                       {p.household_size && <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">👨‍👩‍👧‍👦 {p.household_size}</span>}
                       {p.state && p.state !== 'unknown' && <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">{p.state}</span>}
+                      <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${
+                        p.status === 'delivered' ? 'bg-green-500/20 text-green-300' :
+                        p.status === 'approved' ? 'bg-blue-500/20 text-blue-300' :
+                        p.status === 'on_hold' ? 'bg-yellow-500/20 text-yellow-300' :
+                        'bg-white/10 text-white/60'
+                      }`}>{
+                        p.status === 'pending' ? 'Waiting for match' :
+                        p.status === 'delivered' ? 'Housed ✓' :
+                        p.status === 'approved' ? 'Approved' :
+                        p.status === 'on_hold' ? 'On hold' :
+                        p.status === 'withdrew' ? 'Withdrew' :
+                        p.status === 'declined' ? 'Declined' :
+                        p.status || ''
+                      }</span>
                     </div>
                   </>
                 )}
