@@ -53,21 +53,27 @@ function ErvMap() {
   // Load data
   useEffect(() => {
     (async () => {
-      const [reqRes, fleetRes, driverRes] = await Promise.all([
-        ervQuery('request_summary'), ervQuery('fleet_status'), ervQuery('driver_status'),
-      ]);
-      const allReqs = reqRes?.data?.requests || [];
-      const needs = allReqs.filter((r: any) => r.status !== 'delivered');
-      const housed = allReqs.filter((r: any) => r.status === 'delivered');
-      const rvs = fleetRes?.data?.resources || [];
-      const drivers = Array.isArray(driverRes?.data) ? driverRes.data : [];
-      setAllData({ needs, housed, rvs, drivers });
-      setStats({
-        needs: needs.length, housed: housed.length, rvs: rvs.length, drivers: drivers.length,
-        people: reqRes?.data?.total_household_members || 0,
-        vets: reqRes?.data?.veteran_count || 0, fr: allReqs.filter((r: any) => r.is_first_responder).length,
-        fema: reqRes?.data?.fema_replacement_count || 0,
-      });
+      try {
+        console.log('[ERV Map] Fetching data...');
+        const [reqRes, fleetRes, driverRes] = await Promise.all([
+          ervQuery('request_summary'), ervQuery('fleet_status'), ervQuery('driver_status'),
+        ]);
+        console.log('[ERV Map] Requests:', reqRes?.data?.requests?.length, 'RVs:', fleetRes?.data?.resources?.length, 'Drivers:', driverRes?.data?.length);
+        const allReqs = reqRes?.data?.requests || [];
+        const needs = allReqs.filter((r: any) => r.status !== 'delivered');
+        const housed = allReqs.filter((r: any) => r.status === 'delivered');
+        const rvs = fleetRes?.data?.resources || [];
+        const drivers = Array.isArray(driverRes?.data) ? driverRes.data : [];
+        setAllData({ needs, housed, rvs, drivers });
+        setStats({
+          needs: needs.length, housed: housed.length, rvs: rvs.length, drivers: drivers.length,
+          people: reqRes?.data?.total_household_members || 0,
+          vets: reqRes?.data?.veteran_count || 0, fr: allReqs.filter((r: any) => r.is_first_responder).length,
+          fema: reqRes?.data?.fema_replacement_count || 0,
+        });
+      } catch (err) {
+        console.error('[ERV Map] Data fetch error:', err);
+      }
     })();
   }, []);
 
@@ -223,14 +229,15 @@ function ErvMap() {
   const p = selectedPin?.properties || {};
 
   // Bottom nav tab
-  const Tab = ({ layerKey, color, icon, label, count }: { layerKey: LayerKey; color: string; icon: string; label: string; count: number }) => {
+  const Tab = ({ layerKey, color, label, count }: { layerKey: LayerKey; color: string; label: string; count: number }) => {
     const active = activeLayers.has(layerKey);
     return (
       <button onClick={() => { toggleLayer(layerKey); setShowSubFilters(false); setActiveSubFilter(null); }}
-        className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors">
-        <div className="relative">
-          <span style={{ color: active ? color : 'rgba(255,255,255,0.25)', fontSize: 18 }}>{icon}</span>
-        </div>
+        className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all">
+        <div className="w-3 h-3 rounded-full transition-all" style={{
+          background: active ? color : 'rgba(255,255,255,0.15)',
+          boxShadow: active ? `0 0 8px ${color}60` : 'none',
+        }} />
         <span style={{ color: active ? color : 'rgba(255,255,255,0.3)' }} className="text-[10px] font-semibold">{label}</span>
         <span style={{ color: active ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)' }} className="text-[9px]">{count.toLocaleString()}</span>
       </button>
@@ -360,10 +367,10 @@ function ErvMap() {
       {/* Bottom Nav — same pattern as citizen portal */}
       <nav style={{ background: CARD_BG }} className="border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center h-16 max-w-lg mx-auto">
-          <Tab layerKey="needs" color={RED} icon="🔴" label="Needs" count={stats.needs} />
-          <Tab layerKey="housed" color={GREEN} icon="🟢" label="Housed" count={stats.housed} />
-          <Tab layerKey="rvs" color={BLUE} icon="🔵" label="RVs" count={stats.rvs} />
-          <Tab layerKey="drivers" color={WHITE} icon="⚪" label="Drivers" count={stats.drivers} />
+          <Tab layerKey="needs" color={RED} label="Needs" count={stats.needs} />
+          <Tab layerKey="housed" color={GREEN} label="Housed" count={stats.housed} />
+          <Tab layerKey="rvs" color={BLUE} label="RVs" count={stats.rvs} />
+          <Tab layerKey="drivers" color={WHITE} label="Drivers" count={stats.drivers} />
           {/* Filter toggle */}
           <button onClick={() => setShowSubFilters(s => !s)}
             className="flex flex-col items-center justify-center gap-0.5 w-14 h-full transition-colors"
