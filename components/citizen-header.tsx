@@ -16,9 +16,10 @@ interface CitizenHeaderProps {
   onAgentTap: () => void;
   locationName: string;
   status: string;
+  agentOpen?: boolean;
 }
 
-export function CitizenHeader({ onAgentTap, locationName, status }: CitizenHeaderProps) {
+export function CitizenHeader({ onAgentTap, locationName, status, agentOpen = false }: CitizenHeaderProps) {
   const resolved = STATUS_MAP[status] || STATUS_MAP['safe'];
 
   return (
@@ -28,13 +29,19 @@ export function CitizenHeader({ onAgentTap, locationName, status }: CitizenHeade
           0% { transform: scale(1); opacity: 0.6; }
           100% { transform: scale(2.5); opacity: 0; }
         }
+        @keyframes logo-tap {
+          0% { transform: scale(1); }
+          30% { transform: scale(1.3); }
+          60% { transform: scale(0.9); }
+          100% { transform: scale(0); opacity: 0; }
+        }
       ` }} />
       <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
-          {/* Left: logomark */}
+          {/* Left: logomark — hidden when agent is open */}
           <button
             onClick={onAgentTap}
-            className="relative h-9 w-9 flex items-center justify-center overflow-visible"
+            className={`relative h-9 w-9 flex items-center justify-center overflow-visible transition-all duration-300 ${agentOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'}`}
             aria-label="Open SOS Agent"
           >
             <span className="absolute inset-0 rounded-full border-2 border-[#EF4E4B]" style={{ animation: 'radar-ping 3s ease-out infinite' }} />

@@ -658,7 +658,7 @@ export default function CitizenMapPage() {
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
       {/* Header */}
-      <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName={locationName} status={status} />
+      <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName={locationName} status={status} agentOpen={sheetOpen} />
 
       {/* Full screen map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />

@@ -183,15 +183,17 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
 
         {/* Floating logomark — only in opening state */}
         {!hasMessages && !isLoading && !fullScreen && (
-          <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-10">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center"
+          <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 animate-[logoFloat_0.4s_ease-out]">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center"
               style={{
-                background: 'rgba(15,30,43,0.95)',
-                boxShadow: '0 0 20px rgba(239,78,75,0.3)',
-                border: '2px solid rgba(239,78,75,0.3)',
+                background: 'rgba(15,30,43,0.97)',
+                boxShadow: '0 0 30px rgba(239,78,75,0.35), 0 4px 20px rgba(0,0,0,0.4)',
+                border: '2px solid rgba(239,78,75,0.35)',
               }}>
-              <img src="/logomark-red.svg" alt="SOS" className="w-7 h-7" />
+              <img src="/logomark-red.svg" alt="SOS" className="w-8 h-8" />
             </div>
+            {/* Pulse ring behind logomark */}
+            <div className="absolute inset-0 rounded-full animate-ping" style={{ border: '1px solid rgba(239,78,75,0.2)', animationDuration: '2s' }} />
           </div>
         )}
 
@@ -292,6 +294,8 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
             <p className="mt-4 text-[10px] text-white/20">or type anything below</p>
           </div>
         )}
+
+        <style>{`@keyframes logoFloat { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.8); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }`}</style>
 
         {/* Input */}
         <div className="px-4 py-2.5 border-t border-white/10 flex-shrink-0">
