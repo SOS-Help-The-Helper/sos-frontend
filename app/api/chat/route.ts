@@ -1286,10 +1286,18 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
             }),
           });
 
+          // Different message based on what they matched with
+          const confirmMessage = recordType === 'request'
+            ? 'Match confirmed! The person in need will be notified that help is on the way.'
+            : recordType === 'resource'
+            ? 'Match confirmed! The resource provider will be connected with you shortly.'
+            : 'Match confirmed! You\'ll be connected shortly.';
+
           return JSON.stringify({
             __tool: 'match_confirmed',
             recordId,
-            message: 'Match confirmed! The person in need will be notified with your info.',
+            recordType,
+            message: confirmMessage,
           });
         },
       },

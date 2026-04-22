@@ -679,7 +679,7 @@ function PhoneInput({ data, onSelect }: { data: any; onSelect: (msg: string) => 
           onChange={(e) => { setPhone(e.target.value); setError(''); }}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder="(555) 123-4567"
-          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]"
+          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]"
         />
       </div>
       {error && <p className="text-[10px] text-red-400">{error}</p>}
@@ -806,25 +806,39 @@ function SOSConfirmationCard({ summary, type, details, onAction }: { summary: st
     onAction(`[SOS_CONFIRMED:${type}]`);
   }
 
+  // Context-aware labels
+  const isOffer = type === 'offer' || type === 'match';
+  const isReport = type === 'report';
+  const headerLabel = isOffer ? 'Confirm your offer' : isReport ? 'Confirm your report' : 'Confirm your SOS';
+  const buttonLabel = isOffer ? '🤝 Send Offer' : isReport ? '📍 Submit Report' : '⚡ Send SOS';
+  const sendingLabel = isOffer ? '🤝 Sending...' : isReport ? '📍 Submitting...' : '⚡ Sending...';
+  const doneLabel = isOffer ? 'Offer Sent!' : isReport ? 'Report Submitted!' : 'SOS Sent!';
+  const doneSubtext = isOffer ? 'The person in need will be notified.' : isReport ? 'Thank you — your report helps the community.' : 'We\'re connecting you with help now.';
+  const buttonColor = isOffer ? '#89CFF0' : '#EF4E4B';
+  const buttonHover = isOffer ? '#6fb8e0' : '#d94340';
+
   return (
     <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-      <p className="text-xs text-white/50 uppercase tracking-wider font-bold">Confirm your SOS</p>
+      <p className="text-xs text-white/50 uppercase tracking-wider font-bold">{headerLabel}</p>
       <p className="text-sm text-white leading-relaxed">{summary}</p>
       {sent ? (
         <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-3 text-center">
-          <p className="text-green-200 text-sm font-bold">✅ SOS Sent!</p>
-          <p className="text-green-200/60 text-[10px] mt-1">We're connecting you with help now.</p>
+          <p className="text-green-200 text-sm font-bold">✅ {doneLabel}</p>
+          <p className="text-green-200/60 text-[10px] mt-1">{doneSubtext}</p>
         </div>
       ) : (
         <button onClick={handleSend} disabled={animating}
-          className={`relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97] bg-[#EF4E4B] hover:bg-[#d94340] ${animating ? 'scale-[1.02]' : ''}`}>
+          className={`relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97] ${animating ? 'scale-[1.02]' : ''}`}
+          style={{ background: buttonColor }}
+          onMouseEnter={e => (e.target as HTMLElement).style.background = buttonHover}
+          onMouseLeave={e => (e.target as HTMLElement).style.background = buttonColor}>
           {animating && (
             <>
-              <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-ping opacity-30" />
-              <span className="absolute inset-0 rounded-xl bg-[#EF4E4B] animate-pulse opacity-50" />
+              <span className="absolute inset-0 rounded-xl animate-ping opacity-30" style={{ background: buttonColor }} />
+              <span className="absolute inset-0 rounded-xl animate-pulse opacity-50" style={{ background: buttonColor }} />
             </>
           )}
-          <span className="relative z-10">{animating ? '⚡ Sending...' : '⚡ Send SOS'}</span>
+          <span className="relative z-10">{animating ? sendingLabel : buttonLabel}</span>
         </button>
       )}
     </div>
