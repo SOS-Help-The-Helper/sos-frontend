@@ -681,39 +681,43 @@ export default function CitizenMapPage() {
 
           {/* Centered card */}
           <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
-            <div className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out]"
+            <div className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out] relative"
               style={{
                 background: 'rgba(26, 56, 80, 0.92)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: '24px',
-                border: `2px solid ${
-                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' :
-                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'
-                }`,
                 boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${
                   selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' :
                   selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.05)'
                 }`,
               }}>
 
-              {/* Top logomark */}
-              <div className="flex justify-center -mt-6">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center"
+              {/* Border that stops where logomark is — using pseudo-element via clip-path */}
+              <div className="absolute inset-0 rounded-[24px] pointer-events-none" style={{
+                border: `1.5px solid ${
+                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' :
+                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.3)' : 'rgba(255,255,255,0.15)'
+                }`,
+                mask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+                WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+              }} />
+
+              {/* Top logomark — floating above the card */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
                   style={{
-                    background: selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.1)',
+                    background: selectedPin.type === 'request' ? 'rgba(15,30,43,0.95)' : selectedPin.type === 'resource' ? 'rgba(15,30,43,0.95)' : 'rgba(15,30,43,0.95)',
                     boxShadow: `0 0 24px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
-                    border: `2px solid ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.3)' : 'rgba(255,255,255,0.15)'}`,
+                    border: `2px solid ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
                   }}>
-                  <img src="/logomark-red.svg" alt="SOS" className="w-7 h-7"
-                    style={{
-                      filter: selectedPin.type === 'resource' ? 'hue-rotate(190deg) saturate(1.5) brightness(1.3)' :
-                              selectedPin.type === 'report' ? 'brightness(10) saturate(0)' : 'none',
-                    }} />
+                  <img
+                    src={selectedPin.type === 'resource' ? '/logomark-blue.svg' : selectedPin.type === 'report' ? '/logomark-white.svg' : '/logomark-red.svg'}
+                    alt="SOS" className="w-8 h-8" />
                 </div>
               </div>
 
-              <div className="px-6 pt-3 pb-5">
+              <div className="px-6 pt-6 pb-5">
                 {/* Close button */}
                 <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
                   className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors">✕</button>
