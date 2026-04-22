@@ -7,10 +7,13 @@ const PUBLIC_PATHS = new Set([
   '/c',
   '/home-v25.html',
   '/join',
+  '/erv',
+  '/erv/map',
 ]);
 
 const PUBLIC_PREFIXES = [
   '/c/',           // citizen portal subpages
+  '/erv/',         // ERV public map
   '/_next/',       // Next.js assets
   '/api/',         // API routes
   '/logomark',     // brand assets
