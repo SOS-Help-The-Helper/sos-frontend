@@ -697,16 +697,19 @@ export default function CitizenMapPage() {
                 }`,
               }}>
 
-              {/* Top accent ring */}
-              <div className="flex justify-center -mt-5">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+              {/* Top logomark */}
+              <div className="flex justify-center -mt-6">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center"
                   style={{
-                    background: selectedPin.type === 'request' ? '#EF4E4B' : selectedPin.type === 'resource' ? '#89CFF0' : '#fff',
-                    boxShadow: `0 0 20px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.5)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.5)' : 'rgba(255,255,255,0.3)'}`,
+                    background: selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.1)',
+                    boxShadow: `0 0 24px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
+                    border: `2px solid ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.3)' : 'rgba(255,255,255,0.15)'}`,
                   }}>
-                  <span className="text-white text-sm font-bold">
-                    {selectedPin.type === 'request' ? 'SOS' : selectedPin.type === 'resource' ? '✦' : '◉'}
-                  </span>
+                  <img src="/logomark-red.svg" alt="SOS" className="w-7 h-7"
+                    style={{
+                      filter: selectedPin.type === 'resource' ? 'hue-rotate(190deg) saturate(1.5) brightness(1.3)' :
+                              selectedPin.type === 'report' ? 'brightness(10) saturate(0)' : 'none',
+                    }} />
                 </div>
               </div>
 
