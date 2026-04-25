@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 import { getReportingData } from '@/lib/report-queries';
-import { VendorReporting } from '@/components/vendor-reporting';
+// TODO: rewire to EF (Phase 4) — // import { VendorReporting } from '@/components/vendor-reporting'; // TODO: rewire to EF (Phase 4)
 import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
@@ -81,15 +81,15 @@ export default function Reporting() {
     a.click(); URL.revokeObjectURL(url);
   }
 
-  // Vendor-specific reporting
-  const isVendorView = effectiveOrgType === 'vendor';
-  if (isVendorView) {
-    return (
-      <DashboardShell title="Vendor Dashboard" subtitle="Jobs, revenue, and performance">
-        <VendorReporting vendorOrgId={effectiveOrgId!} />
-      </DashboardShell>
-    );
-  }
+  // Vendor-specific reporting — TODO: rewire to EF (Phase 4)
+  // const isVendorView = effectiveOrgType === 'vendor';
+  // if (isVendorView) {
+  //   return (
+  //     <DashboardShell title="Vendor Dashboard" subtitle="Jobs, revenue, and performance">
+{/* TODO: rewire */ /*   //       <VendorReporting vendorOrgId={effectiveOrgId!} /> */}
+  //     </DashboardShell>
+  //   );
+  // }
 
   if (loading) {
     return (

@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
-import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
+// TODO: rewire to EF (Phase 4) — // import { getVendorJobs, VendorJob } from '@/lib/vendor-queries'; // TODO: rewire to EF (Phase 4)
 import { BidForm } from '@/components/bid-form';
 import { AdminMatchView } from '@/components/admin-match-view';
 import { LayoutGrid } from 'lucide-react';
@@ -53,9 +53,9 @@ function Matching() {
   const [sortBy, setSortBy] = useState<'score' | 'date' | 'urgency'>('score');
   const [disasters, setDisasters] = useState<any[]>([]);
   const [disasterFilter, setDisasterFilter] = useState('all');
-  const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]);
+  // const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]); // TODO: rewire to EF (Phase 4)
   const [vendorSwipeIndex, setVendorSwipeIndex] = useState(0);
-  const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null);
+  // const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null); // TODO: rewire to EF (Phase 4)
 
   const { orgId, orgType, loading: authLoading } = useAuthContext();
   const { effectiveOrgId, effectiveOrgType } = useViewContext();

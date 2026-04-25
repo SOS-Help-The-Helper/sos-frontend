@@ -5,11 +5,11 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { DetailPopup } from '@/components/detail-popup';
-import { BidReview } from '@/components/bid-review';
-import { VendorManagement } from '@/components/vendor-management';
+// TODO: rewire to EF (Phase 4) — // import { BidReview } from '@/components/bid-review'; // TODO: rewire to EF (Phase 4)
+// TODO: rewire to EF (Phase 4) — // import { VendorManagement } from '@/components/vendor-management'; // TODO: rewire to EF (Phase 4)
 import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3, BarChart3 } from 'lucide-react';
-import { CapacityEditor } from '@/components/capacity-editor';
+// TODO: rewire to EF (Phase 4) — // import { CapacityEditor } from '@/components/capacity-editor'; // TODO: rewire to EF (Phase 4)
 
 type Tab = 'organizations' | 'requests' | 'resources' | 'capacity' | 'vendor_jobs';
 
@@ -100,13 +100,14 @@ export default function Management() {
   // Vendor-specific management
   const isVendorView = effectiveOrgType === 'vendor';
   const showVendorJobs = isAdmin || effectiveOrgType === 'vendor';
-  if (isVendorView) {
-    return (
-      <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
-        <VendorManagement vendorOrgId={effectiveOrgId!} />
-      </DashboardShell>
-    );
-  }
+  // TODO: rewire to EF (Phase 4)
+  // if (isVendorView) {
+  //   return (
+  //     <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
+{/* TODO: rewire */ /*   //       <VendorManagement vendorOrgId={effectiveOrgId!} /> */}
+  //     </DashboardShell>
+  //   );
+  // }
 
   if (loading) {
     return (
@@ -487,21 +488,21 @@ export default function Management() {
         </div>
       )}
 
-      {/* Bid Review Modal */}
-      {reviewJobId && (
-        <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} />
-      )}
+      {/* Bid Review Modal — TODO: rewire to EF (Phase 4) */}
+      {/* {reviewJobId && (
+{/* TODO: rewire */ /*         <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} /> */}
+      )} */}
 
-      {/* Capacity Editor Modal */}
-      {editingCapacity && (
-        <CapacityEditor
+      {/* Capacity Editor Modal — TODO: rewire to EF (Phase 4) */}
+      {/* {editingCapacity && (
+{/* TODO: rewire */ /*         <CapacityEditor */}
           resource={editingCapacity}
           onClose={() => setEditingCapacity(null)}
           onSaved={(updated) => {
             setResources(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
           }}
         />
-      )}
+      )} */}
 
       {/* Detail Popup */}
       {selectedItem && (

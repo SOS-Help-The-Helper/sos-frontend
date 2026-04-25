@@ -6,7 +6,7 @@ import { StatCard } from '@/components/stat-card';
 import { LineChart, HorizontalBars } from '@/components/charts';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
-import { getRevenueStats, type RevenueStats } from '@/lib/vendor-enhanced-queries';
+// TODO: rewire to EF (Phase 4) — import { getRevenueStats, type RevenueStats } from '@/lib/vendor-enhanced-queries';
 
 export default function RevenuePage() {
   const [stats, setStats] = useState<RevenueStats | null>(null);

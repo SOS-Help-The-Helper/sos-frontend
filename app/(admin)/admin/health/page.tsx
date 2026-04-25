@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AdminShell } from '@/components/admin-shell';
 import { supabase } from '@/lib/supabase-client';
-import { getHenryBrain } from '@/lib/henry-brain';
+// TODO: rewire to EF (Phase 4) — import { getHenryBrain } from '@/lib/henry-brain';
 
 interface DivisionCard {
   name: string;

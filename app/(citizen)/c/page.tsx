@@ -9,7 +9,7 @@ import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter
 import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { CitizenHeader } from '@/components/citizen-header';
-import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
+// TODO: rewire to EF (Phase 4) — import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
 import { setPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';

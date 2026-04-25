@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { submitBid, VendorJob } from '@/lib/vendor-queries';
+// TODO: rewire to EF (Phase 4) — import { submitBid, VendorJob } from '@/lib/vendor-queries';
 import { useAuthContext } from '@/lib/auth-context';
 import { DollarSign, Clock, FileText, Send, Check } from 'lucide-react';
 
