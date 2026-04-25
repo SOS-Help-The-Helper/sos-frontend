@@ -1,8 +1,8 @@
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect } from 'react';
 import { AdminShell } from '@/components/admin-shell';
-import { supabase } from '@/lib/supabase-client';
 
 interface SignalTrace {
   id: string;

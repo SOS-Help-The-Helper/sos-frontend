@@ -156,3 +156,62 @@ export async function loadMapFeatures(
     organizations: raw.organizations ?? [],
   };
 }
+
+// --- Generic read helpers (server-side via map-data EF or direct reads) ---
+// These replace direct supabase.from() calls in frontend pages.
+// Uses anon key + RLS (same security as before, but centralized).
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseRead = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
+
+// Scoped read-only queries (RLS-protected, anon key)
+export const db = {
+  from: (table: string) => supabaseRead.from(table),
+  // Convenience wrappers for common patterns
+  getMatches: async (filters: { person_id?: string; org_id?: string; status?: string; limit?: number }) => {
+    let q = supabaseRead.from('matches').select('*, requests(id, category, urgency, location_text, household_size), resources(id, category, org_id, capacity_available)');
+    if (filters.person_id) q = q.or(`requests.person_id.eq.${filters.person_id}`);
+    if (filters.org_id) q = q.eq('resource_org_id', filters.org_id);
+    if (filters.status) q = q.eq('status', filters.status);
+    q = q.order('created_at', { ascending: false }).limit(filters.limit || 50);
+    return q;
+  },
+  getRequests: async (filters: { org_id?: string; status?: string[]; limit?: number }) => {
+    let q = supabaseRead.from('requests').select('id, category, urgency, status, location_text, latitude, longitude, household_size, has_children, has_elderly, has_disabled, has_pets, taxonomy_code, created_at, priority_score');
+    if (filters.status) q = q.in('status', filters.status);
+    if (filters.org_id) q = q.eq('org_id', filters.org_id);
+    q = q.order('created_at', { ascending: false }).limit(filters.limit || 100);
+    return q;
+  },
+  getResources: async (filters: { org_id?: string; status?: string[]; limit?: number }) => {
+    let q = supabaseRead.from('resources').select('id, category, status, capacity_available, capacity_total, latitude, longitude, taxonomy_code, org_id, created_at');
+    if (filters.status) q = q.in('status', filters.status);
+    if (filters.org_id) q = q.eq('org_id', filters.org_id);
+    q = q.order('created_at', { ascending: false }).limit(filters.limit || 100);
+    return q;
+  },
+  getOrganizations: async (filters?: { status?: string }) => {
+    let q = supabaseRead.from('organizations').select('id, name, org_type, status, latitude, longitude');
+    if (filters?.status) q = q.eq('status', filters.status);
+    return q;
+  },
+  getPersonById: async (personId: string) => {
+    return supabaseRead.from('persons').select('id, display_name, sos_score, impact_score, community_score, readiness_score, score_data, phone_hash, created_at').eq('id', personId).single();
+  },
+  getCommunityMessages: async (filters?: { type?: string; limit?: number }) => {
+    let q = supabaseRead.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged, person_id');
+    if (filters?.type) q = q.eq('message_type', filters.type);
+    q = q.order('created_at', { ascending: false }).limit(filters?.limit || 100);
+    return q;
+  },
+  getReports: async (filters?: { status?: string; limit?: number }) => {
+    let q = supabaseRead.from('reports').select('id, category, severity, description, latitude, longitude, status, verification_status, created_at');
+    if (filters?.status) q = q.eq('status', filters.status);
+    q = q.order('created_at', { ascending: false }).limit(filters?.limit || 100);
+    return q;
+  },
+};

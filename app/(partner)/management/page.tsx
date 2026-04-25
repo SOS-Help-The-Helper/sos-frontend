@@ -1,4 +1,4 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,7 +8,6 @@ import { useViewContext } from '@/lib/view-context';
 import { DetailPopup } from '@/components/detail-popup';
 // TODO: rewire to EF (Phase 4) — // import { BidReview } from '@/components/bid-review'; // TODO: rewire to EF (Phase 4)
 // TODO: rewire to EF (Phase 4) — // import { VendorManagement } from '@/components/vendor-management'; // TODO: rewire to EF (Phase 4)
-import { supabase } from '@/lib/supabase-client';
 import { Pause, Play, X, Edit3, BarChart3 } from 'lucide-react';
 // TODO: rewire to EF (Phase 4) — // import { CapacityEditor } from '@/components/capacity-editor'; // TODO: rewire to EF (Phase 4)
 
@@ -72,9 +71,9 @@ export default function Management() {
       setOrgs(orgData.data || []);
 
       // Vendor jobs + bids
-      const { data: vjData } = await supabase.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
+      const { data: vjData } = await db.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
       setVendorJobs(vjData || []);
-      const { data: bidData } = await supabase.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, gouging_flagged, created_at').order('created_at', { ascending: false });
+      const { data: bidData } = await db.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, gouging_flagged, created_at').order('created_at', { ascending: false });
       setBids(bidData || []);
 
       setLoading(false);
@@ -88,7 +87,7 @@ export default function Management() {
   const statuses = [...new Set(items.map((i: any) => i.status))].filter(Boolean);
 
   async function updateStatus(table: string, id: string, newStatus: string) {
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', id);
+    const { error } = await db.from(table).update({ status: newStatus }).eq('id', id);
     if (!error) {
       if (table === 'requests') {
         setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));

@@ -1,9 +1,8 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
-import { supabase } from '@/lib/supabase-client';
 import { useViewContext } from '@/lib/view-context';
 import { useAuthContext } from '@/lib/auth-context';
 // TODO: rewire to lib/api.ts (Phase 3-5) — import { getMatchLines } from '@/lib/map-queries';
@@ -65,8 +64,8 @@ function MapContent() {
   // Load map data
   useEffect(() => {
     async function loadData() {
-      let reqQuery = supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source, person_id, household_size').not('latitude', 'is', null);
-      let resQuery = supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
+      let reqQuery = db.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source, person_id, household_size').not('latitude', 'is', null);
+      let resQuery = db.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
       // Coordination orgs see all network data; other orgs see only their own
       if (effectiveOrgId && effectiveOrgType !== 'coordination') {
         reqQuery = reqQuery.eq('org_id', effectiveOrgId);
@@ -74,7 +73,7 @@ function MapContent() {
       }
       const [reqData, resData, disData, lines] = await Promise.all([
         reqQuery, resQuery,
-        supabase.from('disasters').select('id, name, status'),
+        db.from('disasters').select('id, name, status'),
         getMatchLines(effectiveOrgId),
       ]);
       setRequests(reqData.data || []);

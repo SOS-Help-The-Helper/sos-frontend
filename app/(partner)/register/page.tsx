@@ -1,9 +1,8 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 
 type Step = 'basics' | 'location' | 'capabilities' | 'review' | 'submitted';
 
@@ -209,7 +208,7 @@ export default function RegisterPage() {
 
   async function handleSubmit() {
     setSaving(true);
-    const { error } = await supabase.from('organizations').insert({
+    const { error } = await db.from('organizations').insert({
       name: orgName,
       org_type: orgType,
       contact_name: contactName,

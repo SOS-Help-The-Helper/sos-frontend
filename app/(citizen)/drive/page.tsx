@@ -1,9 +1,8 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 const STATUS_PIPELINE = [
@@ -101,7 +100,7 @@ function DriverContent() {
     if (newStatus === 'picked_up') updates.picked_up_at = new Date().toISOString();
     if (newStatus === 'delivered') updates.delivered_at = new Date().toISOString();
 
-    await supabase.from('delivery_assignments').update(updates).eq('id', assignment.id);
+    await db.from('delivery_assignments').update(updates).eq('id', assignment.id);
     setAssignment(prev => prev ? { ...prev, ...updates } : null);
   }
 
@@ -115,7 +114,7 @@ function DriverContent() {
     await supabase.storage.from('delivery-photos').upload(fileName, file, { contentType: file.type });
     const { data: urlData } = supabase.storage.from('delivery-photos').getPublicUrl(fileName);
 
-    await supabase.from('delivery_assignments').update({ delivery_photo_url: urlData?.publicUrl }).eq('id', assignment.id);
+    await db.from('delivery_assignments').update({ delivery_photo_url: urlData?.publicUrl }).eq('id', assignment.id);
     setAssignment(prev => prev ? { ...prev, delivery_photo_url: urlData?.publicUrl || null } : null);
     setUploading(false);
   }
@@ -131,7 +130,7 @@ function DriverContent() {
     const { data: urlData } = supabase.storage.from('delivery-photos').getPublicUrl(fileName);
 
     const updatedDocs = [...(assignment.document_urls || []), urlData?.publicUrl].filter(Boolean);
-    await supabase.from('delivery_assignments').update({ document_urls: updatedDocs }).eq('id', assignment.id);
+    await db.from('delivery_assignments').update({ document_urls: updatedDocs }).eq('id', assignment.id);
     setAssignment(prev => prev ? { ...prev, document_urls: updatedDocs as string[] } : null);
     setUploading(false);
   }

@@ -1,11 +1,10 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { GovShell } from '@/components/gov-shell';
 // TODO: rewire to lib/api.ts (Phase 3-5) — import { getGovMapData, type MapLayer } from '@/lib/gov-queries';
-import { supabase } from '@/lib/supabase-client';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -27,7 +26,7 @@ export default function GovMap() {
   const markersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    supabase.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
+    db.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
   }, []);
 
   useEffect(() => {

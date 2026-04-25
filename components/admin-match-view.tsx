@@ -1,8 +1,7 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase-client';
 import { ArrowRight, Check, X } from 'lucide-react';
 
 interface AdminMatchViewProps {
@@ -18,7 +17,7 @@ export function AdminMatchView({ disasterFilter }: AdminMatchViewProps) {
 
   useEffect(() => {
     async function load() {
-      let reqQuery = supabase.from('requests')
+      let reqQuery = db.from('requests')
         .select('id, category, urgency, status, details_sanitized, triage_score, org_id, created_at')
         .in('status', ['active', 'open', 'pending', 'matched'])
         .order('triage_score', { ascending: false });
@@ -29,7 +28,7 @@ export function AdminMatchView({ disasterFilter }: AdminMatchViewProps) {
 
       const [reqData, orgData] = await Promise.all([
         reqQuery,
-        supabase.from('organizations').select('id, name, org_type, capabilities, trust_score').not('id', 'eq', 'sos-platform').order('name'),
+        db.from('organizations').select('id, name, org_type, capabilities, trust_score').not('id', 'eq', 'sos-platform').order('name'),
       ]);
 
       setRequests(reqData.data || []);
@@ -42,7 +41,7 @@ export function AdminMatchView({ disasterFilter }: AdminMatchViewProps) {
   async function assignMatch() {
     if (!selectedRequest || !selectedPartner) return;
     // Create a match record
-    const { error } = await supabase.from('matches').insert({
+    const { error } = await db.from('matches').insert({
       request_id: selectedRequest.id,
       resource_id: null, // Manual assignment — resource TBD
       disaster_id: disasterFilter !== 'all' ? disasterFilter : null,

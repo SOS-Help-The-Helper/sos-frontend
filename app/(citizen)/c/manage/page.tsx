@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
-import { supabase } from '@/lib/supabase-client';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { api } from '@/lib/api';
 import { getPersonId } from '@/lib/person-cookie';
@@ -52,9 +51,9 @@ export default function ManagePage() {
     const [scoreData, reqData, resData] = await Promise.all([
       getSOSScore(pid),
       // KEEP: needs dedicated EF
-      supabase.from('requests').select('id, category, details_sanitized, urgency, status, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
+      db.from('requests').select('id, category, details_sanitized, urgency, status, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
       // KEEP: needs dedicated EF
-      supabase.from('resources').select('id, category, details_sanitized, capacity_available, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
+      db.from('resources').select('id, category, details_sanitized, capacity_available, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
     ]);
     setScore(scoreData);
     setRequests(reqData.data || []);
@@ -113,7 +112,7 @@ export default function ManagePage() {
     setUpdatingId(id);
     setErrorId(null);
     // KEEP: needs dedicated EF
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', id);
+    const { error } = await db.from(table).update({ status: newStatus }).eq('id', id);
     setUpdatingId(null);
     if (error) {
       showError(id);
@@ -127,7 +126,7 @@ export default function ManagePage() {
     if (!editingRequest) return;
     setSaving(true);
     // KEEP: needs dedicated EF
-    const { error } = await supabase.from('requests').update({
+    const { error } = await db.from('requests').update({
       details_sanitized: editingRequest.details_sanitized,
       urgency: editingRequest.urgency,
       household_size: editingRequest.household_size,
@@ -146,7 +145,7 @@ export default function ManagePage() {
     if (!editingResource) return;
     setSaving(true);
     // KEEP: needs dedicated EF
-    const { error } = await supabase.from('resources').update({
+    const { error } = await db.from('resources').update({
       details_sanitized: editingResource.details_sanitized,
       capacity_available: editingResource.capacity_available,
     }).eq('id', editingResource.id);

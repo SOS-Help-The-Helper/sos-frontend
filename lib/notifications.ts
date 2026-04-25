@@ -1,11 +1,10 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 /**
  * Partner notification system.
  * Reads from partner_notifications table.
  * Realtime subscription on matches for live updates.
  */
 
-import { supabase } from '@/lib/supabase-client';
 
 export interface PartnerNotification {
   id: string;

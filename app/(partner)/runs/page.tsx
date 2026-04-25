@@ -1,9 +1,8 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
-import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 
@@ -60,8 +59,8 @@ export default function DeliveryRunsPage() {
     if (!currentOrgId) return;
     async function load() {
       const [{ data: runData }, { data: helperData }] = await Promise.all([
-        supabase.from('delivery_runs').select('*').eq('org_id', currentOrgId).order('created_at', { ascending: false }),
-        supabase.from('resources').select('id, person_id, category, details_sanitized').eq('source', 'citizen_offer').in('category', ['transportation', 'labor']).limit(50),
+        db.from('delivery_runs').select('*').eq('org_id', currentOrgId).order('created_at', { ascending: false }),
+        db.from('resources').select('id, person_id, category, details_sanitized').eq('source', 'citizen_offer').in('category', ['transportation', 'labor']).limit(50),
       ]);
       setRuns(runData || []);
       setHelpers(helperData || []);
@@ -75,7 +74,7 @@ export default function DeliveryRunsPage() {
     setSaving(true);
 
     // Create run
-    const { data: runData, error: runError } = await supabase.from('delivery_runs').insert({
+    const { data: runData, error: runError } = await db.from('delivery_runs').insert({
       name: runName,
       org_id: currentOrgId,
       status: 'planning',
@@ -100,7 +99,7 @@ export default function DeliveryRunsPage() {
       dropoff_notes: slot.dropoff_notes || null,
     }));
 
-    await supabase.from('delivery_assignments').insert(assignmentInserts);
+    await db.from('delivery_assignments').insert(assignmentInserts);
 
     setRuns(prev => [runData, ...prev]);
     setView('list');
@@ -113,7 +112,7 @@ export default function DeliveryRunsPage() {
 
   async function viewRunDetail(run: DeliveryRun) {
     setSelectedRun(run);
-    const { data } = await supabase.from('delivery_assignments').select('*').eq('run_id', run.id).order('slot_number');
+    const { data } = await db.from('delivery_assignments').select('*').eq('run_id', run.id).order('slot_number');
     setRunAssignments(data || []);
     setView('detail');
   }

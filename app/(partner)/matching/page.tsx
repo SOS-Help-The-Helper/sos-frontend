@@ -1,4 +1,4 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useEffect, useState, useRef, Suspense } from 'react';
@@ -11,7 +11,6 @@ import { ChainView } from '@/components/chain-view';
 import { MatchTimeline } from '@/components/match-timeline';
 // TODO: rewire to lib/api.ts (Phase 3-5) — import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
 // TODO: rewire to lib/api.ts (Phase 3-5) — import { getScopedMatches } from '@/lib/scoped-queries';
-import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
@@ -83,7 +82,7 @@ function Matching() {
       setSwipeIndex(0);
 
       // Load disasters
-      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      const { data: disData } = await db.from('disasters').select('id, name, status');
       setDisasters(disData || []);
 
       // Load vendor jobs if viewing as vendor

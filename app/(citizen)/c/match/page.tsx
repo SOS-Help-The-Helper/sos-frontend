@@ -1,4 +1,4 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +6,6 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 /**
@@ -96,8 +95,8 @@ export default function MatchPage() {
     try {
       // Step 1: Get my request IDs and resource IDs
       const [{ data: myRequests }, { data: myResources }] = await Promise.all([
-        supabase.from('requests').select('id').eq('person_id', personId!),
-        supabase.from('resources').select('id').eq('person_id', personId!),
+        db.from('requests').select('id').eq('person_id', personId!),
+        db.from('resources').select('id').eq('person_id', personId!),
       ]);
 
       const myRequestIds = (myRequests || []).map(r => r.id);

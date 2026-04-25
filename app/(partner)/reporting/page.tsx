@@ -1,4 +1,4 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,7 +6,6 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
 // TODO: rewire to lib/api.ts (Phase 3-5) — import { getReportingData } from '@/lib/report-queries';
 // TODO: rewire to EF (Phase 4) — // import { VendorReporting } from '@/components/vendor-reporting'; // TODO: rewire to EF (Phase 4)
-import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { LineChart, HorizontalBars, DonutChart } from '@/components/charts';
@@ -30,7 +29,7 @@ export default function Reporting() {
   useEffect(() => {
     async function load() {
       const reportData = await getReportingData(effectiveOrgId, disasterFilter !== 'all' ? disasterFilter : undefined);
-      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      const { data: disData } = await db.from('disasters').select('id, name, status');
       setDisasters(disData || []);
       setData(reportData);
 
@@ -57,7 +56,7 @@ export default function Reporting() {
   // CSV export
   function downloadCSV() {
     if (!data) return;
-    supabase.from('audit_log').insert({ action: 'partner_report_export', actor_type: 'partner', details: `CSV export: ${new Date().toISOString()}` }).then(() => {});
+    db.from('audit_log').insert({ action: 'partner_report_export', actor_type: 'partner', details: `CSV export: ${new Date().toISOString()}` }).then(() => {});
     const rows = [
       ['Partner Impact Report'],
       ['Generated', new Date().toISOString()],

@@ -1,3 +1,4 @@
+import { db } from '@/lib/api';
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -34,11 +35,11 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
     if (viewType === 'admin' || viewType === 'citizen') {
       // Admin/platform context — system-wide stats
       const [requests, matches, orgs, fulfilled, learnings] = await Promise.all([
-        supabase.from('requests').select('id', { count: 'exact', head: true }),
-        supabase.from('matches').select('id', { count: 'exact', head: true }),
-        supabase.from('organizations').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
-        supabase.from('system_learnings').select('pattern, confidence, domain').order('confidence', { ascending: false }).limit(5),
+        db.from('requests').select('id', { count: 'exact', head: true }),
+        db.from('matches').select('id', { count: 'exact', head: true }),
+        db.from('organizations').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        db.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
+        db.from('system_learnings').select('pattern, confidence, domain').order('confidence', { ascending: false }).limit(5),
       ]);
 
       lines.push(`[SYSTEM CONTEXT — Live data from Supabase]`);
@@ -55,7 +56,7 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
       }
 
       // Recent activity
-      const { data: recentMatches } = await supabase.from('matches')
+      const { data: recentMatches } = await db.from('matches')
         .select('id, match_score, match_summary_masked, status, created_at')
         .order('created_at', { ascending: false }).limit(5);
       
@@ -67,7 +68,7 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
       }
 
       // Active disasters
-      const { data: disasters } = await supabase.from('disasters')
+      const { data: disasters } = await db.from('disasters')
         .select('name, status, response_phase').eq('status', 'active');
       if (disasters?.length) {
         lines.push(`\nActive disasters:`);
@@ -81,11 +82,11 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
       const orgName = ORG_NAMES[orgId] || 'Partner';
       
       const [org, offers, matches, fulfilled] = await Promise.all([
-        supabase.from('organizations').select('name, org_type, capabilities, service_area_description, trust_score').eq('id', orgId).single(),
-        supabase.from('resources').select('id, category, description, capacity_available, status').eq('org_id', orgId).eq('status', 'active'),
-        supabase.from('matches').select('id, match_score, match_summary_masked, status, created_at, resource_id')
+        db.from('organizations').select('name, org_type, capabilities, service_area_description, trust_score').eq('id', orgId).single(),
+        db.from('resources').select('id, category, description, capacity_available, status').eq('org_id', orgId).eq('status', 'active'),
+        db.from('matches').select('id, match_score, match_summary_masked, status, created_at, resource_id')
           .order('created_at', { ascending: false }).limit(10),
-        supabase.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
+        db.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
       ]);
 
       // Get network members (if coordinator org)

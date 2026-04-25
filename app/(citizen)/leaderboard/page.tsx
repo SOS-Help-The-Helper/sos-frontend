@@ -1,9 +1,8 @@
-// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
+import { db } from '@/lib/api';
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 interface LeaderboardEntry {
@@ -44,10 +43,10 @@ export default function LeaderboardPage() {
         if (me) { setMyRank(me.rank); setMyScore(me.sos_score); }
         else {
           // Not in top 20 — get my score
-          const { data: myData } = await supabase.from('persons').select('sos_score').eq('id', personId).single();
+          const { data: myData } = await db.from('persons').select('sos_score').eq('id', personId).single();
           if (myData?.sos_score) {
             setMyScore(myData.sos_score);
-            const { count } = await supabase.from('persons').select('id', { count: 'exact', head: true }).gt('sos_score', myData.sos_score);
+            const { count } = await db.from('persons').select('id', { count: 'exact', head: true }).gt('sos_score', myData.sos_score);
             setMyRank((count || 0) + 1);
           }
         }
