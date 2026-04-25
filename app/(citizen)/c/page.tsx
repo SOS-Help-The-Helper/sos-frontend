@@ -128,39 +128,49 @@ export default function CitizenMapPage() {
 
       map.on('load', async () => {
         // Load data INSIDE map.on('load') so we don't miss the event
-        let alertData: Alert[] = [], partners: any[] = [];
-        let requests: any[] = [], resources: any[] = [], reports: any[] = [];
+        let alertData: Alert[] = [];
+        let requestFeatures: any[] = [], resourceFeatures: any[] = [], reportFeatures: any[] = [];
         try {
           if (isAdmin) {
-            alertData = DEMO_ALERTS; partners = DEMO_PARTNERS;
+            alertData = DEMO_ALERTS;
+            resourceFeatures = (DEMO_PARTNERS as any[]).filter((p: any) => p.latitude && p.longitude).map((p: any) => ({
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
+              properties: { id: p.id, name: p.name, category: p.org_type, type: 'resource', source_type: 'partner' },
+            }));
           } else {
-            const [a, p] = await Promise.all([
+            const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const [a, mapResp] = await Promise.all([
               getAlerts(lat, lng),
-              // TODO: migrate to dedicated map-data EF
-              supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
+              fetch(`${API_BASE}/functions/v1/map-data?lat=${lat}&lng=${lng}&radius=100`, { headers: { 'Authorization': `Bearer ${API_KEY}` } }),
             ]);
-            alertData = a; partners = (p as any).data || [];
+            alertData = a;
+            const mapData = await mapResp.json();
+            requestFeatures = (mapData.requests || []).map((f: any) => ({
+              ...f,
+              properties: { ...f.properties, details: f.properties.text, type: 'request' },
+            }));
+            resourceFeatures = [
+              ...(mapData.resources || []).map((f: any) => ({
+                ...f,
+                properties: { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' },
+              })),
+              ...(mapData.organizations || []).map((f: any) => ({
+                ...f,
+                properties: { ...f.properties, type: 'resource', source_type: 'partner' },
+              })),
+            ];
+            reportFeatures = (mapData.reports || []).map((f: any) => ({
+              ...f,
+              properties: { ...f.properties, description: f.properties.text, type: 'report' },
+            }));
           }
           setAlerts(alertData);
-
-          // TODO: migrate to dedicated map-data EF
-          const [reqResult, resResult, repResult] = await Promise.all([
-            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
-            supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).eq('map_visible', true).limit(500),
-            supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
-          ]);
-          requests = reqResult.data || [];
-          resources = resResult.data || [];
-          reports = repResult.data || [];
         } catch (err) {
           console.error('Map data load error:', err);
         }
         // === REQUESTS SOURCE (red) ===
-        const requestFeatures = (requests || []).filter(r => r.latitude && r.longitude).map(r => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
-        }));
         requestFeaturesRef.current = requestFeatures;
 
         map.addSource('requests-source', {
@@ -183,18 +193,6 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === RESOURCES SOURCE (blue) ===
-        const resourceFeatures = [
-          ...(resources || []).filter(r => r.latitude && r.longitude).map(r => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-            properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
-          })),
-          ...partners.filter(p => p.latitude && p.longitude).map(p => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
-            properties: { id: p.id, name: p.name, category: p.org_type, type: 'resource', source_type: 'partner' },
-          })),
-        ];
         resourceFeaturesRef.current = resourceFeatures;
 
         map.addSource('resources-source', {
@@ -213,11 +211,6 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === REPORTS SOURCE (white) ===
-        const reportFeatures = (reports || []).filter(r => r.latitude && r.longitude && !r.flagged).map(r => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, description: r.message_text, created_at: r.created_at, type: 'report' },
-        }));
 
         map.addSource('reports-source', {
           type: 'geojson',
@@ -334,19 +327,15 @@ export default function CitizenMapPage() {
         const dlZoom = dlParams.get('zoom');
 
         if (dlPin) {
-          // Find the pin in loaded data and select it
-          const allFeatures = [...(requests || []), ...(resources || [])];
-          const match = allFeatures.find((f: any) => f.id === dlPin);
+          // Find the pin in loaded GeoJSON features and select it
+          const allFeatures = [...requestFeatures, ...resourceFeatures];
+          const match = allFeatures.find((f: any) => f.properties?.id === dlPin);
           if (match) {
-            const pinType = requests.some((r: any) => r.id === dlPin) ? 'request' : 'resource';
-            map.flyTo({ center: [match.longitude, match.latitude], zoom: 14, duration: 1200 });
+            const pinType: 'request' | 'resource' = match.properties.type === 'request' ? 'request' : 'resource';
+            const coords = match.geometry.coordinates;
+            map.flyTo({ center: [coords[0], coords[1]], zoom: 14, duration: 1200 });
             setTimeout(() => {
-              setSelectedPin({
-                type: pinType, id: match.id,
-                properties: pinType === 'request'
-                  ? { id: match.id, category: match.category, urgency: match.urgency, status: match.status, details: match.public_display_text || match.details_sanitized, triage: match.triage_score, household: match.household_size, type: 'request', person_id: match.person_id }
-                  : { id: match.id, category: match.category, status: match.status, capacity: match.capacity_available, details: match.details_sanitized, type: 'resource', source_type: 'sos' }
-              });
+              setSelectedPin({ type: pinType, id: match.properties.id, properties: match.properties });
               setDetailMode('card');
             }, 1300);
           }
