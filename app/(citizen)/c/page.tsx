@@ -9,7 +9,6 @@ import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter
 import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { CitizenHeader } from '@/components/citizen-header';
-// TODO: rewire to EF (Phase 4) — import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
 import { setPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -137,12 +136,14 @@ export default function CitizenMapPage() {
           } else {
             const [a, p] = await Promise.all([
               getAlerts(lat, lng),
+              // TODO: migrate to dedicated map-data EF
               supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
             ]);
             alertData = a; partners = (p as any).data || [];
           }
           setAlerts(alertData);
 
+          // TODO: migrate to dedicated map-data EF
           const [reqResult, resResult, repResult] = await Promise.all([
             supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
             supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).eq('map_visible', true).limit(500),
