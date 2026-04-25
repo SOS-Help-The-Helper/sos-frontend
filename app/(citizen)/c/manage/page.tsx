@@ -6,6 +6,7 @@ import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
 import { supabase } from '@/lib/supabase-client';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
+import { api } from '@/lib/api';
 import { getPersonId } from '@/lib/person-cookie';
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -50,7 +51,9 @@ export default function ManagePage() {
   const loadData = useCallback(async (pid: string) => {
     const [scoreData, reqData, resData] = await Promise.all([
       getSOSScore(pid),
+      // KEEP: needs dedicated EF
       supabase.from('requests').select('id, category, details_sanitized, urgency, status, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
+      // KEEP: needs dedicated EF
       supabase.from('resources').select('id, category, details_sanitized, capacity_available, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
     ]);
     setScore(scoreData);
@@ -59,30 +62,15 @@ export default function ManagePage() {
 
     const requestIds = (reqData.data || []).map((r: any) => r.id);
     const resourceIds = (resData.data || []).map((r: any) => r.id);
-    const matchSelect = 'id, request_id, resource_id, status, match_score, created_at, requests(category, details_sanitized, urgency), resources(category, details_sanitized, organizations(name))';
 
     let requestMatches: any[] = [];
     if (requestIds.length > 0) {
-      const { data } = await supabase
-        .from('matches')
-        .select(matchSelect)
-        .in('request_id', requestIds)
-        .not('status', 'in', '("cancelled","expired")')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      requestMatches = data || [];
+      requestMatches = (await api.queryMatches({ request_ids: requestIds, status_exclude: ['cancelled', 'expired'] }) as any[]) || [];
     }
 
     let resourceMatches: any[] = [];
     if (resourceIds.length > 0) {
-      const { data } = await supabase
-        .from('matches')
-        .select(matchSelect)
-        .in('resource_id', resourceIds)
-        .not('status', 'in', '("cancelled","expired")')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      resourceMatches = data || [];
+      resourceMatches = (await api.queryMatches({ resource_ids: resourceIds, status_exclude: ['cancelled', 'expired'] }) as any[]) || [];
     }
 
     const allMatches = [...requestMatches, ...resourceMatches];
@@ -124,6 +112,7 @@ export default function ManagePage() {
   async function updateStatus(table: 'requests' | 'resources', id: string, newStatus: string) {
     setUpdatingId(id);
     setErrorId(null);
+    // KEEP: needs dedicated EF
     const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', id);
     setUpdatingId(null);
     if (error) {
@@ -137,6 +126,7 @@ export default function ManagePage() {
   async function saveRequestEdit() {
     if (!editingRequest) return;
     setSaving(true);
+    // KEEP: needs dedicated EF
     const { error } = await supabase.from('requests').update({
       details_sanitized: editingRequest.details_sanitized,
       urgency: editingRequest.urgency,
@@ -155,6 +145,7 @@ export default function ManagePage() {
   async function saveResourceEdit() {
     if (!editingResource) return;
     setSaving(true);
+    // KEEP: needs dedicated EF
     const { error } = await supabase.from('resources').update({
       details_sanitized: editingResource.details_sanitized,
       capacity_available: editingResource.capacity_available,

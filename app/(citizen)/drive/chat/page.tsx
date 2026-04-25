@@ -1,3 +1,4 @@
+// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';

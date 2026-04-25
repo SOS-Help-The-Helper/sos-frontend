@@ -3,19 +3,19 @@
  * Prepended as system context so the agent knows their situation.
  */
 
-import { supabase } from './supabase-client';
+import { api } from './api';
 
 export async function getPersonContext(personId: string): Promise<string | null> {
-  const { data: soses } = await supabase
-    .from('soses')
-    .select('id, title, status, urgency')
-    .eq('person_id', personId)
-    .in('status', ['active'])
-    .limit(5);
+  const data = await api.ervQuery('soses', {
+    person_id: personId,
+    statuses: ['active'],
+    limit: 5,
+  }) as any;
+  const soses = data?.soses ?? (Array.isArray(data) ? data : []);
 
   if (!soses || soses.length === 0) return null;
 
-  const lines = soses.map(s =>
+  const lines = soses.map((s: any) =>
     `- SOS ${s.id.slice(0, 8)}: ${s.title || 'Untitled'} (${s.status}, ${s.urgency || 'standard'})`
   );
 

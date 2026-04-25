@@ -1,3 +1,4 @@
+// TODO(Phase3-5): migrate supabase.from() calls below to lib/api.ts EF calls
 /**
  * Map views CRUD — org-scoped saved map tabs.
  * Each partner can save custom map views with viewport, layers, pins.

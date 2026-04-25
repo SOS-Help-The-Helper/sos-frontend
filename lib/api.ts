@@ -130,6 +130,9 @@ export const api = {
   // Notifications (replaces lib/notifications.ts direct DB queries)
   getNotifications: (orgId: string) =>
     efCall('get-notifications', { org_id: orgId }, { method: 'GET' }),
+
+  // Raw EF caller — use for one-off queries until a named wrapper is added
+  efCall,
 };
 
 // ---------------------------------------------------------------------------

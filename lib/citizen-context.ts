@@ -3,7 +3,7 @@
  * Reads from person record, active disasters, and location.
  */
 
-import { supabase } from '@/lib/supabase-client';
+import { api } from '@/lib/api';
 
 export type CitizenMode = 'peacetime' | 'watch' | 'active' | 'recovery';
 
@@ -39,14 +39,12 @@ export interface CitizenState {
 
 export async function getCitizenState(personId?: string): Promise<CitizenState> {
   // Check for active disasters
-  const { data: disasters } = await supabase
-    .from('disasters')
-    .select('id, name, status, disaster_type, created_at')
-    .in('status', ['active', 'watch', 'recovery'])
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  const disaster = disasters?.[0] || null;
+  const disasterData = await api.ervQuery('disasters', {
+    statuses: ['active', 'watch', 'recovery'],
+    limit: 1,
+  }) as any;
+  const disasters: ActiveDisaster[] = disasterData?.disasters ?? (Array.isArray(disasterData) ? disasterData : []);
+  const disaster = disasters[0] || null;
 
   // Determine mode from disaster status
   let mode: CitizenMode = 'peacetime';
@@ -63,35 +61,28 @@ export async function getCitizenState(personId?: string): Promise<CitizenState> 
   let hasOfferedHelp = false;
 
   if (personId) {
-    const { data: personData } = await supabase
-      .from('persons')
-      .select('*')
-      .eq('id', personId)
-      .single();
-    person = personData;
+    const personData = await api.ervQuery('person', { person_id: personId }) as any;
+    person = personData?.person ?? personData ?? null;
 
-    // Count active requests
-    const { count: reqCount } = await supabase
-      .from('requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('person_id', personId)
-      .in('status', ['open', 'matched']);
-    activeRequestCount = reqCount || 0;
+    const reqData = await api.queryMatches({
+      person_id: personId,
+      statuses: ['open', 'matched'],
+      count: true,
+    }) as any;
+    activeRequestCount = reqData?.count || 0;
 
-    // Count active matches
-    const { count: matchCount } = await supabase
-      .from('matches')
-      .select('id', { count: 'exact', head: true })
-      .eq('person_id', personId)
-      .in('status', ['proposed', 'connected']);
-    activeMatchCount = matchCount || 0;
+    const matchData = await api.queryMatches({
+      person_id: personId,
+      statuses: ['proposed', 'connected'],
+      count: true,
+    }) as any;
+    activeMatchCount = matchData?.count || 0;
 
-    // Check if they've offered resources
-    const { count: offerCount } = await supabase
-      .from('resources')
-      .select('id', { count: 'exact', head: true })
-      .eq('person_id', personId);
-    hasOfferedHelp = (offerCount || 0) > 0;
+    const offerData = await api.queryInventory({
+      person_id: personId,
+      count: true,
+    }) as any;
+    hasOfferedHelp = (offerData?.count || 0) > 0;
   }
 
   return { mode, person, disaster, activeRequestCount, activeMatchCount, hasOfferedHelp };
