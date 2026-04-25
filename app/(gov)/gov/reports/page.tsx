@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { GovShell } from '@/components/gov-shell';
-import { getSitrepSummary, type SitrepSummary } from '@/lib/gov-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSitrepSummary, type SitrepSummary } from '@/lib/gov-queries';
 import { supabase } from '@/lib/supabase-client';
 
 export default function GovReports() {

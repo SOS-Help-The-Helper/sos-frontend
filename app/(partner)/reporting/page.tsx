@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
-import { getReportingData } from '@/lib/report-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getReportingData } from '@/lib/report-queries';
 // TODO: rewire to EF (Phase 4) — // import { VendorReporting } from '@/components/vendor-reporting'; // TODO: rewire to EF (Phase 4)
 import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { LineChart, HorizontalBars, DonutChart } from '@/components/charts';
 import { ImpactCertificate } from '@/components/impact-certificate';
-import { getResponseTimeTrend, getCategoryBreakdown, getCommunityImpact, getPlatformComparison, type ResponseTimeTrend, type CategoryBreakdown, type CommunityImpact, type PlatformComparison } from '@/lib/partner-report-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getResponseTimeTrend, getCategoryBreakdown, getCommunityImpact, getPlatformComparison, type ResponseTimeTrend, type CategoryBreakdown, type CommunityImpact, type PlatformComparison } from '@/lib/partner-report-queries';
 
 export default function Reporting() {
   const [data, setData] = useState<any>(null);

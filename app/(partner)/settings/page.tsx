@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
-import { getSystemConfig } from '@/lib/org-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSystemConfig } from '@/lib/org-queries';
 import { useAuthContext } from '@/lib/auth-context';
 import { getNotificationPreferences, saveNotificationPreferences, type NotificationPreferences } from '@/lib/notifications';
 

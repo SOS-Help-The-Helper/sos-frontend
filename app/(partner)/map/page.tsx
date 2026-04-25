@@ -5,7 +5,7 @@ import { DashboardShell } from '@/components/dashboard-shell';
 import { supabase } from '@/lib/supabase-client';
 import { useViewContext } from '@/lib/view-context';
 import { useAuthContext } from '@/lib/auth-context';
-import { getMatchLines } from '@/lib/map-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getMatchLines } from '@/lib/map-queries';
 import { getMapViews, createMapView, updateMapView, deleteMapView, updateMapViewFilters, type MapView } from '@/lib/map-views';
 import { MapPin, Link2, Plus, X, Save, GripVertical } from 'lucide-react';
 import { PersonaToggle, usePersonas } from '@/components/partner/persona-toggle';

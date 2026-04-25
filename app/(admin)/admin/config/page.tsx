@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminShell } from '@/components/admin-shell';
-import { getSystemConfig } from '@/lib/org-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSystemConfig } from '@/lib/org-queries';
 import { NervousSystem } from '@/components/nervous-system';
 
 export default function AdminConfigPage() {

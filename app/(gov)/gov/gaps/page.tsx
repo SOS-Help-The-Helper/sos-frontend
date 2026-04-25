@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { GovShell } from '@/components/gov-shell';
-import { getGapAnalysis, type GapAnalysis } from '@/lib/gov-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getGapAnalysis, type GapAnalysis } from '@/lib/gov-queries';
 import { supabase } from '@/lib/supabase-client';
 
 const SEVERITY_BADGES: Record<string, string> = {

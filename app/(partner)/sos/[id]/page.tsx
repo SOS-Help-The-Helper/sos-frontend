@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
-import { getSOSDetail, postSOSMessage, getParticipantColor, getParticipantIcon, SOSMessage, SOSParticipant } from '@/lib/sos-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSOSDetail, postSOSMessage, getParticipantColor, getParticipantIcon, SOSMessage, SOSParticipant } from '@/lib/sos-queries';
 import { Send } from 'lucide-react';
 
 export default function SOSDetail() {
