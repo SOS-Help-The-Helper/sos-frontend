@@ -35,9 +35,9 @@ export default function ProfilePage() {
         const [scoreData, { count: mc }, { count: rc }] = await Promise.all([
           api.getScore(personId) as Promise<SOSScore>,
           // KEEP: profile read needs dedicated EF
-          supabase.from('matches').select('id', { count: 'exact', head: true }).eq('person_id', personId),
+          db.from('matches').select('id', { count: 'exact', head: true }).eq('person_id', personId),
           // KEEP: profile read needs dedicated EF
-          supabase.from('community_messages').select('id', { count: 'exact', head: true }).eq('person_id', personId).eq('message_type', 'report'),
+          db.from('community_messages').select('id', { count: 'exact', head: true }).eq('person_id', personId).eq('message_type', 'report'),
         ]);
         setScore(scoreData);
         setMatchCount(mc || 0);
