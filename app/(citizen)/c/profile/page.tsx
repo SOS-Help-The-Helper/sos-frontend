@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
-import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
+import type { SOSScore } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
+import { api } from '@/lib/api';
 import { getPersonId, clearPersonId } from '@/lib/person-cookie';
 
 const READINESS_ITEMS = [
@@ -32,8 +33,10 @@ export default function ProfilePage() {
     async function load() {
       if (personId) {
         const [scoreData, { count: mc }, { count: rc }] = await Promise.all([
-          getSOSScore(personId),
+          api.getScore(personId) as Promise<SOSScore>,
+          // KEEP: profile read needs dedicated EF
           supabase.from('matches').select('id', { count: 'exact', head: true }).eq('person_id', personId),
+          // KEEP: profile read needs dedicated EF
           supabase.from('community_messages').select('id', { count: 'exact', head: true }).eq('person_id', personId).eq('message_type', 'report'),
         ]);
         setScore(scoreData);

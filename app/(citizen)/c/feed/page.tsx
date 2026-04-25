@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
-import { supabase } from '@/lib/supabase-client';
+import { api } from '@/lib/api';
 
 type Filter = 'all' | 'alerts' | 'community' | 'needs' | 'reports';
 
@@ -27,19 +27,11 @@ export default function FeedPage() {
 
   useEffect(() => {
     async function load() {
-      const delta = 0.072; // ~8km
-      let lat = 35.5951, lng = -82.5515;
-      try {
-        const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }));
-        lat = pos.coords.latitude; lng = pos.coords.longitude;
-      } catch {}
-
       // Community messages
-      const { data: msgs } = await supabase.from('community_messages')
-        .select('id, person_id, message_text, message_type, photo_url, flagged, created_at')
-        .gte('latitude', lat - delta).lte('latitude', lat + delta)
-        .gte('longitude', lng - delta).lte('longitude', lng + delta)
-        .order('created_at', { ascending: false }).limit(50);
+      const msgs = await api.getMessages('community') as Array<{
+        id: string; person_id: string; message_text: string;
+        message_type: string; photo_url: string | null; flagged: boolean; created_at: string;
+      }>;
 
       const feedItems: FeedItem[] = (msgs || []).map(m => ({
         id: m.id,
