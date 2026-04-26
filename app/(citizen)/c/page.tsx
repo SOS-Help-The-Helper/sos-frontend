@@ -79,6 +79,7 @@ export default function CitizenMapPage() {
         setGpsReady(true);
         // Fly to user location once GPS resolves
         if (mapInstance.current) {
+        if (!mapInstance.current) return;
           mapInstance.current.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 12, duration: 1500 });
           // Update user location dot
           const userSrc = mapInstance.current.getSource('user-location');
@@ -633,7 +634,8 @@ export default function CitizenMapPage() {
   }, []);
 
   function handleResultSelect(result: MapResult) {
-    mapInstance.current?.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
+    if (!mapInstance.current) return;
+    mapInstance.current.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
     setSelectedPin({ type: 'resource', id: result.id, properties: { name: result.name, category: result.category, details: result.description, phone: result.phone, address: result.address, source_type: result.source } });
     setDetailMode('card');
   }
