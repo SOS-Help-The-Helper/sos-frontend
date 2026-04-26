@@ -42,10 +42,6 @@ export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
       return <CircumstanceChips data={toolData} onSelect={onUserAction} />;
     case 'get_location':
       return <LocationInput data={toolData} onSelect={onUserAction} />;
-    case 'show_helper_type':
-      return <HelperTypeChips data={toolData} onSelect={onUserAction} />;
-    case 'show_availability':
-      return <AvailabilityChips data={toolData} onSelect={onUserAction} />;
     case 'search_results':
       return <SearchResults data={toolData} onSelect={onUserAction} />;
     case 'show_score':
@@ -376,40 +372,6 @@ function LocationInput({ data, onSelect }: { data: any; onSelect: (msg: string) 
   );
 }
 
-function HelperTypeChips({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
-  const options = data.options || [
-    { id: 'skills', label: 'Skills & Equipment', icon: '🔧' },
-    { id: 'time', label: 'My Time', icon: '🚶' },
-    { id: 'both', label: 'Both', icon: '💪' },
-  ];
-  return (
-    <div>
-      {data.prompt && <p className="text-xs text-white/60 mb-2">{data.prompt}</p>}
-      <QuickChips chips={options} onSelect={(id) => {
-        const opt = options.find((o: any) => o.id === id);
-        onSelect(`I can offer ${opt?.label || id}`);
-      }} />
-    </div>
-  );
-}
-
-function AvailabilityChips({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
-  const options = data.options || [
-    { id: 'now', label: 'Available now', icon: '⚡' },
-    { id: 'scheduled', label: 'Scheduled', icon: '📅' },
-    { id: 'ongoing', label: 'Ongoing', icon: '🔄' },
-  ];
-  return (
-    <div>
-      {data.prompt && <p className="text-xs text-white/60 mb-2">{data.prompt}</p>}
-      <QuickChips chips={options} onSelect={(id) => {
-        const opt = options.find((o: any) => o.id === id);
-        onSelect(`Availability: ${opt?.label || id}`);
-      }} />
-    </div>
-  );
-}
-
 const CATEGORY_EMOJI: Record<string, string> = {
   food_water: '🍽️', food: '🍽️', housing: '🏠', shelter: '🏠', health: '🏥', medical: '🏥',
   mental_health: '🧠', transport: '🚗', transportation: '🚗', clothing: '👕', utilities: '💡',
@@ -729,25 +691,30 @@ function DangerCheck({ data, onSelect }: { data: any; onSelect: (msg: string) =>
 }
 
 function FEMACard({ data }: { data: any }) {
-  const completeness = data.completeness || 0;
+  const declarations: any[] = data.declarations || [];
+  const programs: string[] = data.programsAvailable || [];
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-      <div className="flex items-center justify-between mb-2">
+    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+      <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-white">FEMA Assistance</p>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-          data.eligible ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/40'
-        }`}>{data.eligible ? 'Eligible' : 'Checking...'}</span>
+        {data.state && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/50">{data.state}</span>}
       </div>
-      {data.declaration && <p className="text-[10px] text-white/50">{data.declaration}</p>}
-      <div className="mt-2">
-        <div className="flex justify-between text-[9px] text-white/40 mb-0.5">
-          <span>Application progress</span><span>{completeness}%</span>
+      <p className="text-[10px] text-white/50">
+        {declarations.length} active declaration{declarations.length !== 1 ? 's' : ''}
+      </p>
+      {declarations.length > 0 && (
+        <ul className="space-y-0.5">
+          {declarations.map((d: any, i: number) => (
+            <li key={i} className="text-[10px] text-white/60 truncate">• {d.title || d.name || d.id || JSON.stringify(d)}</li>
+          ))}
+        </ul>
+      )}
+      {programs.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {programs.map((p: string) => (
+            <span key={p} className="text-[9px] px-1.5 py-0.5 rounded-full bg-sos-accent-500/20 text-sos-accent-400">{p}</span>
+          ))}
         </div>
-        <div className="h-1.5 bg-white/10 rounded-full"><div className="h-full bg-sos-accent-500 rounded-full" style={{ width: `${completeness}%` }} /></div>
-      </div>
-      {data.link && (
-        <a href={data.link} target="_blank" rel="noopener noreferrer"
-          className="block mt-2 text-[10px] text-sos-accent-400 font-medium">Go to DisasterAssistance.gov →</a>
       )}
     </div>
   );
@@ -798,10 +765,9 @@ function ToggleChipWrapper({ options, prompt, onAction }: { options: any[]; prom
 // ── Send SOS Confirmation Card ──
 function SOSConfirmationCard({ summary, type, details, onAction }: { summary: string; type: string; details?: any; onAction: (msg: string) => void }) {
   const [sent, setSent] = useState(false);
-  const [animating, setAnimating] = useState(false);
 
   function handleSend() {
-    if (sent || animating) return;
+    if (sent) return;
     setSent(true);
     onAction(`[SOS_CONFIRMED:${type}]`);
   }
@@ -811,7 +777,6 @@ function SOSConfirmationCard({ summary, type, details, onAction }: { summary: st
   const isReport = type === 'report';
   const headerLabel = isOffer ? 'Confirm your offer' : isReport ? 'Confirm your report' : 'Confirm your SOS';
   const buttonLabel = isOffer ? '🤝 Send Offer' : isReport ? '📍 Submit Report' : '⚡ Send SOS';
-  const sendingLabel = isOffer ? '🤝 Sending...' : isReport ? '📍 Submitting...' : '⚡ Sending...';
   const doneLabel = isOffer ? 'Offer Sent!' : isReport ? 'Report Submitted!' : 'SOS Sent!';
   const doneSubtext = isOffer ? 'The person in need will be notified.' : isReport ? 'Thank you — your report helps the community.' : 'We\'re connecting you with help now.';
   const buttonColor = isOffer ? '#89CFF0' : '#EF4E4B';
@@ -827,18 +792,12 @@ function SOSConfirmationCard({ summary, type, details, onAction }: { summary: st
           <p className="text-green-200/60 text-[10px] mt-1">{doneSubtext}</p>
         </div>
       ) : (
-        <button onClick={handleSend} disabled={animating}
-          className={`relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97] ${animating ? 'scale-[1.02]' : ''}`}
+        <button onClick={handleSend}
+          className="relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97]"
           style={{ background: buttonColor }}
           onMouseEnter={e => (e.target as HTMLElement).style.background = buttonHover}
           onMouseLeave={e => (e.target as HTMLElement).style.background = buttonColor}>
-          {animating && (
-            <>
-              <span className="absolute inset-0 rounded-xl animate-ping opacity-30" style={{ background: buttonColor }} />
-              <span className="absolute inset-0 rounded-xl animate-pulse opacity-50" style={{ background: buttonColor }} />
-            </>
-          )}
-          <span className="relative z-10">{animating ? sendingLabel : buttonLabel}</span>
+          <span className="relative z-10">{buttonLabel}</span>
         </button>
       )}
     </div>
