@@ -5,7 +5,8 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
-import { api } from '@/lib/api';
+import { api, db } from '@/lib/api';
+import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 const CATEGORY_EMOJI: Record<string, string> = {
