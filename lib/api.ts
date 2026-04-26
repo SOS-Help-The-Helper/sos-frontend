@@ -83,10 +83,6 @@ export const api = {
   searchResources: (keyword: string, lat: number, lng: number, distance?: number) =>
     efCall('resource-search', { keyword, lat, lng, ...(distance !== undefined ? { distance } : {}) }),
 
-  // Scores
-  getScore: (personId: string) =>
-    efCall('get-score', { person_id: personId }, { method: 'GET' }),
-
   // Reports
   submitSitrep: (data: Record<string, unknown>) =>
     efCall('submit-sitrep', data),
@@ -135,28 +131,6 @@ export const api = {
   efCall,
 };
 
-// ---------------------------------------------------------------------------
-// Map helper
-// ---------------------------------------------------------------------------
-
-export async function loadMapFeatures(
-  lat: number,
-  lng: number,
-  keyword = ''
-): Promise<MapFeatures> {
-  const raw = await efCall<{
-    requests?: GeoFeature[];
-    resources?: GeoFeature[];
-    organizations?: GeoFeature[];
-  }>('resource-search', { keyword, lat: String(lat), lng: String(lng) }, { method: 'GET' });
-
-  return {
-    requests: raw.requests ?? [],
-    resources: raw.resources ?? [],
-    organizations: raw.organizations ?? [],
-  };
-}
-
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---
 // These replace direct supabase.from() calls in frontend pages.
 // Uses anon key + RLS (same security as before, but centralized).
@@ -174,7 +148,7 @@ export const db = {
   // Convenience wrappers for common patterns
   getMatches: async (filters: { person_id?: string; org_id?: string; status?: string; limit?: number }) => {
     let q = supabaseRead.from('matches').select('*, requests(id, category, urgency, location_text, household_size), resources(id, category, org_id, capacity_available)');
-    if (filters.person_id) q = q.or(`requests.person_id.eq.${filters.person_id}`);
+    if (filters.person_id) q = q.eq('request_person_id', filters.person_id);
     if (filters.org_id) q = q.eq('resource_org_id', filters.org_id);
     if (filters.status) q = q.eq('status', filters.status);
     q = q.order('created_at', { ascending: false }).limit(filters.limit || 50);
