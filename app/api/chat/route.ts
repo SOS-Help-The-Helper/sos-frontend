@@ -128,9 +128,6 @@ MAP INTELLIGENCE TOOLS (coordinates are OPTIONAL — all tools default to Ashevi
 - "Where is help not reaching?" / "Coverage gaps" → call show_coverage_gaps (shows underserved areas)
 - "What's happening right now?" / "Recent activity" → call show_activity
 - "Am I in danger?" / "Is it safe here?" → call show_risk (overlays alerts)
-- "Where's my help?" / "Track my request" → call track_my_sos (shows your SOS + matched resource)
-- "Save this for later" / "Bookmark" → call bookmark_resource
-- "Share my location with the volunteer" → call share_location
 All map tools update the map automatically. The user sees changes on the map behind the chat.
 
 TAXONOMY (CRITICAL):
@@ -468,42 +465,6 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
           return JSON.stringify({
             __tool: 'show_phone_input',
             prompt: prompt || 'What is the best number to reach you?',
-          });
-        },
-      },
-
-      show_helper_type: {
-        description: 'Show 3 broad helper categories. Use when someone says they can help.',
-        inputSchema: z.object({
-          prompt: z.string().describe('Text to show above options'),
-        }),
-        execute: async function({ prompt }) {
-          return JSON.stringify({
-            __tool: 'show_helper_type',
-            prompt,
-            options: [
-              { id: 'skills', icon: '🔧', label: 'I have skills or equipment' },
-              { id: 'time', icon: '🕐', label: 'I have time to volunteer' },
-              { id: 'space', icon: '🏠', label: 'I have space or supplies to share' },
-            ],
-          });
-        },
-      },
-
-      show_availability: {
-        description: 'Show availability options for helpers.',
-        inputSchema: z.object({
-          prompt: z.string().describe('Text to show'),
-        }),
-        execute: async function({ prompt }) {
-          return JSON.stringify({
-            __tool: 'show_availability',
-            prompt,
-            options: [
-              { id: 'disaster', label: 'Disasters only' },
-              { id: 'anytime', label: 'Whenever there\'s a need' },
-              { id: 'active', label: 'I actively want to volunteer' },
-            ],
           });
         },
       },
@@ -1159,89 +1120,6 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
             message: riskZones.length > 0
               ? `${riskZones.length} active alert(s) near your location.`
               : 'No active alerts near your location.',
-          });
-        },
-      },
-
-      track_my_sos: {
-        description: 'Show the user\'s active SOS and matched resources on the map with a connecting line. Use for "where\'s my help", "track my request", "show my SOS status". No parameters needed — uses authenticated user.',
-        inputSchema: z.object({}),
-        execute: async function() {
-          const pid = personId || 'anonymous';
-          // Get active SOS + matches
-          const [sosResp, matchResp] = await Promise.all([
-            fetch(`${SUPABASE_URL}/rest/v1/soses?select=id,category,status,latitude,longitude&person_id=eq.${pid}&status=eq.active&order=created_at.desc&limit=1`, {
-              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
-            }),
-            fetch(`${SUPABASE_URL}/rest/v1/requests?select=id,latitude,longitude,category,status,matches(id,resource_id,status,match_score)&person_id=eq.${pid}&status=in.(active,matched)&order=created_at.desc&limit=3`, {
-              headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
-            }),
-          ]);
-          const soses = await sosResp.json().catch(() => []);
-          const requests = await matchResp.json().catch(() => []);
-
-          const activeReq = requests[0];
-          const activeMatch = activeReq?.matches?.[0];
-
-          return JSON.stringify({
-            __tool: 'sos_tracker',
-            __mapCommand: activeReq ? {
-              type: 'track_sos',
-              trackingData: {
-                requestPin: { lat: activeReq.latitude, lng: activeReq.longitude, category: activeReq.category, status: activeReq.status },
-                matchStatus: activeMatch?.status || 'searching',
-                matchId: activeMatch?.id || '',
-              },
-              center: activeReq.latitude && activeReq.longitude ? [activeReq.longitude, activeReq.latitude] : undefined,
-            } : undefined,
-            hasActiveSOS: soses.length > 0,
-            hasActiveRequest: !!activeReq,
-            hasMatch: !!activeMatch,
-            matchStatus: activeMatch?.status || 'no match yet',
-            message: !activeReq
-              ? "You don't have an active SOS request right now."
-              : activeMatch
-                ? `Your ${activeReq.category} request has a ${activeMatch.status} match (score: ${activeMatch.match_score}).`
-                : `Your ${activeReq.category} request is active. We're searching for a match.`,
-          });
-        },
-      },
-
-      bookmark_resource: {
-        description: 'Save/bookmark a resource for later. Use when someone says "save this", "bookmark", "remember this place".',
-        inputSchema: z.object({
-          resourceId: z.string().describe('Resource ID to bookmark'),
-          resourceName: z.string().describe('Resource name'),
-        }),
-        execute: async function({ resourceId, resourceName }) {
-          // Store in person's metadata (or localStorage signal)
-          return JSON.stringify({
-            __tool: 'bookmark_confirmed',
-            __mapCommand: { type: 'bookmark', bookmarkId: resourceId },
-            resourceId,
-            resourceName,
-            message: `Saved "${resourceName}" to your bookmarks. You can find it in your Profile tab.`,
-          });
-        },
-      },
-
-      share_location: {
-        description: 'Share your live location with a matched helper. Use when someone is waiting for help and wants to share location.',
-        inputSchema: z.object({
-          lat: z.number().describe('Your latitude'),
-          lng: z.number().describe('Your longitude'),
-          matchId: z.string().optional().describe('Match ID to share with'),
-        }),
-        execute: async function({ lat, lng, matchId }) {
-          // Generate a share URL (in production, this would create a temporary share token)
-          const shareToken = Math.random().toString(36).substring(2, 10);
-          const shareUrl = `https://sosconnect.org/locate/${shareToken}`;
-
-          return JSON.stringify({
-            __tool: 'location_shared',
-            __mapCommand: { type: 'share_location', center: [lng, lat], shareUrl },
-            shareUrl,
-            message: 'Your location has been shared. The volunteer coming to help you can see where you are.',
           });
         },
       },
