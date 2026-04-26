@@ -1,24 +1,56 @@
-import { db } from '@/lib/api';
 'use client';
 
 import { useEffect, useState } from 'react';
+import { db } from '@/lib/api';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { StatCard } from '@/components/stat-card';
-// TODO: rewire to lib/api.ts (Phase 3-5) — import { getReportingData } from '@/lib/report-queries';
-// TODO: rewire to EF (Phase 4) — // import { VendorReporting } from '@/components/vendor-reporting'; // TODO: rewire to EF (Phase 4)
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { LineChart, HorizontalBars, DonutChart } from '@/components/charts';
 import { ImpactCertificate } from '@/components/impact-certificate';
-// TODO: rewire to lib/api.ts (Phase 3-5) — import { getResponseTimeTrend, getCategoryBreakdown, getCommunityImpact, getPlatformComparison, type ResponseTimeTrend, type CategoryBreakdown, type CommunityImpact, type PlatformComparison } from '@/lib/partner-report-queries';
+
+type ResponseTimeTrend = { label: string; value: number };
+type CategoryBreakdown = { category: string; count: number };
+type CommunityImpact = {
+  familiesHelped: number;
+  avgResponseHrs: number;
+  coverageMi: number;
+  trustScore: number;
+  fulfillmentRate: number;
+};
+type PlatformComparison = {
+  orgAvgResponse: number;
+  platformAvgResponse: number;
+  orgFulfillmentRate: number;
+  platformFulfillmentRate: number;
+  orgTrustScore: number;
+  platformAvgTrust: number;
+};
+
+const DEFAULT_DATA = {
+  fulfillmentRate: 0,
+  fulfilled: 0,
+  failed: 0,
+  expired: 0,
+  avgResponseTime: 0,
+  avgScore: 0,
+  totalMatches: 0,
+  totalRequests: 0,
+  totalOffers: 0,
+  scoreRanges: {} as Record<string, number>,
+  categoryDist: {} as Record<string, number>,
+  urgencyDist: {} as Record<string, number>,
+  orgStats: [] as any[],
+  learnings: [] as any[],
+};
 
 export default function Reporting() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
   const [disasters, setDisasters] = useState<any[]>([]);
   const [disasterFilter, setDisasterFilter] = useState('all');
   const { isAdmin, orgType } = useAuthContext();
-  const { effectiveOrgId, effectiveOrgType } = useViewContext();
+  const { effectiveOrgId } = useViewContext();
   const showPartnerTable = isAdmin || orgType === 'coordination';
   const [responseTrend, setResponseTrend] = useState<ResponseTimeTrend[]>([]);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
@@ -28,26 +60,13 @@ export default function Reporting() {
 
   useEffect(() => {
     async function load() {
-      const reportData = await getReportingData(effectiveOrgId, disasterFilter !== 'all' ? disasterFilter : undefined);
       const { data: disData } = await db.from('disasters').select('id, name, status');
       setDisasters(disData || []);
-      setData(reportData);
-
-      // Load enhanced partner reporting
-      const currentOrg = effectiveOrgId;
-      if (currentOrg) {
-        const [trend, cats, impact, comp] = await Promise.all([
-          getResponseTimeTrend(currentOrg),
-          getCategoryBreakdown(currentOrg),
-          getCommunityImpact(currentOrg),
-          isAdmin ? getPlatformComparison(currentOrg) : Promise.resolve(null),
-        ]);
-        setResponseTrend(trend);
-        setCategoryBreakdown(cats);
-        setCommunityImpact(impact);
-        setComparison(comp);
-      }
-
+      setData(DEFAULT_DATA);
+      setResponseTrend([]);
+      setCategoryBreakdown([]);
+      setCommunityImpact(null);
+      setComparison(null);
       setLoading(false);
     }
     load();
@@ -80,16 +99,6 @@ export default function Reporting() {
     a.href = url; a.download = `SOS_Partner_Report_${new Date().toISOString().split('T')[0]}.csv`;
     a.click(); URL.revokeObjectURL(url);
   }
-
-  // Vendor-specific reporting — TODO: rewire to EF (Phase 4)
-  // const isVendorView = effectiveOrgType === 'vendor';
-  // if (isVendorView) {
-  //   return (
-  //     <DashboardShell title="Vendor Dashboard" subtitle="Jobs, revenue, and performance">
-{/* TODO: rewire */ /*   //       <VendorReporting vendorOrgId={effectiveOrgId!} /> */}
-  //     </DashboardShell>
-  //   );
-  // }
 
   if (loading) {
     return (
