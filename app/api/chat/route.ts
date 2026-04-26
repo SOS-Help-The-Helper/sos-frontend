@@ -817,6 +817,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
           return JSON.stringify({
             __tool: 'referral_card',
             personId,
+            message: 'Share this chat with someone who needs help — just send them the link to this page.',
           });
         },
       },
@@ -979,20 +980,22 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
           const data = await resp.json().catch(() => ({ results: [] }));
           const results = (data.results || []).filter((r: any) => r.lat && r.lng).slice(0, 5);
 
-          // Rank by distance + capacity
-          const ranked = results.map((r: any, i: number) => {
-            const dist = Math.sqrt(Math.pow((r.lat - lat) * 111, 2) + Math.pow((r.lng - lng) * 85, 2));
-            const distKm = Math.round(dist * 10) / 10;
-            return {
-              ...r, rank: i + 1, distance_km: distKm,
-              reason: `${distKm}km away${r.capacity ? `, capacity: ${r.capacity}` : ''}`,
-            };
-          }).sort((a: any, b: any) => a.distance_km - b.distance_km)
-            .map((r: any, i: number) => ({ ...r, rank: i + 1 }));
+          // Rank by distance + capacity (skip sort if no coordinates provided)
+          const ranked = lat == null || lng == null
+            ? results.map((r: any, i: number) => ({ ...r, rank: i + 1, reason: r.capacity ? `capacity: ${r.capacity}` : '' }))
+            : results.map((r: any, i: number) => {
+                const dist = Math.sqrt(Math.pow((r.lat - useLat) * 111, 2) + Math.pow((r.lng - useLng) * 85, 2));
+                const distKm = Math.round(dist * 10) / 10;
+                return {
+                  ...r, rank: i + 1, distance_km: distKm,
+                  reason: `${distKm}km away${r.capacity ? `, capacity: ${r.capacity}` : ''}`,
+                };
+              }).sort((a: any, b: any) => a.distance_km - b.distance_km)
+                .map((r: any, i: number) => ({ ...r, rank: i + 1 }));
 
           return JSON.stringify({
             __tool: 'comparison_result',
-            __mapCommand: { type: 'compare', comparedResults: ranked, center: [lng, lat] },
+            __mapCommand: { type: 'compare', comparedResults: ranked, center: [useLng, useLat] },
             results: ranked,
             recommendation: ranked[0] ? `Closest: ${ranked[0].name} (${Math.round(ranked[0].distance_km * 0.621 * 10) / 10}mi)` : 'No results found',
           });
@@ -1095,9 +1098,9 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
           lng: z.number().optional().describe('User longitude'),
         }),
         execute: async function({ lat, lng }) {
-          const useLat = lat || 35.597; const useLng = lng || -82.546;
+          const useLat = lat ?? 35.5946; const useLng = lng ?? -82.5540;
           // Get NWS alerts from our alerts-feed EF
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/alerts-feed?lat=${lat}&lng=${lng}`, {
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/alerts-feed?lat=${useLat}&lng=${useLng}`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
           const data = await resp.json().catch(() => ({ alerts: [] }));
@@ -1107,13 +1110,13 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
             severity: a.severity || 'moderate',
             label: a.headline || a.description?.substring(0, 80),
             source: 'NWS',
-            center: [lng, lat] as [number, number],
+            center: [useLng, useLat] as [number, number],
             radius_km: 10,
           }));
 
           return JSON.stringify({
             __tool: 'risk_assessment',
-            __mapCommand: { type: 'show_risk', riskZones, center: [lng, lat] },
+            __mapCommand: { type: 'show_risk', riskZones, center: [useLng, useLat] },
             alertCount: riskZones.length,
             alerts: riskZones,
             safe: riskZones.length === 0,
