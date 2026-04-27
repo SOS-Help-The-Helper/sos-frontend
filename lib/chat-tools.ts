@@ -473,12 +473,12 @@ export function getChatTools() {
           const useLat = lat || 35.597; const useLng = lng || -82.546; // Default: Asheville NC
           const radius = radiusKm || 8;
           // Query all active resources directly (show_nearby doesn't filter by keyword)
-          const resp = await fetch(`${SUPABASE_URL}/rest/v1/resources?status=eq.active&select=id,organization_name,service_name,category,taxonomy_code,details_sanitized,latitude,longitude,capacity_available,source&limit=100`, {
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/resources?status=eq.active&select=id,organization_name,service_name,category,taxonomy_code,details_sanitized,latitude,longitude,capacity_available,source,locations:location_id(latitude,longitude)&limit=100`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
           const allResources = await resp.json().catch(() => []);
           // Also get active requests
-          const reqResp = await fetch(`${SUPABASE_URL}/rest/v1/requests?status=eq.active&select=id,category,details_sanitized,latitude,longitude,urgency&limit=100`, {
+          const reqResp = await fetch(`${SUPABASE_URL}/rest/v1/requests?status=eq.active&select=id,category,details_sanitized,latitude,longitude,urgency,locations:location_id(latitude,longitude)&limit=100`, {
             headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
           });
           const allRequests = await reqResp.json().catch(() => []);
@@ -651,10 +651,10 @@ export function getChatTools() {
           const radius = radiusKm || 20;
           // Get requests and resources within radius
           const [reqResp, resResp] = await Promise.all([
-            fetch(`${SUPABASE_URL}/rest/v1/requests?select=id,latitude,longitude,category,status&status=eq.active&limit=200`, {
+            fetch(`${SUPABASE_URL}/rest/v1/requests?select=id,latitude,longitude,category,status,locations:location_id(latitude,longitude)&status=eq.active&limit=200`, {
               headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
             }),
-            fetch(`${SUPABASE_URL}/rest/v1/resources?select=id,latitude,longitude,category,status&status=eq.active&limit=200`, {
+            fetch(`${SUPABASE_URL}/rest/v1/resources?select=id,latitude,longitude,category,status,locations:location_id(latitude,longitude)&status=eq.active&limit=200`, {
               headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
             }),
           ]);
@@ -704,7 +704,7 @@ export function getChatTools() {
             fetch(`${SUPABASE_URL}/rest/v1/matches?select=id,request_id,status,created_at&created_at=gte.${since}&order=created_at.desc&limit=20`, {
               headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
             }),
-            fetch(`${SUPABASE_URL}/rest/v1/community_messages?select=id,message_type,latitude,longitude,message_text,created_at&created_at=gte.${since}&order=created_at.desc&limit=20`, {
+            fetch(`${SUPABASE_URL}/rest/v1/community_messages?select=id,message_type,latitude,longitude,message_text,created_at,locations:location_id(latitude,longitude)&created_at=gte.${since}&order=created_at.desc&limit=20`, {
               headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
             }),
           ]);
