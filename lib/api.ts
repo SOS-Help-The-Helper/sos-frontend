@@ -155,21 +155,21 @@ export const db = {
     return q;
   },
   getRequests: async (filters: { org_id?: string; status?: string[]; limit?: number }) => {
-    let q = supabaseRead.from('requests').select('id, category, urgency, status, location_text, latitude, longitude, household_size, has_children, has_elderly, has_disabled, has_pets, taxonomy_code, created_at, priority_score');
+    let q = supabaseRead.from('requests').select('id, category, urgency, status, location_text, latitude, longitude, household_size, has_children, has_elderly, has_disabled, has_pets, taxonomy_code, created_at, priority_score, locations:location_id(latitude, longitude, street_address, city, state, zip_code)');
     if (filters.status) q = q.in('status', filters.status);
     if (filters.org_id) q = q.eq('org_id', filters.org_id);
     q = q.order('created_at', { ascending: false }).limit(filters.limit || 100);
     return q;
   },
   getResources: async (filters: { org_id?: string; status?: string[]; limit?: number }) => {
-    let q = supabaseRead.from('resources').select('id, category, status, capacity_available, capacity_total, latitude, longitude, taxonomy_code, org_id, created_at');
+    let q = supabaseRead.from('resources').select('id, category, status, capacity_available, capacity_total, latitude, longitude, taxonomy_code, org_id, created_at, locations:location_id(latitude, longitude, street_address, city, state, zip_code)');
     if (filters.status) q = q.in('status', filters.status);
     if (filters.org_id) q = q.eq('org_id', filters.org_id);
     q = q.order('created_at', { ascending: false }).limit(filters.limit || 100);
     return q;
   },
   getOrganizations: async (filters?: { status?: string }) => {
-    let q = supabaseRead.from('organizations').select('id, name, org_type, status, latitude, longitude');
+    let q = supabaseRead.from('organizations').select('id, name, org_type, status, latitude, longitude, locations:location_id(latitude, longitude, street_address, city, state, zip_code)');
     if (filters?.status) q = q.eq('status', filters.status);
     return q;
   },
