@@ -1,5 +1,5 @@
-import { db } from '@/lib/api';
 'use client';
+import { db } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';

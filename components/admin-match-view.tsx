@@ -1,5 +1,5 @@
-import { db } from '@/lib/api';
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { ArrowRight, Check, X } from 'lucide-react';

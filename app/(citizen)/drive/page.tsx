@@ -1,5 +1,5 @@
-import { db } from '@/lib/api';
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
