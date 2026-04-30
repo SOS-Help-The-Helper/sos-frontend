@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sendOTP, verifyOTP } from '@/packages/auth/phone-auth';
+import { sendOTP, verifyOTP } from '@/lib/phone-auth';
 import { useRouter } from 'next/navigation';
 import { setPersonId } from '@/lib/person-cookie';
 

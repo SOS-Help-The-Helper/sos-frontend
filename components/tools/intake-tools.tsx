@@ -165,5 +165,4 @@ export function LocationInput({ data, onSelect }: { data: any; onSelect: (msg: s
       </div>
     </div>
   );
-
-
+}

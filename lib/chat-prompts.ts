@@ -183,7 +183,3 @@ RULES FOR MATCH FLOW:
 - Final confirmation ALWAYS uses show_sos_confirmation which renders the "Send SOS" button.
 - Three-four exchanges max. Fast.
 - No bullet points. No lists. No paragraphs. Conversational.`;
-
-export async function POST(req: Request) {
-  try {
-

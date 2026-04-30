@@ -489,9 +489,6 @@ export default function Management() {
       )}
 
       {/* Bid Review Modal — TODO: rewire to EF (Phase 4) */}
-      {/* {reviewJobId && (
-{/* TODO: rewire */ /*         <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} /> */}
-      )} */}
 
       {/* Capacity Editor Modal — TODO: rewire to EF (Phase 4) */}
 

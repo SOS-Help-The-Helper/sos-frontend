@@ -529,6 +529,9 @@ export function getChatTools() {
               closest: closest ? `${closest.name} (${Math.round(closest.distance_km * 0.621 * 10) / 10}mi, ${closest.category})` : 'none found',
               radius,
             },
+          });
+        },
+      },
 
       show_route: {
         description: 'Show directions/route to a destination on the map. Use when someone asks "how do I get to", "directions to", "navigate to".',
@@ -867,6 +870,5 @@ export function getChatTools() {
           return JSON.stringify({ __tool: 'show_sos_confirmation', summary, type, details });
         },
       },
-    },
   };
 }
