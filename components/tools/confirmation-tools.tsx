@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { ToggleChips } from '../agent-tap-cards';
+import { emitMapCommand } from '@/lib/map-commands';
+import { setPersonId } from '@/lib/person-cookie';
 
 export function SubmitConfirmation({ data }: { data: any }) {
   const [visible, setVisible] = useState(data.success !== false);
@@ -95,4 +99,40 @@ export function ToggleChipWrapper({ options, prompt, onAction }: { options: any[
 export function SOSConfirmationCard({ summary, type, details, onAction }: { summary: string; type: string; details?: any; onAction: (msg: string) => void }) {
   const [sent, setSent] = useState(false);
 
+  function handleSend() {
+    if (sent) return;
+    setSent(true);
+    onAction(`[SOS_CONFIRMED:${type}]`);
+  }
 
+  // Context-aware labels
+  const isOffer = type === 'offer' || type === 'match';
+  const isReport = type === 'report';
+  const headerLabel = isOffer ? 'Confirm your offer' : isReport ? 'Confirm your report' : 'Confirm your SOS';
+  const buttonLabel = isOffer ? '🤝 Send Offer' : isReport ? '📍 Submit Report' : '⚡ Send SOS';
+  const doneLabel = isOffer ? 'Offer Sent!' : isReport ? 'Report Submitted!' : 'SOS Sent!';
+  const doneSubtext = isOffer ? 'The person in need will be notified.' : isReport ? 'Thank you — your report helps the community.' : 'We\'re connecting you with help now.';
+  const buttonColor = isOffer ? '#89CFF0' : '#EF4E4B';
+  const buttonHover = isOffer ? '#6fb8e0' : '#d94340';
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+      <p className="text-xs text-white/50 uppercase tracking-wider font-bold">{headerLabel}</p>
+      <p className="text-sm text-white leading-relaxed">{summary}</p>
+      {sent ? (
+        <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-3 text-center">
+          <p className="text-green-200 text-sm font-bold">✅ {doneLabel}</p>
+          <p className="text-green-200/60 text-[10px] mt-1">{doneSubtext}</p>
+        </div>
+      ) : (
+        <button onClick={handleSend}
+          className="relative w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.97]"
+          style={{ background: buttonColor }}
+          onMouseEnter={e => (e.target as HTMLElement).style.background = buttonHover}
+          onMouseLeave={e => (e.target as HTMLElement).style.background = buttonColor}>
+          <span className="relative z-10">{buttonLabel}</span>
+        </button>
+      )}
+    </div>
+  );
+}

@@ -38,6 +38,42 @@ export function PhoneInput({ data, onSelect }: { data: any; onSelect: (msg: stri
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
 
+  function handleSubmit() {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      onSelect(`+1${digits}`);
+    } else if (digits.length === 11 && digits.startsWith('1')) {
+      onSelect(`+${digits}`);
+    } else {
+      setError('Enter a valid 10-digit US phone number');
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {data.prompt && <p className="text-xs text-white/60 mb-1">{data.prompt}</p>}
+      <div className="flex gap-2">
+        <span className="flex items-center text-xs text-white/40 px-2 py-2 bg-white/5 rounded-lg border border-white/10">+1</span>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => { setPhone(e.target.value); setError(''); }}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          placeholder="(555) 123-4567"
+          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]"
+        />
+      </div>
+      {error && <p className="text-[10px] text-red-400">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2.5 rounded-xl bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97] hover:bg-[#d94340] transition-colors"
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
+
 
 export function PhotoCapture({ data, onSelect }: { data: any; onSelect: (msg: string) => void }) {
   return (
