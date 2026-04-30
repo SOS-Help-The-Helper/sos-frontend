@@ -494,15 +494,6 @@ export default function Management() {
       )} */}
 
       {/* Capacity Editor Modal — TODO: rewire to EF (Phase 4) */}
-      {/* {editingCapacity && (
-{/* TODO: rewire */ /*         <CapacityEditor */}
-          resource={editingCapacity}
-          onClose={() => setEditingCapacity(null)}
-          onSaved={(updated) => {
-            setResources(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
-          }}
-        />
-      )} */}
 
       {/* Detail Popup */}
       {selectedItem && (

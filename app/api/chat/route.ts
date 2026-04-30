@@ -8,6 +8,8 @@ import { getChatTools } from '@/lib/chat-tools';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+export async function POST(req: Request) {
+  try {
   const body = await req.json();
   const rawMessages = body.messages || [];
   if (!rawMessages.length) {
