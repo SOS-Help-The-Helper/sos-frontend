@@ -27,6 +27,7 @@ export default function CitizenMapPage() {
   const mapboxglRef = useRef<any>(null);
   const requestFeaturesRef = useRef<any[]>([]);
   const resourceFeaturesRef = useRef<any[]>([]);
+  const reportFeaturesRef = useRef<any[]>([]);
   const realtimeChannelRef = useRef<any>(null);
 
   const [lat, setLat] = useState(39);
@@ -47,8 +48,6 @@ export default function CitizenMapPage() {
   const [mapResultsQuery, setMapResultsQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
 
-  const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
-  
   // Allow setting personId via URL param for testing: /c?pid=xxx
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -128,45 +127,29 @@ export default function CitizenMapPage() {
       map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
-        // Load data INSIDE map.on('load') so we don't miss the event
+        // Load clustered GeoJSON overview + alerts
         let alertData: Alert[] = [];
         let requestFeatures: any[] = [], resourceFeatures: any[] = [], reportFeatures: any[] = [];
+        const seenIds = new Set<string>();
         try {
-          if (isAdmin) {
-            alertData = DEMO_ALERTS;
-            resourceFeatures = (DEMO_PARTNERS as any[]).filter((p: any) => p.latitude && p.longitude).map((p: any) => ({
-              type: 'Feature' as const,
-              geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
-              properties: { id: p.id, name: p.name, category: p.org_type, type: 'resource', source_type: 'partner' },
-            }));
-          } else {
-            const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-            const [a, mapResp] = await Promise.all([
-              getAlerts(lat, lng),
-              fetch(`${API_BASE}/functions/v1/map-data?lat=${lat}&lng=${lng}&radius=100`, { headers: { 'Authorization': `Bearer ${API_KEY}` } }),
-            ]);
-            alertData = a;
-            const mapData = await mapResp.json();
-            requestFeatures = (mapData.requests || []).map((f: any) => ({
-              ...f,
-              properties: { ...f.properties, details: f.properties.text, type: 'request' },
-            }));
-            resourceFeatures = [
-              ...(mapData.resources || []).map((f: any) => ({
-                ...f,
-                properties: { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' },
-              })),
-              ...(mapData.organizations || []).map((f: any) => ({
-                ...f,
-                properties: { ...f.properties, type: 'resource', source_type: 'partner' },
-              })),
-            ];
-            reportFeatures = (mapData.reports || []).map((f: any) => ({
-              ...f,
-              properties: { ...f.properties, description: f.properties.text, type: 'report' },
-            }));
-          }
+          const [a, geojsonResp] = await Promise.all([
+            getAlerts(lat, lng),
+            fetch('https://rtduqguwhkczexnoawej.supabase.co/storage/v1/object/public/public-assets/map/sos-map-data.geojson'),
+          ]);
+          alertData = a;
+          const geojson = await geojsonResp.json();
+          const allFeatures: any[] = geojson.features || [];
+          allFeatures.forEach((f: any) => {
+            const fType = f.properties?.type;
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            if (fType === 'request') {
+              requestFeatures.push(f);
+            } else if (fType === 'resource') {
+              resourceFeatures.push(f);
+            } else {
+              reportFeatures.push(f);
+            }
+          });
           setAlerts(alertData);
         } catch (err) {
           console.error('Map data load error:', err);
@@ -177,7 +160,7 @@ export default function CitizenMapPage() {
         map.addSource('requests-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: requestFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
         // Cluster glow (behind)
@@ -199,7 +182,7 @@ export default function CitizenMapPage() {
         map.addSource('resources-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: resourceFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
         map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
@@ -212,11 +195,12 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === REPORTS SOURCE (white) ===
+        reportFeaturesRef.current = reportFeatures;
 
         map.addSource('reports-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: reportFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
         map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
@@ -225,6 +209,70 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
+
+        // === DETAIL FETCH ON ZOOM ===
+        // When zoomed to city level (>=10), fetch detailed data from map-data EF and merge
+        map.on('moveend', async () => {
+          if (destroyed) return;
+          const zoom = map.getZoom();
+          if (zoom < 10) return;
+          const center = map.getCenter();
+          try {
+            const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const resp = await fetch(`${API_BASE}/functions/v1/map-data?lat=${center.lat}&lng=${center.lng}&radius=25`, {
+              headers: { 'Authorization': `Bearer ${API_KEY}` },
+            });
+            const mapData = await resp.json();
+            let added = false;
+            (mapData.requests || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
+                requestFeaturesRef.current = [...requestFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            (mapData.resources || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
+                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            (mapData.organizations || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
+                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            (mapData.reports || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, description: f.properties.text, type: 'report' };
+                reportFeaturesRef.current = [...reportFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            if (added) {
+              const reqSrc = map.getSource('requests-source') as any;
+              if (reqSrc) reqSrc.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
+              const resSrc = map.getSource('resources-source') as any;
+              if (resSrc) resSrc.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
+              const repSrc = map.getSource('reports-source') as any;
+              if (repSrc) repSrc.setData({ type: 'FeatureCollection', features: reportFeaturesRef.current });
+            }
+          } catch (err) {
+            console.warn('Detail fetch error:', err);
+          }
+        });
 
         // === DISASTERS SOURCE (navy, empty for now) ===
         map.addSource('disasters-source', {
@@ -383,7 +431,7 @@ export default function CitizenMapPage() {
 
     initMap();
     return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [isAdmin]);
+  }, []);
 
   // Map command subscription (for search results)
   useEffect(() => {
