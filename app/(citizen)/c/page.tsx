@@ -27,7 +27,7 @@ export default function CitizenMapPage() {
   const mapboxglRef = useRef<any>(null);
   const requestFeaturesRef = useRef<any[]>([]);
   const resourceFeaturesRef = useRef<any[]>([]);
-  const reportFeaturesRef = useRef<any[]>([]);
+
   const realtimeChannelRef = useRef<any>(null);
 
   const [lat, setLat] = useState(39);
@@ -127,28 +127,35 @@ export default function CitizenMapPage() {
       map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
-        // Load clustered GeoJSON overview + alerts
+        // Load requests + resources from EF, alerts separately
         let alertData: Alert[] = [];
-        let requestFeatures: any[] = [], resourceFeatures: any[] = [], reportFeatures: any[] = [];
+        let requestFeatures: any[] = [], resourceFeatures: any[] = [];
         const seenIds = new Set<string>();
         try {
-          const [a, geojsonResp] = await Promise.all([
+          const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          const [a, efResp] = await Promise.all([
             getAlerts(lat, lng),
-            fetch('https://rtduqguwhkczexnoawej.supabase.co/storage/v1/object/public/public-assets/map/sos-map-data.geojson'),
+            fetch(`${API_BASE}/functions/v1/map-data?lat=39&lng=-98&radius=3000`, {
+              headers: { 'Authorization': `Bearer ${API_KEY}` },
+            }),
           ]);
           alertData = a;
-          const geojson = await geojsonResp.json();
-          const allFeatures: any[] = geojson.features || [];
-          allFeatures.forEach((f: any) => {
-            const fType = f.properties?.type;
+          const mapData = await efResp.json();
+          (mapData.requests || []).forEach((f: any) => {
             if (f.properties?.id) seenIds.add(f.properties.id);
-            if (fType === 'request') {
-              requestFeatures.push(f);
-            } else if (fType === 'resource') {
-              resourceFeatures.push(f);
-            } else {
-              reportFeatures.push(f);
-            }
+            f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
+            requestFeatures.push(f);
+          });
+          (mapData.resources || []).forEach((f: any) => {
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
+            resourceFeatures.push(f);
+          });
+          (mapData.organizations || []).forEach((f: any) => {
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
+            resourceFeatures.push(f);
           });
           setAlerts(alertData);
         } catch (err) {
@@ -194,20 +201,17 @@ export default function CitizenMapPage() {
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
-        // === REPORTS SOURCE (white) ===
-        reportFeaturesRef.current = reportFeatures;
-
+        // === REPORTS SOURCE (white) — Mapbox vector tileset ===
         map.addSource('reports-source', {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: reportFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+          type: 'vector',
+          url: 'mapbox://sosconnect.sos-reports-v2',
         });
 
-        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
+        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
-        map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
+        map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-        map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', filter: ['!', ['has', 'point_count']],
+        map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
 
         // === DETAIL FETCH ON ZOOM ===
@@ -252,22 +256,11 @@ export default function CitizenMapPage() {
                 added = true;
               }
             });
-            (mapData.reports || []).forEach((f: any) => {
-              const id = f.properties?.id;
-              if (id && !seenIds.has(id)) {
-                seenIds.add(id);
-                f.properties = { ...f.properties, description: f.properties.text, type: 'report' };
-                reportFeaturesRef.current = [...reportFeaturesRef.current, f];
-                added = true;
-              }
-            });
             if (added) {
               const reqSrc = map.getSource('requests-source') as any;
               if (reqSrc) reqSrc.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
               const resSrc = map.getSource('resources-source') as any;
               if (resSrc) resSrc.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
-              const repSrc = map.getSource('reports-source') as any;
-              if (repSrc) repSrc.setData({ type: 'FeatureCollection', features: reportFeaturesRef.current });
             }
           } catch (err) {
             console.warn('Detail fetch error:', err);
