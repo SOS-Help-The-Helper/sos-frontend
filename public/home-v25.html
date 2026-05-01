@@ -588,7 +588,23 @@
 </head>
 <body>
 
-
+<!-- ════════ NAV ════════ -->
+<nav id="siteNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">
+      <img src="/logomark-red.svg" alt="SOS">
+      SOS
+    </a>
+    <div class="nav-links">
+      <a href="#crisis">Crisis</a>
+      <a href="#ecosystem">Ecosystem</a>
+      <a href="#gap">Coordination</a>
+      <a href="#solution">Solution</a>
+      <a href="/what-is-sos">What Is SOS</a>
+      <a href="/join">Join</a>
+    </div>
+  </div>
+</nav>
 
 <!-- ════════════════════════════════════════════
      SECTION 1: HERO — Dark, Full Viewport
@@ -959,6 +975,16 @@
 <script>
 (function() {
   gsap.registerPlugin(ScrollTrigger);
+
+  /* ═══════════════════════════════════════════
+     NAV — fade in after hero loads, scroll glassmorphism
+     ═══════════════════════════════════════════ */
+  var siteNav = document.getElementById('siteNav');
+  gsap.to(siteNav, { opacity: 1, duration: 0.6, delay: 0.3, ease: 'power2.out' });
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 40) { siteNav.classList.add('scrolled'); }
+    else { siteNav.classList.remove('scrolled'); }
+  }, { passive: true });
 
   /* ═══════════════════════════════════════════
      SHARED UTILITIES
