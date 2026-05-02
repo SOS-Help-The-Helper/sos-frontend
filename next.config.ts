@@ -11,10 +11,6 @@ const nextConfig: NextConfig = {
         source: '/',
         destination: '/home-v25.html',
       },
-      {
-        source: '/what-is-sos',
-        destination: '/what-is-sos.html',
-      },
     ];
   },
 };
