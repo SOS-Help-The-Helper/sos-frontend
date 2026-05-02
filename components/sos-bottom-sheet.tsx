@@ -216,6 +216,10 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
           <div className={`${messages.length > 0 ? 'flex-1' : ''} overflow-y-auto px-3 pb-2 space-y-4 overflow-x-hidden ${fullScreen ? 'pt-16' : ''}`}>
             {messages.map(msg => (
               <div key={msg.id}>
+                {/* Debug: show part types */}
+                <div className="text-[8px] text-white/20 mb-1">
+                  {(msg as any).parts?.map((p: any, i: number) => `[${i}:${p.type}${p.state ? ':'+p.state : ''}]`).join(' ')}
+                </div>
                 {/* Render from parts (AI SDK v6 pattern) */}
                 {(msg as any).parts?.map((part: any, pi: number) => {
                   if (part.type === 'text' && part.text) {
