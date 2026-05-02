@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, stepCountIs } from 'ai';
 import { sanitize } from '@/lib/pii-sanitizer';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
@@ -188,7 +188,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     system: activeSystemPrompt,
     messages,
     // Don't pass tools for join flow (pure conversation)
-    ...(joinFlow ? {} : { tools: getChatTools(userLat, userLng), maxSteps: 5 }),
+    ...(joinFlow ? {} : { tools: getChatTools(userLat, userLng), stopWhen: stepCountIs(5) }),
   });
 
   return result.toUIMessageStreamResponse();
