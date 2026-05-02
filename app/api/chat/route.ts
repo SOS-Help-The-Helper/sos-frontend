@@ -188,6 +188,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     system: activeSystemPrompt,
     messages,
     tools: getChatTools(),
+    maxSteps: 5, // Allow multi-step tool execution
   });
 
   return result.toUIMessageStreamResponse();
