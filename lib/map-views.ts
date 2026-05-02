@@ -1,9 +1,9 @@
+import { db } from '@/lib/api';
 /**
  * Map views CRUD — org-scoped saved map tabs.
  * Each partner can save custom map views with viewport, layers, pins.
  */
 
-import { supabase } from '@/lib/supabase-client';
 import type { FilterConfig } from '@/lib/filter-engine';
 
 export interface MapView {
@@ -101,7 +101,7 @@ export async function deleteMapView(id: string): Promise<boolean> {
 export async function reorderMapViews(views: { id: string; sort_order: number }[]): Promise<boolean> {
   // Update each view's sort_order
   const updates = views.map(v =>
-    supabase.from('map_views').update({ sort_order: v.sort_order }).eq('id', v.id)
+    db.from('map_views').update({ sort_order: v.sort_order }).eq('id', v.id)
   );
   const results = await Promise.all(updates);
   return results.every(r => !r.error);

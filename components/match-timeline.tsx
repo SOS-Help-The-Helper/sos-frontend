@@ -1,6 +1,6 @@
 'use client';
 
-import { MatchEvent, getStatusColor } from '@/lib/match-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { MatchEvent, getStatusColor } from '@/lib/match-queries';
 
 interface MatchTimelineProps {
   events: MatchEvent[];

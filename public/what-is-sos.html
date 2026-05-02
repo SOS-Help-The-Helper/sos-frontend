@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Is SOS | Community Coordination</title>
+<meta name="description" content="SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, and vendors — so when someone needs help and someone else can provide it, the connection actually happens.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sosconnect.org/what-is-sos">
+<meta property="og:title" content="What Is SOS | Community Coordination">
+<meta property="og:description" content="SOS is coordination infrastructure for disaster response. When help doesn't show up, people do — they just need a way to coordinate.">
+<meta property="og:image" content="https://sosconnect.org/og-image.png?v=2">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="SOS">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="What Is SOS | Community Coordination">
+<meta name="twitter:description" content="SOS is coordination infrastructure for disaster response. When help doesn't show up, people do — they just need a way to coordinate.">
+<meta name="twitter:image" content="https://sosconnect.org/og-image.png?v=2">
+<link rel="icon" type="image/png" href="/logomark.png">
+<link rel="apple-touch-icon" href="/logomark.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset ── */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Nunito Sans', -apple-system, sans-serif;
+    color: #0F1E2B;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    background: rgba(15,30,43,0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom-color: rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+  .nav-inner {
+    max-width: 1080px; margin: 0 auto; padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 12px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #fff; text-decoration: none;
+  }
+  .nav-brand img { height: 24px; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    position: relative;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s;
+    padding-bottom: 4px;
+  }
+  .nav-links a:hover { color: #fff; }
+  .nav-links a.active { color: #89CFF0; }
+  .nav-links a.active::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 1.5px; background: #89CFF0; border-radius: 1px;
+  }
+
+  /* ── Sections ── */
+  section { padding: 120px 32px; }
+  .narrow { max-width: 720px; margin: 0 auto; }
+
+  /* ── Typography ── */
+  .serif { font-family: 'DM Serif Display', Georgia, serif; }
+  h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 52px; line-height: 1.1; color: #0F1E2B; font-weight: 400; }
+  h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 38px; line-height: 1.15; color: #0F1E2B; font-weight: 400; }
+  h3 { font-size: 16px; font-weight: 700; color: #0F1E2B; }
+
+  .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: #0F1E2B; margin-bottom: 16px;
+  }
+  .body-lg { font-size: 18px; font-weight: 300; color: #555; line-height: 1.8; }
+
+  /* ── Backgrounds ── */
+  .bg-white { background: #fff; }
+  .bg-light { background: #f8f9fa; }
+  .bg-navy { background: #0F1E2B; color: #fff; }
+  .bg-navy h1, .bg-navy h2, .bg-navy h3 { color: #fff; }
+  .bg-navy .label { color: #89CFF0; }
+  .bg-navy .body-lg { color: rgba(255,255,255,0.55); }
+  .bg-light-alt { background: #f1f3f5; }
+
+  /* ── Accent line ── */
+  .accent-line { width: 48px; height: 2px; background: #0F1E2B; margin: 24px 0 0; }
+  .bg-navy .accent-line { background: #89CFF0; }
+
+  /* ── Stat cards ── */
+  .stat-row { display: flex; gap: 32px; margin: 48px 0; }
+  .stat-card {
+    flex: 1; background: #fff; border-radius: 16px; padding: 32px;
+    border: 1px solid rgba(15,30,43,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+  .stat-card .num {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 56px; color: #0F1E2B; line-height: 1;
+  }
+  .stat-card .desc { font-size: 14px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
+
+  /* ── Ecosystem cards ── */
+  .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+  .eco-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(15,30,43,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 32px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .eco-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .eco-card .eco-icon { margin-bottom: 16px; display: block; }
+  .eco-card h3 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px; font-weight: 400; color: #0F1E2B; margin-bottom: 12px;
+  }
+  .eco-card .eco-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #89CFF0; margin-bottom: 8px;
+  }
+  .eco-card p { font-size: 15px; color: #0F1E2B; line-height: 1.7; }
+
+  /* ── Page Hero (static, not animated) ── */
+  .page-hero {
+    min-height: 60vh; display: flex; align-items: center;
+    justify-content: center; text-align: center;
+    background: #0F1E2B; padding: 140px 32px 100px;
+    position: relative; overflow: hidden;
+  }
+  .page-hero .grain-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    opacity: 0.02; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+  .page-hero-content { position: relative; z-index: 2; max-width: 720px; }
+  .page-hero .page-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: #89CFF0; margin-bottom: 24px;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: clamp(32px, 5vw, 52px); color: #fff; font-weight: 400; line-height: 1.15;
+  }
+  .page-hero .hero-sub {
+    font-size: 18px; color: rgba(255,255,255,0.5); font-weight: 300;
+    margin-top: 20px; line-height: 1.8;
+  }
+
+  /* ── Crisis cards (red left border variant) ── */
+  .crisis-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(15,30,43,0.06);
+    border-left: 3px solid #EF4E4B;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 36px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .crisis-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+  .crisis-card .eco-label { color: #EF4E4B; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+  .crisis-card h3 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px; font-weight: 400; margin-bottom: 12px;
+  }
+  .crisis-card p { font-size: 15px; color: #3d4852; line-height: 1.7; }
+
+  /* ── Pull quote (coordination section) ── */
+  .pull-quote-block {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 48px;
+    margin-bottom: 32px;
+  }
+  .pull-quote-block .pq-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+  .pull-quote-block .pq-label.fail { color: #EF4E4B; }
+  .pull-quote-block .pq-label.work { color: #34d399; }
+  .pull-quote-block p {
+    font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.75; font-weight: 300;
+  }
+
+  /* ── Thesis vignette (everyone is a helper) ── */
+  .thesis-block {
+    font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;
+    margin-bottom: 20px;
+  }
+  .thesis-emphasis {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px; color: #0F1E2B; line-height: 1.3;
+    margin: 40px 0 20px;
+  }
+
+  /* ── Solution steps (text-based flywheel) ── */
+  .solution-step {
+    display: flex; gap: 24px; align-items: flex-start;
+    margin-bottom: 32px; padding-bottom: 32px;
+    border-bottom: 1px solid rgba(15,30,43,0.08);
+  }
+  .solution-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .solution-step-num {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 36px; color: #EF4E4B; line-height: 1; flex-shrink: 0;
+    width: 48px; text-align: right;
+  }
+  .solution-step-content h3 {
+    font-size: 15px; font-weight: 700; color: #0F1E2B; margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .solution-step-content p {
+    font-size: 15px; color: #3d4852; line-height: 1.7;
+  }
+
+  /* ── Result card ── */
+  .result-card {
+    background: #fff; border-radius: 16px; padding: 36px;
+    text-align: center; margin-top: 56px;
+    border: 1px solid rgba(15,30,43,0.06);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  }
+  .result-card p { font-size: 17px; color: #555; line-height: 1.8; font-weight: 300; }
+  .result-card strong { color: #0F1E2B; font-weight: 600; }
+
+  /* ── Invitation section ── */
+  .invitation-section {
+    background: #0a141f; text-align: center; position: relative; overflow: hidden;
+    padding: 120px 32px;
+  }
+  .invitation-moment {
+    font-size: 16px; color: rgba(255,255,255,0.4); max-width: 560px;
+    margin: 0 auto 40px; line-height: 1.8; font-weight: 300;
+  }
+  .are-you-heading {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 42px; color: #fff; margin-bottom: 16px;
+  }
+
+  /* ── Inline citation superscript ── */
+  .cite {
+    font-size: 11px; vertical-align: super; line-height: 0;
+    color: #89CFF0; text-decoration: none;
+  }
+
+  /* ── SOS Icon system ── */
+  .sos-icon {
+    width: 24px; height: 24px;
+    flex-shrink: 0;
+    fill: none;
+    display: inline-block;
+  }
+  .sos-icon-lg { width: 36px; height: 36px; }
+
+  /* ── Section dividers ── */
+  .wave-divider { line-height: 0; margin-top: -1px; position: relative; z-index: 2; }
+  .wave-divider svg { display: block; width: 100%; }
+
+  /* ── gs-fade base state ── */
+  .gs-fade { opacity: 0; transform: translateY(24px); }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    h1 { font-size: 32px; }
+    h2 { font-size: 28px; }
+    .stat-row { flex-direction: column; gap: 20px; }
+    #crisisGrid { grid-template-columns: 1fr !important; }
+    #ecoGrid { grid-template-columns: 1fr !important; }
+    #aboutGrid { grid-template-columns: 1fr !important; }
+    .stat-card .num { font-size: 44px; }
+    .eco-grid { grid-template-columns: 1fr; }
+    section { padding: 80px 20px; }
+    .nav-links { display: none; }
+    .page-hero { padding: 120px 20px 80px; }
+    .page-hero h1 { font-size: 32px; }
+    .are-you-heading { font-size: 32px; }
+    .pull-quote-block { padding: 32px; }
+    .invitation-section { padding: 80px 20px; }
+    .solution-step { flex-direction: column; gap: 8px; }
+    .solution-step-num { width: auto; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ NAV ════════ -->
+<nav id="siteNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">
+      <img src="/logomark-red.svg" alt="SOS">
+      SOS
+    </a>
+    <div class="nav-links">
+      <a href="/#crisis">Crisis</a>
+      <a href="/#ecosystem">Ecosystem</a>
+      <a href="/#gap">Coordination</a>
+      <a href="/#solution">Solution</a>
+      <a href="/what-is-sos" class="active">What Is SOS</a>
+      <a href="/join">Join</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     HERO — Page header, navy background
+     ════════════════════════════════════════════ -->
+<section class="page-hero" id="hero">
+  <div class="grain-overlay"></div>
+  <div class="page-hero-content">
+    <p class="page-label gs-fade">What Is SOS</p>
+    <h1 class="gs-fade">When help doesn't show up,<br>people do.</h1>
+    <p class="hero-sub gs-fade">They just need a way to coordinate.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 2: THE CRISIS — Light bg
+     ════════════════════════════════════════════ -->
+<section id="crisis" class="bg-light">
+  <div class="narrow">
+    <p class="label gs-fade">The Crisis</p>
+    <h2 class="gs-fade">The disaster within the disaster.</h2>
+    <div class="accent-line gs-fade"></div>
+
+    <div style="margin-top: 32px;" class="gs-fade">
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 16px;">Every major disaster in modern history has exposed the same failure — not in the people who respond, but in the systems that are supposed to coordinate them.</p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 16px;">After Hurricane Helene hit western North Carolina in September 2024, FEMA's resource tracking system crashed under ten times its normal volume. Search and rescue teams checked the same homes three and four times because two platforms didn't talk to each other.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">¹</a> Facebook became the missing persons database — not by design, but because nothing else worked. Volunteers were turned away at the edge of the damage zone because nobody could tell them where to bring it.</p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">This pattern isn't new. From Katrina to Sandy, Harvey to Maria, the same coordination failures surface every time. The tools break. The data fragments. The people who want to help can't find the people who need it.</p>
+    </div>
+  </div>
+
+  <div id="crisisGrid" style="margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 48px;">
+    <div class="crisis-card crisis-reveal" style="opacity: 0; transform: translateY(20px);">
+      <p class="eco-label">Federal Safety Net</p>
+      <h3>The net is contracting</h3>
+      <p>As of April 2026, FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.dhs.gov/news/2026/04/02/femas-47th-anniversary-overshadowed-democrats-shutdown-disaster-relief-fund-nears" class="cite" target="_blank" rel="noopener">²</a> Twenty states have sued to restart the largest federal preparedness grant program.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">³</a> GAO added disaster assistance to its high-risk list for the first time.<a href="https://www.gao.gov/products/gao-25-107743" class="cite" target="_blank" rel="noopener">⁴</a></p>
+    </div>
+    <div class="crisis-card crisis-reveal" style="opacity: 0; transform: translateY(20px);">
+      <p class="eco-label">Global Humanitarian Crisis</p>
+      <h3>The Great Aid Recession</h3>
+      <p>305 million people needed humanitarian assistance in 2025. 207 million didn't receive it.<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">⁵</a> The $24.4 billion funding shortfall is the largest on record.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">⁶</a> Humanitarian funding dropped 40 percent in a single year.<a href="https://unric.org/en/humanitarian-aid-the-most-vulnerable-already-severely-impacted-by-budget-cuts/" class="cite" target="_blank" rel="noopener">⁷</a></p>
+    </div>
+    <div class="crisis-card crisis-reveal" style="opacity: 0; transform: translateY(20px);">
+      <p class="eco-label">Coordination Failure</p>
+      <h3>Volunteer convergence</h3>
+      <p>After Helene, 54 fire departments, hundreds of nonprofits, and thousands of volunteers responded — across 19 different systems with zero shared visibility. Researchers call this "volunteer convergence": the secondary disaster within the disaster.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Stats: Navy bg -->
+<section class="bg-navy" style="padding: 100px 32px;">
+  <div class="narrow" style="text-align: center; margin-bottom: 64px;">
+    <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: rgba(255,255,255,0.6); font-weight: 400;">The disasters are accelerating.<br>The systems are contracting.</p>
+  </div>
+  <div class="narrow">
+    <div class="stat-row">
+      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
+        <div class="num" data-count="305" data-suffix="M+" data-prefix="" style="color: #fff;">0</div>
+        <div class="desc" style="color: rgba(255,255,255,0.5);">people needed humanitarian assistance globally in 2025<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">⁵</a></div>
+      </div>
+      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
+        <div class="num" data-count="24" data-suffix="B" data-prefix="$" style="color: #fff;">0</div>
+        <div class="desc" style="color: rgba(255,255,255,0.5);">humanitarian funding shortfall — the largest on record<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">⁶</a></div>
+      </div>
+      <div class="stat-card gs-fade" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08);">
+        <div class="num" data-count="40" data-suffix="%" data-prefix="" style="color: #fff;">0</div>
+        <div class="desc" style="color: rgba(255,255,255,0.5);">drop in humanitarian aid in a single year — the "Great Aid Recession"<a href="https://www.cfr.org/articles/great-aid-recession-2025s-humanitarian-crash-nine-charts" class="cite" target="_blank" rel="noopener">⁸</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 3: THE HELP EXISTS — White bg, 3-col eco cards
+     ════════════════════════════════════════════ -->
+<section id="ecosystem" class="bg-white">
+  <div style="max-width: 1100px; margin: 0 auto; padding: 0 48px;">
+    <p class="label gs-fade">The Help Exists</p>
+    <h2 class="gs-fade">Everyone responds.<br>No one can see each other.</h2>
+    <div class="accent-line gs-fade"></div>
+    <p class="body-lg gs-fade" style="margin-top: 24px; max-width: 640px;">
+      The response to every disaster is bigger, faster, and more capable than any system gives it credit for.
+    </p>
+
+    <div id="ecoGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px;">
+      <div class="eco-card" style="background: #f4f5f7;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
+        <p class="eco-label">Citizens</p>
+        <h3>The actual first responders</h3>
+        <p>Three out of four people turn to family, neighbors, and friends before they turn to any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" target="_blank" rel="noopener">⁹</a> Most search and rescue in the first 24 hours is performed by community members. People with trucks clear roads. Nurses triage on front porches. Teenagers who speak three languages become the only translators for miles.</p>
+      </div>
+      <div class="eco-card" style="background: #f4f5f7;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        <p class="eco-label">Organizations</p>
+        <h3>Deployed within hours</h3>
+        <p>Small nonprofits with four-person staffs manage thousands of requests on spreadsheets. Large networks coordinate across hundreds of member organizations. Faith-based groups, mutual aid networks, and volunteer teams self-organize through group chats, Facebook posts, and word of mouth.</p>
+      </div>
+      <div class="eco-card" style="background: #f4f5f7;">
+        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
+        <p class="eco-label">Government &amp; Emergency Services</p>
+        <h3>Overwhelmed &amp; underfunded</h3>
+        <p>85% of state emergency management agencies cite infrastructure limitations as the primary barrier to adopting AI coordination tools.<a href="https://www.deloitte.com/us/en/insights/industry/government-public-sector-services/emergency-management-preparedness-response.html" class="cite" target="_blank" rel="noopener">¹⁰</a> Only 25% of directors say their staff have the skills to manage emergency conditions effectively. Working with tools from a different era.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 4: COORDINATION AS FORCE MULTIPLIER — Navy bg
+     ════════════════════════════════════════════ -->
+<section id="coordination" class="bg-navy">
+  <div class="narrow" style="text-align: center;">
+    <p class="label gs-fade">Coordination as a Force Multiplier</p>
+    <h2 class="gs-fade">When coordination fails,<br>no amount of resources is enough.</h2>
+    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
+  </div>
+
+  <div style="max-width: 820px; margin: 64px auto 0; padding: 0 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div class="pull-quote-block gs-fade">
+      <p class="pq-label fail">When it fails</p>
+      <p>Three organizations can help one family. Without coordination, two never hear about the need. The third shows up a week late. The family called nine hotlines. Nobody tracks what was spent. After Katrina, that absence of accountability cost billions in fraud.<a href="https://www.gao.gov/products/gao-06-844t" class="cite" target="_blank" rel="noopener">¹¹</a></p>
+    </div>
+    <div class="pull-quote-block gs-fade">
+      <p class="pq-label work">When it works</p>
+      <p>The shelter organization, the food distribution team, and the medical transport volunteer all receive the same match at the same time. Each knows what the other is doing. Every dollar traced. Every contribution attributed. The system learns — and feeds the next disaster.</p>
+    </div>
+  </div>
+
+  <div class="narrow" style="text-align: center; margin-top: 64px;">
+    <p class="gs-fade" style="color: #89CFF0; font-style: normal; font-weight: 600; font-size: 18px;">
+      The technology to make this possible didn't exist two years ago. It does now.
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 5: EVERYONE IS A HELPER — Light bg
+     ════════════════════════════════════════════ -->
+<section id="thesis" class="bg-light">
+  <div class="narrow">
+    <p class="label gs-fade">Everyone Is a Helper</p>
+    <h2 class="gs-fade">This is what we learned in the field.</h2>
+    <div class="accent-line gs-fade"></div>
+
+    <p class="thesis-block gs-fade" style="margin-top: 32px;">The same person who needs shelter today volunteers their generator tomorrow. The displaced family with a truck is clearing roads by morning. The person who called for help last week is running supply deliveries this week.</p>
+    <p class="thesis-block gs-fade">There is no clean line between the people who need help and the people who give it. Needs and offers coexist on the same person, sometimes on the same day.</p>
+    <p class="thesis-block gs-fade">SOS doesn't categorize people as survivors or helpers. In the system, there are people — connected to what they need and what they can offer. The person asking isn't just asking. They're also contributing.</p>
+
+    <p class="thesis-emphasis gs-fade">The pay-it-forward instinct is already there. What they lack isn't motivation.</p>
+    <p class="thesis-emphasis gs-fade" style="color: #EF4E4B;">It's infrastructure.</p>
+
+    <p class="thesis-block gs-fade" style="margin-top: 32px;">SOS is built on the premise that every person has something to offer — and that the coordination layer should see both sides. Requests and resources. Needs and offers. On every person. All the time.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 6: THE SOLUTION — Light-alt bg
+     ════════════════════════════════════════════ -->
+<section id="solution" class="bg-light-alt">
+  <div class="narrow" style="text-align: center;">
+    <p class="label gs-fade">The Solution</p>
+    <h2 class="gs-fade">Relief as permaculture.</h2>
+    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
+    <p class="body-lg gs-fade" style="margin-top: 32px; text-align: left;">
+      SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, emergency services, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.
+    </p>
+  </div>
+
+  <div style="max-width: 680px; margin: 64px auto 0; padding: 0 32px;">
+    <div class="solution-step gs-fade">
+      <div class="solution-step-num">01</div>
+      <div class="solution-step-content">
+        <h3>Intake — any device, any channel</h3>
+        <p>Someone texts a number from a shelter. Someone scans a QR code on a flyer. Someone calls from a landline because their cell service is gone. They talk naturally — "my family needs a place to stay, we lost everything" — and the system extracts the need. No app to download. No account to create. Works on any phone.</p>
+      </div>
+    </div>
+    <div class="solution-step gs-fade">
+      <div class="solution-step-num">02</div>
+      <div class="solution-step-content">
+        <h3>Map — offers are captured the same way</h3>
+        <p>People who want to help go through the same flow. "I have a truck and I'm in Asheville." "I can translate Spanish and Creole." "I have three pallets of water." The system captures what they can offer, where they are, and when they're available.</p>
+      </div>
+    </div>
+    <div class="solution-step gs-fade">
+      <div class="solution-step-num">03</div>
+      <div class="solution-step-content">
+        <h3>Match — simultaneous, intelligent coordination</h3>
+        <p>The system finds the closest people who can respond. The match considers capability, capacity, proximity, and urgency. One family. Three people or organizations. Coordinated simultaneously. Each gets the match through their existing tools and accepts, declines, or reassigns.</p>
+      </div>
+    </div>
+    <div class="solution-step gs-fade">
+      <div class="solution-step-num">04</div>
+      <div class="solution-step-content">
+        <h3>Fulfill — every match traced</h3>
+        <p>Every match is traced. Every outcome recorded. Each partner organization gets its own AI coordination agent — trained on their inventory, workflows, and rhythm. These agents retain context across every conversation, so each interaction builds on everything that came before.</p>
+      </div>
+    </div>
+    <div class="solution-step gs-fade">
+      <div class="solution-step-num">05</div>
+      <div class="solution-step-content">
+        <h3>Learn — the system compounds</h3>
+        <p>After the first disaster season, the system knows which neighborhoods surge first, which partners respond within the hour, which resources run dry. Every cycle feeds the next. The intelligence compounds. The network strengthens. The response accelerates.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 680px; margin: 0 auto; padding: 0 32px;">
+    <div class="result-card gs-fade">
+      <p>
+        The system doesn't just respond to disasters — it learns from them. The disaster restoration market is <strong>$45 billion.<a href="https://www.mordorintelligence.com/industry-reports/disaster-restoration-services-market" class="cite" target="_blank" rel="noopener">¹²</a></strong> Revenue from connecting homeowners with vetted contractors funds coordination for people with no insurance, no savings, and no safety net. The mission is legally protected through a dual structure: a 501(c)(3) that is always free for citizens, and a Public Benefit Corporation that generates revenue and reinvests it into the mission.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 7: BORN IN A HURRICANE — White bg
+     ════════════════════════════════════════════ -->
+<section id="origin" class="bg-white" style="padding: 100px 32px;">
+  <div style="max-width: 720px; margin: 0 auto; text-align: center;">
+    <p class="label gs-fade">Why We Started</p>
+    <h2 class="gs-fade">Born in a hurricane.<br>Built on research.</h2>
+    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
+  </div>
+  <div id="aboutGrid" style="max-width: 1100px; margin: 48px auto 0; padding: 0 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;">
+    <div class="gs-fade" style="background: #f4f5f7; border-radius: 16px; padding: 36px;">
+      <p style="font-size: 13px; font-weight: 700; color: #89CFF0; letter-spacing: 0.08em; margin-bottom: 12px;">THE ORIGIN</p>
+      <p style="font-size: 15px; color: #3d4852; line-height: 1.75; font-weight: 300;">SOS started during Hurricane Helene. Our founder's farmhouse in Burnsville, North Carolina was damaged — he lived in a donated RV for three months. The team scraped 4,000 missing persons off Facebook, delivered RVs, and brought Starlink terminals to communities cut off for weeks. Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026, coordinating hundreds of resources across 12 states.<a href="https://www.foxweather.com/watch/fmc-pc525bwm58bnkvy1" class="cite" target="_blank" rel="noopener">¹³</a></p>
+    </div>
+    <div class="gs-fade" style="background: #f4f5f7; border-radius: 16px; padding: 36px;">
+      <p style="font-size: 13px; font-weight: 700; color: #89CFF0; letter-spacing: 0.08em; margin-bottom: 12px;">THE RESEARCH</p>
+      <p style="font-size: 15px; color: #3d4852; line-height: 1.75; font-weight: 300;">After 18 months studying the history of disaster coordination and the science of coordination itself, SOS is production software. AI coordination agents are live with partner organizations across housing, food, medical, supplies, transport, and coordination. The citizen portal is live. The coordination loop is running.</p>
+    </div>
+    <div class="gs-fade" style="background: #f4f5f7; border-radius: 16px; padding: 36px;">
+      <p style="font-size: 13px; font-weight: 700; color: #89CFF0; letter-spacing: 0.08em; margin-bottom: 12px;">THE VALUES</p>
+      <p style="font-size: 15px; color: #3d4852; line-height: 1.75; font-weight: 300;">Partners keep their data. If they leave, it goes with them. Citizens control their privacy — no profile required, location data expires. Every coordination decision is logged with reasoning. SOS doesn't sell data, build profiles, or optimize for engagement. Communities deserve infrastructure that works for them, not on them. The values are structural, not aspirational.</p>
+    </div>
+    <div class="gs-fade" style="text-align: center; padding: 56px 48px; background: #0F1E2B; border-radius: 16px; grid-column: 1 / -1;">
+      <p style="font-size: 11px; font-weight: 700; color: #89CFF0; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px;">Our Core Finding</p>
+      <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 32px; color: #fff; font-weight: 400; line-height: 1.35;">The instinct is already there. What's missing — <span style="color: #EF4E4B;">is infrastructure.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECTION 8: ARE YOU A HELPER? — Navy bg, CTA
+     ════════════════════════════════════════════ -->
+<section id="join" class="invitation-section">
+  <div style="max-width: 600px; margin: 0 auto; position: relative; z-index: 2;">
+    <p class="label gs-fade" style="color: #89CFF0; margin-bottom: 24px;">Are You a Helper?</p>
+    <h2 class="are-you-heading gs-fade">Join the SOS community.</h2>
+
+    <p class="invitation-moment gs-fade">Everyone is a helper. We help the helpers.</p>
+
+    <div class="gs-fade" style="display: flex; align-items: center; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 8px;">
+      <a href="/c?flow=get-help" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; transition: opacity 0.3s; padding: 12px 0; border-bottom: 1.5px solid rgba(239,78,75,0.4); min-height: 44px; display: inline-flex; align-items: center;">Get Help</a>
+      <span style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></span>
+      <a href="/c?flow=give-help" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; transition: opacity 0.3s; padding: 12px 0; border-bottom: 1.5px solid rgba(137,207,240,0.3); min-height: 44px; display: inline-flex; align-items: center;">Give Help</a>
+      <span style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></span>
+      <a href="/join" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">Partner With Us</a>
+    </div>
+
+    <p class="gs-fade" style="margin-top: 48px; font-size: 13px; color: rgba(255,255,255,0.25); letter-spacing: 0.1em;">sosconnect.org</p>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer style="background: #0F1E2B; padding: 80px 32px 48px; text-align: center;">
+  <img src="/logomark-red.svg" alt="SOS" style="height: 32px; opacity: 0.8; margin-bottom: 32px;">
+  <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; color: #fff; font-weight: 400; line-height: 1.2; margin-bottom: 12px;">Everyone is a helper.</p>
+  <p style="font-size: 18px; color: #89CFF0; font-weight: 300; margin-bottom: 48px;">We help the helpers.</p>
+  <div style="margin-bottom: 24px;">
+    <a aria-label="SOS Global Inc on GuideStar" href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer" style="display: inline-block; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+      <img alt="GuideStar Transparency Seal" src="https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/16026335/svg" style="height: 80px;" />
+    </a>
+  </div>
+  <p style="font-size: 11px; color: rgba(255,255,255,0.2);">sosconnect.org · © 2026 SOS Global · 501(c)(3) nonprofit · EIN 33-2797387</p>
+</footer>
+
+<!-- ════════ SCRIPTS ════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function() {
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ═══════════════════════════════════════════
+     NAV — fade in on load, glassmorphism on scroll
+     ═══════════════════════════════════════════ */
+  var nav = document.getElementById('siteNav');
+  gsap.to(nav, { opacity: 1, duration: 0.6, delay: 0.3, ease: 'power2.out' });
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 40) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  }, { passive: true });
+
+  /* ═══════════════════════════════════════════
+     HERO — fade in
+     ═══════════════════════════════════════════ */
+  gsap.set('.page-hero-content .gs-fade', { opacity: 0, y: 24 });
+  gsap.to('.page-hero-content .gs-fade', {
+    opacity: 1, y: 0, duration: 0.7, stagger: 0.18, delay: 0.4, ease: 'power2.out'
+  });
+
+  /* ═══════════════════════════════════════════
+     GLOBAL: gs-fade elements (scroll triggered)
+     ═══════════════════════════════════════════ */
+  document.querySelectorAll('.gs-fade').forEach(function(el) {
+    // Skip hero elements (already animated above)
+    if (el.closest('.page-hero-content')) return;
+    gsap.from(el, {
+      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' },
+      opacity: 0, y: 24, duration: 0.7, ease: 'power2.out'
+    });
+  });
+
+  /* ═══════════════════════════════════════════
+     Crisis cards — stagger reveal
+     ═══════════════════════════════════════════ */
+  gsap.to('.crisis-reveal', {
+    scrollTrigger: { trigger: '#crisisGrid', start: 'top 80%' },
+    opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: 'power2.out'
+  });
+
+  /* ═══════════════════════════════════════════
+     Eco cards — stagger reveal
+     ═══════════════════════════════════════════ */
+  gsap.from('#ecoGrid .eco-card', {
+    scrollTrigger: { trigger: '#ecoGrid', start: 'top 80%' },
+    opacity: 0, y: 30, duration: 0.6, stagger: 0.15, ease: 'power2.out'
+  });
+
+  /* ═══════════════════════════════════════════
+     About grid — stagger reveal
+     ═══════════════════════════════════════════ */
+  gsap.from('#aboutGrid > div', {
+    scrollTrigger: { trigger: '#aboutGrid', start: 'top 80%' },
+    opacity: 0, y: 30, duration: 0.6, stagger: 0.12, ease: 'power2.out'
+  });
+
+  /* ═══════════════════════════════════════════
+     Animated counters
+     ═══════════════════════════════════════════ */
+  document.querySelectorAll('.stat-card .num').forEach(function(numEl) {
+    var target = parseInt(numEl.getAttribute('data-count'));
+    var suffix = numEl.getAttribute('data-suffix') || '';
+    var prefix = numEl.getAttribute('data-prefix') || '';
+    var triggered = false;
+    ScrollTrigger.create({
+      trigger: numEl, start: 'top 80%',
+      onEnter: function() {
+        if (triggered) return; triggered = true;
+        var obj = { val: 0 };
+        gsap.to(obj, {
+          val: target, duration: 1.8, ease: 'power2.out',
+          onUpdate: function() { numEl.textContent = prefix + Math.round(obj.val) + suffix; }
+        });
+      }
+    });
+  });
+
+  window.addEventListener('load', function() { ScrollTrigger.refresh(); });
+
+})();
+</script>
+
+</body>
+</html>

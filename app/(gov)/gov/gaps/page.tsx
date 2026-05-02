@@ -1,9 +1,9 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { GovShell } from '@/components/gov-shell';
-import { getGapAnalysis, type GapAnalysis } from '@/lib/gov-queries';
-import { supabase } from '@/lib/supabase-client';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getGapAnalysis, type GapAnalysis } from '@/lib/gov-queries';
 
 const SEVERITY_BADGES: Record<string, string> = {
   critical: 'bg-sos-red-500/20 text-sos-red-500 border border-sos-red-500/30',
@@ -25,7 +25,7 @@ export default function GapAnalysisPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
-    supabase.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
+    db.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
   }, []);
 
   useEffect(() => {

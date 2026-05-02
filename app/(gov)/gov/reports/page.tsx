@@ -1,9 +1,9 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { GovShell } from '@/components/gov-shell';
-import { getSitrepSummary, type SitrepSummary } from '@/lib/gov-queries';
-import { supabase } from '@/lib/supabase-client';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSitrepSummary, type SitrepSummary } from '@/lib/gov-queries';
 
 export default function GovReports() {
   const [report, setReport] = useState<SitrepSummary | null>(null);
@@ -12,7 +12,7 @@ export default function GovReports() {
   const [disasterFilter, setDisasterFilter] = useState('all');
 
   useEffect(() => {
-    supabase.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
+    db.from('disasters').select('id, name, status').then(({ data }) => setDisasters(data || []));
   }, []);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function GovReports() {
     if (!report) return;
 
     // Audit log this download
-    supabase.from('audit_log').insert({
+    db.from('audit_log').insert({
       action: 'foia_export',
       actor_type: 'gov_user',
       details: `CSV export: ${report.disaster_name}, ${new Date().toISOString()}`,

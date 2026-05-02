@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
-import { getAvailableJobs, getActiveJobs, type AvailableJob, type ActiveJob } from '@/lib/vendor-enhanced-queries';
+// TODO: rewire to EF (Phase 4) — import { getAvailableJobs, getActiveJobs, type AvailableJob, type ActiveJob } from '@/lib/vendor-enhanced-queries';
 import { BidForm } from '@/components/bid-form';
-import { type VendorJob } from '@/lib/vendor-queries';
+// TODO: rewire to EF (Phase 4) — import { type VendorJob } from '@/lib/vendor-queries';
 
 type Tab = 'available' | 'active' | 'completed';
 

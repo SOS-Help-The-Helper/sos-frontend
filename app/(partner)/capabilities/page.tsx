@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
-import { getVendorProfile, updateVendorProfile, type VendorProfile } from '@/lib/vendor-enhanced-queries';
+// TODO: rewire to EF (Phase 4) — import { getVendorProfile, updateVendorProfile, type VendorProfile } from '@/lib/vendor-enhanced-queries';
 
 const SERVICE_CATEGORIES = [
   { id: 'roofing', icon: '🏠', label: 'Roofing' },

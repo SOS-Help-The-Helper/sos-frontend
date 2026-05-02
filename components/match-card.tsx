@@ -1,6 +1,6 @@
 'use client';
 
-import { Match, getStatusColor, getScoreColor, getChainRoleIcon } from '@/lib/match-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { Match, getStatusColor, getScoreColor, getChainRoleIcon } from '@/lib/match-queries';
 
 interface MatchCardProps {
   match: Match;

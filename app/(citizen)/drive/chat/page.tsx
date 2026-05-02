@@ -1,8 +1,8 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 interface Message {
@@ -32,7 +32,7 @@ function CaravanChatContent() {
     if (!runId) { setLoading(false); return; }
     async function load() {
       // Get run info
-      const { data: runData } = await supabase.from('delivery_runs').select('name, total_slots').eq('id', runId).single();
+      const { data: runData } = await db.from('delivery_runs').select('name, total_slots').eq('id', runId).single();
       if (runData) { setRunName(runData.name); setMemberCount(runData.total_slots || 0); }
 
       // Get messages for this run — stored in community_messages with run_id in JSONB or a dedicated column
@@ -77,7 +77,7 @@ function CaravanChatContent() {
     if (!input.trim() || sending || !runId) return;
     setSending(true);
 
-    const { data } = await supabase.from('community_messages').insert({
+    const { data } = await db.from('community_messages').insert({
       person_id: personId,
       message_text: input.trim(),
       message_type: `caravan_${runId}`,

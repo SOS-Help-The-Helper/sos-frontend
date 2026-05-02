@@ -1,8 +1,8 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { AdminShell } from '@/components/admin-shell';
-import { supabase } from '@/lib/supabase-client';
 
 interface PendingLearning {
   id: string;
@@ -77,9 +77,9 @@ export default function ApprovalsPage() {
 
   async function handleLearning(id: string, action: 'active' | 'rejected') {
     setActing(id);
-    await supabase.from('system_learnings').update({ status: action }).eq('id', id);
+    await db.from('system_learnings').update({ status: action }).eq('id', id);
     // Audit trail
-    await supabase.from('audit_log').insert({
+    await db.from('audit_log').insert({
       action: `learning_${action}`,
       actor_type: 'admin',
       details: `Learning ${id} → ${action}`,
@@ -91,12 +91,12 @@ export default function ApprovalsPage() {
   async function handleTrust(orgId: string, action: 'override' | 'suspend') {
     setActing(orgId);
     if (action === 'suspend') {
-      await supabase.from('organizations').update({ status: 'suspended' }).eq('id', orgId);
+      await db.from('organizations').update({ status: 'suspended' }).eq('id', orgId);
     } else {
-      await supabase.from('organizations').update({ trust_score: 0.5 }).eq('id', orgId);
+      await db.from('organizations').update({ trust_score: 0.5 }).eq('id', orgId);
     }
     // Audit trail
-    await supabase.from('audit_log').insert({
+    await db.from('audit_log').insert({
       action: `trust_${action}`,
       actor_type: 'admin',
       details: `Org ${orgId} → ${action}`,
@@ -166,8 +166,8 @@ export default function ApprovalsPage() {
                     <button
                       onClick={async () => {
                         setActing(org.id);
-                        await supabase.from('organizations').update({ status: 'active', trust_score: 0.7 }).eq('id', org.id);
-                        await supabase.from('audit_log').insert({ action: 'org_approved', actor_type: 'admin', details: `Org ${org.name} (${org.id}) approved, trust set to 0.7` }).then(() => {});
+                        await db.from('organizations').update({ status: 'active', trust_score: 0.7 }).eq('id', org.id);
+                        await db.from('audit_log').insert({ action: 'org_approved', actor_type: 'admin', details: `Org ${org.name} (${org.id}) approved, trust set to 0.7` }).then(() => {});
                         setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
                         setActing(null);
                       }}
@@ -178,8 +178,8 @@ export default function ApprovalsPage() {
                     <button
                       onClick={async () => {
                         setActing(org.id);
-                        await supabase.from('organizations').update({ status: 'rejected' }).eq('id', org.id);
-                        await supabase.from('audit_log').insert({ action: 'org_rejected', actor_type: 'admin', details: `Org ${org.name} (${org.id}) rejected` }).then(() => {});
+                        await db.from('organizations').update({ status: 'rejected' }).eq('id', org.id);
+                        await db.from('audit_log').insert({ action: 'org_rejected', actor_type: 'admin', details: `Org ${org.name} (${org.id}) rejected` }).then(() => {});
                         setPendingOrgs(prev => prev.filter(o => o.id !== org.id));
                         setActing(null);
                       }}

@@ -1,262 +1,426 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { AIToolRenderer } from '@/components/ai-tool-renderer';
-import { getPersonId } from '@/lib/person-cookie';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-type Step = 'who' | 'what' | 'chat';
-type FlowType = 'survivor' | 'donor' | 'volunteer';
-type ForWhom = 'myself' | 'someone';
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+const ERV_QUERY_URL = 'https://rtduqguwhkczexnoawej.supabase.co/functions/v1/erv-query';
+const ERV_AUTH = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o';
 
-const ERV_LOGO = 'https://images.squarespace-cdn.com/content/v1/5f8873ca8870914d0d9008eb/1604966886490-AH1M1O1LHME34AQJAWEF/IMG_0053.JPG?format=100w';
+type SelectedPin = {
+  type: 'request' | 'resource' | 'driver';
+  id: string;
+  properties: Record<string, any>;
+};
 
-export default function ErvIntakePage() {
-  const [step, setStep] = useState<Step>('who');
-  const [forWhom, setForWhom] = useState<ForWhom | null>(null);
-  const [flowType, setFlowType] = useState<FlowType | null>(null);
-  const [input, setInput] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+async function ervQuery(queryType: string, filters?: Record<string, any>) {
+  const res = await fetch(ERV_QUERY_URL, {
+    method: 'POST',
+    headers: { Authorization: ERV_AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query_type: queryType, filters, limit: 5000 }),
+  });
+  return res.json();
+}
 
-  const personId = typeof window !== 'undefined' ? getPersonId() : null;
+export default function ErvMapPage() {
+  return (
+    <Suspense fallback={<div style={{ background: '#0F1E2B', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#89CFF0', fontSize: 14 }}>Loading ERV Map...</span></div>}>
+      <ErvMap />
+    </Suspense>
+  );
+}
 
-  const transport = useRef(new DefaultChatTransport({
-    api: '/api/chat',
-    headers: {
-      'x-person-id': personId || '',
-      'x-authenticated': personId ? 'true' : 'false',
-    },
-  })).current;
+function ErvMap() {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const layerClickedRef = useRef(false);
+  const mapInstance = useRef<any>(null);
+  const mapboxglRef = useRef<any>(null);
+  const searchParams = useSearchParams();
+  const deepLinkPin = searchParams.get('pin');
+  const deepLinkType = searchParams.get('type');
 
-  const { messages, sendMessage, status } = useChat({ transport });
-  const isLoading = status === 'streaming' || status === 'submitted';
+  const [lat, setLat] = useState(29.2);
+  const [lng, setLng] = useState(-82.1);
+  const [locationName, setLocationName] = useState('Ocala, FL');
+  const [loading, setLoading] = useState(true);
+  const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
+  const [stats, setStats] = useState<{ families: number; rvs: number; drivers: number; people: number }>({ families: 0, rvs: 0, drivers: 0, people: 0 });
 
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior });
-    });
+  // GPS
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async (p) => {
+        setLat(p.coords.latitude);
+        setLng(p.coords.longitude);
+        if (mapInstance.current) {
+          mapInstance.current.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 8, duration: 1500 });
+        }
+        try {
+          const gKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+          if (gKey) {
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${p.coords.latitude},${p.coords.longitude}&key=${gKey}&result_type=locality`);
+            const data = await res.json();
+            if (data.results?.[0]) {
+              const components = data.results[0].address_components || [];
+              const city = components.find((c: any) => c.types.includes('locality'))?.long_name;
+              const state = components.find((c: any) => c.types.includes('administrative_area_level_1'))?.short_name;
+              if (city && state) setLocationName(`${city}, ${state}`);
+            }
+          }
+        } catch {}
+      },
+      () => {}, { enableHighAccuracy: true, timeout: 3000 }
+    );
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
-
-  // Mobile keyboard handling
+  // Map init + data load
   useEffect(() => {
-    const vv = (window as any).visualViewport;
-    if (!vv) return;
-    const handler = () => {
-      const diff = window.innerHeight - vv.height;
-      setKeyboardHeight(diff > 50 ? diff : 0);
+    if (!mapRef.current || !MAPBOX_TOKEN) return;
+    if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
+    let glowFrame = 0;
+    let destroyed = false;
+
+    const initMap = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default;
+      mapboxglRef.current = mapboxgl;
+      await import('mapbox-gl/dist/mapbox-gl.css');
+      if (!mapRef.current) return;
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+
+      const map = new mapboxgl.Map({
+        container: mapRef.current,
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [-82.1, 29.2], // Ocala, FL (ERV staging)
+        zoom: 4,
+        attributionControl: false,
+      });
+      mapInstance.current = map;
+
+      map.on('load', async () => {
+        // Fetch ERV data via edge functions
+        let requests: any[] = [], resources: any[] = [], drivers: any[] = [];
+        try {
+          const [reqRes, fleetRes, driverRes] = await Promise.all([
+            ervQuery('request_summary'),
+            ervQuery('fleet_status'),
+            ervQuery('driver_status'),
+          ]);
+          requests = reqRes?.data?.requests || [];
+          resources = fleetRes?.data?.resources || [];
+          drivers = (Array.isArray(driverRes?.data) ? driverRes.data : driverRes?.data?.resources || driverRes?.data || []);
+          
+          setStats({
+            families: reqRes?.data?.total || requests.length,
+            rvs: fleetRes?.data?.total || resources.length,
+            drivers: Array.isArray(drivers) ? drivers.length : 0,
+            people: reqRes?.data?.total_household || 0,
+          });
+        } catch (err) {
+          console.error('ERV data load error:', err);
+        }
+
+        // === REQUESTS (red) — survivors needing help ===
+        const requestFeatures = requests.filter((r: any) => r.latitude && r.longitude).map((r: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+          properties: {
+            id: r.id, type: 'request', status: r.status, priority_score: r.priority_score,
+            household_size: r.household_size, state: r.state, is_veteran: r.is_veteran,
+            is_first_responder: r.is_first_responder, is_fema_replacement: r.is_fema_replacement,
+            disaster_id: r.disaster_id,
+          },
+        }));
+
+        map.addSource('requests-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: requestFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+        });
+
+        // Cluster glow
+        map.addLayer({ id: 'requests-cluster-glow', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
+        map.addLayer({ id: 'requests-clusters', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6 } });
+        map.addLayer({ id: 'requests-cluster-count', type: 'symbol', source: 'requests-source', filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'requests-hit', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
+        map.addLayer({ id: 'requests-points', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // === RESOURCES (blue) — RVs ===
+        const resourceFeatures = resources.filter((r: any) => r.latitude && r.longitude).map((r: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+          properties: {
+            id: r.id, type: 'resource', status: r.status, source: r.source,
+            vehicle_type: r.vehicle_type, sleeps: r.sleeps, vin: r.vin,
+            year: r.year, make: r.make, model: r.model,
+          },
+        }));
+
+        map.addSource('resources-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: resourceFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+        });
+
+        map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
+        map.addLayer({ id: 'resources-clusters', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6 } });
+        map.addLayer({ id: 'resources-cluster-count', type: 'symbol', source: 'resources-source', filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'resources-hit', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
+        map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // === DRIVERS (green) ===
+        const driverFeatures = (Array.isArray(drivers) ? drivers : []).filter((d: any) => d.latitude && d.longitude).map((d: any) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [d.longitude, d.latitude] },
+          properties: {
+            id: d.id, type: 'driver', status: d.status,
+            display_name: d.persons?.display_name || 'Driver',
+            tow_capability: JSON.stringify(d.tow_capability || []),
+            has_class_a: d.has_class_a,
+          },
+        }));
+
+        map.addSource('drivers-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: driverFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+        });
+
+        map.addLayer({ id: 'drivers-cluster-glow', type: 'circle', source: 'drivers-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#4CAF50', 'circle-radius': ['step', ['get', 'point_count'], 28, 5, 38, 20, 48], 'circle-opacity': 0.3, 'circle-blur': 1 } });
+        map.addLayer({ id: 'drivers-clusters', type: 'circle', source: 'drivers-source', filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#4CAF50', 'circle-radius': ['step', ['get', 'point_count'], 16, 5, 22, 20, 28], 'circle-opacity': 0.6 } });
+        map.addLayer({ id: 'drivers-cluster-count', type: 'symbol', source: 'drivers-source', filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'drivers-points', type: 'circle', source: 'drivers-source', filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#4CAF50', 'circle-radius': 7, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // === USER LOCATION (pulsing green) ===
+        map.addSource('user-location', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} } });
+        map.addLayer({ id: 'user-pulse', type: 'circle', source: 'user-location',
+          paint: { 'circle-color': '#34d399', 'circle-radius': 24, 'circle-opacity': 0.2 } });
+        map.addLayer({ id: 'user-dot', type: 'circle', source: 'user-location',
+          paint: { 'circle-color': '#34d399', 'circle-radius': 7, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
+
+        // === CLUSTER GLOW ANIMATION ===
+        const animateGlow = () => {
+          if (destroyed) return;
+          try {
+            const t = Date.now() / 1000;
+            const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+            const glowLayers = [
+              { id: 'requests-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+              { id: 'resources-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
+              { id: 'drivers-cluster-glow', baseRadius: [28, 38, 48], baseOpacity: 0.3 },
+            ];
+            glowLayers.forEach(({ id, baseRadius, baseOpacity }) => {
+              if (!map.getLayer(id)) return;
+              const scale = 1 + pulse * 0.3;
+              map.setPaintProperty(id, 'circle-radius', ['step', ['get', 'point_count'], baseRadius[0] * scale, 10, baseRadius[1] * scale, 50, baseRadius[2] * scale]);
+              map.setPaintProperty(id, 'circle-opacity', baseOpacity * (0.6 + pulse * 0.4));
+            });
+          } catch {}
+          glowFrame = requestAnimationFrame(animateGlow);
+        };
+        animateGlow();
+
+        // === CLICK HANDLERS ===
+        const clickLayers = [
+          { layers: ['requests-hit', 'requests-points'], type: 'request' as const },
+          { layers: ['resources-hit', 'resources-points'], type: 'resource' as const },
+          { layers: ['drivers-points'], type: 'driver' as const },
+        ];
+        clickLayers.forEach(({ layers, type }) => {
+          layers.forEach(layer => {
+            map.on('click', layer, (e: any) => {
+              if (!e.features?.length) return;
+              layerClickedRef.current = true;
+              const props = e.features[0].properties;
+              setSelectedPin({ type, id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
+            });
+            map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+          });
+        });
+
+        // Cluster click → zoom
+        ['requests-clusters', 'resources-clusters', 'drivers-clusters'].forEach(layer => {
+          map.on('click', layer, (e: any) => {
+            const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
+            if (!features.length) return;
+            layerClickedRef.current = true;
+            const clusterId = features[0].properties?.cluster_id;
+            const sourceName = layer.replace('-clusters', '-source');
+            (map.getSource(sourceName) as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+              if (err || zoom == null) return;
+              map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
+            });
+          });
+        });
+
+        // Click empty → dismiss
+        map.on('click', () => {
+          setTimeout(() => {
+            if (layerClickedRef.current) { layerClickedRef.current = false; return; }
+            setSelectedPin(null);
+          }, 100);
+        });
+
+        // Deep link: zoom to specific pin
+        if (deepLinkPin) {
+          const allFeatures = [...requestFeatures, ...resourceFeatures, ...driverFeatures];
+          const target = allFeatures.find(f => f.properties.id === deepLinkPin);
+          if (target) {
+            const [tLng, tLat] = target.geometry.coordinates;
+            setTimeout(() => {
+              map.flyTo({ center: [tLng, tLat], zoom: 14, duration: 1500 });
+              setSelectedPin({ type: target.properties.type, id: target.properties.id, properties: target.properties });
+            }, 1000);
+          }
+        }
+      });
+
+      setLoading(false);
     };
-    vv.addEventListener('resize', handler);
-    return () => vv.removeEventListener('resize', handler);
+
+    initMap();
+    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
-  // Start agent conversation when flow selected
-  useEffect(() => {
-    if (step === 'chat' && flowType && forWhom && messages.length === 0) {
-      const context = forWhom === 'myself'
-        ? 'The user is filling this out for themselves.'
-        : 'The user is filling this out on behalf of someone else. Ask for the beneficiary\'s information separately.';
-      sendMessage({ text: `[ERV_INTAKE:${flowType}:${forWhom}] ${context}. Start the intake flow.` });
-    }
-  }, [step, flowType, forWhom]);
-
-  function send(text: string) {
-    if (!text.trim() || isLoading) return;
-    sendMessage({ text: text.trim() });
-    setInput('');
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    send(input);
-  }
-
-  function selectForWhom(whom: ForWhom) {
-    setForWhom(whom);
-    setStep('what');
-  }
-
-  function selectFlow(flow: FlowType) {
-    setFlowType(flow);
-    setStep('chat');
-  }
+  const p = selectedPin?.properties || {};
 
   return (
-    <div className="min-h-screen bg-[#0F1E2B] text-white flex flex-col max-w-lg mx-auto">
-      {/* Header — persists on ALL steps including chat */}
-      <header className="bg-[#1A3850] px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-3 flex-shrink-0 z-10 border-b border-white/10">
-        <img src="/erv-logo.png" alt="EmergencyRV" className="w-9 h-9 rounded-full object-cover" />
-        <div className="flex-1">
-          <h1 className="text-sm font-bold leading-none">EmergencyRV</h1>
-          <p className="text-[10px] text-white/40 mt-0.5">Bridging the Gap Between Disaster and Safe Shelter</p>
+    <div style={{ width: '100%', height: '100vh', position: 'relative', background: '#0F1E2B', overflow: 'hidden' }}>
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-30 px-4 pt-3 pb-2" style={{ background: 'linear-gradient(to bottom, rgba(15,30,43,0.95), transparent)' }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-white text-sm font-bold tracking-wide">🚐 Emergency RV</h1>
+            <p className="text-white/40 text-[10px]">{stats.families.toLocaleString()} families · {stats.rvs.toLocaleString()} RVs · {stats.drivers} drivers</p>
+          </div>
         </div>
-        {step === 'chat' && (
-          <div className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
-            <span className="text-[9px] text-white/30">{isLoading ? 'typing...' : 'online'}</span>
-          </div>
-        )}
-      </header>
-
-      {/* Flow indicator bar — visible during chat */}
-      {step === 'chat' && flowType && (
-        <div className="px-4 py-1.5 bg-white/[0.03] border-b border-white/5 flex items-center justify-between flex-shrink-0">
-          <span className="text-[10px] text-white/40">
-            {flowType === 'survivor' ? 'Housing Application' : flowType === 'donor' ? 'RV Donation' : 'Volunteer Signup'}
-            {forWhom === 'someone' ? ' · on behalf' : ''}
-          </span>
-          <button onClick={() => { setStep('what'); setFlowType(null); }} className="text-[10px] text-white/25 hover:text-white/50">Change</button>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto">
-        {/* Step 0: For whom? */}
-        {step === 'who' && (
-          <div className="px-4 py-6 space-y-5">
-            <div className="text-center space-y-1">
-              <h2 className="text-lg font-bold">Welcome</h2>
-              <p className="text-xs text-white/40">We provide RVs to families displaced by natural disasters.</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-[10px] text-white/30 text-center uppercase tracking-wider font-semibold">Who is this for?</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => selectForWhom('myself')}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-center space-y-1.5 active:scale-[0.98]">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </div>
-                  <p className="text-sm font-semibold">For myself</p>
-                  <p className="text-[10px] text-white/30">I need help, want to donate, or volunteer</p>
-                </button>
-                <button onClick={() => selectForWhom('someone')}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-center space-y-1.5 active:scale-[0.98]">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <p className="text-sm font-semibold">For someone else</p>
-                  <p className="text-[10px] text-white/30">Partner, case worker, or friend</p>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 1: What do you need? */}
-        {step === 'what' && (
-          <div className="px-4 py-5 space-y-4">
-            <p className="text-xs text-white/30 text-center">{forWhom === 'myself' ? 'How can we help you?' : 'How can we help them?'}</p>
-            <div className="space-y-2">
-              <button onClick={() => selectFlow('survivor')}
-                className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-3 active:scale-[0.99]">
-                <div className="w-10 h-10 rounded-lg bg-[#EF4E4B]/10 flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4E4B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <div className="text-left"><p className="text-sm font-semibold">I need housing help</p><p className="text-[10px] text-white/30">Lost or damaged home due to disaster</p></div>
-              </button>
-              <button onClick={() => selectFlow('donor')}
-                className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-3 active:scale-[0.99]">
-                <div className="w-10 h-10 rounded-lg bg-[#89CFF0]/10 flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                </div>
-                <div className="text-left"><p className="text-sm font-semibold">I want to donate an RV</p><p className="text-[10px] text-white/30">Give an RV to a family in need</p></div>
-              </button>
-              <button onClick={() => selectFlow('volunteer')}
-                className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-3 active:scale-[0.99]">
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div className="text-left"><p className="text-sm font-semibold">I want to volunteer or drive</p><p className="text-[10px] text-white/30">Help deliver RVs or support operations</p></div>
-              </button>
-            </div>
-            <button onClick={() => { setStep('who'); setForWhom(null); }} className="w-full text-center text-[10px] text-white/25 hover:text-white/40 mt-1">← Back</button>
-          </div>
-        )}
-
-        {/* Step 2: Agent Chat — matches /c/agent design */}
-        {step === 'chat' && (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#0F1E2B]">
-              {messages.map((msg, i) => (
-                <div key={msg.id || i}>
-                  {(msg as any).parts?.map((part: any, j: number) => {
-                    if (part.type === 'text' && part.text?.startsWith('[System:')) return null;
-                    if (part.type === 'tool-invocation' && part.toolInvocation?.result) {
-                      try {
-                        const result = typeof part.toolInvocation.result === 'string' ? JSON.parse(part.toolInvocation.result) : part.toolInvocation.result;
-                        return <div key={j} className="ml-1 mt-1"><AIToolRenderer toolData={result} onUserAction={(text: string) => sendMessage({ text })} /></div>;
-                      } catch { return null; }
-                    }
-                    if (part.type === 'text' && part.text) {
-                      const isUser = msg.role === 'user';
-                      return (
-                        <div key={j} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`}>
-                          <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                            isUser ? 'bg-sos-red-500 text-white rounded-br-md' : 'bg-white/10 text-white rounded-bl-md'
-                          }`}>
-                            {!isUser && (
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <img src="/erv-logo.png" alt="" className="h-3.5 w-3.5 rounded-full" />
-                                <span className="text-[9px] font-bold text-white/40">ERV</span>
-                              </div>
-                            )}
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    if (part.type === 'step-start') {
-                      return (
-                        <div key={j} className="flex justify-start mb-1">
-                          <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-2.5">
-                            <div className="flex gap-1.5 items-center">
-                              <div className="w-2 h-2 rounded-full bg-amber-400/50 animate-pulse" />
-                              <span className="text-[10px] text-white/25">Working on it...</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              ))}
-              {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                <div className="flex justify-start">
-                  <div className="bg-white/10 rounded-2xl rounded-bl-md px-4 py-2.5">
-                    <div className="flex gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Input bar — matches /c/agent design */}
-      {step === 'chat' && (
-        <div className="bg-[#1A3850] border-t border-white/10 flex-shrink-0">
-          <form onSubmit={handleSubmit} className="px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] flex gap-2">
-            <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-              placeholder="Type your answer..."
-              className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-sos-accent-400"
-              disabled={isLoading} />
-            <button type="submit" disabled={isLoading || !input.trim()}
-              className="w-10 h-10 rounded-xl bg-sos-red-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-              </svg>
+      {/* Map */}
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+
+      {/* Legend */}
+      <div className="absolute bottom-4 left-3 z-20 flex gap-1.5">
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B]" /> {stats.families.toLocaleString()} Families
+        </span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#89CFF0]" /> {stats.rvs.toLocaleString()} RVs
+        </span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#4CAF50]" /> {stats.drivers} Drivers
+        </span>
+      </div>
+
+      {/* Detail Card */}
+      {selectedPin && (
+        <div className="absolute left-0 right-0 z-30 bottom-0 max-w-lg lg:max-w-xl mx-auto" style={{ maxHeight: '360px' }}>
+          <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 flex flex-col overflow-hidden">
+            {/* Drag handle */}
+            <button onClick={() => setSelectedPin(null)} className="py-2 flex justify-center flex-shrink-0">
+              <div className="w-10 h-1 bg-white/30 rounded-full" />
             </button>
-          </form>
+
+            <div className="px-5 pb-4">
+              {/* Type badge */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                  selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
+                  selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-[#4CAF50]'
+                }`} />
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                  selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
+                  selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-[#4CAF50]'
+                }`}>
+                  {selectedPin.type === 'request' ? 'Family Needing Help' :
+                   selectedPin.type === 'resource' ? 'RV' : 'Volunteer Driver'}
+                </span>
+              </div>
+
+              {/* Request detail */}
+              {selectedPin.type === 'request' && (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {p.is_veteran && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">🎖️ Veteran</span>}
+                    {p.is_first_responder && <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">🚒 First Responder</span>}
+                    {p.is_fema_replacement && <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">FEMA Replacement</span>}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {p.priority_score && (
+                      <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
+                        p.priority_score >= 80 ? 'bg-red-500/20 text-red-300' :
+                        p.priority_score >= 50 ? 'bg-yellow-500/20 text-yellow-300' :
+                        'bg-green-500/20 text-green-300'
+                      }`}>Priority: {p.priority_score}</span>
+                    )}
+                    {p.household_size && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">👨‍👩‍👧‍👦 {p.household_size} people</span>}
+                    {p.state && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">{p.state}</span>}
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">{p.status}</span>
+                  </div>
+                </>
+              )}
+
+              {/* Resource (RV) detail */}
+              {selectedPin.type === 'resource' && (
+                <>
+                  <p className="text-sm text-white/80 mb-2">
+                    {[p.year, p.make, p.model].filter(Boolean).join(' ') || p.vehicle_type || 'RV'}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {p.sleeps && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Sleeps {p.sleeps}</span>}
+                    {p.vehicle_type && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">{p.vehicle_type.replace(/_/g, ' ')}</span>}
+                    {p.source && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">{p.source.replace(/_/g, ' ')}</span>}
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
+                      p.status === 'deployed' ? 'bg-green-500/20 text-green-300' :
+                      p.status === 'available' ? 'bg-blue-500/20 text-blue-300' :
+                      'bg-white/10 text-white/60'
+                    }`}>{p.status}</span>
+                  </div>
+                  {p.vin && <p className="text-[10px] text-white/30 font-mono">VIN: {p.vin}</p>}
+                </>
+              )}
+
+              {/* Driver detail */}
+              {selectedPin.type === 'driver' && (
+                <>
+                  <p className="text-sm text-white/80 mb-2">{p.display_name || 'Volunteer Driver'}</p>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {p.tow_capability && (() => {
+                      try {
+                        const caps = JSON.parse(p.tow_capability);
+                        return caps.map((c: string) => (
+                          <span key={c} className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">{c.replace(/_/g, ' ')}</span>
+                        ));
+                      } catch { return null; }
+                    })()}
+                    {p.has_class_a && <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-green-500/20 text-green-300">Class A</span>}
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">{p.status}</span>
+                  </div>
+                </>
+              )}
+
+              {/* Pin ID for sharing */}
+              <p className="text-[9px] text-white/20 mt-2 font-mono select-all">{selectedPin.id}</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

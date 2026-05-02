@@ -588,7 +588,23 @@
 </head>
 <body>
 
-
+<!-- ════════ NAV ════════ -->
+<nav id="siteNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">
+      <img src="/logomark-red.svg" alt="SOS">
+      SOS
+    </a>
+    <div class="nav-links">
+      <a href="#crisis">Crisis</a>
+      <a href="#ecosystem">Ecosystem</a>
+      <a href="#gap">Coordination</a>
+      <a href="#solution">Solution</a>
+      <a href="/what-is-sos">What Is SOS</a>
+      <a href="/join">Join</a>
+    </div>
+  </div>
+</nav>
 
 <!-- ════════════════════════════════════════════
      SECTION 1: HERO — Dark, Full Viewport
@@ -945,7 +961,12 @@
   <img src="/logomark-red.svg" alt="SOS" style="height: 32px; opacity: 0.8; margin-bottom: 32px;">
   <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; color: #fff; font-weight: 400; line-height: 1.2; margin-bottom: 12px;">Everyone is a helper.</p>
   <p style="font-size: 18px; color: #89CFF0; font-weight: 300; margin-bottom: 48px;">We help the helpers.</p>
-  <p style="font-size: 11px; color: rgba(255,255,255,0.2);"><a href="https://sosconnect.org" style="color: inherit; text-decoration: none;">sosconnect.org</a> · © 2026 SOS Global</p>
+  <div style="margin-bottom: 24px;">
+    <a aria-label="SOS Global Inc on GuideStar" href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer" style="display: inline-block; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+      <img alt="GuideStar Transparency Seal" src="https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/16026335/svg" style="height: 80px;" />
+    </a>
+  </div>
+  <p style="font-size: 11px; color: rgba(255,255,255,0.2);"><a href="https://sosconnect.org" style="color: inherit; text-decoration: none;">sosconnect.org</a> · © 2026 SOS Global · 501(c)(3) nonprofit · EIN 33-2797387</p>
 </footer>
 
 <!-- ════════ SCRIPTS ════════ -->
@@ -954,6 +975,16 @@
 <script>
 (function() {
   gsap.registerPlugin(ScrollTrigger);
+
+  /* ═══════════════════════════════════════════
+     NAV — fade in after hero loads, scroll glassmorphism
+     ═══════════════════════════════════════════ */
+  var siteNav = document.getElementById('siteNav');
+  gsap.to(siteNav, { opacity: 1, duration: 0.6, delay: 0.3, ease: 'power2.out' });
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 40) { siteNav.classList.add('scrolled'); }
+    else { siteNav.classList.remove('scrolled'); }
+  }, { passive: true });
 
   /* ═══════════════════════════════════════════
      SHARED UTILITIES

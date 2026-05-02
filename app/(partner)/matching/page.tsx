@@ -2,25 +2,22 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { db } from '@/lib/api';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { MatchSwipeContent } from '@/components/match-swipe-content';
 import { MatchCard } from '@/components/match-card';
-import { ChainView } from '@/components/chain-view';
 import { MatchTimeline } from '@/components/match-timeline';
-import { getMatchStats, getMatchEvents, getChainMatches, Match, MatchEvent } from '@/lib/match-queries';
-import { getScopedMatches } from '@/lib/scoped-queries';
-import { supabase } from '@/lib/supabase-client';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { getPortalConfig } from '@/lib/portal-config';
-import { getVendorJobs, VendorJob } from '@/lib/vendor-queries';
-import { BidForm } from '@/components/bid-form';
 import { AdminMatchView } from '@/components/admin-match-view';
 import { LayoutGrid } from 'lucide-react';
 import { Layers, Map, List } from 'lucide-react';
-import { getUnreadNotifications, markMatchAsRead, type PartnerNotification } from '@/lib/notifications';
+import { getUnreadNotifications, markMatchAsRead } from '@/lib/notifications';
 import { useNotifications } from '@/lib/notification-context';
+
+type Match = { id: string; status: string; score: number; request_id: string; resource_id: string; created_at: string; [key: string]: any };
 
 type MatchMode = 'swipe' | 'map' | 'list' | 'admin';
 
@@ -46,16 +43,12 @@ function Matching() {
   const [mode, setMode] = useState<MatchMode>('swipe');
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
-  const [chainMatches, setChainMatches] = useState<Match[]>([]);
+  const [matchEvents, setMatchEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'score' | 'date' | 'urgency'>('score');
   const [disasters, setDisasters] = useState<any[]>([]);
   const [disasterFilter, setDisasterFilter] = useState('all');
-  const [vendorJobs, setVendorJobs] = useState<VendorJob[]>([]);
-  const [vendorSwipeIndex, setVendorSwipeIndex] = useState(0);
-  const [showBidForm, setShowBidForm] = useState<VendorJob | null>(null);
 
   const { orgId, orgType, loading: authLoading } = useAuthContext();
   const { effectiveOrgId, effectiveOrgType } = useViewContext();
@@ -69,30 +62,27 @@ function Matching() {
   useEffect(() => {
     if (authLoading) return;
     async function load() {
-      const [matchData, statsData] = await Promise.all([
-        getScopedMatches(effectiveOrgId ?? orgId, { status: filter }),
-        getMatchStats(),
-      ]);
-      // Filter by disaster if selected
-      const filtered = disasterFilter !== 'all' 
-        ? matchData.filter((m: any) => m.disaster_id === disasterFilter)
-        : matchData;
+      let query = db.from('matches').select('*').order('created_at', { ascending: false }).limit(50);
+      if (filter !== 'all') query = query.eq('status', filter);
+      const { data: matchData } = await query;
+      const allMatches: Match[] = matchData || [];
+
+      const filtered = disasterFilter !== 'all'
+        ? allMatches.filter((m) => m.disaster_id === disasterFilter)
+        : allMatches;
       setMatches(filtered);
-      setStats(statsData);
+
+      setStats({
+        total: filtered.length,
+        proposed: filtered.filter(m => m.status === 'proposed').length,
+        connected: filtered.filter(m => m.status === 'connected').length,
+        fulfilled: filtered.filter(m => m.status === 'fulfilled').length,
+      });
       setSwipeIndex(0);
 
-      // Load disasters
-      const { data: disData } = await supabase.from('disasters').select('id, name, status');
+      const { data: disData } = await db.from('disasters').select('id, name, status');
       setDisasters(disData || []);
 
-      // Load vendor jobs if viewing as vendor
-      if (effectiveOrgType === 'vendor') {
-        const jobs = await getVendorJobs();
-        setVendorJobs(jobs);
-        setVendorSwipeIndex(0);
-      }
-
-      // Load unread notification match IDs
       const currentOrg = effectiveOrgId || orgId;
       if (currentOrg) {
         const unread = await getUnreadNotifications(currentOrg);
@@ -104,7 +94,6 @@ function Matching() {
     load();
   }, [filter, orgId, effectiveOrgId, authLoading, disasterFilter]);
 
-  // Deep link: auto-select and scroll to match from URL param
   useEffect(() => {
     if (!deepLinkMatchId || loading || matches.length === 0) return;
     const match = matches.find(m => m.id === deepLinkMatchId);
@@ -112,34 +101,29 @@ function Matching() {
       setMode('list');
       setHighlightedMatchId(deepLinkMatchId);
       selectMatch(match);
-      // Scroll to the match card
       setTimeout(() => {
         const el = matchRefs.current[deepLinkMatchId];
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 200);
-      // Remove highlight after 3 seconds
       setTimeout(() => setHighlightedMatchId(null), 3000);
     }
   }, [deepLinkMatchId, loading, matches.length]);
 
-  const pendingMatches = matches.filter(m => 
+  const pendingMatches = matches.filter(m =>
     ['proposed', 'viewed', 'accepted'].includes(m.status)
   );
 
   function handleSwipeAccept() {
-    // TODO: write to matches table
     setSwipeIndex(prev => prev + 1);
   }
 
   function handleSwipeDecline() {
-    // TODO: write decline to matches table
     setSwipeIndex(prev => prev + 1);
   }
 
   async function selectMatch(match: Match) {
     setSelectedMatch(match);
 
-    // Mark as read if unread
     if (unreadMatchIds.has(match.id)) {
       const currentOrg = effectiveOrgId || orgId;
       if (currentOrg) {
@@ -149,14 +133,8 @@ function Matching() {
       }
     }
 
-    const events = await getMatchEvents(match.id);
-    setMatchEvents(events);
-    if (match.chain_id) {
-      const chain = await getChainMatches(match.chain_id);
-      setChainMatches(chain);
-    } else {
-      setChainMatches([]);
-    }
+    const { data: events } = await db.from('match_events').select('*').eq('match_id', match.id).order('created_at', { ascending: false }).limit(20);
+    setMatchEvents(events || []);
   }
 
   if (loading) {
@@ -170,15 +148,12 @@ function Matching() {
   }
 
   const currentSwipeMatch = pendingMatches[swipeIndex];
-  // Determine org type from view context or auth
-  const isVendorView = effectiveOrgType === 'vendor';
-  const currentVendorJob = vendorJobs[vendorSwipeIndex];
   const portalConfig = getPortalConfig(effectiveOrgType);
 
   return (
     <DashboardShell
-      title={isVendorView ? "Available Jobs" : effectiveOrgType === 'citizen' ? "Your Options" : "Matches"}
-      subtitle={isVendorView ? `${vendorJobs.length} jobs available` : effectiveOrgType === 'citizen' ? "Help available for you" : `${stats?.total || 0} matches${stats?.byStatus?.fulfilled ? ` · ${stats.byStatus.fulfilled} fulfilled` : ''}`}
+      title={effectiveOrgType === 'citizen' ? "Your Options" : "Matches"}
+      subtitle={effectiveOrgType === 'citizen' ? "Help available for you" : `${stats?.total || 0} matches${stats?.fulfilled ? ` · ${stats.fulfilled} fulfilled` : ''}`}
     >
       {/* Mode Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -254,7 +229,6 @@ function Matching() {
       {/* SWIPE MODE */}
       {mode === 'swipe' && (
         <div className="flex flex-col items-center py-4">
-          {/* Emergency Auto-Match Banner */}
           {currentSwipeMatch && (currentSwipeMatch as any).auto_consent_granted && (
             <div className="w-full max-w-md mb-4 bg-sos-red-500 text-white rounded-xl p-4 text-center">
               <p className="text-lg font-bold">🚨 Emergency Auto-Match</p>
@@ -262,53 +236,7 @@ function Matching() {
               <p className="text-xs mt-2 opacity-70">They're on their way.</p>
             </div>
           )}
-          {/* Vendor Job Swipe */}
-          {isVendorView && currentVendorJob ? (
-            <SwipeCard
-              key={`vendor-${vendorSwipeIndex}`}
-              onAccept={() => { setShowBidForm(currentVendorJob); }}
-              onDecline={() => setVendorSwipeIndex(prev => prev + 1)}
-              acceptLabel="Bid"
-              declineLabel="Pass"
-            >
-              <div className="p-6 min-h-[440px] flex flex-col">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-xs text-white/50 font-medium">{vendorSwipeIndex + 1} of {vendorJobs.length} jobs</span>
-                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 uppercase">💼 Job</span>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="w-24 h-24 rounded-3xl bg-yellow-500/10 flex items-center justify-center mb-6">
-                    <span className="text-5xl">🔧</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-white capitalize mb-3">
-                    {currentVendorJob.category?.replace(/_/g, ' ') || 'Job Available'}
-                  </h2>
-                  <p className="text-base text-white/70 leading-relaxed mb-4">{currentVendorJob.details_sanitized}</p>
-                  {currentVendorJob.vendor_budget > 0 && (
-                    <div className="text-xl font-bold text-green-400 mb-2">
-                      Budget: ${currentVendorJob.vendor_budget.toLocaleString()}
-                    </div>
-                  )}
-                  {currentVendorJob.urgency && (
-                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${
-                      currentVendorJob.urgency === 'critical' ? 'bg-sos-red-500/20 text-sos-red-300' :
-                      currentVendorJob.urgency === 'high' ? 'bg-sos-red-500/10 text-sos-red-400' :
-                      'bg-white/10 text-white/50'
-                    }`}>{currentVendorJob.urgency}</span>
-                  )}
-                </div>
-                <p className="text-[10px] text-white/30 text-center mt-4">Swipe right to bid · Left to pass</p>
-              </div>
-            </SwipeCard>
-          ) : isVendorView ? (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✓</span>
-              </div>
-              <h3 className="text-lg font-bold text-sos-blue-800">No More Jobs</h3>
-              <p className="text-sm text-sos-gray-600 mt-1">You've reviewed all available jobs</p>
-            </div>
-          ) : currentSwipeMatch ? (
+          {currentSwipeMatch ? (
             <SwipeCard
               key={`match-${swipeIndex}`}
               onAccept={handleSwipeAccept}
@@ -337,7 +265,7 @@ function Matching() {
                   : 'When citizens submit needs in your area, assignments will appear here.'}
               </p>
               {matches.length > 0 && (
-                <p className="text-xs text-sos-gray-400 mt-3">{matches.length} total matches · {stats?.byStatus?.fulfilled || 0} fulfilled</p>
+                <p className="text-xs text-sos-gray-400 mt-3">{matches.length} total matches · {stats?.fulfilled || 0} fulfilled</p>
               )}
               <div className="flex items-center justify-center gap-2 mt-4">
                 <button onClick={() => setMode('list')} className="text-xs font-semibold px-4 py-2 rounded-lg border border-sos-gray-300 text-sos-gray-600 hover:bg-sos-gray-200 transition-all active:scale-[0.97]">
@@ -418,7 +346,7 @@ function Matching() {
             {[...matches].sort((a, b) => {
               if (sortBy === 'score') return (b.match_score || 0) - (a.match_score || 0);
               if (sortBy === 'date') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-              return 0; // urgency handled elsewhere
+              return 0;
             }).map(match => (
               <div key={match.id} className="flex items-start gap-2">
                 <input
@@ -488,7 +416,6 @@ function Matching() {
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
-                      // Share to Slack via agent chat API
                       const summary = selectedMatch.match_summary_masked || `Match score: ${selectedMatch.match_score}`;
                       const deepLink = `${window.location.origin}/matching?match=${selectedMatch.id}`;
                       await fetch('/api/agent/chat', {
@@ -515,7 +442,6 @@ function Matching() {
                   </button>
                 </div>
 
-                {chainMatches.length > 1 && <ChainView matches={chainMatches} />}
                 <div className="bg-white rounded-xl border-2 border-sos-gray-300/80 p-5">
                   <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Timeline</h3>
                   <MatchTimeline events={matchEvents} />
@@ -533,18 +459,6 @@ function Matching() {
       {/* ADMIN ASSIGN MODE */}
       {mode === 'admin' && (
         <AdminMatchView disasterFilter={disasterFilter} />
-      )}
-
-      {/* Bid Form Modal */}
-      {showBidForm && (
-        <BidForm
-          job={showBidForm}
-          onClose={() => setShowBidForm(null)}
-          onSubmitted={() => {
-            setShowBidForm(null);
-            setVendorSwipeIndex(prev => prev + 1);
-          }}
-        />
       )}
     </DashboardShell>
   );

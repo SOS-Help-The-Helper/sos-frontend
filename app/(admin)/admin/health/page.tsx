@@ -1,9 +1,9 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { AdminShell } from '@/components/admin-shell';
-import { supabase } from '@/lib/supabase-client';
-import { getHenryBrain } from '@/lib/henry-brain';
+// TODO: rewire to EF (Phase 4) — import { getHenryBrain } from '@/lib/henry-brain';
 
 interface DivisionCard {
   name: string;
@@ -35,12 +35,12 @@ export default function HealthPage() {
     async function load() {
       // SOS operational stats
       const [{ count: reqCount }, { count: resCount }, { count: matchCount }, { count: eventCount }, { count: traceCount }, { count: learningCount }] = await Promise.all([
-        supabase.from('requests').select('id', { count: 'exact', head: true }),
-        supabase.from('resources').select('id', { count: 'exact', head: true }),
-        supabase.from('matches').select('id', { count: 'exact', head: true }),
-        supabase.from('match_events').select('id', { count: 'exact', head: true }),
-        supabase.from('signal_traces').select('id', { count: 'exact', head: true }),
-        supabase.from('system_learnings').select('id', { count: 'exact', head: true }),
+        db.from('requests').select('id', { count: 'exact', head: true }),
+        db.from('resources').select('id', { count: 'exact', head: true }),
+        db.from('matches').select('id', { count: 'exact', head: true }),
+        db.from('match_events').select('id', { count: 'exact', head: true }),
+        db.from('signal_traces').select('id', { count: 'exact', head: true }),
+        db.from('system_learnings').select('id', { count: 'exact', head: true }),
       ]);
 
       // Henry Brain agent stats (if available)

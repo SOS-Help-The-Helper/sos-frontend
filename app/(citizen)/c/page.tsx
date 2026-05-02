@@ -9,7 +9,6 @@ import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter
 import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { CitizenHeader } from '@/components/citizen-header';
-import { DEMO_ALERTS, DEMO_PARTNERS } from '@/lib/demo-data';
 import { setPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -26,6 +25,10 @@ export default function CitizenMapPage() {
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
   const mapboxglRef = useRef<any>(null);
+  const requestFeaturesRef = useRef<any[]>([]);
+  const resourceFeaturesRef = useRef<any[]>([]);
+
+  const realtimeChannelRef = useRef<any>(null);
 
   const [lat, setLat] = useState(39);
   const [lng, setLng] = useState(-98);
@@ -45,8 +48,6 @@ export default function CitizenMapPage() {
   const [mapResultsQuery, setMapResultsQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
 
-  const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
-  
   // Allow setting personId via URL param for testing: /c?pid=xxx
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -77,6 +78,7 @@ export default function CitizenMapPage() {
         setGpsReady(true);
         // Fly to user location once GPS resolves
         if (mapInstance.current) {
+        if (!mapInstance.current) return;
           mapInstance.current.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 12, duration: 1500 });
           // Update user location dot
           const userSrc = mapInstance.current.getSource('user-location');
@@ -125,43 +127,47 @@ export default function CitizenMapPage() {
       map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
-        // Load data INSIDE map.on('load') so we don't miss the event
-        let alertData: Alert[] = [], partners: any[] = [];
-        let requests: any[] = [], resources: any[] = [], reports: any[] = [];
+        // Load requests + resources from EF, alerts separately
+        let alertData: Alert[] = [];
+        let requestFeatures: any[] = [], resourceFeatures: any[] = [];
+        const seenIds = new Set<string>();
         try {
-          if (isAdmin) {
-            alertData = DEMO_ALERTS; partners = DEMO_PARTNERS;
-          } else {
-            const [a, p] = await Promise.all([
-              getAlerts(lat, lng),
-              supabase.from('organizations').select('id, name, org_type, latitude, longitude').not('latitude', 'is', null).eq('status', 'active'),
-            ]);
-            alertData = a; partners = (p as any).data || [];
-          }
-          setAlerts(alertData);
-
-          const [reqResult, resResult, repResult] = await Promise.all([
-            supabase.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, public_display_text, triage_score, household_size, person_id').not('latitude', 'is', null).eq('map_visible', true).in('status', ['open', 'active', 'matched']).limit(500),
-            supabase.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, org_id').not('latitude', 'is', null).eq('map_visible', true).limit(500),
-            supabase.from('community_messages').select('id, message_text, message_type, latitude, longitude, created_at, flagged').eq('message_type', 'report').not('latitude', 'is', null).order('created_at', { ascending: false }).limit(200),
+          const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          const [a, efResp] = await Promise.all([
+            getAlerts(lat, lng),
+            fetch(`${API_BASE}/functions/v1/map-data?lat=39&lng=-98&radius=3000`, {
+              headers: { 'Authorization': `Bearer ${API_KEY}` },
+            }),
           ]);
-          requests = reqResult.data || [];
-          resources = resResult.data || [];
-          reports = repResult.data || [];
+          alertData = a;
+          const mapData = await efResp.json();
+          (mapData.requests || []).forEach((f: any) => {
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
+            requestFeatures.push(f);
+          });
+          (mapData.resources || []).forEach((f: any) => {
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
+            resourceFeatures.push(f);
+          });
+          (mapData.organizations || []).forEach((f: any) => {
+            if (f.properties?.id) seenIds.add(f.properties.id);
+            f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
+            resourceFeatures.push(f);
+          });
+          setAlerts(alertData);
         } catch (err) {
           console.error('Map data load error:', err);
         }
         // === REQUESTS SOURCE (red) ===
-        const requestFeatures = (requests || []).filter(r => r.latitude && r.longitude).map(r => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
-        }));
+        requestFeaturesRef.current = requestFeatures;
 
         map.addSource('requests-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: requestFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
         // Cluster glow (behind)
@@ -178,23 +184,12 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === RESOURCES SOURCE (blue) ===
-        const resourceFeatures = [
-          ...(resources || []).filter(r => r.latitude && r.longitude).map(r => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-            properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
-          })),
-          ...partners.filter(p => p.latitude && p.longitude).map(p => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
-            properties: { id: p.id, name: p.name, category: p.org_type, type: 'resource', source_type: 'partner' },
-          })),
-        ];
+        resourceFeaturesRef.current = resourceFeatures;
 
         map.addSource('resources-source', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: resourceFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
         map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
@@ -206,25 +201,71 @@ export default function CitizenMapPage() {
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
-        // === REPORTS SOURCE (white) ===
-        const reportFeatures = (reports || []).filter(r => r.latitude && r.longitude && !r.flagged).map(r => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-          properties: { id: r.id, description: r.message_text, created_at: r.created_at, type: 'report' },
-        }));
-
+        // === REPORTS SOURCE (white) — Mapbox vector tileset ===
         map.addSource('reports-source', {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: reportFeatures },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 40, clusterMinPoints: 5,
+          type: 'vector',
+          url: 'mapbox://sosconnect.sos-reports-v2',
         });
 
-        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
+        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
-        map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', filter: ['has', 'point_count'],
+        map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-        map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', filter: ['!', ['has', 'point_count']],
+        map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
+
+        // === DETAIL FETCH ON ZOOM ===
+        // When zoomed to city level (>=10), fetch detailed data from map-data EF and merge
+        map.on('moveend', async () => {
+          if (destroyed) return;
+          const zoom = map.getZoom();
+          if (zoom < 10) return;
+          const center = map.getCenter();
+          try {
+            const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const resp = await fetch(`${API_BASE}/functions/v1/map-data?lat=${center.lat}&lng=${center.lng}&radius=25`, {
+              headers: { 'Authorization': `Bearer ${API_KEY}` },
+            });
+            const mapData = await resp.json();
+            let added = false;
+            (mapData.requests || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
+                requestFeaturesRef.current = [...requestFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            (mapData.resources || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
+                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            (mapData.organizations || []).forEach((f: any) => {
+              const id = f.properties?.id;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
+                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
+                added = true;
+              }
+            });
+            if (added) {
+              const reqSrc = map.getSource('requests-source') as any;
+              if (reqSrc) reqSrc.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
+              const resSrc = map.getSource('resources-source') as any;
+              if (resSrc) resSrc.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
+            }
+          } catch (err) {
+            console.warn('Detail fetch error:', err);
+          }
+        });
 
         // === DISASTERS SOURCE (navy, empty for now) ===
         map.addSource('disasters-source', {
@@ -318,14 +359,72 @@ export default function CitizenMapPage() {
             map.setFilter(layer, ['!', ['has', 'point_count']]);
           }
         });
+
+        // === DEEP LINK: /c?pin=UUID&type=request|resource  or  /c?lat=X&lng=Y&zoom=Z ===
+        const dlParams = new URLSearchParams(window.location.search);
+        const dlPin = dlParams.get('pin');
+        const dlType = dlParams.get('type') || 'request';
+        const dlLat = dlParams.get('lat');
+        const dlLng = dlParams.get('lng');
+        const dlZoom = dlParams.get('zoom');
+
+        if (dlPin) {
+          // Find the pin in loaded GeoJSON features and select it
+          const allFeatures = [...requestFeatures, ...resourceFeatures];
+          const match = allFeatures.find((f: any) => f.properties?.id === dlPin);
+          if (match) {
+            const pinType: 'request' | 'resource' = match.properties.type === 'request' ? 'request' : 'resource';
+            const coords = match.geometry.coordinates;
+            map.flyTo({ center: [coords[0], coords[1]], zoom: 14, duration: 1200 });
+            setTimeout(() => {
+              setSelectedPin({ type: pinType, id: match.properties.id, properties: match.properties });
+              setDetailMode('card');
+            }, 1300);
+          }
+        } else if (dlLat && dlLng) {
+          map.flyTo({ center: [parseFloat(dlLng), parseFloat(dlLat)], zoom: dlZoom ? parseFloat(dlZoom) : 13, duration: 1200 });
+        }
+
+        // === REALTIME SUBSCRIPTIONS ===
+        const channel = supabase
+          .channel('map-realtime')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests', filter: 'map_visible=eq.true' }, (payload: any) => {
+            const r = payload.new;
+            if (!r.latitude || !r.longitude) return;
+            const feature = {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+              properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
+            };
+            requestFeaturesRef.current = [...requestFeaturesRef.current, feature];
+            const src = map.getSource('requests-source') as any;
+            if (src) src.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'resources', filter: 'map_visible=eq.true' }, (payload: any) => {
+            const r = payload.new;
+            if (!r.latitude || !r.longitude) return;
+            const feature = {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
+              properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
+            };
+            resourceFeaturesRef.current = [...resourceFeaturesRef.current, feature];
+            const src = map.getSource('resources-source') as any;
+            if (src) src.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (_payload: any) => {
+            // For future use
+          })
+          .subscribe();
+        realtimeChannelRef.current = channel;
       });
 
       setLoading(false);
     };
 
     initMap();
-    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [isAdmin]);
+    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+  }, []);
 
   // Map command subscription (for search results)
   useEffect(() => {
@@ -576,7 +675,8 @@ export default function CitizenMapPage() {
   }, []);
 
   function handleResultSelect(result: MapResult) {
-    mapInstance.current?.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
+    if (!mapInstance.current) return;
+    mapInstance.current.flyTo({ center: [result.lng, result.lat], zoom: 14, duration: 800 });
     setSelectedPin({ type: 'resource', id: result.id, properties: { name: result.name, category: result.category, details: result.description, phone: result.phone, address: result.address, source_type: result.source } });
     setDetailMode('card');
   }
@@ -591,7 +691,7 @@ export default function CitizenMapPage() {
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen || showResults || matchMode}>
       {/* Header */}
-      <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName={locationName} status={status} />
+      <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName={locationName} status={status} agentOpen={sheetOpen} />
 
       {/* Full screen map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
@@ -605,96 +705,122 @@ export default function CitizenMapPage() {
 
       {/* Alert banner — disabled for now */}
 
-      {/* === Part 2: Detail Card === */}
+      {/* === Part 2: Detail Card — Centered circular popup === */}
       {selectedPin && !matchMode && (
-        <div className={`absolute left-0 right-0 z-30 transition-all duration-300 max-w-lg lg:max-w-xl mx-auto bottom-[calc(56px+env(safe-area-inset-bottom,0px))]`}
-          style={{ maxHeight: '360px' }}>
-          <div className="bg-[#1A3850] rounded-t-2xl shadow-2xl border-t border-white/10 h-full flex flex-col overflow-hidden">
-            {/* Drag handle — swipe down to close */}
-            <button 
-              onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
-              className="py-2 flex justify-center flex-shrink-0 cursor-grab active:cursor-grabbing"
-            >
-              <div className="w-10 h-1 bg-white/30 rounded-full" />
-            </button>
+        <>
+          {/* Backdrop */}
+          <div className="absolute inset-0 z-25 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300"
+            onClick={() => { setSelectedPin(null); setDetailMode('card'); }} />
 
-            <div className="flex-1 px-5 overflow-hidden">
-              {/* Row 1: Type label + close */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                    selectedPin.type === 'request' ? 'bg-[#EF4E4B]' :
-                    selectedPin.type === 'resource' ? 'bg-[#89CFF0]' : 'bg-white'
-                  }`} />
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${
-                    selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
-                    selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
-                  }`}>
-                    SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
-                  </span>
+          {/* Centered card */}
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
+            <div className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out] relative"
+              style={{
+                background: 'rgba(26, 56, 80, 0.92)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${
+                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' :
+                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.05)'
+                }`,
+              }}>
+
+              {/* Border that stops where logomark is — using pseudo-element via clip-path */}
+              <div className="absolute inset-0 rounded-[24px] pointer-events-none" style={{
+                border: `1.5px solid ${
+                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' :
+                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.3)' : 'rgba(255,255,255,0.15)'
+                }`,
+                mask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+                WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+              }} />
+
+              {/* Top logomark — floating above the card */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: selectedPin.type === 'request' ? 'rgba(15,30,43,0.95)' : selectedPin.type === 'resource' ? 'rgba(15,30,43,0.95)' : 'rgba(15,30,43,0.95)',
+                    boxShadow: `0 0 24px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
+                    border: `2px solid ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
+                  }}>
+                  <img
+                    src={selectedPin.type === 'resource' ? '/logomark-blue.svg' : selectedPin.type === 'report' ? '/logomark-white.svg' : '/logomark-red.svg'}
+                    alt="SOS" className="w-8 h-8" />
                 </div>
-                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }} className="text-white/30 hover:text-white text-lg leading-none p-1">✕</button>
               </div>
 
-              {/* Row 2: Summary text */}
-              <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-3">
-                {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
-              </p>
+              <div className="px-6 pt-6 pb-5">
+                {/* Close button */}
+                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
+                  className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors">✕</button>
 
-              {/* Row 3: Metadata — single row, consistent sizing */}
-              <div className="flex items-center gap-2 flex-wrap mb-4">
-                {p.category && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
-                    Category: {p.category.replace(/_/g, ' ')}
-                  </span>
-                )}
-                {selectedPin.type === 'request' && p.household && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">People: {p.household}</span>
-                )}
-                {selectedPin.type === 'request' && p.urgency && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">Urgency: {p.urgency}</span>
-                )}
-                {selectedPin.type === 'resource' && p.source_type && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
-                    {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
-                  </span>
-                )}
-                {selectedPin.type === 'resource' && p.capacity != null && (
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
-                )}
-              </div>
-            </div>
+                {/* Type label */}
+                <p className={`text-center text-[11px] font-bold uppercase tracking-[0.2em] mb-3 ${
+                  selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
+                  selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
+                }`}>
+                  SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
+                </p>
 
-            {/* Match button — locked to bottom, no scrolling past it */}
-            <div className="px-5 pb-3 pt-3 flex-shrink-0">
+                {/* Summary */}
+                <p className="text-center text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
+                  {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
+                </p>
+
+                {/* Metadata pills */}
+                <div className="flex items-center justify-center gap-2 flex-wrap mb-5">
+                  {p.category && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
+                      {p.category.replace(/_/g, ' ')}
+                    </span>
+                  )}
+                  {selectedPin.type === 'request' && p.household && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">👨‍👩‍👧‍👦 {p.household}</span>
+                  )}
+                  {selectedPin.type === 'request' && p.urgency && (
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
+                      p.urgency === 'critical' ? 'bg-red-500/20 text-red-300' :
+                      p.urgency === 'high' ? 'bg-orange-500/20 text-orange-300' :
+                      'bg-white/10 text-white/60'
+                    }`}>{p.urgency}</span>
+                  )}
+                  {selectedPin.type === 'resource' && p.source_type && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
+                      {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
+                    </span>
+                  )}
+                  {selectedPin.type === 'resource' && p.capacity != null && (
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
+                  )}
+                </div>
+
+                {/* Match button */}
                 <button onClick={() => {
                     const pinData = { ...selectedPin };
                     setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
-                    // Pass structured match context with IDs
                     const matchContext = JSON.stringify({
-                      action: 'match', 
+                      action: 'match',
                       intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
-                      type: pinData.type,
-                      id: pinData.id,
-                      category: pinData.properties?.category,
-                      urgency: pinData.properties?.urgency,
-                      name: pinData.properties?.name,
-                      details: pinData.properties?.details?.substring(0, 100),
+                      type: pinData.type, id: pinData.id,
+                      category: pinData.properties?.category, urgency: pinData.properties?.urgency,
+                      name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
                     });
-                    setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext }));
-                    }, 500);
+                    setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-[#EF4E4B] text-white text-xs font-bold active:scale-[0.97]">
+                  className="w-full py-3 rounded-2xl text-white text-xs font-bold tracking-wide active:scale-[0.97] transition-transform"
+                  style={{
+                    background: selectedPin.type === 'request' ? '#EF4E4B' : '#89CFF0',
+                    boxShadow: `0 4px 20px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' : 'rgba(137,207,240,0.3)'}`,
+                  }}>
                   Match
                 </button>
-                <button onClick={() => setDetailMode(detailMode === 'card' ? 'expanded' : 'card')}
-                  className="hidden">
-                  {detailMode === 'card' ? 'Details →' : 'Collapse'}
-                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          <style>{`@keyframes cardPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }`}</style>
+        </>
       )}
 
       {/* Results slide-up */}

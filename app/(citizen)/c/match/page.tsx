@@ -1,11 +1,11 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
 /**
@@ -79,13 +79,24 @@ export default function MatchPage() {
     else setLoading(false);
   }, [personId]);
 
+  useEffect(() => {
+    if (!personId) return;
+    const channel = supabase
+      .channel('matches-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, () => {
+        loadProposals();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [personId]);
+
   async function loadProposals() {
     setLoading(true);
     try {
       // Step 1: Get my request IDs and resource IDs
       const [{ data: myRequests }, { data: myResources }] = await Promise.all([
-        supabase.from('requests').select('id').eq('person_id', personId!),
-        supabase.from('resources').select('id').eq('person_id', personId!),
+        db.from('requests').select('id').eq('person_id', personId!),
+        db.from('resources').select('id').eq('person_id', personId!),
       ]);
 
       const myRequestIds = (myRequests || []).map(r => r.id);

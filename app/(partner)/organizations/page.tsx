@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
-import { getOrganizations, getOrgOffers, getOrgAffiliations, getOrgTypeColor, Organization } from '@/lib/org-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { getOrganizations, getOrgOffers, getOrgAffiliations, getOrgTypeColor, Organization } from '@/lib/org-queries';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 

@@ -1,3 +1,4 @@
+import { db } from '@/lib/api';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -39,15 +40,15 @@ export async function POST(req: Request) {
     .single();
 
   if (existing) {
-    await supabase.from('chat_sessions').update({ messages, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    await db.from('chat_sessions').update({ messages, updated_at: new Date().toISOString() }).eq('id', existing.id);
   } else {
-    await supabase.from('chat_sessions').insert({ person_id: personId, agent_type: 'citizen', messages });
+    await db.from('chat_sessions').insert({ person_id: personId, agent_type: 'citizen', messages });
   }
 
   // P1 Fix 6: Write signal trace for significant actions
   const lastMsg = messages[messages.length - 1];
   if (lastMsg?.parts?.some((p: any) => p.type === 'tool-invocation' && p.toolInvocation?.state === 'result')) {
-    await supabase.from('signal_traces').insert({
+    await db.from('signal_traces').insert({
       entity_type: 'web_chat',
       signal_layer: 'I',
       trace_type: 'web_agent_action',

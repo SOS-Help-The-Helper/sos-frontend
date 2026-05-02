@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Match, getScoreColor } from '@/lib/match-queries';
+// TODO: rewire to lib/api.ts (Phase 3-5) — import { Match, getScoreColor } from '@/lib/match-queries';
 import { measureText } from '@/lib/text-measure';
 import { TextReveal } from './text-reveal';
 import { BalancedText } from './balanced-text';

@@ -1,15 +1,15 @@
 'use client';
+import { db } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/dashboard-shell';
 import { useAuthContext } from '@/lib/auth-context';
 import { useViewContext } from '@/lib/view-context';
 import { DetailPopup } from '@/components/detail-popup';
-import { BidReview } from '@/components/bid-review';
-import { VendorManagement } from '@/components/vendor-management';
-import { supabase } from '@/lib/supabase-client';
+// TODO: rewire to EF (Phase 4) — // import { BidReview } from '@/components/bid-review'; // TODO: rewire to EF (Phase 4)
+// TODO: rewire to EF (Phase 4) — // import { VendorManagement } from '@/components/vendor-management'; // TODO: rewire to EF (Phase 4)
 import { Pause, Play, X, Edit3, BarChart3 } from 'lucide-react';
-import { CapacityEditor } from '@/components/capacity-editor';
+// TODO: rewire to EF (Phase 4) — // import { CapacityEditor } from '@/components/capacity-editor'; // TODO: rewire to EF (Phase 4)
 
 type Tab = 'organizations' | 'requests' | 'resources' | 'capacity' | 'vendor_jobs';
 
@@ -71,9 +71,9 @@ export default function Management() {
       setOrgs(orgData.data || []);
 
       // Vendor jobs + bids
-      const { data: vjData } = await supabase.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
+      const { data: vjData } = await db.from('requests').select('id, category, details_sanitized, vendor_budget, status, urgency, created_at').eq('is_vendor_job', true).order('created_at', { ascending: false });
       setVendorJobs(vjData || []);
-      const { data: bidData } = await supabase.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, gouging_flagged, created_at').order('created_at', { ascending: false });
+      const { data: bidData } = await db.from('bids').select('id, request_id, vendor_org_id, bid_amount, status, gouging_flagged, created_at').order('created_at', { ascending: false });
       setBids(bidData || []);
 
       setLoading(false);
@@ -87,7 +87,7 @@ export default function Management() {
   const statuses = [...new Set(items.map((i: any) => i.status))].filter(Boolean);
 
   async function updateStatus(table: string, id: string, newStatus: string) {
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', id);
+    const { error } = await db.from(table).update({ status: newStatus }).eq('id', id);
     if (!error) {
       if (table === 'requests') {
         setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
@@ -100,13 +100,14 @@ export default function Management() {
   // Vendor-specific management
   const isVendorView = effectiveOrgType === 'vendor';
   const showVendorJobs = isAdmin || effectiveOrgType === 'vendor';
-  if (isVendorView) {
-    return (
-      <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
-        <VendorManagement vendorOrgId={effectiveOrgId!} />
-      </DashboardShell>
-    );
-  }
+  // TODO: rewire to EF (Phase 4)
+  // if (isVendorView) {
+  //   return (
+  //     <DashboardShell title="My Jobs" subtitle="Active jobs, bids, and history">
+{/* TODO: rewire */ /*   //       <VendorManagement vendorOrgId={effectiveOrgId!} /> */}
+  //     </DashboardShell>
+  //   );
+  // }
 
   if (loading) {
     return (
@@ -487,21 +488,9 @@ export default function Management() {
         </div>
       )}
 
-      {/* Bid Review Modal */}
-      {reviewJobId && (
-        <BidReview requestId={reviewJobId} onClose={() => setReviewJobId(null)} />
-      )}
+      {/* Bid Review Modal — TODO: rewire to EF (Phase 4) */}
 
-      {/* Capacity Editor Modal */}
-      {editingCapacity && (
-        <CapacityEditor
-          resource={editingCapacity}
-          onClose={() => setEditingCapacity(null)}
-          onSaved={(updated) => {
-            setResources(prev => prev.map(r => r.id === updated.id ? { ...r, ...updated } : r));
-          }}
-        />
-      )}
+      {/* Capacity Editor Modal — TODO: rewire to EF (Phase 4) */}
 
       {/* Detail Popup */}
       {selectedItem && (

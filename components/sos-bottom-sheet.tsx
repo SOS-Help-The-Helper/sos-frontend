@@ -158,19 +158,55 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
     : sheetState === 'half' ? '45vh' : '64px';
   const bottomOffset = keyboardOffset > 0 ? keyboardOffset : 56;
 
+  const hasMessages = messages.length > 0;
+
   return (
     <div className="fixed left-0 right-0 z-50 max-w-lg mx-auto transition-all duration-300"
       style={{ bottom: `${bottomOffset}px`, height: sheetHeight, maxWidth: '100vw' }}>
-      {sheetState !== 'collapsed' && <div className="fixed inset-0 -z-10" onClick={onClose} />}
-      <div className="bg-[#1A3850] rounded-t-2xl h-full flex flex-col shadow-2xl border-t border-white/10 overflow-hidden">
+      {sheetState !== 'collapsed' && <div className="fixed inset-0 -z-10 bg-black/20 backdrop-blur-[1px]" onClick={onClose} />}
+      <div className="h-full flex flex-col overflow-hidden relative"
+        style={{
+          background: 'rgba(26, 56, 80, 0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '24px 24px 0 0',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.4), 0 0 30px rgba(239,78,75,0.08)',
+        }}>
+
+        {/* Border that fades at top for logomark */}
+        <div className="absolute inset-0 rounded-t-[24px] pointer-events-none" style={{
+          border: '1.5px solid rgba(239,78,75,0.2)',
+          borderBottom: 'none',
+          mask: 'linear-gradient(to bottom, transparent 0px, transparent 20px, black 20px)',
+          WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 20px, black 20px)',
+        }} />
+
+        {/* Floating logomark — only in opening state */}
+        {!hasMessages && !isLoading && !fullScreen && (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 animate-[logoFloat_0.4s_ease-out]">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(15,30,43,0.97)',
+                boxShadow: '0 0 30px rgba(239,78,75,0.35), 0 4px 20px rgba(0,0,0,0.4)',
+                border: '2px solid rgba(239,78,75,0.35)',
+              }}>
+              <img src="/logomark-red.svg" alt="SOS" className="w-8 h-8" />
+            </div>
+            {/* Pulse ring behind logomark */}
+            <div className="absolute inset-0 rounded-full animate-ping" style={{ border: '1px solid rgba(239,78,75,0.2)', animationDuration: '2s' }} />
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
           <button onClick={() => setSheetState(sheetState === 'collapsed' ? 'half' : sheetState === 'half' ? 'full' : 'half')}>
             <div className="w-8 h-1 bg-white/20 rounded-full" />
           </button>
           <div className="flex items-center gap-1.5">
-            <img src="/logomark.svg" alt="SOS" className="h-5 w-5" />
-            <span className="text-[10px] font-bold text-white/60">SOS Agent</span>
+            {hasMessages && <img src="/logomark-red.svg" alt="SOS" className="h-4 w-4" />}
+            <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">
+              {hasMessages ? 'SOS Agent' : ''}
+            </span>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white text-sm px-1">✕</button>
         </div>
@@ -225,32 +261,41 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
           </div>
         )}
 
-        {/* Quick chips */}
+        {/* Opening state — branded welcome */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-1.5">
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#EF4E4B] mb-2">SOS Agent</p>
+            <p className="text-center text-sm text-white/60 mb-5">How can I help?</p>
             {partner === 'erv' ? (
               <QuickChips chips={ERV_CHIPS} onSelect={(id) => {
                 const prompts: Record<string, string> = { donate: 'I want to donate an RV', drive: 'I want to volunteer as an RV delivery driver' };
                 send(prompts[id] || id);
               }} />
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-2.5">
                 {[
                   { id: 'help', label: 'Get help', color: '#EF4E4B', prompt: 'I need help' },
                   { id: 'offer', label: 'Give help', color: '#89CFF0', prompt: 'I want to help' },
                   { id: 'report', label: 'Report', color: '#FBBF24', prompt: 'I want to report something' },
                 ].map(chip => (
                   <button key={chip.id} onClick={() => send(chip.prompt)}
-                    className="flex items-center gap-1.5 text-[11px] font-medium px-3.5 py-2 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 active:scale-[0.97] transition-all">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chip.color }} />
+                    className="flex items-center gap-2 text-[12px] font-semibold px-4 py-2.5 rounded-2xl text-white active:scale-[0.97] transition-all"
+                    style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: `1.5px solid ${chip.color}30`,
+                      boxShadow: `0 0 12px ${chip.color}10`,
+                    }}>
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: chip.color, boxShadow: `0 0 6px ${chip.color}40` }} />
                     {chip.label}
                   </button>
                 ))}
               </div>
             )}
-            <p className="mt-3 text-[11px] text-white/30 italic">or, just start a conversation</p>
+            <p className="mt-4 text-[10px] text-white/20">or type anything below</p>
           </div>
         )}
+
+        <style>{`@keyframes logoFloat { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.8); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }`}</style>
 
         {/* Input */}
         <div className="px-4 py-2.5 border-t border-white/10 flex-shrink-0">
