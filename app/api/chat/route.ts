@@ -187,7 +187,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     model: anthropic('claude-sonnet-4-20250514'),
     system: activeSystemPrompt,
     messages,
-    tools: getChatTools(),
+    tools: getChatTools(userLat, userLng),
     maxSteps: 5, // Allow multi-step tool execution
   });
 

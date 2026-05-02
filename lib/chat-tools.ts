@@ -6,7 +6,7 @@ import { z } from 'zod';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export function getChatTools() {
+export function getChatTools(userLat?: number, userLng?: number) {
   return {
       show_categories: {
         description: 'Show disaster need category selection cards. Use when someone says they need help or can help.',
