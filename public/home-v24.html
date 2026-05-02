@@ -495,6 +495,180 @@
     font-weight: 300;
   }
 
+  /* ══════════════════════════════════
+     UTILITY CLASSES — Extracted from inline styles
+     ══════════════════════════════════ */
+
+  /* ── Spacing utilities ── */
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mt-32 { margin-top: 32px; }
+  .mt-48 { margin-top: 48px; }
+  .mt-64 { margin-top: 64px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-12 { margin-bottom: 12px; }
+  .mb-48 { margin-bottom: 48px; }
+  .mb-64 { margin-bottom: 64px; }
+
+  /* ── Text utilities ── */
+  .text-center { text-align: center; }
+  .text-white { color: #fff; }
+  .text-blue { color: #89CFF0; }
+  .text-red { color: #EF4E4B; }
+
+  /* ── Layout utilities ── */
+  .relative { position: relative; }
+  .z-2 { z-index: 2; }
+
+  /* ── Accent line centered ── */
+  .accent-line-center { width: 48px; height: 2px; background: #89CFF0; margin: 24px auto 0; }
+
+  /* ── Hero section elements ── */
+  .hero-content-wrap {
+    position: relative; width: 100%; max-width: 780px; min-height: 300px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  .hero-text-stage {
+    position: absolute; left: 50%; top: 38%;
+    transform: translate(-50%, -50%); width: 100%; opacity: 0;
+  }
+  .hero-morph-container {
+    opacity: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 0.35em;
+  }
+  .hero-phase3 {
+    opacity: 0; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .hero-logo-wrap {
+    opacity: 0; position: relative; width: 140px; height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: visible; z-index: 10;
+  }
+  .hero-logo-img {
+    width: 140px; height: 140px; display: block;
+    position: relative; z-index: 2; opacity: 0;
+  }
+  .hero-sos-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800;
+    color: rgba(255,255,255,0.6); letter-spacing: 0.18em;
+    z-index: 3; padding-right: 0.18em; margin-left: 2px; opacity: 0;
+  }
+  .hero-tagline-wrap {
+    opacity: 0; margin-top: 180px;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+  }
+  .hero-cta-row {
+    opacity: 0; display: flex; align-items: center; gap: 32px;
+  }
+  .hero-cta-link {
+    font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    text-decoration: none; transition: opacity 0.3s; padding: 8px 0;
+  }
+  .hero-cta-link--red {
+    color: #EF4E4B; border-bottom: 1.5px solid rgba(239,78,75,0.4);
+  }
+  .hero-cta-link--blue {
+    color: #89CFF0; border-bottom: 1.5px solid rgba(137,207,240,0.3);
+  }
+  .hero-divider {
+    width: 1px; height: 16px; background: rgba(255,255,255,0.15);
+  }
+  .hero-learn-more {
+    opacity: 0; display: flex; flex-direction: column;
+    align-items: center; gap: 8px; text-decoration: none;
+  }
+  .hero-learn-text {
+    font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25);
+  }
+  .hero-learn-arrow { font-size: 18px; color: rgba(255,255,255,0.2); }
+  .radar-ring-hidden { animation: none; opacity: 0; }
+
+  /* ── Crisis section ── */
+  .crisis-grid {
+    margin-top: 40px; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .crisis-label {
+    font-size: 13px; font-weight: 700; color: #EF4E4B;
+    letter-spacing: 0.05em; margin-bottom: 8px;
+  }
+  .crisis-text {
+    font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;
+  }
+
+  /* ── Coordination section ── */
+  .coord-intro { margin-top: 32px; }
+  .coord-text {
+    font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;
+  }
+  .coord-text + .coord-text { margin-top: 12px; }
+  .coord-highlight {
+    color: #89CFF0; font-style: normal; font-weight: 600;
+  }
+
+  /* ── Convergence cards ── */
+  .convergence-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 32px 24px; text-align: center;
+  }
+  .convergence-card h4 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 18px; color: #fff; margin-bottom: 8px;
+  }
+  .convergence-card p {
+    font-size: 13px; color: rgba(255,255,255,0.55);
+    line-height: 1.6; font-weight: 300;
+  }
+  .convergence-card .cite { color: rgba(255,255,255,0.35); }
+
+  /* ── Icon utilities ── */
+  .sos-icon-block {
+    width: 32px; height: 32px; margin: 0 auto 16px; display: block;
+  }
+  .sos-icon-inline { margin-right: 8px; }
+  .eco-icon { width: 28px; height: 28px; margin-bottom: 16px; }
+
+  /* ── Wave dividers ── */
+  .wave-divider svg { height: 60px; }
+  .wave-divider--white { background: #fff; }
+  .wave-divider--navy { background: #0F1E2B; }
+
+  /* ── Resolution card colors ── */
+  .sc-role--success { color: #34d399; }
+  .sc-time--success { color: #34d399; }
+
+  /* ── Logo sizing ── */
+  .logo-sm { height: 24px; }
+  .logo-md { height: 80px; }
+
+  /* ── Text highlights ── */
+  .highlight-blue { color: #89CFF0; }
+
+  /* ── Button row ── */
+  .btn-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── Invitation tagline ── */
+  .invitation-tagline {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px; color: rgba(255,255,255,0.4);
+  }
+
+  /* ── Footer ── */
+  .footer-brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 12px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(255,255,255,0.4);
+    text-decoration: none;
+  }
+  .footer-brand img { height: 18px; opacity: 0.5; }
+  .footer-copy { margin-top: 16px; font-size: 11px; }
+
   /* ── Hero CTA touch targets ── */
   .hero-cta {
     min-height: 44px;
@@ -516,7 +690,7 @@
     h2 { font-size: 28px; }
     .hero-sub { font-size: 17px; }
     .stat-row { flex-direction: column; gap: 20px; }
-    .crisis-points { grid-template-columns: 1fr !important; gap: 20px !important; }
+    .crisis-points, .crisis-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
     .stat-card .num { font-size: 44px; }
     .eco-grid { grid-template-columns: 1fr; }
     .coord-grid { grid-template-columns: 1fr; }
@@ -540,6 +714,8 @@
     #crisis { clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%); padding-bottom: 120px; }
     .coord-pull-quote { font-size: 24px; }
     .about-section { padding: 80px 20px; }
+    .hero-cta-row { flex-direction: column; gap: 16px; }
+    .hero-divider { display: none; }
   }
 
   /* Typing cursor */
@@ -612,7 +788,7 @@
 <nav id="navbar">
   <div class="nav-inner">
     <a href="/" class="nav-brand">
-      <img src="/logomark-red.svg" alt="SOS" style="height: 24px;">
+      <img src="/logomark-red.svg" alt="SOS" class="logo-sm">
       SOS
     </a>
     <div class="nav-links">
@@ -636,30 +812,30 @@
   <canvas id="heroCanvas"></canvas>
   <div class="grain-overlay"></div>
 
-  <div class="hero-content" style="position: relative; width: 100%; max-width: 780px; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center;">
+  <div class="hero-content hero-content-wrap">
     <!-- Morphing text container -->
-    <div id="heroTextStage" style="position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); width: 100%; opacity: 0;">
-      <h1 class="hero-title" id="morphContainer" style="opacity: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 0.35em;"></h1>
+    <div id="heroTextStage" class="hero-text-stage">
+      <h1 class="hero-title hero-morph-container" id="morphContainer"></h1>
     </div>
     <!-- Phase 5: SOS logomark + name (no CSS pulse rings — drawn on canvas) -->
-    <div id="heroPhase3" style="opacity: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div id="heroLogoWrap" style="opacity: 0; position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; overflow: visible; z-index: 10;">
-        <span class="radar-ring" id="ring1" style="animation: none; opacity: 0;"></span>
-        <span class="radar-ring" id="ring2" style="animation: none; opacity: 0;"></span>
-        <span class="radar-ring" id="ring3" style="animation: none; opacity: 0;"></span>
-        <span class="radar-ring" id="ring4" style="animation: none; opacity: 0;"></span>
-        <img id="heroLogoImg" src="/logomark-red.svg" alt="SOS" style="width: 140px; height: 140px; display: block; position: relative; z-index: 2; opacity: 0;">
-        <span id="heroSosText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.18em; z-index: 3; padding-right: 0.18em; margin-left: 2px; opacity: 0;">SOS</span>
+    <div id="heroPhase3" class="hero-phase3">
+      <div id="heroLogoWrap" class="hero-logo-wrap">
+        <span class="radar-ring radar-ring-hidden" id="ring1"></span>
+        <span class="radar-ring radar-ring-hidden" id="ring2"></span>
+        <span class="radar-ring radar-ring-hidden" id="ring3"></span>
+        <span class="radar-ring radar-ring-hidden" id="ring4"></span>
+        <img id="heroLogoImg" src="/logomark-red.svg" alt="SOS" class="hero-logo-img">
+        <span id="heroSosText" class="hero-sos-text">SOS</span>
       </div>
-      <div id="heroTagline" style="opacity: 0; margin-top: 180px; display: flex; flex-direction: column; align-items: center; gap: 28px;">
-        <div class="tag-word" style="opacity: 0; display: flex; align-items: center; gap: 32px;">
-          <a href="/c?flow=get-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(239,78,75,0.4);">Get Help</a>
-          <span style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></span>
-          <a href="/c?flow=give-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(137,207,240,0.3);">Give Help</a>
+      <div id="heroTagline" class="hero-tagline-wrap">
+        <div class="tag-word hero-cta-row">
+          <a href="/c?flow=get-help" class="hero-cta hero-cta-link hero-cta-link--red">Get Help</a>
+          <span class="hero-divider"></span>
+          <a href="/c?flow=give-help" class="hero-cta hero-cta-link hero-cta-link--blue">Give Help</a>
         </div>
-        <a href="#crisis" class="tag-word" id="learnMoreLink" style="opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
-          <span style="font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Learn more</span>
-          <span id="learnMoreArrow" style="font-size: 18px; color: rgba(255,255,255,0.2);">↓</span>
+        <a href="#crisis" class="tag-word hero-learn-more" id="learnMoreLink">
+          <span class="hero-learn-text">Learn more</span>
+          <span id="learnMoreArrow" class="hero-learn-arrow">↓</span>
         </a>
       </div>
     </div>
@@ -672,7 +848,7 @@
      ════════════════════════════════════════════ -->
 <section id="crisis" class="bg-white">
   <div class="narrow">
-    <div class="stat-row" style="margin-bottom: 48px;">
+    <div class="stat-row mb-48">
       <div class="stat-card gs-fade">
         <div class="num" data-count="305" data-suffix="M+" data-prefix="">0</div>
         <div class="desc">people needed humanitarian assistance globally in 2025<a href="https://www.unocha.org/publications/report/world/global-humanitarian-overview-2026-enesfr" class="cite" target="_blank" rel="noopener">¹</a></div>
@@ -691,18 +867,18 @@
     <h2 class="gs-fade">The Great Aid Recession</h2>
     <div class="accent-line gs-fade"></div>
 
-    <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" class="gs-fade crisis-points">
+    <div class="crisis-grid gs-fade crisis-points">
       <div>
-        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FUNDING COLLAPSED</p>
-        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> The largest shortfall ever recorded.</p>
+        <p class="crisis-label">FUNDING COLLAPSED</p>
+        <p class="crisis-text">Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a> The largest shortfall ever recorded.</p>
       </div>
       <div>
-        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">FEMA IS RETREATING</p>
-        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">Non-lifesaving recovery defunded. Twenty states have sued to restart preparedness grants.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a></p>
+        <p class="crisis-label">FEMA IS RETREATING</p>
+        <p class="crisis-text">Non-lifesaving recovery defunded. Twenty states have sued to restart preparedness grants.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a></p>
       </div>
       <div>
-        <p style="font-size: 13px; font-weight: 700; color: #EF4E4B; letter-spacing: 0.05em; margin-bottom: 8px;">DISASTERS ACCELERATING</p>
-        <p style="font-size: 15px; color: #555; line-height: 1.7; font-weight: 300;">The safety net is contracting at the exact moment communities need it most.</p>
+        <p class="crisis-label">DISASTERS ACCELERATING</p>
+        <p class="crisis-text">The safety net is contracting at the exact moment communities need it most.</p>
       </div>
     </div>
   </div>
@@ -719,10 +895,10 @@
     <h2 class="gs-fade">When coordination fails, help scatters.</h2>
     <div class="accent-line gs-fade"></div>
 
-    <div style="margin-top: 32px;" class="gs-fade">
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">After Helene, FEMA's resource system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a></p>
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Search and rescue checked the same homes three times. Others were never checked at all.</p>
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Facebook became the missing persons database — not by design, but because nothing else worked.</p>
+    <div class="coord-intro gs-fade">
+      <p class="coord-text mb-12">After Helene, FEMA's resource system crashed under ten times its normal volume.<a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" class="cite" target="_blank" rel="noopener">³</a></p>
+      <p class="coord-text mb-12">Search and rescue checked the same homes three times. Others were never checked at all.</p>
+      <p class="coord-text">Facebook became the missing persons database — not by design, but because nothing else worked.</p>
     </div>
 
     <div class="coord-grid" id="coordParallax">
@@ -736,8 +912,8 @@
       </div>
     </div>
 
-    <p class="body-lg gs-fade" style="text-align: center; margin-top: 16px;">
-      <em style="color: #89CFF0; font-style: normal; font-weight: 600;">The technology to make this possible didn't exist two years ago. It does now.</em>
+    <p class="body-lg gs-fade text-center mt-16">
+      <em class="coord-highlight">The technology to make this possible didn't exist two years ago. It does now.</em>
     </p>
   </div>
 </section>
@@ -747,33 +923,33 @@
      ════════════════════════════════════════════ -->
 <section id="convergence" class="bg-navy">
   <div class="narrow">
-    <p class="label gs-fade" style="text-align: center;">The Convergence</p>
-    <h2 class="gs-fade" style="text-align: center;">Three things are converging at once</h2>
-    <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
+    <p class="label gs-fade text-center">The Convergence</p>
+    <h2 class="gs-fade text-center">Three things are converging at once</h2>
+    <div class="accent-line gs-fade accent-line-center"></div>
 
-    <div class="convergence-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px;">
-      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Systems Are Failing</h4>
-        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">²</a></p>
+    <div class="convergence-grid">
+      <div class="convergence-card gs-fade">
+        <svg class="sos-icon sos-icon-block" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <h4>Systems Are Failing</h4>
+        <p>FEMA has stopped funding non-lifesaving disaster recovery.<a href="https://www.npr.org/2026/03/30/nx-s1-5753765/fema-trump-extreme-weather-rural-pennsylvania" class="cite" target="_blank" rel="noopener">⁴</a> Twenty states have sued to restart the largest federal preparedness grant program. Humanitarian funding dropped 40% in a single year.<a href="https://carnegieendowment.org/russia-eurasia/research/2025/12/the-painful-seismic-shift-in-humanitarian-aidand-whats-next" class="cite" target="_blank" rel="noopener">²</a></p>
       </div>
-      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Communities Respond First</h4>
-        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">Three out of four people turn to neighbors before any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" style="color:rgba(255,255,255,0.35);" target="_blank" rel="noopener">⁶</a> The largest coordination network already exists — it just has no infrastructure.</p>
+      <div class="convergence-card gs-fade">
+        <svg class="sos-icon sos-icon-block" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h4>Communities Respond First</h4>
+        <p>Three out of four people turn to neighbors before any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" target="_blank" rel="noopener">⁶</a> The largest coordination network already exists — it just has no infrastructure.</p>
       </div>
-      <div class="gs-fade" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px 24px; text-align: center;">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; margin: 0 auto 16px; display: block;"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="11" opacity="0.4"/></svg>
-        <h4 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #fff; margin-bottom: 8px;">Coordination Is Now Possible</h4>
-        <p style="font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 300;">AI coordination — conversational intake, real-time matching, multi-channel orchestration — is feasible today. None of this was possible two years ago.</p>
+      <div class="convergence-card gs-fade">
+        <svg class="sos-icon sos-icon-block" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="11" opacity="0.4"/></svg>
+        <h4>Coordination Is Now Possible</h4>
+        <p>AI coordination — conversational intake, real-time matching, multi-channel orchestration — is feasible today. None of this was possible two years ago.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- Wave: Convergence (navy) → Ecosystem (white) -->
-<div class="wave-divider" style="background: #fff;">
-  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
+<div class="wave-divider wave-divider--white">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#0F1E2B"/>
   </svg>
 </div>
@@ -786,25 +962,25 @@
     <p class="label gs-fade">The Help Exists</p>
     <h2 class="gs-fade">Everyone responds. They just can't see each other.</h2>
     <div class="accent-line gs-fade"></div>
-    <p class="body-lg gs-fade" style="margin-top: 24px;">
+    <p class="body-lg gs-fade mt-24">
       The response to every disaster is bigger, faster, and more capable than any system gives it credit for. Everyone responds. They just can't see each other.
     </p>
 
     <div class="eco-grid">
       <div class="eco-card gs-fade">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
+        <svg class="sos-icon eco-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a4 4 0 0 1 3 4v6"/></svg>
         <p class="eco-label">Citizens</p>
         <h3>The actual first responders</h3>
         <p>Three out of four people turn to neighbors before any agency.<a href="https://www.sciencedirect.com/science/article/abs/pii/S2212420921005070" class="cite" target="_blank" rel="noopener">⁶</a> People with trucks clear roads. Nurses triage on front porches.</p>
       </div>
       <div class="eco-card gs-fade">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        <svg class="sos-icon eco-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <p class="eco-label">Organizations</p>
         <h3>Deployed within hours</h3>
         <p>Small nonprofits manage thousands of requests on spreadsheets. Faith-based groups self-organize through group chats. Everyone responds.</p>
       </div>
       <div class="eco-card gs-fade">
-        <svg class="sos-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px; margin-bottom: 16px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
+        <svg class="sos-icon eco-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
         <p class="eco-label">Government &amp; Emergency Services</p>
         <h3>Overwhelmed &amp; underfunded</h3>
         <p>85% of state emergency agencies cite infrastructure limitations.<a href="https://www.deloitte.com/us/en/insights/industry/government-public-sector-services/emergency-management-preparedness-response.html" class="cite" target="_blank" rel="noopener">⁷</a> Working with tools from a different era.</p>
@@ -880,7 +1056,7 @@
         <p class="label gs-fade">The Solution</p>
         <h2 class="gs-fade">Relief as permaculture.</h2>
         <div class="accent-line gs-fade"></div>
-        <p class="body-lg gs-fade" style="margin-top: 24px;">
+        <p class="body-lg gs-fade mt-24">
           SOS is coordination infrastructure that connects citizens, nonprofits, government agencies, emergency services, and vendors — so that when someone needs help and someone else can provide it, the connection actually happens.
         </p>
       </div>
@@ -895,8 +1071,8 @@
 </section>
 
 <!-- Wave: Solution (gray) → Scenario (navy) -->
-<div class="wave-divider" style="background: #0F1E2B;">
-  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" style="height: 60px;" xmlns="http://www.w3.org/2000/svg">
+<div class="wave-divider wave-divider--navy">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,0 L1440,0 L1440,30 C1200,60 960,10 720,35 C480,60 240,15 0,40 Z" fill="#f1f3f5"/>
   </svg>
 </div>
@@ -907,53 +1083,53 @@
 <section id="scenario" class="thesis-section">
   <div class="scenario-container">
     <div class="scenario-header">
-      <p class="label" style="color: #89CFF0;">Real-Time Coordination</p>
-      <h2 style="color: #fff;">It all comes together.</h2>
-      <div class="accent-line" style="background: #89CFF0; margin: 24px auto 0;"></div>
+      <p class="label text-blue">Real-Time Coordination</p>
+      <h2 class="text-white">It all comes together.</h2>
+      <div class="accent-line accent-line-center"></div>
     </div>
 
     <div class="scenario-timeline-line"></div>
 
     <div class="scenario-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
       <span class="sc-role">Citizen</span>
       <p class="sc-text">Maria texts: <em>"my roof collapsed. Three kids, no car, no power."</em></p>
       <p class="sc-time">2:14 PM</p>
     </div>
 
     <div class="scenario-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" opacity="0.6"/><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" opacity="0.6"/><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
       <span class="sc-role">SOS Intelligence</span>
       <p class="sc-text">Matched to Riverside Community Shelter (2.1 mi). Capacity confirmed. Three open beds.</p>
       <p class="sc-time">2:14 PM — instant</p>
     </div>
 
     <div class="scenario-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 17V7a2 2 0 0 1 2-2h9v12H3z"/><path d="M14 5h3l3 4v8h-6V5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><path d="M3 17V7a2 2 0 0 1 2-2h9v12H3z"/><path d="M14 5h3l3 4v8h-6V5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
       <span class="sc-role">Volunteer</span>
       <p class="sc-text">David — retired teacher with a truck — gets the route. ETA 12 minutes.</p>
       <p class="sc-time">2:15 PM</p>
     </div>
 
     <div class="scenario-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><path d="M12 4C10 2 6.5 2 4.5 4.5S4 10 12 16c8-6 8.5-9 6.5-11.5S14 2 12 4z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
       <span class="sc-role">Nonprofit</span>
       <p class="sc-text">Red Cross case worker notified. Maria's intake pre-filled from her initial text.</p>
       <p class="sc-time">2:15 PM</p>
     </div>
 
     <div class="scenario-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><line x1="9" y1="21" x2="9" y2="14"/><line x1="15" y1="21" x2="15" y2="14"/><line x1="12" y1="21" x2="12" y2="14"/></svg>
       <span class="sc-role">Government</span>
       <p class="sc-text">FEMA resource tracker updated. Maria's request no longer duplicated across 3 agencies.</p>
       <p class="sc-time">2:16 PM</p>
     </div>
 
     <div class="scenario-card resolution-card gs-fade">
-      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-      <span class="sc-role" style="color: #34d399;">Resolution</span>
+      <svg class="sos-icon sos-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sos-icon-inline"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
+      <span class="sc-role sc-role--success">Resolution</span>
       <p class="sc-text">Three kids confirmed safe. Maria connected to long-term housing pipeline.</p>
-      <p class="sc-time" style="color: #34d399;">4:47 PM</p>
+      <p class="sc-time sc-time--success">4:47 PM</p>
     </div>
 
     <p class="scenario-closing gs-fade">
@@ -966,7 +1142,7 @@
      SECTION 8: ABOUT — Origin Story
      ════════════════════════════════════════════ -->
 <section id="about" class="about-section">
-  <div class="narrow" style="position: relative; z-index: 2;">
+  <div class="narrow relative z-2">
 
     <div class="about-timeline">
       <div class="about-timeline-item gs-fade">
@@ -983,8 +1159,8 @@
       </div>
     </div>
 
-    <div class="gs-fade" style="margin-top: 48px;">
-      <img src="/logomark-red.svg" alt="SOS" id="invitationLogo" style="height: 80px;">
+    <div class="gs-fade mt-48">
+      <img src="/logomark-red.svg" alt="SOS" id="invitationLogo" class="logo-md">
     </div>
   </div>
 </section>
@@ -994,7 +1170,7 @@
      ════════════════════════════════════════════ -->
 <section id="stories" class="thesis-section">
   <div class="thesis-vertical">
-    <div style="margin-top: 64px;">
+    <div class="mt-64">
       <div class="vignette-card gs-fade">
         <p>A displaced family finds temporary housing in a stranger's guest room — then clears roads with their truck by morning.</p>
       </div>
@@ -1006,9 +1182,9 @@
       </div>
     </div>
 
-    <p class="thesis-closing gs-fade" style="margin-top: 48px;">
+    <p class="thesis-closing gs-fade mt-48">
       Needs and offers coexist on the same person, sometimes on the same day. The instinct is already there. What they lack isn't motivation —
-      <strong style="color: #89CFF0;">it's infrastructure.</strong>
+      <strong class="highlight-blue">it's infrastructure.</strong>
     </p>
   </div>
 </section>
@@ -1018,22 +1194,22 @@
      ════════════════════════════════════════════ -->
 <section id="invitation" class="invitation-section">
   <div class="grain-overlay"></div>
-  <div class="narrow" style="position: relative; z-index: 2;">
+  <div class="narrow relative z-2">
 
-    <h1 class="thesis-headline gs-fade" style="margin-bottom: 48px;">Everyone is a helper.</h1>
+    <h1 class="thesis-headline gs-fade mb-48">Everyone is a helper.</h1>
 
-    <div class="gs-fade" style="margin-bottom: 48px;">
-      <img src="/logomark-red.svg" alt="SOS" style="height: 80px;">
+    <div class="gs-fade mb-48">
+      <img src="/logomark-red.svg" alt="SOS" class="logo-md">
     </div>
 
     <h1 class="gs-fade are-you-heading">Are you?</h1>
 
-    <div class="gs-fade btn-row-cta" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px;">
+    <div class="gs-fade btn-row-cta btn-row mb-64">
       <a href="/c" class="btn btn-red">I need help</a>
       <a href="/volunteer" class="btn btn-outline-white">I want to help</a>
     </div>
 
-    <p class="gs-fade" style="font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: rgba(255,255,255,0.4);">
+    <p class="gs-fade invitation-tagline">
       We help the helpers.
     </p>
   </div>
@@ -1041,16 +1217,16 @@
 
 <!-- ════════ FOOTER ════════ -->
 <footer>
-  <p style="margin-bottom: 12px;">
-    <a href="/" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4);">
-      <img src="/logomark-red.svg" alt="SOS" style="height: 18px; opacity: 0.5;">
+  <p class="mb-12">
+    <a href="/" class="footer-brand">
+      <img src="/logomark-red.svg" alt="SOS">
       SOS GLOBAL
     </a>
   </p>
   <p>
     <a href="/c">Citizens</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/matching">Partners</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="mailto:info@sos-help.org">Contact</a>
   </p>
-  <p style="margin-top: 16px; font-size: 11px;">
+  <p class="footer-copy">
     sosconnect.org &middot; © 2026 SOS Global
   </p>
 </footer>
