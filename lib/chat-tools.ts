@@ -2,6 +2,7 @@
 // Each tool has a Zod schema + execute function that calls Supabase EFs
 
 import { z } from 'zod';
+import { zodSchema } from 'ai';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -10,10 +11,10 @@ export function getChatTools(userLat?: number, userLng?: number) {
   return {
       show_categories: {
         description: 'Show disaster need category selection cards. Use when someone says they need help or can help.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show above the cards'),
           flow: z.enum(['need', 'help']).optional().describe('Which flow - need shows need categories, help adds Volunteer and Donate'),
-        }),
+        })),
         execute: async function({ prompt, flow }) {
           const options = [
             { id: 'housing', icon: '🏠', label: 'Housing' },
@@ -38,9 +39,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_counter: {
         description: 'Show people count selection. Use after categories are selected.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show above the counter'),
-        }),
+        })),
         execute: async function({ prompt }) {
           return JSON.stringify({
             __tool: 'show_counter',
@@ -57,9 +58,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_circumstances: {
         description: 'Show special circumstances selection. Use after count is selected.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show above the options'),
-        }),
+        })),
         execute: async function({ prompt }) {
           return JSON.stringify({
             __tool: 'show_circumstances',
@@ -81,10 +82,10 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       get_location: {
         description: 'Get user location via GPS or address search. Use when you need their location.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show'),
           forSelf: z.boolean().describe('true if for the user themselves, false if for someone else'),
-        }),
+        })),
         execute: async function({ prompt, forSelf }) {
           return JSON.stringify({
             __tool: 'get_location',
@@ -96,9 +97,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_phone_input: {
         description: 'Collect phone number from non-authenticated citizen. Shows a phone input field. Use BEFORE submit_sos or submit_helper when user is not authenticated.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text above the phone input'),
-        }),
+        })),
         execute: async function({ prompt }) {
           return JSON.stringify({
             __tool: 'show_phone_input',
@@ -109,12 +110,12 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       search_resources: {
         description: 'Search for resources near a location. Returns results to show on map and in list.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           keyword: z.string().describe('What to search for: shelter, food, medical, etc.'),
           lat: z.number().optional().describe('Latitude (optional — falls back to user location or Asheville NC)'),
           lng: z.number().optional().describe('Longitude (optional — falls back to user location or Asheville NC)'),
           distance: z.number().optional().describe('Search radius in miles, default 15'),
-        }),
+        })),
         execute: async function({ keyword, lat, lng, distance }) {
           // Fallback: user GPS from headers → Asheville NC default
           const useLat = lat ?? userLat ?? 35.5951;
@@ -173,9 +174,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_score: {
         description: 'Show the user SOS Score with breakdown. Use when they ask about their score or readiness.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           personId: z.string().optional().describe('Person ID, if known'),
-        }),
+        })),
         execute: async function({ personId }) {
           // Query score from score-compute EF
           let score = { total: 0, readiness: 0, community: 0, impact: 0, next_action: 'Complete your profile to start your score' };
@@ -201,7 +202,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       submit_sos: {
         description: 'Submit a help request. Use after collecting category, count, circumstances, and location. Include taxonomy_codes when possible.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           categories: z.array(z.string()).describe('Selected categories'),
           taxonomy_codes: z.array(z.string()).optional().describe('Taxonomy codes matching each category (e.g. HOUSING.EMERGENCY, FOOD.MEALS)'),
           count: z.string().describe('Number of people'),
@@ -211,7 +212,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
           lng: z.number().describe('Longitude'),
           locationName: z.string().optional().describe('Location name'),
           urgency: z.string().optional().describe('critical/high/medium/low'),
-        }),
+        })),
         execute: async function({ categories, taxonomy_codes, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
           // Call intake-write EF
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
@@ -262,7 +263,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       submit_helper: {
         description: 'Register someone as a helper. Use after collecting their skills and availability.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           helperType: z.string().describe('skills, time, or space'),
           skills: z.array(z.string()).optional().describe('Specific skills mentioned'),
           availability: z.string().describe('disaster, anytime, or active'),
@@ -270,7 +271,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
           lng: z.number().describe('Longitude'),
           distanceMiles: z.number().optional().describe('How far they will travel'),
           notes: z.string().optional().describe('Additional details from conversation'),
-        }),
+        })),
         execute: async function({ helperType, skills, availability, lat, lng, distanceMiles, notes }) {
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
             method: 'POST',
@@ -299,13 +300,13 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       submit_join_person: {
         description: 'Save a person who wants to join the SOS community. Use in the join flow after collecting name, phone, skills, and optionally organization.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           name: z.string().describe('Full name'),
           phone: z.string().describe('Phone number'),
           skills: z.string().optional().describe('Skills, resources, or what they can contribute'),
           organization: z.string().optional().describe('Organization name if they are part of one'),
           motivation: z.string().optional().describe('Why they want to join'),
-        }),
+        })),
         execute: async function({ name, phone, skills, organization, motivation }) {
           try {
             const nameParts = name.trim().split(' ');
@@ -366,9 +367,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       capture_photo: {
         description: 'Prompt user to take a photo for reporting. Shows camera input.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show'),
-        }),
+        })),
         execute: async function({ prompt }) {
           return JSON.stringify({
             __tool: 'capture_photo',
@@ -379,9 +380,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_danger_check: {
         description: 'Ask if anyone is in danger. Use during report flow.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show'),
-        }),
+        })),
         execute: async function({ prompt }) {
           return JSON.stringify({
             __tool: 'show_danger_check',
@@ -396,9 +397,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       check_fema: {
         description: 'Check FEMA disaster declarations for a state.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           state: z.string().describe('2-letter state code'),
-        }),
+        })),
         execute: async function({ state }) {
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/fema-check?state=${state}`, {
             headers: { 'Authorization': `Bearer ${SUPABASE_ANON}` },
@@ -419,11 +420,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       escalate_to_platform: {
         description: 'Escalate a complex coordination request to the SOS platform agent. Use when: multiple partners needed for one SOS, referral chain required, match conflict, or request unfulfilled for extended time.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           sosId: z.string().optional().describe('SOS record ID'),
           reason: z.string().describe('Why this needs platform coordination'),
           partnerTypes: z.array(z.string()).optional().describe('Types of partners needed'),
-        }),
+        })),
         execute: async function({ sosId, reason, partnerTypes }) {
           // Write escalation to signal_traces for platform agent to pick up
           await fetch(SUPABASE_URL + '/rest/v1/signal_traces', {
@@ -448,9 +449,9 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       generate_referral: {
         description: 'Generate a referral code and show share card.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           personId: z.string().optional().describe('Person ID'),
-        }),
+        })),
         execute: async function({ personId }) {
           return JSON.stringify({
             __tool: 'referral_card',
@@ -464,11 +465,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_nearby: {
         description: 'Show summary of everything near the user. Use when someone says "what\'s around me", "what\'s nearby", "show me what\'s close". Returns counts + closest resource.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
           lng: z.number().optional().describe('User longitude'),
           radiusKm: z.number().optional().describe('Search radius in km, default 8'),
-        }),
+        })),
         execute: async function({ lat, lng, radiusKm }) {
           const useLat = lat || 35.597; const useLng = lng || -82.546; // Default: Asheville NC
           const radius = radiusKm || 8;
@@ -535,14 +536,14 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_route: {
         description: 'Show directions/route to a destination on the map. Use when someone asks "how do I get to", "directions to", "navigate to".',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           fromLat: z.number().describe('Starting latitude'),
           fromLng: z.number().describe('Starting longitude'),
           toLat: z.number().describe('Destination latitude'),
           toLng: z.number().describe('Destination longitude'),
           destName: z.string().describe('Name of destination'),
           mode: z.enum(['driving', 'walking', 'cycling']).optional().describe('Travel mode, default driving'),
-        }),
+        })),
         execute: async function({ fromLat, fromLng, toLat, toLng, destName, mode }) {
           const travelMode = mode || 'driving';
           const resp = await fetch(`https://api.mapbox.com/directions/v5/mapbox/${travelMode}/${fromLng},${fromLat};${toLng},${toLat}?geometries=geojson&steps=true&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`);
@@ -576,11 +577,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_disaster_zone: {
         description: 'Show disaster boundaries or affected area on the map. Use when someone asks about a specific disaster area, flood zone, fire perimeter, etc.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           disasterName: z.string().describe('Name of the disaster'),
           lat: z.number().optional().describe('Center latitude of disaster area'),
           lng: z.number().optional().describe('Center longitude of disaster area'),
-        }),
+        })),
         execute: async function({ disasterName, lat, lng }) {
           // Query disaster records from DB
           const resp = await fetch(`${SUPABASE_URL}/rest/v1/disasters?name=ilike.*${encodeURIComponent(disasterName)}*&select=id,name,center_lat,center_lng,radius_km,status&limit=1`, {
@@ -606,11 +607,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       compare_resources: {
         description: 'Compare multiple resources and rank them. Use when someone asks "which is closest", "best option", "compare shelters".',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           keyword: z.string().describe('What to search for'),
           lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
           lng: z.number().optional().describe('User longitude'),
-        }),
+        })),
         execute: async function({ keyword, lat, lng }) {
           const useLat = lat || 35.597; const useLng = lng || -82.546;
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/resource-search?keyword=${encodeURIComponent(keyword)}&lat=${useLat}&lng=${useLng}`, {
@@ -644,11 +645,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_coverage_gaps: {
         description: 'Show areas where people need help but no resources are nearby. Use for "where is help not reaching", "coverage gaps", "underserved areas".',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           lat: z.number().describe('Center latitude'),
           lng: z.number().describe('Center longitude'),
           radiusKm: z.number().optional().describe('Analysis radius in km, default 20'),
-        }),
+        })),
         execute: async function({ lat, lng, radiusKm }) {
           const useLat = lat || 35.597; const useLng = lng || -82.546;
           const radius = radiusKm || 20;
@@ -694,11 +695,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_activity: {
         description: 'Show recent coordination activity on the map. Use for "what\'s happening", "recent activity", "show me what\'s going on".',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           lat: z.number().optional().describe('Center latitude'),
           lng: z.number().optional().describe('Center longitude'),
           hoursBack: z.number().optional().describe('How many hours back to look, default 24'),
-        }),
+        })),
         execute: async function({ lat, lng, hoursBack }) {
           const hours = hoursBack || 24;
           const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
@@ -735,10 +736,10 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_risk: {
         description: 'Show risk/danger zones near user. Use for "am I in danger", "is it safe", "show alerts", "risk assessment".',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           lat: z.number().optional().describe('User latitude (defaults to Asheville NC if not provided)'),
           lng: z.number().optional().describe('User longitude'),
-        }),
+        })),
         execute: async function({ lat, lng }) {
           const useLat = lat ?? 35.5946; const useLng = lng ?? -82.5540;
           // Get NWS alerts from our alerts-feed EF
@@ -771,14 +772,14 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       create_match: {
         description: 'Create a match between a helper and a request or resource. Use after collecting how they can help and when.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           recordId: z.string().describe('The ID of the request or resource'),
           recordType: z.string().describe('request or resource'),
           category: z.string().optional(),
           helperDescription: z.string().optional().describe('What the helper said they can offer'),
           availability: z.string().optional().describe('When they can help'),
           phone: z.string().optional().describe('Phone if not authenticated'),
-        }),
+        })),
         execute: async function({ recordId, recordType, category, helperDescription, availability, phone }) {
           // Write match via match-respond EF
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-respond`, {
@@ -828,7 +829,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_chips: {
         description: 'Show quick-select chip buttons. Max 3 per row. Use for structured choices at any point in the conversation.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show above the chips'),
           chips: z.array(z.object({
             id: z.string(),
@@ -836,7 +837,7 @@ export function getChatTools(userLat?: number, userLng?: number) {
             icon: z.string().optional(),
           })).describe('Array of chip options'),
           multiSelect: z.boolean().optional().describe('Allow multiple selections'),
-        }),
+        })),
         execute: async function({ prompt, chips, multiSelect }) {
           return JSON.stringify({ __tool: 'show_chips', prompt, chips, multiSelect: multiSelect || false });
         },
@@ -845,14 +846,14 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_toggle_chips: {
         description: 'Show multi-select toggle chips (e.g., veteran + medical + first responder). Shows a "Continue" button after selections.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           prompt: z.string().describe('Text to show above the chips'),
           options: z.array(z.object({
             id: z.string(),
             icon: z.string(),
             label: z.string(),
           })),
-        }),
+        })),
         execute: async function({ prompt, options }) {
           return JSON.stringify({ __tool: 'show_toggle_chips', prompt, options });
         },
@@ -861,11 +862,11 @@ export function getChatTools(userLat?: number, userLng?: number) {
 
       show_sos_confirmation: {
         description: 'Show final SOS confirmation card with the "Send SOS" button. ALWAYS use this as the final step before submitting any SOS, match, or intake. Never use a text-only confirmation.',
-        inputSchema: z.object({
+        inputSchema: zodSchema(z.object({
           summary: z.string().describe('Brief summary of what will be submitted'),
           type: z.string().describe('Type: request, offer, match, report'),
           details: z.object({}).passthrough().optional().describe('Structured data to submit'),
-        }),
+        })),
         execute: async function({ summary, type, details }) {
           return JSON.stringify({ __tool: 'show_sos_confirmation', summary, type, details });
         },
