@@ -394,7 +394,7 @@ export default function CitizenMapPage() {
             const feature = {
               type: 'Feature' as const,
               geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-              properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, details: r.public_display_text || r.details_sanitized, triage: r.triage_score, household: r.household_size, type: 'request', person_id: r.person_id },
+              properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, created_at: r.created_at, type: 'request' },
             };
             requestFeaturesRef.current = [...requestFeaturesRef.current, feature];
             const src = map.getSource('requests-source') as any;
@@ -406,7 +406,7 @@ export default function CitizenMapPage() {
             const feature = {
               type: 'Feature' as const,
               geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-              properties: { id: r.id, category: r.category, status: r.status, capacity: r.capacity_available, details: r.details_sanitized, type: 'resource', source_type: 'sos' },
+              properties: { id: r.id, category: r.category, status: r.status, capacity_available: r.capacity_available, created_at: r.created_at, type: 'resource' },
             };
             resourceFeaturesRef.current = [...resourceFeaturesRef.current, feature];
             const src = map.getSource('resources-source') as any;

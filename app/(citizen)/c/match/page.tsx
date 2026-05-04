@@ -1,7 +1,8 @@
 'use client';
-import { db } from '@/lib/api';
+import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase-client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
@@ -73,6 +74,8 @@ export default function MatchPage() {
   const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const personId = typeof window !== 'undefined' ? getPersonId() : null;
+  const myRequestIdsRef = useRef<string[]>([]);
+  const myResourceIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (personId) loadProposals();
@@ -83,8 +86,11 @@ export default function MatchPage() {
     if (!personId) return;
     const channel = supabase
       .channel('matches-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, () => {
-        loadProposals();
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (payload: any) => {
+        const row = payload.new;
+        if (myRequestIdsRef.current.includes(row.request_id) || myResourceIdsRef.current.includes(row.resource_id)) {
+          loadProposals();
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -94,13 +100,11 @@ export default function MatchPage() {
     setLoading(true);
     try {
       // Step 1: Get my request IDs and resource IDs
-      const [{ data: myRequests }, { data: myResources }] = await Promise.all([
-        db.from('requests').select('id').eq('person_id', personId!),
-        db.from('resources').select('id').eq('person_id', personId!),
-      ]);
-
-      const myRequestIds = (myRequests || []).map(r => r.id);
-      const myResourceIds = (myResources || []).map(r => r.id);
+      const sosData = await api.efCall<any>('sos-read', { actor: { type: 'citizen', id: personId }, scope: 'my_records' });
+      const myRequestIds = (sosData?.requests || []).map((r: any) => r.id);
+      const myResourceIds = (sosData?.resources || []).map((r: any) => r.id);
+      myRequestIdsRef.current = myRequestIds;
+      myResourceIdsRef.current = myResourceIds;
 
       if (myRequestIds.length === 0 && myResourceIds.length === 0) {
         setProposals([]);
@@ -211,28 +215,9 @@ export default function MatchPage() {
     if (!proposal) return;
 
     if (action === 'accept') {
-      // Call match-respond EF with the actual matches.id and correct field name
+      // Call match-respond via api.respondMatch
       try {
-        const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/match-respond`, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            match_id: proposal.id,       // matches.id — NOT request_id or resource_id
-            response: 'accept',          // EF reads 'response' — NOT 'action'
-            actor_id: personId,
-            channel: 'citizen_app',
-          }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          console.error('match-respond error:', err);
-        }
+        await api.respondMatch(proposal.id, 'accept');
       } catch (err) {
         console.error('Match accept failed:', err);
       }
