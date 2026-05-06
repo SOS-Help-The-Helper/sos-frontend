@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
 import "./globals.css";
@@ -49,6 +50,12 @@ export default function RootLayout({
             {children}
           </ViewProvider>
         </AuthProvider>
+        {/* HubSpot Tracking Code */}
+        <Script
+          id="hs-script-loader"
+          src="//js.hs-scripts.com/51436821.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
