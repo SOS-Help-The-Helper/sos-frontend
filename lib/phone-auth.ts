@@ -31,11 +31,26 @@ export async function verifyOTP(phone: string, token: string): Promise<{ success
     return { success: true, personId: existing.id };
   }
 
+  // Cross-channel merge: check if person exists by phone (created via SMS/partner)
+  const e164 = formatPhoneE164(phone);
+  const { data: byPhone } = await supabase
+    .from('persons')
+    .select('id')
+    .eq('phone', e164)
+    .maybeSingle();
+
+  if (byPhone) {
+    // Link auth to existing person from another channel
+    await supabase.from('persons').update({ auth_user_id: userId, phone_hash: await hashPhone(phone) }).eq('id', byPhone.id);
+    return { success: true, personId: byPhone.id };
+  }
+
   // Create new person record
   const { data: newPerson, error: createError } = await supabase
     .from('persons')
     .insert({
       auth_user_id: userId,
+      phone: formatPhoneE164(phone),
       phone_hash: await hashPhone(phone),
       created_at: new Date().toISOString(),
     })
@@ -53,6 +68,14 @@ export async function getSession() {
 
 export async function signOut() {
   await supabase.auth.signOut();
+}
+
+function formatPhoneE164(input: string): string {
+  const digits = input.replace(/\D/g, '');
+  if (digits.length === 10) return '+1' + digits;
+  if (digits.startsWith('1') && digits.length === 11) return '+' + digits;
+  if (input.startsWith('+')) return input;
+  return '+1' + digits;
 }
 
 async function hashPhone(phone: string): Promise<string> {
