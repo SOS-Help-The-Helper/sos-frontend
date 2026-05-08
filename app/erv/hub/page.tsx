@@ -15,6 +15,11 @@ const CARD_BG = '#1A3850';
 const ERV_QUERY_URL = 'https://rtduqguwhkczexnoawej.supabase.co/functions/v1/erv-query';
 const ERV_AUTH = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o';
 
+// ERV Partner DB — used for donor_pipeline (not available on SOS DB)
+const ERV_PARTNER_URL = 'https://xbtrtztzaokeodarqvpr.supabase.co/functions/v1/partner-read';
+const ERV_PARTNER_AUTH = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhidHJ0enR6YW9rZW9kYXJxdnByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjE0NTYsImV4cCI6MjA5MTU5NzQ1Nn0.adgNAyeml0GIy81VXQu7DcbnnJNhQhNT9zVgwjNJbds';
+const ERV_PARTNER_KEY = 'erv_pk_708c849205328c2d0f734e8dac6494fd';
+
 type ViewType = 'requests' | 'fleet' | 'drivers' | 'donors' | 'impact';
 const VIEWS: { id: ViewType; label: string }[] = [
   { id: 'requests', label: 'Requests' },
@@ -28,6 +33,19 @@ async function ervQuery(queryType: string, filters?: Record<string, any>) {
   const res = await fetch(ERV_QUERY_URL, {
     method: 'POST',
     headers: { Authorization: ERV_AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query_type: queryType, filters, limit: 5000 }),
+  });
+  return res.json();
+}
+
+async function ervPartnerQuery(queryType: string, filters?: Record<string, any>) {
+  const res = await fetch(ERV_PARTNER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: ERV_PARTNER_AUTH,
+      'Content-Type': 'application/json',
+      'x-partner-key': ERV_PARTNER_KEY,
+    },
     body: JSON.stringify({ query_type: queryType, filters, limit: 5000 }),
   });
   return res.json();
@@ -247,15 +265,12 @@ const driverFilters: FilterColumnDef[] = [
 
 const donorColumns: Column<any>[] = [
   {
-    key: 'display_name', label: 'Name',
-    render: r => <span className="font-medium text-white/90">{r.persons?.display_name || r.display_name || '—'}</span>,
-    searchValue: r => r.persons?.display_name || r.display_name || '',
-  },
-  { key: 'state', label: 'Location', render: r => <span className="text-white/60">{r.location_text || r.state || '—'}</span> },
-  {
-    key: 'rv', label: 'RV Details',
-    render: r => <span className="text-white/60">{[r.year, r.make, r.model].filter(Boolean).join(' ') || r.vehicle_type || '—'}</span>,
-    searchValue: r => [r.year, r.make, r.model, r.vehicle_type].filter(Boolean).join(' '),
+    key: 'description', label: 'RV Description',
+    render: r => {
+      const desc = r.description || '—';
+      return <span className="font-medium text-white/90">{desc.length > 80 ? desc.slice(0, 80) + '…' : desc}</span>;
+    },
+    searchValue: r => r.description || '',
   },
   { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
   {
@@ -318,7 +333,7 @@ function ErvHub() {
           ervQuery('request_summary'),
           ervQuery('fleet_status'),
           ervQuery('driver_status'),
-          ervQuery('donor_pipeline'),
+          ervPartnerQuery('donor_pipeline'),
         ]);
 
         if (cancelled) return;
@@ -326,7 +341,7 @@ function ErvHub() {
         const requests = reqRes?.data?.requests || [];
         const fleet = fleetRes?.data?.resources || [];
         const drivers = Array.isArray(driverRes?.data) ? driverRes.data : driverRes?.data?.resources || [];
-        const donors = donorRes?.data?.resources || donorRes?.data || [];
+        const donors = donorRes?.donations || donorRes?.data?.donations || [];
 
         // Compute impact from the data we have
         const fulfilled = requests.filter((r: any) => ['fulfilled', 'delivered'].includes(r.status));
@@ -370,9 +385,9 @@ function ErvHub() {
 
   // Apply URL filters to data
   const filteredData = useMemo(() => {
-    const applyFilters = (rows: any[]) => {
+    const applyFilters = (rows: any[], hasState = true) => {
       let result = rows;
-      if (stateFilter) result = result.filter(r => (r.state || '').toLowerCase() === stateFilter.toLowerCase());
+      if (stateFilter && hasState) result = result.filter(r => (r.state || '').toLowerCase() === stateFilter.toLowerCase());
       if (statusFilter) result = result.filter(r => (r.status || r.partner_status || '').toLowerCase() === statusFilter.toLowerCase());
       if (veteranFilter) result = result.filter(r => r.is_veteran);
       if (femaFilter) result = result.filter(r => r.is_fema_replacement);
@@ -382,7 +397,7 @@ function ErvHub() {
       requests: applyFilters(data.requests),
       fleet: applyFilters(data.fleet),
       drivers: applyFilters(data.drivers),
-      donors: applyFilters(data.donors),
+      donors: applyFilters(data.donors, false),
     };
   }, [data, stateFilter, statusFilter, veteranFilter, femaFilter]);
 
