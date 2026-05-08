@@ -270,12 +270,12 @@ const donorColumns: Column<any>[] = [
     searchValue: r => r.persons?.display_name || r.contact_name || '',
   },
   {
-    key: 'location_text', label: 'Location',
+    key: 'location', label: 'Location',
     render: r => {
-      const loc = r.location_text || '—';
+      const loc = r.city && r.state ? `${r.city}, ${r.state}` : r.state || r.location_text || '—';
       return <span className="text-white/60">{loc.length > 30 ? loc.slice(0, 30) + '…' : loc}</span>;
     },
-    searchValue: r => r.location_text || '',
+    searchValue: r => [r.city, r.state, r.location_text].filter(Boolean).join(' '),
   },
   {
     key: 'rv', label: 'RV',
@@ -412,7 +412,7 @@ function ErvHub() {
       requests: applyFilters(data.requests),
       fleet: applyFilters(data.fleet),
       drivers: applyFilters(data.drivers),
-      donors: applyFilters(data.donors, false),
+      donors: applyFilters(data.donors),
     };
   }, [data, stateFilter, statusFilter, veteranFilter, femaFilter]);
 
