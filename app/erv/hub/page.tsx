@@ -265,18 +265,33 @@ const driverFilters: FilterColumnDef[] = [
 
 const donorColumns: Column<any>[] = [
   {
-    key: 'description', label: 'RV Description',
-    render: r => {
-      const desc = r.description || '—';
-      return <span className="font-medium text-white/90">{desc.length > 80 ? desc.slice(0, 80) + '…' : desc}</span>;
-    },
-    searchValue: r => r.description || '',
+    key: 'contact_name', label: 'Donor',
+    render: r => <span className="font-medium text-white/90">{r.persons?.display_name || r.contact_name || '—'}</span>,
+    searchValue: r => r.persons?.display_name || r.contact_name || '',
   },
+  {
+    key: 'location_text', label: 'Location',
+    render: r => {
+      const loc = r.location_text || '—';
+      return <span className="text-white/60">{loc.length > 30 ? loc.slice(0, 30) + '…' : loc}</span>;
+    },
+    searchValue: r => r.location_text || '',
+  },
+  {
+    key: 'rv', label: 'RV',
+    render: r => {
+      const rv = [r.year, r.make, r.model].filter(Boolean).join(' ') || r.vehicle_type || r.description?.slice(0, 50) || '—';
+      return <span className="text-white/60">{rv}</span>;
+    },
+    searchValue: r => [r.year, r.make, r.model, r.vehicle_type, r.description].filter(Boolean).join(' '),
+  },
+  { key: 'sleeps', label: 'Sleeps', render: r => <span className="text-white/60">{r.sleeps || '—'}</span>, mobileHide: true },
   { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
   {
     key: 'created_at', label: 'Date',
     render: r => <span className="text-white/40 text-xs">{formatDate(r.created_at)}</span>,
     sortValue: r => new Date(r.created_at || 0).getTime(),
+    mobileHide: true,
   },
 ];
 
