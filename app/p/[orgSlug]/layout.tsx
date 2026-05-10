@@ -1,54 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
 import { PartnerShell } from '@/components/partner/partner-shell';
-import { PartnerHeaderClient } from '@/components/partner/partner-header-client';
+import { PartnerLayoutClient } from './layout-client';
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
-async function fetchOrg(orgSlug: string) {
-  const db = getSupabase();
+export default async function PartnerLayout({ children, params }: { children: React.ReactNode; params: { orgSlug: string } }) {
+  const { orgSlug } = params;
 
-  // Try slug column first
-  const { data: bySlug, error: slugErr } = await db
+  const { data: org } = await supabase
     .from('organizations')
-    .select('id, name, logo_url')
-    .eq('slug', orgSlug)
-    .maybeSingle();
-
-  if (!slugErr && bySlug) return bySlug;
-
-  // Fall back to name ilike (replace hyphens with spaces)
-  const nameLike = orgSlug.replace(/-/g, ' ');
-  const { data: byName } = await db
-    .from('organizations')
-    .select('id, name, logo_url')
-    .ilike('name', nameLike)
-    .maybeSingle();
-
-  return byName ?? null;
-}
-
-export default async function PartnerLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: { orgSlug: string };
-}) {
-  const org = await fetchOrg(params.orgSlug);
+    .select('id, name, slug, logo_url, metadata')
+    .or(`slug.eq.${orgSlug},normalized_name.ilike.%${orgSlug.replace(/-/g, ' ')}%`)
+    .limit(1)
+    .single();
 
   if (!org) {
-    return <div className="p-8 text-white">Organization not found.</div>;
+    return <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white">Organization not found</div>;
   }
 
   return (
-    <PartnerShell orgSlug={params.orgSlug}>
-      <PartnerHeaderClient orgName={org.name} logoUrl={org.logo_url ?? undefined} />
-      {children}
+    <PartnerShell orgSlug={orgSlug}>
+      <PartnerLayoutClient orgId={org.id} orgName={org.name} orgSlug={orgSlug}>
+        {children}
+      </PartnerLayoutClient>
     </PartnerShell>
   );
 }
