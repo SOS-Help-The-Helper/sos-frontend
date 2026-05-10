@@ -10,15 +10,29 @@ const supabase = createClient(
 export default async function PartnerLayout({ children, params }: { children: React.ReactNode; params: { orgSlug: string } }) {
   const { orgSlug } = params;
 
-  const { data: org } = await supabase
+  // Try slug first, then fuzzy name match
+  let org: any = null;
+  
+  const { data: bySlug } = await supabase
     .from('organizations')
-    .select('id, name, slug, logo_url, metadata')
-    .or(`slug.eq.${orgSlug},normalized_name.ilike.%${orgSlug.replace(/-/g, ' ')}%`)
-    .limit(1)
-    .single();
+    .select('id, name, slug, metadata')
+    .eq('slug', orgSlug)
+    .maybeSingle();
+  
+  if (bySlug) {
+    org = bySlug;
+  } else {
+    const { data: byName } = await supabase
+      .from('organizations')
+      .select('id, name, slug, metadata')
+      .ilike('normalized_name', `%${orgSlug.replace(/-/g, ' ')}%`)
+      .limit(1)
+      .maybeSingle();
+    org = byName;
+  }
 
   if (!org) {
-    return <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white">Organization not found</div>;
+    return <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white text-sm">Organization not found</div>;
   }
 
   return (
