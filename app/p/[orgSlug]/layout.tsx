@@ -7,10 +7,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 );
 
-export default async function PartnerLayout({ children, params }: { children: React.ReactNode; params: { orgSlug: string } }) {
-  const { orgSlug } = params;
+export default async function PartnerLayout({ children, params }: { children: React.ReactNode; params: Promise<{ orgSlug: string }> }) {
+  const { orgSlug } = await params;
 
-  // Try slug first, then fuzzy name match
   let org: any = null;
   
   const { data: bySlug } = await supabase
