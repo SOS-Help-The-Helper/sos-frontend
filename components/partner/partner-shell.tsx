@@ -14,10 +14,10 @@ export function PartnerShell({ children, orgSlug, tabs }: PartnerShellProps) {
   const pathname = usePathname();
 
   const resolvedTabs = tabs ?? [
-    { path: `/p/${orgSlug}`,          label: 'Map',        icon: Map },
-    { path: `/p/${orgSlug}/people`,   label: 'People',     icon: Users },
-    { path: `/p/${orgSlug}/assets`,   label: 'Assets',     icon: Package },
-    { path: `/p/${orgSlug}/deliver`,  label: 'Deliveries', icon: Truck },
+    { path: `/app`,          label: 'Map',        icon: Map },
+    { path: `/app/people`,   label: 'People',     icon: Users },
+    { path: `/app/assets`,   label: 'Assets',     icon: Package },
+    { path: `/app/deliver`,  label: 'Deliveries', icon: Truck },
   ];
 
   function isActive(path: string) {

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
+import { PartnerProvider } from '@/lib/partner-context';
 
 interface PartnerLayoutClientProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: Partn
   const [agentOpen, setAgentOpen] = useState(false);
 
   return (
-    <>
+    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug}>
       <CitizenHeader
         onAgentTap={() => setAgentOpen(true)}
         locationName={orgName}
@@ -28,6 +29,6 @@ export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: Partn
         context="partner"
         partner={orgSlug}
       />
-    </>
+    </PartnerProvider>
   );
 }
