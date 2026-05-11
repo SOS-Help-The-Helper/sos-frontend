@@ -64,15 +64,34 @@ export async function POST(req: Request) {
       const transportData = await transportRes.json();
       const transport = transportData.results?.[0] || transportData.assignments?.[0];
       if (transport) {
+        // Fetch resource details for the delivery description
+        let resourceDesc = 'Delivery item';
+        if (transport.resource_id) {
+          try {
+            const resRes = await fetch(ERV_DB + '/functions/v1/partner-read', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + ERV_ANON, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query_type: 'resource_lookup', filters: { id: transport.resource_id } }),
+            });
+            const resData = await resRes.json();
+            const resource = resData.resource || resData.results?.[0];
+            if (resource) {
+              resourceDesc = [resource.year, resource.make, resource.model].filter(Boolean).join(' ') || resource.description || 'RV';
+            }
+          } catch {}
+        }
+
         driverSystemPrompt = `You are in DRIVER MODE for a specific delivery.
 
 DELIVERY DETAILS:
 - Transport ID: ${transport.id}
 - Status: ${transport.status}
-- Resource: ${transport.resource_description || 'Delivery item'}
-- Pickup: ${transport.origin || 'TBD'}
-- Dropoff: ${transport.destination || 'TBD'}
+- Resource: ${resourceDesc}
+- Pickup: ${transport.origin_text || transport.origin || 'TBD'}
+- Dropoff: ${transport.destination_text || transport.destination || 'TBD'}
+- Distance: ${transport.distance_miles ? transport.distance_miles + ' miles' : 'TBD'}
 - Driver: ${transport.driver_name || 'Not yet assigned'}
+- Notes: ${transport.coordinator_notes || 'None'}
 
 RULES:
 - Only answer questions about THIS delivery
