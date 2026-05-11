@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { KanbanBoard, KanbanColumn } from '@/components/partner/kanban-board';
-import { ervFetch } from '@/lib/erv-api';
+import { usePartnerFetch } from '@/lib/partner-api';
 
 type SubTab = 'survivors' | 'volunteers' | 'rvs';
 
@@ -202,6 +202,7 @@ function RVsKanban({
 
 export default function ManagePage() {
   const { orgId } = usePartnerOrg();
+  const partnerFetch = usePartnerFetch();
   const [activeTab, setActiveTab] = useState<SubTab>('survivors');
   const [survivors, setSurvivors] = useState<any[]>([]);
   const [volunteers, setVolunteers] = useState<any[]>([]);
@@ -213,13 +214,13 @@ export default function ManagePage() {
     setLoading(true);
 
     if (tab === 'survivors') {
-      const res = await ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] }));
       setSurvivors(res.requests || []);
     } else if (tab === 'rvs') {
-      const res = await ervFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ resources: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ resources: [] }));
       setRvs(res.resources || []);
     } else if (tab === 'volunteers') {
-      const res = await ervFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] }));
       setVolunteers(res.results || []);
     }
 
@@ -237,7 +238,7 @@ export default function ManagePage() {
     const prev = survivors.find(s => String(s.id ?? s.request_id) === itemId);
     if (!prev) return;
     setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, ops_status: newStatus } : s));
-    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'request', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
+    const body = await partnerFetch('partner-update', { action: 'record_status', record_type: 'request', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
     if (body?.error) {
       setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, ops_status: prev.ops_status } : s));
       window.alert(`Failed to update survivor status: ${body.error ?? 'Unknown error'}`);
@@ -248,7 +249,7 @@ export default function ManagePage() {
     const prev = rvs.find(r => String(r.id ?? r.resource_id) === itemId);
     if (!prev) return;
     setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, ops_status: newStatus } : r));
-    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'resource', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
+    const body = await partnerFetch('partner-update', { action: 'record_status', record_type: 'resource', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
     if (body?.error) {
       setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, ops_status: prev.ops_status } : r));
       window.alert(`Failed to update RV status: ${body.error ?? 'Unknown error'}`);

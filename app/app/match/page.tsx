@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
-import { ervFetch } from '@/lib/erv-api';
+import { usePartnerFetch } from '@/lib/partner-api';
 
 const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SOS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -172,6 +172,7 @@ function CandidateCard({
 }
 
 function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCommitted: () => void }) {
+  const partnerFetch = usePartnerFetch();
   const [survivors, setSurvivors] = useState<Survivor[]>([]);
   const [loadingSurvivors, setLoadingSurvivors] = useState(false);
   const [search, setSearch] = useState('');
@@ -186,7 +187,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
   useEffect(() => {
     if (!orgId) return;
     setLoadingSurvivors(true);
-    ervFetch('partner-read', {
+    partnerFetch('partner-read', {
       query_type: 'recent_requests',
       filters: { ops_status: ['pending', 'approved'] },
       limit: 500,
@@ -402,6 +403,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
 
 export default function MatchPage() {
   const { orgId } = usePartnerOrg();
+  const partnerFetch = usePartnerFetch();
   const [view, setView] = useState<SubView>('active');
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -409,7 +411,7 @@ export default function MatchPage() {
   const fetchMatches = useCallback(async () => {
     setLoading(true);
 
-    const res = await ervFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ deliveries: [] }));
+    const res = await partnerFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ deliveries: [] }));
 
     setMatches(res.deliveries || []);
     setLoading(false);
