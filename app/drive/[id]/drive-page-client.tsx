@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
@@ -174,6 +174,73 @@ function PhotoCapture({
   );
 }
 
+const GPS_ACTIVE_STATUSES = ['en_route', 'in_transit', 'arrived'];
+
+function useGPSTracker(transportId: string, partnerConfig: PartnerConfig, enabled: boolean) {
+  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [error, setError] = useState(false);
+  const watchId = useRef<number | null>(null);
+  const lastSent = useRef<number>(0);
+  const offlineQueue = useRef<Array<{ lat: number; lng: number }>>([]);
+
+  useEffect(() => {
+    if (!enabled) {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+      return;
+    }
+
+    watchId.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setPosition({ lat, lng });
+        setError(false);
+
+        const now = Date.now();
+        if (now - lastSent.current < 30_000) return;
+        lastSent.current = now;
+
+        offlineQueue.current.push({ lat, lng });
+        const batch = offlineQueue.current.splice(0);
+        const latest = batch[batch.length - 1];
+        fetch(partnerConfig.db_url + '/functions/v1/partner-update', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + partnerConfig.anon_key,
+            'x-partner-key': partnerConfig.api_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'update_transport_location',
+            transport_id: transportId,
+            lat: latest.lat,
+            lng: latest.lng,
+          }),
+        }).catch(() => {
+          offlineQueue.current.unshift(...batch);
+        });
+      },
+      (err) => {
+        console.error('GPS error:', err);
+        setError(true);
+      },
+      { enableHighAccuracy: true, maximumAge: 10_000 },
+    );
+
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+    };
+  }, [enabled, transportId, partnerConfig]);
+
+  return { lat: position?.lat ?? null, lng: position?.lng ?? null, tracking: enabled && !error, error };
+}
+
 export default function DrivePageClient({
   transport,
   orgName,
@@ -185,6 +252,9 @@ export default function DrivePageClient({
   const [currentStatus, setCurrentStatus] = useState(transport.status);
   const [updating, setUpdating] = useState(false);
   const [photoPrompt, setPhotoPrompt] = useState<string | null>(null);
+
+  const gpsEnabled = GPS_ACTIVE_STATUSES.includes(currentStatus);
+  const gps = useGPSTracker(transport.id, partnerConfig, gpsEnabled);
 
   const pipeline = transportConfig.status_pipeline ?? DEFAULT_PIPELINE;
   const requirePhotosAt = transportConfig.require_photos_at ?? [];
@@ -419,6 +489,14 @@ export default function DrivePageClient({
               })}
             </div>
             <p className="text-xs text-white/50">{currentStatus.replace(/_/g, ' ')}</p>
+            {gpsEnabled && (
+              <div className="flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${gps.error ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                <span className={`text-[10px] ${gps.error ? 'text-yellow-400' : 'text-green-400'}`}>
+                  {gps.error ? 'Location unavailable' : 'Location sharing active'}
+                </span>
+              </div>
+            )}
           </div>
 
           {atEnd ? (
