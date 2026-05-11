@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerLayoutClient } from './layout-client';

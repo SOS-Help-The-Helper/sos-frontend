@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 import type { Metadata } from 'next';
 import DrivePageClient from './drive-page-client';
