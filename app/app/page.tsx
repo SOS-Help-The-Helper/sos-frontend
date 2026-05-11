@@ -4,7 +4,7 @@ import { usePartnerOrg } from '@/lib/partner-context';
 import { PinDetailCard } from '@/components/partner/pin-detail-card';
 import { DashboardOverlay } from '@/components/partner/dashboard-overlay';
 import { QuickActions } from '@/components/partner/quick-actions';
-import { ERV_URL, ERV_HEADERS } from '@/lib/erv-api';
+import { ervFetch } from '@/lib/erv-api';
 
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
 
@@ -27,9 +27,9 @@ export default function PartnerMapPage() {
     setLoading(true);
 
     const [survRes, rvsRes, volRes] = await Promise.all([
-      fetch(`${ERV_URL}/functions/v1/partner-read`, { method: 'POST', headers: ERV_HEADERS, body: JSON.stringify({ query_type: 'recent_requests', filters: {}, limit: 3000 }) }).then(r => r.json()).catch(() => ({ results: [] })),
-      fetch(`${ERV_URL}/functions/v1/partner-read`, { method: 'POST', headers: ERV_HEADERS, body: JSON.stringify({ query_type: 'available_resources', filters: {}, limit: 1000 }) }).then(r => r.json()).catch(() => ({ results: [] })),
-      fetch(`${ERV_URL}/functions/v1/partner-read`, { method: 'POST', headers: ERV_HEADERS, body: JSON.stringify({ query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }) }).then(r => r.json()).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }).catch(() => ({ results: [] })),
     ]);
     setSurvivors(survRes.results || []);
     setRvs(rvsRes.results || []);
