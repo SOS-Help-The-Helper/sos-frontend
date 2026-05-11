@@ -65,16 +65,17 @@ const STATUS_LABELS: Record<string, string> = {
   verified: 'Complete',
 };
 
-const STATUS_PILL_COLORS: Record<string, string> = {
-  accepted: 'bg-blue-500/20 text-blue-300',
-  en_route: 'bg-yellow-500/20 text-yellow-300',
-  at_pickup: 'bg-orange-500/20 text-orange-300',
-  loaded: 'bg-orange-400/20 text-orange-200',
-  hooked_up: 'bg-orange-400/20 text-orange-200',
-  in_transit: 'bg-purple-500/20 text-purple-300',
-  arrived: 'bg-green-400/20 text-green-300',
-  delivered: 'bg-green-500/20 text-green-300',
-  verified: 'bg-green-600/20 text-green-200',
+const STATUS_PILL_COLORS: Record<string, { bg: string; text: string }> = {
+  created:    { bg: 'rgba(255,255,255,0.08)',  text: 'rgba(255,255,255,0.5)' },
+  accepted:   { bg: 'rgba(59,130,246,0.18)',   text: '#93C5FD' },
+  en_route:   { bg: 'rgba(251,146,60,0.18)',   text: '#FCA05E' },
+  at_pickup:  { bg: 'rgba(251,146,60,0.18)',   text: '#FCA05E' },
+  loaded:     { bg: 'rgba(251,146,60,0.14)',   text: '#FDBA74' },
+  hooked_up:  { bg: 'rgba(251,146,60,0.14)',   text: '#FDBA74' },
+  in_transit: { bg: 'rgba(168,85,247,0.18)',   text: '#C084FC' },
+  arrived:    { bg: 'rgba(34,197,94,0.18)',    text: '#86EFAC' },
+  delivered:  { bg: 'rgba(34,197,94,0.18)',    text: '#86EFAC' },
+  verified:   { bg: 'rgba(34,197,94,0.14)',    text: '#6EE7B7' },
 };
 
 const PHOTO_PROMPTS: Record<string, string> = {
@@ -83,6 +84,19 @@ const PHOTO_PROMPTS: Record<string, string> = {
   loaded: 'Photo showing the load is secure',
   delivered: 'Photo of the signed title and RV at its new location',
   default: 'Take a photo for this stage',
+};
+
+// Pipeline step display labels (short)
+const STEP_SHORT: Record<string, string> = {
+  accepted:   'Accept',
+  en_route:   'Depart',
+  at_pickup:  'Pickup',
+  loaded:     'Loaded',
+  hooked_up:  'Hooked',
+  in_transit: 'Drive',
+  arrived:    'Arrive',
+  delivered:  'Deliver',
+  verified:   'Done',
 };
 
 function cityOnly(address: string): string {
@@ -121,12 +135,18 @@ function PhotoCapture({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1A3850] rounded-t-2xl p-5 z-20">
+    <div className="fixed bottom-0 left-0 right-0 z-20 rounded-t-3xl p-6"
+      style={{
+        background: 'rgba(26, 56, 80, 0.97)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+      }}>
       <div className="flex items-center gap-2 mb-1">
         <Camera className="w-5 h-5 text-white/70" />
         <p className="text-sm font-semibold text-white">Take a photo</p>
       </div>
-      <p className="text-xs text-white/50 mb-4">{prompt}</p>
+      <p className="text-xs text-white/40 mb-5">{prompt}</p>
 
       {preview ? (
         <div className="mb-4">
@@ -134,13 +154,13 @@ function PhotoCapture({
           <img
             src={preview}
             alt="Preview"
-            className="w-full max-h-40 object-cover rounded-xl"
+            className="w-full max-h-44 object-cover rounded-2xl"
           />
         </div>
       ) : (
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-full py-4 rounded-2xl bg-white/10 text-white text-sm font-medium flex items-center justify-center gap-2 active:opacity-70 transition-opacity mb-4"
+          className="w-full py-4 rounded-2xl bg-white/8 text-white text-sm font-medium flex items-center justify-center gap-2 active:opacity-70 transition-opacity mb-4 border border-white/10"
         >
           <Camera className="w-5 h-5" />
           Open Camera
@@ -159,14 +179,18 @@ function PhotoCapture({
       {preview ? (
         <button
           onClick={handleContinue}
-          className="w-full py-4 rounded-2xl bg-[#EF4E4B] text-white font-bold text-sm active:opacity-80 transition-opacity"
+          className="w-full py-4 rounded-[20px] text-white font-bold text-sm active:scale-[0.98] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #EF4E4B, #d43a37)',
+            boxShadow: '0 8px 32px rgba(239,78,75,0.3)',
+          }}
         >
           Continue
         </button>
       ) : null}
 
-      <div className="flex justify-center mt-3">
-        <button onClick={onSkip} className="text-xs text-white/30 underline">
+      <div className="flex justify-center mt-4">
+        <button onClick={onSkip} className="text-xs text-white/25 underline">
           Skip
         </button>
       </div>
@@ -274,8 +298,7 @@ export default function DrivePageClient({
   const displayedDestination =
     beforeAtPickup && destination ? cityOnly(destination) : destination;
 
-  const pillClass =
-    STATUS_PILL_COLORS[currentStatus] ?? 'bg-white/10 text-white/60';
+  const pillStyle = STATUS_PILL_COLORS[currentStatus] ?? STATUS_PILL_COLORS.created;
 
   async function doAdvanceStatus(targetStatus: string) {
     setUpdating(true);
@@ -359,104 +382,269 @@ export default function DrivePageClient({
         agentOpen={agentOpen}
       />
 
-      {/* Main content */}
-      <div className="px-5 pt-20 pb-24">
-        {/* No driver banner */}
+      {/* Scrollable main content */}
+      <div
+        className="overflow-y-auto"
+        style={{
+          paddingTop: '72px',
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 180px)',
+        }}
+      >
+        {/* No-driver animated prompt */}
         {!transport.driver_person_id && (
-          <div className="mb-4 rounded-xl border border-[#EF4E4B]/40 bg-[#EF4E4B]/10 px-4 py-3 text-center">
-            <p className="text-sm font-medium text-white">
-              Tap the SOS button to get started
+          <div className="mx-4 mb-6 rounded-2xl px-5 py-4 text-center"
+            style={{
+              background: 'rgba(239,78,75,0.07)',
+              border: '1px solid rgba(239,78,75,0.2)',
+            }}>
+            {/* Pulsing logomark */}
+            <div className="flex justify-center mb-3">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-[#EF4E4B]/20 animate-ping" />
+                <div className="relative w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(15,30,43,0.95)',
+                    boxShadow: '0 0 16px rgba(239,78,75,0.35)',
+                    border: '1.5px solid rgba(239,78,75,0.35)',
+                  }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logomark-red.svg" alt="SOS" className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-white/60 leading-snug">
+              Tap the SOS button to get started as a volunteer driver
             </p>
-            <p className="mt-0.5 text-xs text-white/50">
-              The agent will guide you through onboarding
-            </p>
+            {/* Arrow pointing down */}
+            <p className="mt-2 text-lg text-white/20 select-none">↓</p>
           </div>
         )}
 
-        {/* Transport card */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          {/* Title + status */}
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-lg font-semibold text-white leading-tight">
-              {resourceDescription}
-            </p>
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${pillClass}`}
+        {/* HERO CARD */}
+        <div className="relative mx-4 mt-7">
+          {/* Floating logomark above card */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(15,30,43,0.95)',
+                boxShadow: '0 0 24px rgba(255,107,0,0.35)',
+                border: '2px solid rgba(255,107,0,0.3)',
+              }}
             >
-              {currentStatus.replace(/_/g, ' ')}
-            </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logomark-red.svg" alt="SOS" className="w-8 h-8" />
+            </div>
           </div>
 
-          <div className="border-t border-white/10 my-4" />
+          {/* Card */}
+          <div
+            style={{
+              background: 'rgba(26, 56, 80, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '24px',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
+              padding: '24px',
+            }}
+          >
+            {/* Resource name */}
+            <p className="text-xl font-semibold text-white text-center mt-8 leading-tight">
+              {resourceDescription.toUpperCase()}
+            </p>
 
-          {/* Pickup */}
-          <div className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">
-              Pickup
-            </p>
-            <p className="text-sm text-white mb-2">
-              {transport.origin_text || '—'}
-            </p>
-            {transport.origin_text && (
-              <button
-                onClick={() =>
-                  window.open(
-                    'https://maps.google.com/?q=' +
-                      encodeURIComponent(transport.origin_text!),
-                    '_blank'
-                  )
-                }
-                className="text-xs bg-white/10 px-3 py-1.5 rounded-lg text-white/80 hover:bg-white/20 transition-colors"
+            {/* Status pill */}
+            <div className="flex justify-center mt-3">
+              <span
+                className="text-[11px] uppercase tracking-widest font-bold px-3 py-1 rounded-full"
+                style={{ background: pillStyle.bg, color: pillStyle.text }}
               >
-                Navigate
-              </button>
-            )}
-          </div>
+                {currentStatus.replace(/_/g, ' ')}
+              </span>
+            </div>
 
-          {/* Dropoff */}
-          <div className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">
-              Dropoff
-            </p>
-            <p className="text-sm text-white mb-2">
-              {displayedDestination || '—'}
-            </p>
-            {destination && (
-              <button
-                onClick={() =>
-                  window.open(
-                    'https://maps.google.com/?q=' +
-                      encodeURIComponent(destination),
-                    '_blank'
-                  )
-                }
-                className="text-xs bg-white/10 px-3 py-1.5 rounded-lg text-white/80 hover:bg-white/20 transition-colors"
-              >
-                Navigate
-              </button>
-            )}
-          </div>
+            {/* Divider */}
+            <div className="border-t border-white/5 my-5" />
 
-          {/* Distance */}
-          {transport.distance_miles != null ? (
-            <p className="text-xs text-white/30 mb-4">
-              {transport.distance_miles} miles
-            </p>
-          ) : transport.origin_text && destination ? (
-            <p className="text-xs text-white/30 mb-4">
-              Estimated distance will be calculated
-            </p>
-          ) : null}
+            {/* Route section */}
+            <div className="flex flex-col gap-0">
+              {/* From row */}
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center mt-1 shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0" />
+                  <div className="w-px h-6 bg-white/10 mt-1" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 mb-0.5">From</p>
+                  <p className="text-sm text-white leading-snug truncate">
+                    {transport.origin_text || '—'}
+                  </p>
+                </div>
+                {transport.origin_text && (
+                  <button
+                    onClick={() =>
+                      window.open(
+                        'https://maps.google.com/?q=' + encodeURIComponent(transport.origin_text!),
+                        '_blank',
+                      )
+                    }
+                    className="text-[10px] text-white/30 hover:text-white transition-colors shrink-0 mt-4"
+                  >
+                    Navigate ›
+                  </button>
+                )}
+              </div>
 
-          {/* Driver notes */}
-          {notes && (
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">
-                Notes
+              {/* To row */}
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B] shrink-0 mt-1" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 mb-0.5">To</p>
+                  <p className="text-sm text-white leading-snug truncate">
+                    {displayedDestination || '—'}
+                  </p>
+                </div>
+                {destination && (
+                  <button
+                    onClick={() =>
+                      window.open(
+                        'https://maps.google.com/?q=' + encodeURIComponent(destination),
+                        '_blank',
+                      )
+                    }
+                    className="text-[10px] text-white/30 hover:text-white transition-colors shrink-0 mt-4"
+                  >
+                    Navigate ›
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Distance */}
+            {transport.distance_miles != null ? (
+              <p className="text-[11px] text-white/30 text-center mt-4">
+                {transport.distance_miles.toLocaleString()} miles
               </p>
-              <p className="text-sm text-white/70">{notes}</p>
+            ) : transport.origin_text && destination ? (
+              <p className="text-[11px] text-white/30 text-center mt-4">
+                Distance calculating…
+              </p>
+            ) : null}
+
+            {/* Notes */}
+            {notes && (
+              <div
+                className="mt-5 rounded-xl p-4"
+                style={{ background: 'rgba(255,255,255,0.03)' }}
+              >
+                <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1.5">Notes</p>
+                <p className="text-xs text-white/40 italic leading-relaxed">{notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* PROGRESS SECTION */}
+        <div className="mx-4 mt-6">
+          {/* GPS badge */}
+          {gpsEnabled && (
+            <div className="flex justify-center mb-4">
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{
+                  background: gps.error ? 'rgba(251,191,36,0.08)' : 'rgba(34,197,94,0.08)',
+                  border: gps.error ? '1px solid rgba(251,191,36,0.2)' : '1px solid rgba(34,197,94,0.2)',
+                }}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${gps.error ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`}
+                />
+                <span className={`text-[10px] font-medium ${gps.error ? 'text-yellow-400' : 'text-green-400'}`}>
+                  {gps.error ? 'Location unavailable' : 'Location sharing active'}
+                </span>
+              </div>
             </div>
           )}
+
+          {/* Pipeline dots rail */}
+          <div className="flex items-start justify-between px-1">
+            {pipeline.map((stage, i) => {
+              const isCompleted = i < currentIndex;
+              const isCurrent = i === currentIndex;
+              const isFuture = i > currentIndex;
+              return (
+                <div key={stage} className="flex flex-col items-center gap-1.5 flex-1">
+                  {/* Connecting line left */}
+                  <div className="flex items-center w-full relative">
+                    {/* Left connector */}
+                    {i > 0 && (
+                      <div
+                        className="absolute left-0 right-1/2 h-px"
+                        style={{
+                          background: i <= currentIndex
+                            ? 'rgba(34,197,94,0.35)'
+                            : 'rgba(255,255,255,0.08)',
+                        }}
+                      />
+                    )}
+                    {/* Right connector */}
+                    {i < pipeline.length - 1 && (
+                      <div
+                        className="absolute left-1/2 right-0 h-px"
+                        style={{
+                          background: i < currentIndex
+                            ? 'rgba(34,197,94,0.35)'
+                            : 'rgba(255,255,255,0.08)',
+                        }}
+                      />
+                    )}
+
+                    {/* Dot */}
+                    <div className="relative z-10 mx-auto">
+                      {isCompleted ? (
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ background: 'rgba(34,197,94,0.2)', border: '1.5px solid rgba(34,197,94,0.5)' }}
+                        >
+                          <span className="text-[11px] text-green-400 font-bold">✓</span>
+                        </div>
+                      ) : isCurrent ? (
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
+                          <div
+                            className="relative w-8 h-8 rounded-full bg-white"
+                            style={{ boxShadow: '0 0 12px rgba(255,255,255,0.4)' }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-8 h-8 rounded-full"
+                          style={{ border: '1.5px solid rgba(255,255,255,0.1)' }}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step label */}
+                  <p
+                    className="text-[9px] text-center leading-none"
+                    style={{
+                      color: isCompleted
+                        ? 'rgba(134,239,172,0.7)'
+                        : isCurrent
+                        ? 'rgba(255,255,255,0.8)'
+                        : 'rgba(255,255,255,0.18)',
+                    }}
+                  >
+                    {STEP_SHORT[stage] ?? stage}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -469,45 +657,24 @@ export default function DrivePageClient({
         />
       )}
 
-      {/* CTA button */}
+      {/* CTA button — fixed above safe area */}
       {!photoPrompt && (
-        <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#0F1E2B] via-[#0F1E2B]/95 to-transparent">
-          {/* Progress dots */}
-          <div className="flex flex-col items-center gap-1 mb-4">
-            <div className="flex gap-1">
-              {pipeline.map((stage, i) => {
-                const isCompleted = i < currentIndex;
-                const isCurrent = i === currentIndex;
-                return (
-                  <span
-                    key={stage}
-                    className={
-                      'w-2 h-2 rounded-full ' +
-                      (isCompleted
-                        ? 'bg-green-400'
-                        : isCurrent
-                        ? 'bg-white animate-pulse'
-                        : 'bg-white/20')
-                    }
-                  />
-                );
-              })}
-            </div>
-            <p className="text-xs text-white/50">{currentStatus.replace(/_/g, ' ')}</p>
-            {gpsEnabled && (
-              <div className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${gps.error ? 'bg-yellow-400' : 'bg-green-400'}`} />
-                <span className={`text-[10px] ${gps.error ? 'text-yellow-400' : 'text-green-400'}`}>
-                  {gps.error ? 'Location unavailable' : 'Location sharing active'}
-                </span>
-              </div>
-            )}
-          </div>
-
+        <div
+          className="fixed bottom-0 left-0 right-0 px-5 pt-4"
+          style={{
+            paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)',
+            background: 'linear-gradient(to top, rgba(15,30,43,1) 60%, transparent)',
+          }}
+        >
           {atEnd ? (
             <button
               disabled
-              className="w-full py-4 rounded-2xl text-white font-bold text-sm bg-green-600/60 cursor-default"
+              className="w-full py-4 text-white font-bold text-sm uppercase tracking-wider cursor-default"
+              style={{
+                borderRadius: '20px',
+                background: 'rgba(34,197,94,0.25)',
+                border: '1px solid rgba(34,197,94,0.3)',
+              }}
             >
               Delivery Complete ✓
             </button>
@@ -515,13 +682,17 @@ export default function DrivePageClient({
             <button
               onClick={handleCTAPress}
               disabled={updating}
-              className={
-                'w-full py-4 rounded-2xl text-white font-bold text-sm transition-opacity active:opacity-80 ' +
-                (updating ? 'opacity-50' : '')
-              }
-              style={{ backgroundColor: brandColor }}
+              className="w-full py-4 text-white font-bold text-sm uppercase tracking-wider active:scale-[0.98] transition-transform"
+              style={{
+                borderRadius: '20px',
+                background: updating
+                  ? 'rgba(239,78,75,0.4)'
+                  : `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)`,
+                boxShadow: updating ? 'none' : '0 8px 32px rgba(239,78,75,0.3)',
+                opacity: updating ? 0.6 : 1,
+              }}
             >
-              {updating ? 'Updating...' : (STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' '))}
+              {updating ? 'Updating…' : (STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' '))}
             </button>
           ) : null}
         </div>
