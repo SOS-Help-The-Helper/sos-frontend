@@ -86,14 +86,17 @@ export default function DrivePageClient({
   transport,
   orgName,
   orgSlug,
+  partnerConfig,
   transportConfig,
 }: DrivePageClientProps) {
   const [agentOpen, setAgentOpen] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(transport.status);
+  const [updating, setUpdating] = useState(false);
 
   const pipeline = transportConfig.status_pipeline ?? DEFAULT_PIPELINE;
   const brandColor = transportConfig.branding?.color ?? '#EF4E4B';
 
-  const currentIndex = pipeline.indexOf(transport.status);
+  const currentIndex = pipeline.indexOf(currentStatus);
   const nextStatus = currentIndex >= 0 && currentIndex < pipeline.length - 1
     ? pipeline[currentIndex + 1]
     : null;
@@ -107,7 +110,36 @@ export default function DrivePageClient({
     beforeAtPickup && destination ? cityOnly(destination) : destination;
 
   const pillClass =
-    STATUS_PILL_COLORS[transport.status] ?? 'bg-white/10 text-white/60';
+    STATUS_PILL_COLORS[currentStatus] ?? 'bg-white/10 text-white/60';
+
+  async function advanceStatus() {
+    if (!nextStatus || updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch(partnerConfig.db_url + '/functions/v1/partner-update', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + partnerConfig.anon_key,
+          'x-partner-key': partnerConfig.api_key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update_transport_status',
+          transport_id: transport.id,
+          status: nextStatus,
+        }),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setCurrentStatus(nextStatus);
+      } else {
+        console.error('Status update failed:', data.error);
+      }
+    } catch (err) {
+      console.error('Status update error:', err);
+    }
+    setUpdating(false);
+  }
 
   const notes = transport.admin_notes || transport.notes;
 
@@ -144,7 +176,7 @@ export default function DrivePageClient({
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${pillClass}`}
             >
-              {transport.status.replace(/_/g, ' ')}
+              {currentStatus.replace(/_/g, ' ')}
             </span>
           </div>
 
@@ -219,6 +251,30 @@ export default function DrivePageClient({
 
       {/* CTA button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#0F1E2B] via-[#0F1E2B]/95 to-transparent">
+        {/* Progress dots */}
+        <div className="flex flex-col items-center gap-1 mb-4">
+          <div className="flex gap-1">
+            {pipeline.map((stage, i) => {
+              const isCompleted = i < currentIndex;
+              const isCurrent = i === currentIndex;
+              return (
+                <span
+                  key={stage}
+                  className={
+                    'w-2 h-2 rounded-full ' +
+                    (isCompleted
+                      ? 'bg-green-400'
+                      : isCurrent
+                      ? 'bg-white animate-pulse'
+                      : 'bg-white/20')
+                  }
+                />
+              );
+            })}
+          </div>
+          <p className="text-xs text-white/50">{currentStatus.replace(/_/g, ' ')}</p>
+        </div>
+
         {atEnd ? (
           <button
             disabled
@@ -228,11 +284,15 @@ export default function DrivePageClient({
           </button>
         ) : nextStatus ? (
           <button
-            onClick={() => console.log('Advance status to:', nextStatus)}
-            className="w-full py-4 rounded-2xl text-white font-bold text-sm transition-opacity active:opacity-80"
+            onClick={advanceStatus}
+            disabled={updating}
+            className={
+              'w-full py-4 rounded-2xl text-white font-bold text-sm transition-opacity active:opacity-80 ' +
+              (updating ? 'opacity-50' : '')
+            }
             style={{ backgroundColor: brandColor }}
           >
-            {STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' ')}
+            {updating ? 'Updating...' : (STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' '))}
           </button>
         ) : null}
       </div>
