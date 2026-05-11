@@ -2,8 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { KanbanBoard, KanbanColumn } from '@/components/partner/kanban-board';
-
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+import { ERV_URL, ERV_HEADERS } from '@/lib/erv-api';
 
 type SubTab = 'survivors' | 'volunteers' | 'rvs';
 
@@ -207,36 +206,33 @@ export default function ManagePage() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   const fetchTab = useCallback(async (tab: SubTab) => {
-    if (!orgId) return;
     setLoading(true);
-    const key = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
-    const headers = { 'x-partner-key': key, 'Content-Type': 'application/json' };
 
     if (tab === 'survivors') {
-      const res = await fetch(`${SB_URL}/functions/v1/partner-read`, {
+      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ query_type: 'recent_requests', filters: { org_id: orgId }, limit: 3000 }),
+        headers: ERV_HEADERS,
+        body: JSON.stringify({ query_type: 'recent_requests', filters: {}, limit: 3000 }),
       }).then(r => r.json()).catch(() => ({ results: [] }));
       setSurvivors(res.results || []);
     } else if (tab === 'rvs') {
-      const res = await fetch(`${SB_URL}/functions/v1/partner-read`, {
+      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ query_type: 'resource_summary', filters: { org_id: orgId }, limit: 1000 }),
+        headers: ERV_HEADERS,
+        body: JSON.stringify({ query_type: 'resource_summary', filters: {}, limit: 1000 }),
       }).then(r => r.json()).catch(() => ({ results: [] }));
       setRvs(res.results || []);
     } else if (tab === 'volunteers') {
-      const res = await fetch(`${SB_URL}/functions/v1/partner-read`, {
+      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ query_type: 'person_lookup', filters: { org_id: orgId, role: 'volunteer' }, limit: 500 }),
+        headers: ERV_HEADERS,
+        body: JSON.stringify({ query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }),
       }).then(r => r.json()).catch(() => ({ results: [] }));
       setVolunteers(res.results || []);
     }
 
     setLoading(false);
-  }, [orgId]);
+  }, []);
 
   useEffect(() => { fetchTab(activeTab); }, [activeTab, fetchTab]);
 
@@ -249,10 +245,9 @@ export default function ManagePage() {
     const prev = survivors.find(s => String(s.id ?? s.request_id) === itemId);
     if (!prev) return;
     setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: newStatus } : s));
-    const key = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
-    const res = await fetch(`${SB_URL}/functions/v1/partner-update`, {
+    const res = await fetch(`${ERV_URL}/functions/v1/partner-update`, {
       method: 'POST',
-      headers: { 'x-partner-key': key, 'Content-Type': 'application/json' },
+      headers: ERV_HEADERS,
       body: JSON.stringify({ action: 'record_status', record_type: 'request', record_id: itemId, partner_status: newStatus }),
     }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
     const body = await (res as Response).json().catch(() => ({}));
@@ -266,10 +261,9 @@ export default function ManagePage() {
     const prev = rvs.find(r => String(r.id ?? r.resource_id) === itemId);
     if (!prev) return;
     setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: newStatus } : r));
-    const key = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
-    const res = await fetch(`${SB_URL}/functions/v1/partner-update`, {
+    const res = await fetch(`${ERV_URL}/functions/v1/partner-update`, {
       method: 'POST',
-      headers: { 'x-partner-key': key, 'Content-Type': 'application/json' },
+      headers: ERV_HEADERS,
       body: JSON.stringify({ action: 'record_status', record_type: 'resource', record_id: itemId, partner_status: newStatus }),
     }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
     const body = await (res as Response).json().catch(() => ({}));

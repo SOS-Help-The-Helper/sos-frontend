@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
+import { ERV_URL, ERV_HEADERS } from '@/lib/erv-api';
 
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SOS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 type SubView = 'active' | 'find';
@@ -185,13 +185,12 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
   useEffect(() => {
     if (!orgId) return;
     setLoadingSurvivors(true);
-    const headers = { 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' };
-    fetch(`${SB_URL}/functions/v1/partner-read`, {
+    fetch(`${ERV_URL}/functions/v1/partner-read`, {
       method: 'POST',
-      headers,
+      headers: ERV_HEADERS,
       body: JSON.stringify({
         query_type: 'recent_requests',
-        filters: { org_id: orgId, partner_status: ['pending', 'approved'] },
+        filters: { partner_status: ['pending', 'approved'] },
         limit: 500,
       }),
     })
@@ -224,7 +223,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
     setSuccessMsg('');
     setErrorMsg('');
     try {
-      const res = await fetch(`${SB_URL}/functions/v1/match-engine`, {
+      const res = await fetch(`${SOS_URL}/functions/v1/match-engine`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${SOS_KEY}`,
@@ -252,7 +251,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
     setSuccessMsg('');
     setErrorMsg('');
     try {
-      const res = await fetch(`${SB_URL}/functions/v1/match-engine`, {
+      const res = await fetch(`${SOS_URL}/functions/v1/match-engine`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${SOS_KEY}`,
@@ -412,26 +411,24 @@ export default function MatchPage() {
   const [loading, setLoading] = useState(false);
 
   const fetchMatches = useCallback(async () => {
-    if (!orgId) return;
     setLoading(true);
-    const headers = { 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' };
 
     const [active, completed] = await Promise.all([
-      fetch(`${SB_URL}/functions/v1/partner-read`, {
+      fetch(`${ERV_URL}/functions/v1/partner-read`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ query_type: 'delivery_tracking', filters: { org_id: orgId } }),
+        headers: ERV_HEADERS,
+        body: JSON.stringify({ query_type: 'delivery_tracking', filters: {} }),
       }).then(r => r.json()).catch(() => ({ results: [] })),
-      fetch(`${SB_URL}/functions/v1/partner-read`, {
+      fetch(`${ERV_URL}/functions/v1/partner-read`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ query_type: 'delivery_history', filters: { org_id: orgId }, limit: 200 }),
+        headers: ERV_HEADERS,
+        body: JSON.stringify({ query_type: 'delivery_history', filters: {}, limit: 200 }),
       }).then(r => r.json()).catch(() => ({ results: [] })),
     ]);
 
     setMatches([...(active.results || []), ...(completed.results || [])]);
     setLoading(false);
-  }, [orgId]);
+  }, []);
 
   useEffect(() => {
     if (view === 'active') fetchMatches();
