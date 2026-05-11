@@ -39,15 +39,16 @@ function urgencyPillClass(urgency: string) {
 // ─── Active Matches ───────────────────────────────────────────────────────────
 
 function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }) {
-  const survivorName = match.survivor_name || match.request_name || match.full_name || 'Unknown Survivor';
+  const survivorName = match.requests?.persons?.display_name || match.survivor_name || match.request_name || match.full_name || 'Unknown Survivor';
   const rvDesc =
+    match.resources?.description ||
+    match.resource_description ||
     match.rv_description ||
     [match.rv_year, match.rv_make, match.rv_model].filter(Boolean).join(' ') ||
-    match.resource_description ||
     'RV';
   const status = match.match_status || match.status || 'proposed';
   const driverName = match.driver_name || match.volunteer_name || null;
-  const date = match.created_at || match.matched_at || null;
+  const date = match.delivery_date || match.created_at || match.matched_at || null;
   const dateStr = date
     ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
@@ -195,7 +196,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
         setSurvivors(
           rows.map(r => ({
             id: r.id || r.request_id,
-            name: r.full_name || r.name || r.survivor_name || 'Unknown',
+            name: r.persons?.display_name || r.full_name || r.display_name || 'Unknown',
             city: r.city,
             state: r.state,
             urgency: r.urgency || r.priority,
