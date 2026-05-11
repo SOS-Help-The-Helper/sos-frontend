@@ -38,6 +38,24 @@ function urgencyPillClass(urgency: string) {
 
 // ─── Active Matches ───────────────────────────────────────────────────────────
 
+function CopyLinkButton({ chainId }: { chainId: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`https://sosconnect.org/drive/${chainId}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-[10px] px-2 py-1 rounded bg-white/10 text-white/50 hover:text-white hover:bg-white/20 transition-colors flex-shrink-0"
+    >
+      {copied ? 'Copied ✓' : 'Copy Link'}
+    </button>
+  );
+}
+
 function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }) {
   const survivorName = match.requests?.persons?.display_name || match.survivor_name || match.request_name || match.full_name || 'Unknown Survivor';
   const rvDesc =
@@ -52,6 +70,7 @@ function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }
   const dateStr = date
     ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
+  const chainId = match.chain_id || null;
 
   return (
     <div
@@ -69,7 +88,10 @@ function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }
         </span>
       </div>
       {driverName && <p className="text-xs text-white/30 mb-1">Driver: {driverName}</p>}
-      {dateStr && <p className="text-[10px] text-white/20">{dateStr}</p>}
+      <div className="flex items-center justify-between">
+        {dateStr ? <p className="text-[10px] text-white/20">{dateStr}</p> : <span />}
+        {chainId && <CopyLinkButton chainId={chainId} />}
+      </div>
     </div>
   );
 }
@@ -182,6 +204,7 @@ function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string;
   const [committingId, setCommittingId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [committedChainId, setCommittedChainId] = useState<string | null>(null);
 
   // Fetch survivors on mount
   useEffect(() => {
@@ -219,6 +242,7 @@ function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string;
     setCandidates([]);
     setSuccessMsg('');
     setErrorMsg('');
+    setCommittedChainId(null);
     try {
       const res = await fetch(`${SOS_URL}/functions/v1/match-engine`, {
         method: 'POST',
@@ -266,6 +290,7 @@ function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string;
         setErrorMsg(data.error || data.message || 'Commit failed.');
       } else {
         setSuccessMsg(`Match committed! ${data.message || ''}`);
+        setCommittedChainId(data.chain_id || null);
         setSelected(null);
         setSearch('');
         setCandidates([]);
@@ -284,6 +309,7 @@ function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string;
     setCandidates([]);
     setSuccessMsg('');
     setErrorMsg('');
+    setCommittedChainId(null);
   }
 
   return (
@@ -291,7 +317,12 @@ function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string;
       {/* Success / Error banners */}
       {successMsg && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-xs text-green-400">
-          {successMsg}
+          <p>{successMsg}</p>
+          {committedChainId && (
+            <div className="mt-2">
+              <CopyLinkButton chainId={committedChainId} />
+            </div>
+          )}
         </div>
       )}
       {errorMsg && (
