@@ -143,8 +143,8 @@ export default function PartnerMapPage() {
   ];
 
   return (
-    <div className="relative w-full h-screen">
-      <div ref={mapContainer} className="absolute inset-0" />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div ref={mapContainer} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
 
       {/* Toggle bar */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-4 py-2 bg-[#0F1E2B]/80 backdrop-blur-sm">
