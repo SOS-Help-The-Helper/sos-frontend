@@ -201,7 +201,7 @@ function RVsKanban({
 }
 
 export default function ManagePage() {
-  const { orgId } = usePartnerOrg();
+  const { orgId, disaster } = usePartnerOrg();
   const partnerFetch = usePartnerFetch();
   const [activeTab, setActiveTab] = useState<SubTab>('survivors');
   const [survivors, setSurvivors] = useState<any[]>([]);
@@ -214,18 +214,18 @@ export default function ManagePage() {
     setLoading(true);
 
     if (tab === 'survivors') {
-      const res = await partnerFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'recent_requests', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 3000 }).catch(() => ({ requests: [] }));
       setSurvivors(res.requests || []);
     } else if (tab === 'rvs') {
-      const res = await partnerFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ resources: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'resource_summary', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 1000 }).catch(() => ({ resources: [] }));
       setRvs(res.resources || []);
     } else if (tab === 'volunteers') {
-      const res = await partnerFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] }));
+      const res = await partnerFetch('partner-read', { query_type: 'driver_availability', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 500 }).catch(() => ({ results: [] }));
       setVolunteers(res.results || []);
     }
 
     setLoading(false);
-  }, []);
+  }, [disaster]);
 
   useEffect(() => { fetchTab(activeTab); }, [activeTab, fetchTab]);
 

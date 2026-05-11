@@ -171,7 +171,7 @@ function CandidateCard({
   );
 }
 
-function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCommitted: () => void }) {
+function FindMatchesView({ orgId, disaster, onMatchCommitted }: { orgId: string; disaster?: { id: string; name: string; slug: string; lat: number; lng: number } | null; onMatchCommitted: () => void }) {
   const partnerFetch = usePartnerFetch();
   const [survivors, setSurvivors] = useState<Survivor[]>([]);
   const [loadingSurvivors, setLoadingSurvivors] = useState(false);
@@ -189,7 +189,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
     setLoadingSurvivors(true);
     partnerFetch('partner-read', {
       query_type: 'recent_requests',
-      filters: { ops_status: ['pending', 'approved'] },
+      filters: { ops_status: ['pending', 'approved'], ...(disaster ? { disaster_id: disaster.id } : {}) },
       limit: 500,
     })
       .then(data => {
@@ -402,7 +402,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MatchPage() {
-  const { orgId } = usePartnerOrg();
+  const { orgId, disaster } = usePartnerOrg();
   const partnerFetch = usePartnerFetch();
   const [view, setView] = useState<SubView>('active');
   const [matches, setMatches] = useState<any[]>([]);
@@ -411,11 +411,11 @@ export default function MatchPage() {
   const fetchMatches = useCallback(async () => {
     setLoading(true);
 
-    const res = await partnerFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ deliveries: [] }));
+    const res = await partnerFetch('partner-read', { query_type: 'delivery_history', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 200 }).catch(() => ({ deliveries: [] }));
 
     setMatches(res.deliveries || []);
     setLoading(false);
-  }, []);
+  }, [disaster]);
 
   useEffect(() => {
     if (view === 'active') fetchMatches();
@@ -462,6 +462,7 @@ export default function MatchPage() {
       {view === 'find' && orgId && (
         <FindMatchesView
           orgId={orgId}
+          disaster={disaster}
           onMatchCommitted={() => {
             setView('active');
             fetchMatches();

@@ -9,7 +9,7 @@ import { usePartnerFetch } from '@/lib/partner-api';
 type FilterType = 'all' | 'survivors' | 'volunteers' | 'rvs';
 
 export default function PartnerMapPage() {
-  const { orgId, orgSlug } = usePartnerOrg();
+  const { orgId, orgSlug, disaster } = usePartnerOrg();
   const partnerFetch = usePartnerFetch();
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -35,8 +35,8 @@ export default function PartnerMapPage() {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/dark-v11',
-        center: [-82.14, 29.19],
-        zoom: 7,
+        center: disaster ? [disaster.lng, disaster.lat] : [-82.14, 29.19],
+        zoom: disaster ? 8 : 7,
       });
       mapRef.current = map;
 
@@ -70,9 +70,9 @@ export default function PartnerMapPage() {
         // Fetch data, then populate sources
         try {
           const [survRes, rvsRes, volRes] = await Promise.all([
-            partnerFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] })),
-            partnerFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ resources: [] })),
-            partnerFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] })),
+            partnerFetch('partner-read', { query_type: 'recent_requests', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 3000 }).catch(() => ({ requests: [] })),
+            partnerFetch('partner-read', { query_type: 'available_resources', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 1000 }).catch(() => ({ resources: [] })),
+            partnerFetch('partner-read', { query_type: 'driver_availability', filters: disaster ? { disaster_id: disaster.id } : {}, limit: 500 }).catch(() => ({ results: [] })),
           ]);
 
           if (destroyed) return;
