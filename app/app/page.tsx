@@ -27,12 +27,12 @@ export default function PartnerMapPage() {
     setLoading(true);
 
     const [survRes, rvsRes, volRes] = await Promise.all([
-      ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ results: [] })),
-      ervFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ results: [] })),
-      ervFetch('partner-read', { query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] })),
+      ervFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ resources: [] })),
+      ervFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] })),
     ]);
-    setSurvivors(survRes.results || []);
-    setRvs(rvsRes.results || []);
+    setSurvivors(survRes.requests || []);
+    setRvs(rvsRes.resources || []);
     setVolunteers(volRes.results || []);
     setLoading(false);
   }, []);

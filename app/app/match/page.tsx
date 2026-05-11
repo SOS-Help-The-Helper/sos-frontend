@@ -191,7 +191,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
       limit: 500,
     })
       .then(data => {
-        const rows: any[] = data.results || data.data || [];
+        const rows: any[] = data.requests || data.data || [];
         setSurvivors(
           rows.map(r => ({
             id: r.id || r.request_id,
@@ -408,12 +408,9 @@ export default function MatchPage() {
   const fetchMatches = useCallback(async () => {
     setLoading(true);
 
-    const [active, completed] = await Promise.all([
-      ervFetch('partner-read', { query_type: 'delivery_tracking' }).catch(() => ({ results: [] })),
-      ervFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ results: [] })),
-    ]);
+    const res = await ervFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ deliveries: [] }));
 
-    setMatches([...(active.results || []), ...(completed.results || [])]);
+    setMatches(res.deliveries || []);
     setLoading(false);
   }, []);
 

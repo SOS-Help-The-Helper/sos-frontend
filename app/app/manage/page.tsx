@@ -213,13 +213,13 @@ export default function ManagePage() {
     setLoading(true);
 
     if (tab === 'survivors') {
-      const res = await ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ results: [] }));
-      setSurvivors(res.results || []);
+      const res = await ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] }));
+      setSurvivors(res.requests || []);
     } else if (tab === 'rvs') {
-      const res = await ervFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ results: [] }));
-      setRvs(res.results || []);
+      const res = await ervFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ resources: [] }));
+      setRvs(res.resources || []);
     } else if (tab === 'volunteers') {
-      const res = await ervFetch('partner-read', { query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }).catch(() => ({ results: [] }));
+      const res = await ervFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] }));
       setVolunteers(res.results || []);
     }
 
