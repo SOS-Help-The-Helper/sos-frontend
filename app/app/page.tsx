@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { PinDetailCard } from '@/components/partner/pin-detail-card';
 import { DashboardOverlay } from '@/components/partner/dashboard-overlay';
-import { QuickActions } from '@/components/partner/quick-actions';
+
 import { ervFetch } from '@/lib/erv-api';
 
 type FilterType = 'all' | 'survivors' | 'volunteers' | 'rvs';
@@ -45,7 +45,14 @@ export default function PartnerMapPage() {
         const toFeature = (item: any, type: string) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [item.longitude || item.lng || 0, item.latitude || item.lat || 0] },
-          properties: { ...item, _type: type },
+          properties: {
+            ...item,
+            _type: type,
+            // Flatten nested person name for pin detail card
+            display_name: item.persons?.display_name || item.display_name || item.full_name || item.contact_name || undefined,
+            // Remove nested objects (GeoJSON properties must be flat)
+            persons: undefined,
+          },
         });
 
         // Add empty sources + layers first
@@ -164,8 +171,16 @@ export default function PartnerMapPage() {
       </div>
 
       <DashboardOverlay resources={rvs} />
-      {selectedPin && <PinDetailCard pin={selectedPin} onClose={() => setSelectedPin(null)} />}
-      {selectedPin && <QuickActions pin={selectedPin} orgSlug={orgSlug} />}
+      {selectedPin && (
+        <div className="absolute bottom-16 left-0 right-0 z-30">
+          <PinDetailCard
+            type={selectedPin._type === 'survivor' ? 'request' : selectedPin._type === 'volunteer' ? 'driver' : 'resource'}
+            data={selectedPin}
+            onClose={() => setSelectedPin(null)}
+            onAction={(action) => console.log('Pin action:', action, selectedPin)}
+          />
+        </div>
+      )}
     </div>
   );
 }
