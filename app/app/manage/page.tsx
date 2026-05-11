@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { KanbanBoard, KanbanColumn } from '@/components/partner/kanban-board';
-import { ERV_URL, ERV_HEADERS } from '@/lib/erv-api';
+import { ervFetch } from '@/lib/erv-api';
 
 type SubTab = 'survivors' | 'volunteers' | 'rvs';
 
@@ -209,25 +209,13 @@ export default function ManagePage() {
     setLoading(true);
 
     if (tab === 'survivors') {
-      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
-        method: 'POST',
-        headers: ERV_HEADERS,
-        body: JSON.stringify({ query_type: 'recent_requests', filters: {}, limit: 3000 }),
-      }).then(r => r.json()).catch(() => ({ results: [] }));
+      const res = await ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ results: [] }));
       setSurvivors(res.results || []);
     } else if (tab === 'rvs') {
-      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
-        method: 'POST',
-        headers: ERV_HEADERS,
-        body: JSON.stringify({ query_type: 'resource_summary', filters: {}, limit: 1000 }),
-      }).then(r => r.json()).catch(() => ({ results: [] }));
+      const res = await ervFetch('partner-read', { query_type: 'resource_summary', limit: 1000 }).catch(() => ({ results: [] }));
       setRvs(res.results || []);
     } else if (tab === 'volunteers') {
-      const res = await fetch(`${ERV_URL}/functions/v1/partner-read`, {
-        method: 'POST',
-        headers: ERV_HEADERS,
-        body: JSON.stringify({ query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }),
-      }).then(r => r.json()).catch(() => ({ results: [] }));
+      const res = await ervFetch('partner-read', { query_type: 'person_lookup', filters: { role: 'volunteer' }, limit: 500 }).catch(() => ({ results: [] }));
       setVolunteers(res.results || []);
     }
 
@@ -245,13 +233,8 @@ export default function ManagePage() {
     const prev = survivors.find(s => String(s.id ?? s.request_id) === itemId);
     if (!prev) return;
     setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: newStatus } : s));
-    const res = await fetch(`${ERV_URL}/functions/v1/partner-update`, {
-      method: 'POST',
-      headers: ERV_HEADERS,
-      body: JSON.stringify({ action: 'record_status', record_type: 'request', record_id: itemId, partner_status: newStatus }),
-    }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
-    const body = await (res as Response).json().catch(() => ({}));
-    if (!(res as Response).ok) {
+    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'request', record_id: itemId, partner_status: newStatus }).catch(e => ({ error: e.message }));
+    if (body?.error) {
       setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: prev.partner_status } : s));
       window.alert(`Failed to update survivor status: ${body.error ?? 'Unknown error'}`);
     }
@@ -261,13 +244,8 @@ export default function ManagePage() {
     const prev = rvs.find(r => String(r.id ?? r.resource_id) === itemId);
     if (!prev) return;
     setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: newStatus } : r));
-    const res = await fetch(`${ERV_URL}/functions/v1/partner-update`, {
-      method: 'POST',
-      headers: ERV_HEADERS,
-      body: JSON.stringify({ action: 'record_status', record_type: 'resource', record_id: itemId, partner_status: newStatus }),
-    }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
-    const body = await (res as Response).json().catch(() => ({}));
-    if (!(res as Response).ok) {
+    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'resource', record_id: itemId, partner_status: newStatus }).catch(e => ({ error: e.message }));
+    if (body?.error) {
       setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: prev.partner_status } : r));
       window.alert(`Failed to update RV status: ${body.error ?? 'Unknown error'}`);
     }
