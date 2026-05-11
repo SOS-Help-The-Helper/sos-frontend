@@ -64,3 +64,81 @@ Spec: `product/specs/PARTNER_PORTAL_V2_SPEC.md` (COMPLETE reference — read it 
 - [ ] useAppCommand hook exported and functional
 - [ ] AppCommandContext wired into layout-client.tsx
 - [ ] No TypeScript errors in changed files
+
+## Multi-Tenant Partner Portal (Phase 2)
+
+### Architecture
+- `?org=` query param (default: 'erv') resolves org from SOS DB `organizations` table
+- Org record has `metadata.partner_config`: `{ db_url, anon_key, api_key }`
+- `?disaster=` query param (optional) scopes all 3 tabs to a specific disaster
+- Layout (server component) fetches org config using SUPABASE_SERVICE_ROLE_KEY
+- Client gets partner config via PartnerProvider context — never sees service role key
+
+### SOS DB org lookup (server-side in layout.tsx)
+```ts
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+const { data: org } = await supabase
+  .from('organizations')
+  .select('id, name, slug, metadata')
+  .eq('slug', orgSlug)
+  .maybeSingle();
+// org.metadata.partner_config = { db_url, anon_key, api_key }
+```
+
+### Partner context shape
+```ts
+interface PartnerConfig {
+  dbUrl: string;
+  anonKey: string;
+  apiKey: string;
+}
+
+interface PartnerContext {
+  orgId: string;
+  orgName: string;
+  orgSlug: string;
+  partnerConfig: PartnerConfig;
+  disaster?: { id: string; name: string; slug: string; lat: number; lng: number; };
+}
+```
+
+### ERV org in SOS DB
+- slug: 'erv'
+- id: da86c92f-d52d-4b13-a474-30e1be8fb808
+- metadata.partner_config.db_url: https://xbtrtztzaokeodarqvpr.supabase.co
+
+## Driver Page Build
+
+### Spec: product/specs/DRIVER_PAGE_SPEC.md
+
+### Route: app/drive/[id]/page.tsx
+- Server component fetches transport + org config
+- Transport lookup: partner-read on the org's DB (from org.metadata.partner_config)
+- Org lookup: SOS DB organizations table by org_id from transport
+
+### Key patterns
+- CitizenHeader + SOSBottomSheet (same as /c and /app)
+- No auth — transport_id UUID is the auth token
+- Config-driven: status pipeline, photo stages, onboarding fields from org config
+- proxy.ts already allows /drive/ prefix
+
+### Transport data shape (from partner-read transport_assignments query)
+```json
+{
+  "id": "uuid",
+  "match_id": "uuid",
+  "resource_id": "uuid",
+  "request_id": "uuid",
+  "driver_person_id": "uuid or null",
+  "status": "accepted",
+  "origin": "Ocala, FL",
+  "destination": "Atlanta, GA",
+  "resource_description": "2022 Forest River Avenger",
+  "driver_name": "John Smith",
+  "current_lat": null,
+  "current_lng": null
+}
+```

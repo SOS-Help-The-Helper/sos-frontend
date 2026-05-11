@@ -17,6 +17,7 @@ const PUBLIC_PREFIXES = [
   '/c/',           // citizen portal subpages
   '/erv/',         // ERV public map
   '/app/',         // partner portal
+  '/drive/',       // driver delivery pages
   '/_next/',       // Next.js assets
   '/api/',         // API routes
   '/logomark',     // brand assets

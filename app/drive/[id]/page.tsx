@@ -43,8 +43,10 @@ export default async function DrivePage({ params }: PageProps) {
       }),
     });
 
-    const data = await res.json();
-    transport = data.results?.[0] ?? data.assignments?.[0] ?? data[0] ?? null;
+    if (res.ok) {
+      const data = await res.json();
+      transport = data.results?.[0] ?? data.assignments?.[0] ?? data[0] ?? null;
+    }
   }
 
   if (!transport) {

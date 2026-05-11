@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     }
   }
   // Transport context injection for driver mode
-  const transportId = req.headers.get('x-transport-id') || new URL(req.url).searchParams.get('transport_id');
+  const transportId = req.headers.get('x-transport-id') || '';
   let driverSystemPrompt: string | null = null;
   if (transportId) {
     const ERV_DB = 'https://xbtrtztzaokeodarqvpr.supabase.co';
