@@ -248,7 +248,7 @@ export default function DrivePageClient({
   partnerConfig,
   transportConfig,
 }: DrivePageClientProps) {
-  const [agentOpen, setAgentOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(!transport.driver_person_id);
   const [currentStatus, setCurrentStatus] = useState(transport.status);
   const [updating, setUpdating] = useState(false);
   const [photoPrompt, setPhotoPrompt] = useState<string | null>(null);
@@ -527,6 +527,8 @@ export default function DrivePageClient({
         onClose={() => setAgentOpen(false)}
         context="partner"
         partner={orgSlug}
+        transportId={transport.id}
+        fullScreen={!transport.driver_person_id}
       />
     </div>
   );

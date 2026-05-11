@@ -39,15 +39,16 @@ interface SOSBottomSheetProps {
   isAuthenticated?: boolean;
   fullScreen?: boolean;
   partner?: string; // 'erv', 'fhm', etc. — shows partner-specific chips
+  transportId?: string;
 }
 
-export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false, partner }: SOSBottomSheetProps) {
+export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false, partner, transportId }: SOSBottomSheetProps) {
   const [sheetState, setSheetState] = useState<SheetState>(fullScreen ? 'full' : 'half');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated), 'x-user-lat': String(userLat || ''), 'x-user-lng': String(userLng || '') } }),
+    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated), 'x-user-lat': String(userLat || ''), 'x-user-lng': String(userLng || ''), 'x-transport-id': transportId || '' } }),
     onError: (err) => console.error('Chat error:', err),
     // No welcome message — agent responds to first user action
   });
