@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Users, Package, Truck } from 'lucide-react';
+import { Map, GitMerge, ClipboardList } from 'lucide-react';
 
 interface PartnerShellProps {
   children: React.ReactNode;
@@ -14,15 +14,13 @@ export function PartnerShell({ children, orgSlug, tabs }: PartnerShellProps) {
   const pathname = usePathname();
 
   const resolvedTabs = tabs ?? [
-    { path: `/app`,          label: 'Map',        icon: Map },
-    { path: `/app/people`,   label: 'People',     icon: Users },
-    { path: `/app/assets`,   label: 'Assets',     icon: Package },
-    { path: `/app/deliver`,  label: 'Deliveries', icon: Truck },
+    { path: `/app`,         label: 'Map',    icon: Map },
+    { path: `/app/match`,   label: 'Match',  icon: GitMerge },
+    { path: `/app/manage`,  label: 'Manage', icon: ClipboardList },
   ];
 
   function isActive(path: string) {
-    const base = `/p/${orgSlug}`;
-    if (path === base) return pathname === base;
+    if (path === '/app') return pathname === '/app';
     return pathname.startsWith(path);
   }
 
