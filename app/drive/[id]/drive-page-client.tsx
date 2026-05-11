@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Camera } from 'lucide-react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 
@@ -76,10 +77,101 @@ const STATUS_PILL_COLORS: Record<string, string> = {
   verified: 'bg-green-600/20 text-green-200',
 };
 
+const PHOTO_PROMPTS: Record<string, string> = {
+  at_pickup: 'Photo of the RV before hookup',
+  hooked_up: 'Photo of the hitch connection',
+  loaded: 'Photo showing the load is secure',
+  delivered: 'Photo of the signed title and RV at its new location',
+  default: 'Take a photo for this stage',
+};
+
 function cityOnly(address: string): string {
   const parts = address.split(',').map((p) => p.trim());
   if (parts.length <= 2) return address;
   return parts.slice(-2).join(', ');
+}
+
+function PhotoCapture({
+  stage,
+  onComplete,
+  onSkip,
+}: {
+  stage: string;
+  onComplete: (url: string) => void;
+  onSkip: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const prompt = PHOTO_PROMPTS[stage] ?? PHOTO_PROMPTS.default;
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleContinue() {
+    // Placeholder URL — full Supabase Storage upload wired when bucket is ready
+    onComplete(preview ?? 'placeholder://photo');
+  }
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-[#1A3850] rounded-t-2xl p-5 z-20">
+      <div className="flex items-center gap-2 mb-1">
+        <Camera className="w-5 h-5 text-white/70" />
+        <p className="text-sm font-semibold text-white">Take a photo</p>
+      </div>
+      <p className="text-xs text-white/50 mb-4">{prompt}</p>
+
+      {preview ? (
+        <div className="mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview}
+            alt="Preview"
+            className="w-full max-h-40 object-cover rounded-xl"
+          />
+        </div>
+      ) : (
+        <button
+          onClick={() => inputRef.current?.click()}
+          className="w-full py-4 rounded-2xl bg-white/10 text-white text-sm font-medium flex items-center justify-center gap-2 active:opacity-70 transition-opacity mb-4"
+        >
+          <Camera className="w-5 h-5" />
+          Open Camera
+        </button>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFile}
+      />
+
+      {preview ? (
+        <button
+          onClick={handleContinue}
+          className="w-full py-4 rounded-2xl bg-[#EF4E4B] text-white font-bold text-sm active:opacity-80 transition-opacity"
+        >
+          Continue
+        </button>
+      ) : null}
+
+      <div className="flex justify-center mt-3">
+        <button onClick={onSkip} className="text-xs text-white/30 underline">
+          Skip
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function DrivePageClient({
@@ -92,8 +184,10 @@ export default function DrivePageClient({
   const [agentOpen, setAgentOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(transport.status);
   const [updating, setUpdating] = useState(false);
+  const [photoPrompt, setPhotoPrompt] = useState<string | null>(null);
 
   const pipeline = transportConfig.status_pipeline ?? DEFAULT_PIPELINE;
+  const requirePhotosAt = transportConfig.require_photos_at ?? [];
   const brandColor = transportConfig.branding?.color ?? '#EF4E4B';
 
   const currentIndex = pipeline.indexOf(currentStatus);
@@ -112,8 +206,7 @@ export default function DrivePageClient({
   const pillClass =
     STATUS_PILL_COLORS[currentStatus] ?? 'bg-white/10 text-white/60';
 
-  async function advanceStatus() {
-    if (!nextStatus || updating) return;
+  async function doAdvanceStatus(targetStatus: string) {
     setUpdating(true);
     try {
       const res = await fetch(partnerConfig.db_url + '/functions/v1/partner-update', {
@@ -126,12 +219,12 @@ export default function DrivePageClient({
         body: JSON.stringify({
           action: 'update_transport_status',
           transport_id: transport.id,
-          status: nextStatus,
+          status: targetStatus,
         }),
       });
       const data = await res.json();
       if (!data.error) {
-        setCurrentStatus(nextStatus);
+        setCurrentStatus(targetStatus);
       } else {
         console.error('Status update failed:', data.error);
       }
@@ -139,6 +232,49 @@ export default function DrivePageClient({
       console.error('Status update error:', err);
     }
     setUpdating(false);
+  }
+
+  async function recordPhotoEvent(stage: string, photoUrl: string) {
+    try {
+      await fetch(partnerConfig.db_url + '/functions/v1/partner-update', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + partnerConfig.anon_key,
+          'x-partner-key': partnerConfig.api_key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'delivery_event',
+          transport_id: transport.id,
+          event_type: 'photo',
+          metadata: { stage, url: photoUrl },
+        }),
+      });
+    } catch (err) {
+      console.error('Photo event error:', err);
+    }
+  }
+
+  function handleCTAPress() {
+    if (!nextStatus || updating) return;
+    if (requirePhotosAt.includes(nextStatus)) {
+      setPhotoPrompt(nextStatus);
+    } else {
+      doAdvanceStatus(nextStatus);
+    }
+  }
+
+  async function handlePhotoComplete(url: string) {
+    const stage = photoPrompt!;
+    setPhotoPrompt(null);
+    await recordPhotoEvent(stage, url);
+    await doAdvanceStatus(stage);
+  }
+
+  function handlePhotoSkip() {
+    const stage = photoPrompt!;
+    setPhotoPrompt(null);
+    doAdvanceStatus(stage);
   }
 
   const notes = transport.admin_notes || transport.notes;
@@ -249,53 +385,64 @@ export default function DrivePageClient({
         </div>
       </div>
 
-      {/* CTA button */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#0F1E2B] via-[#0F1E2B]/95 to-transparent">
-        {/* Progress dots */}
-        <div className="flex flex-col items-center gap-1 mb-4">
-          <div className="flex gap-1">
-            {pipeline.map((stage, i) => {
-              const isCompleted = i < currentIndex;
-              const isCurrent = i === currentIndex;
-              return (
-                <span
-                  key={stage}
-                  className={
-                    'w-2 h-2 rounded-full ' +
-                    (isCompleted
-                      ? 'bg-green-400'
-                      : isCurrent
-                      ? 'bg-white animate-pulse'
-                      : 'bg-white/20')
-                  }
-                />
-              );
-            })}
-          </div>
-          <p className="text-xs text-white/50">{currentStatus.replace(/_/g, ' ')}</p>
-        </div>
+      {/* Photo capture overlay */}
+      {photoPrompt && (
+        <PhotoCapture
+          stage={photoPrompt}
+          onComplete={handlePhotoComplete}
+          onSkip={handlePhotoSkip}
+        />
+      )}
 
-        {atEnd ? (
-          <button
-            disabled
-            className="w-full py-4 rounded-2xl text-white font-bold text-sm bg-green-600/60 cursor-default"
-          >
-            Delivery Complete ✓
-          </button>
-        ) : nextStatus ? (
-          <button
-            onClick={advanceStatus}
-            disabled={updating}
-            className={
-              'w-full py-4 rounded-2xl text-white font-bold text-sm transition-opacity active:opacity-80 ' +
-              (updating ? 'opacity-50' : '')
-            }
-            style={{ backgroundColor: brandColor }}
-          >
-            {updating ? 'Updating...' : (STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' '))}
-          </button>
-        ) : null}
-      </div>
+      {/* CTA button */}
+      {!photoPrompt && (
+        <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#0F1E2B] via-[#0F1E2B]/95 to-transparent">
+          {/* Progress dots */}
+          <div className="flex flex-col items-center gap-1 mb-4">
+            <div className="flex gap-1">
+              {pipeline.map((stage, i) => {
+                const isCompleted = i < currentIndex;
+                const isCurrent = i === currentIndex;
+                return (
+                  <span
+                    key={stage}
+                    className={
+                      'w-2 h-2 rounded-full ' +
+                      (isCompleted
+                        ? 'bg-green-400'
+                        : isCurrent
+                        ? 'bg-white animate-pulse'
+                        : 'bg-white/20')
+                    }
+                  />
+                );
+              })}
+            </div>
+            <p className="text-xs text-white/50">{currentStatus.replace(/_/g, ' ')}</p>
+          </div>
+
+          {atEnd ? (
+            <button
+              disabled
+              className="w-full py-4 rounded-2xl text-white font-bold text-sm bg-green-600/60 cursor-default"
+            >
+              Delivery Complete ✓
+            </button>
+          ) : nextStatus ? (
+            <button
+              onClick={handleCTAPress}
+              disabled={updating}
+              className={
+                'w-full py-4 rounded-2xl text-white font-bold text-sm transition-opacity active:opacity-80 ' +
+                (updating ? 'opacity-50' : '')
+              }
+              style={{ backgroundColor: brandColor }}
+            >
+              {updating ? 'Updating...' : (STATUS_LABELS[nextStatus] ?? nextStatus.replace(/_/g, ' '))}
+            </button>
+          ) : null}
+        </div>
+      )}
 
       <SOSBottomSheet
         open={agentOpen}
