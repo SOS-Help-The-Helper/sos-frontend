@@ -40,7 +40,7 @@ export function PinDetailCard({ type, data, onClose, onAction }: PinDetailCardPr
                 {data.taxonomy_code && <Badge label={data.taxonomy_code} />}
                 {data.urgency && <Badge label={data.urgency} color={URGENCY[data.urgency as keyof typeof URGENCY] ?? 'bg-gray-600'} />}
                 {data.status && <Pill label={data.status} />}
-                {data.partner_status && <Pill label={data.partner_status} />}
+                {data.ops_status && <Pill label={data.ops_status} />}
               </div>
               {data.location_text && <p className="text-white/50 text-xs">{data.location_text}</p>}
             </>
@@ -52,7 +52,7 @@ export function PinDetailCard({ type, data, onClose, onAction }: PinDetailCardPr
               <div className="flex flex-wrap gap-1.5">
                 {data.taxonomy_code && <Badge label={data.taxonomy_code} />}
                 {data.status && <Pill label={data.status} />}
-                {data.partner_status && <Pill label={data.partner_status} />}
+                {data.ops_status && <Pill label={data.ops_status} />}
                 {data.condition_rating != null && (
                   <span className="flex items-center gap-0.5 text-yellow-400 text-xs"><Star size={11} fill="currentColor" />{data.condition_rating}</span>
                 )}

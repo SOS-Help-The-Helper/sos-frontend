@@ -14,7 +14,7 @@ const ICONS: Record<string, any> = {
   status_changed: Package,
   location_moved: Truck,
   transport_verified: UserCheck,
-  partner_status_changed: ArrowRight,
+  ops_status_changed: ArrowRight,
 };
 
 export function NotificationFeed({ open, onClose }: NotificationFeedProps) {

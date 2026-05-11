@@ -20,8 +20,8 @@ export default function AssetsPage() {
     }).then(r => r.json()).then(d => setResources(d.results || [])).catch(() => {});
   }, [orgId]);
 
-  const statuses = ['all', ...new Set(resources.map(r => r.partner_status || r.status).filter(Boolean))];
-  const filtered = statusFilter === 'all' ? resources : resources.filter(r => (r.partner_status || r.status) === statusFilter);
+  const statuses = ['all', ...new Set(resources.map(r => r.ops_status || r.status).filter(Boolean))];
+  const filtered = statusFilter === 'all' ? resources : resources.filter(r => (r.ops_status || r.status) === statusFilter);
 
   return (
     <div className="pt-20 pb-20 px-4 bg-[#0F1E2B] min-h-screen">
@@ -39,7 +39,7 @@ export default function AssetsPage() {
           <div key={r.id} className="bg-white/5 rounded-lg p-3">
             <div className="flex items-center justify-between mb-1">
               <p className="text-sm text-white font-medium">{r.description || r.resource_type || 'Resource'}</p>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">{r.partner_status || r.status}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">{r.ops_status || r.status}</span>
             </div>
             <p className="text-xs text-white/40">{r.location_text || 'Location unknown'}</p>
             {r.vin && <p className="text-[10px] text-white/20 mt-1">VIN: {r.vin}</p>}

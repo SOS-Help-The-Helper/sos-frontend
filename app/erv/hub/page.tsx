@@ -189,7 +189,7 @@ const requestColumns: Column<any>[] = [
     render: r => priorityBadge(r.priority_score),
     sortValue: r => r.priority_score ?? 0,
   },
-  { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
+  { key: 'status', label: 'Status', render: r => statusPill(r.ops_status || r.status) },
   { key: 'household_size', label: 'HH', render: r => <span className="text-white/60">{r.household_size || '—'}</span> },
   { key: 'is_veteran', label: 'Vet', render: r => <Check yes={!!r.is_veteran} />, mobileHide: true },
   { key: 'is_first_responder', label: 'FR', render: r => <Check yes={!!r.is_first_responder} />, mobileHide: true },
@@ -219,7 +219,7 @@ const fleetColumns: Column<any>[] = [
   { key: 'vehicle_type', label: 'Type', render: r => <span className="text-white/60 capitalize">{(r.vehicle_type || '—').replace(/_/g, ' ')}</span> },
   { key: 'sleeps', label: 'Sleeps', render: r => <span className="text-white/60">{r.sleeps || r.capacity_available || '—'}</span>, sortValue: r => r.sleeps || r.capacity_available || 0 },
   { key: 'hitch_type', label: 'Hitch', render: r => <span className="text-white/60 capitalize">{(r.hitch_type || '—').replace(/_/g, ' ')}</span>, mobileHide: true },
-  { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
+  { key: 'status', label: 'Status', render: r => statusPill(r.ops_status || r.status) },
   { key: 'source', label: 'Source', render: r => <span className="text-white/50 capitalize text-xs">{(r.source || '—').replace(/_/g, ' ')}</span>, mobileHide: true },
   { key: 'vin', label: 'VIN', render: r => <span className="text-white/30 font-mono text-xs">{r.vin || '—'}</span>, mobileHide: true },
 ];
@@ -252,7 +252,7 @@ const driverColumns: Column<any>[] = [
     searchValue: r => (Array.isArray(r.tow_capability) ? r.tow_capability.join(' ') : ''),
   },
   { key: 'has_class_a', label: 'Class A', render: r => <Check yes={!!r.has_class_a} /> },
-  { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
+  { key: 'status', label: 'Status', render: r => statusPill(r.ops_status || r.status) },
   { key: 'state', label: 'State', render: r => <span className="text-white/60">{r.state || '—'}</span> },
 ];
 
@@ -286,7 +286,7 @@ const donorColumns: Column<any>[] = [
     searchValue: r => [r.year, r.make, r.model, r.vehicle_type, r.description].filter(Boolean).join(' '),
   },
   { key: 'sleeps', label: 'Sleeps', render: r => <span className="text-white/60">{r.sleeps || '—'}</span>, mobileHide: true },
-  { key: 'status', label: 'Status', render: r => statusPill(r.partner_status || r.status) },
+  { key: 'status', label: 'Status', render: r => statusPill(r.ops_status || r.status) },
   {
     key: 'created_at', label: 'Date',
     render: r => <span className="text-white/40 text-xs">{formatDate(r.created_at)}</span>,
@@ -403,7 +403,7 @@ function ErvHub() {
     const applyFilters = (rows: any[], hasState = true) => {
       let result = rows;
       if (stateFilter && hasState) result = result.filter(r => (r.state || '').toLowerCase() === stateFilter.toLowerCase());
-      if (statusFilter) result = result.filter(r => (r.status || r.partner_status || '').toLowerCase() === statusFilter.toLowerCase());
+      if (statusFilter) result = result.filter(r => (r.status || r.ops_status || '').toLowerCase() === statusFilter.toLowerCase());
       if (veteranFilter) result = result.filter(r => r.is_veteran);
       if (femaFilter) result = result.filter(r => r.is_fema_replacement);
       return result;
@@ -437,7 +437,7 @@ function ErvHub() {
 
   const statStrip = useMemo(() => {
     if (view === 'requests') {
-      const pending = filteredData.requests.filter((r: any) => r.status === 'pending' || r.partner_status === 'pending').length;
+      const pending = filteredData.requests.filter((r: any) => r.status === 'pending' || r.ops_status === 'pending').length;
       return `${filteredData.requests.length.toLocaleString()} requests · ${pending} pending`;
     }
     if (view === 'fleet') {

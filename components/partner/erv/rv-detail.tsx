@@ -48,7 +48,7 @@ export function RVDetail({ resource, onClose }: RVDetailProps) {
           {r.vin && <p className="text-xs text-white/30">VIN: {r.vin}</p>}
           <div className="flex gap-3 text-xs">
             {r.status && <span className="text-green-400">{r.status}</span>}
-            {r.partner_status && <span className="text-orange-400">{r.partner_status}</span>}
+            {r.ops_status && <span className="text-orange-400">{r.ops_status}</span>}
             {r.condition_rating && <span className="flex items-center gap-1 text-yellow-400"><Star className="h-3 w-3" />{r.condition_rating}</span>}
           </div>
         </div>

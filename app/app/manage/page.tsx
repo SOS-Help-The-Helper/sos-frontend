@@ -105,7 +105,7 @@ function SurvivorsKanban({
     <KanbanBoard
       columns={SURVIVOR_COLUMNS}
       items={data}
-      groupBy="partner_status"
+      groupBy="ops_status"
       renderCard={({ item }) => (
         <SurvivorCard key={item.id ?? item.request_id} item={item} onClick={onCardClick} />
       )}
@@ -190,7 +190,7 @@ function RVsKanban({
     <KanbanBoard
       columns={RV_COLUMNS}
       items={data}
-      groupBy="partner_status"
+      groupBy="ops_status"
       renderCard={({ item }) => (
         <RVCard key={item.id ?? item.resource_id} item={item} onClick={onCardClick} />
       )}
@@ -236,10 +236,10 @@ export default function ManagePage() {
   const handleSurvivorStatusChange = useCallback(async (itemId: string, newStatus: string) => {
     const prev = survivors.find(s => String(s.id ?? s.request_id) === itemId);
     if (!prev) return;
-    setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: newStatus } : s));
-    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'request', record_id: itemId, partner_status: newStatus }).catch(e => ({ error: e.message }));
+    setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, ops_status: newStatus } : s));
+    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'request', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
     if (body?.error) {
-      setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: prev.partner_status } : s));
+      setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, ops_status: prev.ops_status } : s));
       window.alert(`Failed to update survivor status: ${body.error ?? 'Unknown error'}`);
     }
   }, [survivors]);
@@ -247,10 +247,10 @@ export default function ManagePage() {
   const handleRVStatusChange = useCallback(async (itemId: string, newStatus: string) => {
     const prev = rvs.find(r => String(r.id ?? r.resource_id) === itemId);
     if (!prev) return;
-    setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: newStatus } : r));
-    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'resource', record_id: itemId, partner_status: newStatus }).catch(e => ({ error: e.message }));
+    setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, ops_status: newStatus } : r));
+    const body = await ervFetch('partner-update', { action: 'record_status', record_type: 'resource', record_id: itemId, ops_status: newStatus }).catch(e => ({ error: e.message }));
     if (body?.error) {
-      setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: prev.partner_status } : r));
+      setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, ops_status: prev.ops_status } : r));
       window.alert(`Failed to update RV status: ${body.error ?? 'Unknown error'}`);
     }
   }, [rvs]);

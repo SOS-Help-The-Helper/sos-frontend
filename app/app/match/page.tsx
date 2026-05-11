@@ -188,7 +188,7 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
     setLoadingSurvivors(true);
     ervFetch('partner-read', {
       query_type: 'recent_requests',
-      filters: { partner_status: ['pending', 'approved'] },
+      filters: { ops_status: ['pending', 'approved'] },
       limit: 500,
     })
       .then(data => {
