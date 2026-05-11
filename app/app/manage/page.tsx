@@ -7,6 +7,17 @@ const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
 type SubTab = 'survivors' | 'volunteers' | 'rvs';
 
+const RV_COLUMNS: KanbanColumn[] = [
+  { key: 'pending', label: 'Pending', color: '#f59e0b' },
+  { key: 'screening', label: 'Screening', color: '#8b5cf6' },
+  { key: 'received', label: 'Received', color: '#3b82f6' },
+  { key: 'available', label: 'Available', color: '#10b981' },
+  { key: 'deployed', label: 'Deployed', color: '#06b6d4' },
+  { key: 'repair', label: 'Repair', color: '#ef4444' },
+  { key: 'cleaning', label: 'Cleaning', color: '#a855f7' },
+  { key: 'sold', label: 'Sold', color: '#6b7280' },
+];
+
 const SURVIVOR_COLUMNS: KanbanColumn[] = [
   { key: 'pending', label: 'Pending', color: '#f59e0b' },
   { key: 'approved', label: 'Approved', color: '#3b82f6' },
@@ -79,9 +90,43 @@ function VolunteersKanban({ data }: { data: any[] }) {
   return <p className="text-white/60 text-sm">Loaded {data.length} volunteers</p>;
 }
 
-function RVsKanban({ data }: { data: any[] }) {
+function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) {
+  const description =
+    item.year || item.make || item.model
+      ? [item.year, item.make, item.model].filter(Boolean).join(' ')
+      : item.description || 'RV';
+  const vin = item.vin ? `VIN: ...${String(item.vin).slice(-6)}` : null;
+  const stars = item.condition_rating
+    ? '★'.repeat(item.condition_rating) + '☆'.repeat(5 - item.condition_rating)
+    : null;
+  const location = item.current_lot || item.location_text || 'Location unknown';
+
+  return (
+    <div
+      className="bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors border border-white/10"
+      onClick={() => onClick(item)}
+    >
+      <p className="text-sm font-medium text-white leading-tight mb-1">{description}</p>
+      {item.length_ft && <p className="text-xs text-white/40 mb-1">{item.length_ft} ft</p>}
+      {vin && <p className="text-[10px] text-white/20 mb-1">{vin}</p>}
+      {stars && <p className="text-xs text-yellow-400 mb-1">{stars}</p>}
+      <p className="text-[10px] text-white/30">{location}</p>
+    </div>
+  );
+}
+
+function RVsKanban({ data, onCardClick }: { data: any[]; onCardClick: (item: any) => void }) {
   if (data.length === 0) return <p className="text-white/40 text-sm">Loading RVs...</p>;
-  return <p className="text-white/60 text-sm">Loaded {data.length} RVs</p>;
+  return (
+    <KanbanBoard
+      columns={RV_COLUMNS}
+      items={data}
+      groupBy="partner_status"
+      renderCard={({ item }) => (
+        <RVCard key={item.id ?? item.resource_id} item={item} onClick={onCardClick} />
+      )}
+    />
+  );
 }
 
 export default function ManagePage() {
@@ -164,7 +209,7 @@ export default function ManagePage() {
             <SurvivorsKanban data={survivors} onCardClick={handleCardClick} />
           )}
           {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} />}
-          {activeTab === 'rvs' && <RVsKanban data={rvs} />}
+          {activeTab === 'rvs' && <RVsKanban data={rvs} onCardClick={handleCardClick} />}
         </>
       )}
     </div>
