@@ -7,11 +7,20 @@ export interface PartnerConfig {
   api_key: string;
 }
 
+export interface DisasterScope {
+  id: string;
+  name: string;
+  slug: string;
+  lat: number;
+  lng: number;
+}
+
 interface PartnerOrg {
   orgId: string;
   orgName: string;
   orgSlug: string;
   partnerConfig: PartnerConfig;
+  disaster?: DisasterScope | null;
 }
 
 const PartnerContext = createContext<PartnerOrg>({

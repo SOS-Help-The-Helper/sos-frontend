@@ -34,6 +34,26 @@ export default async function AppLayout({
 
   const partnerConfig = org.metadata?.partner_config || {};
 
+  let disaster = null;
+  if (disasterSlug) {
+    if (partnerConfig?.db_url) {
+      const res = await fetch(`${partnerConfig.db_url}/functions/v1/partner-read`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${partnerConfig.anon_key}`,
+          'x-partner-key': partnerConfig.api_key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query_type: 'disaster_summary', filters: { slug: disasterSlug } }),
+      });
+      const data = await res.json();
+      const d = data.disasters?.find?.((d: { slug: string }) => d.slug === disasterSlug) || data.results?.[0];
+      if (d) {
+        disaster = { id: d.id, name: d.name, slug: d.slug || disasterSlug, lat: d.latitude ?? d.center_lat, lng: d.longitude ?? d.center_lng };
+      }
+    }
+  }
+
   return (
     <PartnerShell orgSlug={org.slug}>
       <PartnerLayoutClient
@@ -41,7 +61,7 @@ export default async function AppLayout({
         orgName={org.name}
         orgSlug={org.slug}
         partnerConfig={partnerConfig}
-        disasterSlug={disasterSlug}
+        disaster={disaster}
       >
         {children}
       </PartnerLayoutClient>

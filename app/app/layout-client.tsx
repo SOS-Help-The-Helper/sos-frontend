@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
-import { PartnerProvider, PartnerConfig } from '@/lib/partner-context';
+import { PartnerProvider, PartnerConfig, DisasterScope } from '@/lib/partner-context';
 import { AppCommandProvider, useAppCommandDispatch } from '@/lib/app-command-context';
 
 interface PartnerLayoutClientProps {
@@ -11,10 +11,10 @@ interface PartnerLayoutClientProps {
   orgName: string;
   orgSlug: string;
   partnerConfig: PartnerConfig;
-  disasterSlug: string | null;
+  disaster?: DisasterScope | null;
 }
 
-function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.ReactNode; orgName: string; orgSlug: string }) {
+function PartnerLayoutInner({ children, orgName, orgSlug, disaster }: { children: React.ReactNode; orgName: string; orgSlug: string; disaster?: DisasterScope | null }) {
   const [agentOpen, setAgentOpen] = useState(false);
   const dispatch = useAppCommandDispatch();
 
@@ -22,7 +22,7 @@ function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.Re
     <>
       <CitizenHeader
         onAgentTap={() => setAgentOpen(true)}
-        locationName={orgName}
+        locationName={disaster ? disaster.name : orgName}
         status="safe"
         agentOpen={agentOpen}
       />
@@ -39,11 +39,11 @@ function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.Re
   );
 }
 
-export function PartnerLayoutClient({ children, orgId, orgName, orgSlug, partnerConfig }: PartnerLayoutClientProps) {
+export function PartnerLayoutClient({ children, orgId, orgName, orgSlug, partnerConfig, disaster }: PartnerLayoutClientProps) {
   return (
-    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug} partnerConfig={partnerConfig}>
+    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug} partnerConfig={partnerConfig} disaster={disaster}>
       <AppCommandProvider>
-        <PartnerLayoutInner orgName={orgName} orgSlug={orgSlug}>
+        <PartnerLayoutInner orgName={orgName} orgSlug={orgSlug} disaster={disaster}>
           {children}
         </PartnerLayoutInner>
       </AppCommandProvider>
