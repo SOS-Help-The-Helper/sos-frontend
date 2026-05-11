@@ -51,12 +51,24 @@ export default function PartnerMapPage() {
       mapRef.current = map;
       map.on('load', () => {
         mapLoadedRef.current = true;
-        map.addSource('survivors', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        map.addSource('survivors', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, cluster: true, clusterMaxZoom: 12, clusterRadius: 50 });
         map.addSource('volunteers', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
         map.addSource('rvs', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-        map.addLayer({ id: 'survivor-pins', type: 'circle', source: 'survivors', paint: { 'circle-radius': 7, 'circle-color': '#EF4E4B', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
+        map.addLayer({ id: 'survivor-clusters', type: 'circle', source: 'survivors', filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#EF4E4B', 50, '#d63a3a', 200, '#b02525'], 'circle-radius': ['step', ['get', 'point_count'], 18, 50, 24, 200, 30], 'circle-opacity': 0.85 } });
+        map.addLayer({ id: 'survivor-cluster-count', type: 'symbol', source: 'survivors', filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'survivor-pins', type: 'circle', source: 'survivors', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 7, 'circle-color': '#EF4E4B', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
         map.addLayer({ id: 'volunteer-pins', type: 'circle', source: 'volunteers', paint: { 'circle-radius': 7, 'circle-color': '#60a5fa', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
         map.addLayer({ id: 'rv-pins', type: 'circle', source: 'rvs', paint: { 'circle-radius': 7, 'circle-color': '#34d399', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
+        map.on('click', 'survivor-clusters', (e: any) => {
+          const features = map.queryRenderedFeatures(e.point, { layers: ['survivor-clusters'] });
+          const clusterId = features[0].properties.cluster_id;
+          (map.getSource('survivors') as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+            if (err) return;
+            map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
+          });
+        });
+        map.on('mouseenter', 'survivor-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'survivor-clusters', () => { map.getCanvas().style.cursor = ''; });
         ['survivor-pins', 'volunteer-pins', 'rv-pins'].forEach(layer => {
           map.on('click', layer, (e: any) => { layerClicked.current = true; setSelectedPin(e.features?.[0]?.properties); });
         });
@@ -79,8 +91,11 @@ export default function PartnerMapPage() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoadedRef.current) return;
+    const survivorsVisible = activeFilter === 'all' || activeFilter === 'survivors';
     const layerVisibility: Record<string, boolean> = {
-      'survivor-pins': activeFilter === 'all' || activeFilter === 'survivors',
+      'survivor-clusters': survivorsVisible,
+      'survivor-cluster-count': survivorsVisible,
+      'survivor-pins': survivorsVisible,
       'volunteer-pins': activeFilter === 'all' || activeFilter === 'volunteers',
       'rv-pins': activeFilter === 'all' || activeFilter === 'rvs',
     };
