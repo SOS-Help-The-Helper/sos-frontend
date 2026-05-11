@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
-import { PartnerProvider } from '@/lib/partner-context';
+import { PartnerProvider, PartnerConfig } from '@/lib/partner-context';
 import { AppCommandProvider, useAppCommandDispatch } from '@/lib/app-command-context';
 
 interface PartnerLayoutClientProps {
@@ -10,6 +10,8 @@ interface PartnerLayoutClientProps {
   orgId: string;
   orgName: string;
   orgSlug: string;
+  partnerConfig: PartnerConfig;
+  disasterSlug: string | null;
 }
 
 function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.ReactNode; orgName: string; orgSlug: string }) {
@@ -37,9 +39,9 @@ function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.Re
   );
 }
 
-export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: PartnerLayoutClientProps) {
+export function PartnerLayoutClient({ children, orgId, orgName, orgSlug, partnerConfig }: PartnerLayoutClientProps) {
   return (
-    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug}>
+    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug} partnerConfig={partnerConfig}>
       <AppCommandProvider>
         <PartnerLayoutInner orgName={orgName} orgSlug={orgSlug}>
           {children}

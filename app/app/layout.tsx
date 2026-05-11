@@ -1,17 +1,48 @@
+import { createClient } from '@supabase/supabase-js';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerLayoutClient } from './layout-client';
 
-// Hardcoded until Clerk auth is wired — ERV is the only partner
-const ERV_ORG = {
-  id: '3d2e8cc3-46db-4adc-b302-89b5716adfb5',
-  name: 'Emergency RV',
-  slug: 'erv',
-};
+export default async function AppLayout({
+  children,
+  searchParams,
+}: {
+  children: React.ReactNode;
+  searchParams: Promise<{ org?: string; disaster?: string }>;
+}) {
+  const params = await searchParams;
+  const orgSlug = params.org || 'erv';
+  const disasterSlug = params.disaster || null;
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('id, name, slug, metadata')
+    .eq('slug', orgSlug)
+    .maybeSingle();
+
+  if (!org) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0F1E2B] text-white">
+        Partner organization not found
+      </div>
+    );
+  }
+
+  const partnerConfig = org.metadata?.partner_config || {};
+
   return (
-    <PartnerShell orgSlug={ERV_ORG.slug}>
-      <PartnerLayoutClient orgId={ERV_ORG.id} orgName={ERV_ORG.name} orgSlug={ERV_ORG.slug}>
+    <PartnerShell orgSlug={org.slug}>
+      <PartnerLayoutClient
+        orgId={org.id}
+        orgName={org.name}
+        orgSlug={org.slug}
+        partnerConfig={partnerConfig}
+        disasterSlug={disasterSlug}
+      >
         {children}
       </PartnerLayoutClient>
     </PartnerShell>
