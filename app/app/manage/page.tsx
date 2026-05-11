@@ -18,6 +18,13 @@ const RV_COLUMNS: KanbanColumn[] = [
   { key: 'sold', label: 'Sold', color: '#6b7280' },
 ];
 
+const VOLUNTEER_COLUMNS: KanbanColumn[] = [
+  { key: 'active', label: 'Active', color: '#10b981' },
+  { key: 'new', label: 'New', color: '#3b82f6' },
+  { key: 'assigned', label: 'Assigned', color: '#06b6d4' },
+  { key: 'inactive', label: 'Inactive', color: '#6b7280' },
+];
+
 const SURVIVOR_COLUMNS: KanbanColumn[] = [
   { key: 'pending', label: 'Pending', color: '#f59e0b' },
   { key: 'approved', label: 'Approved', color: '#3b82f6' },
@@ -85,9 +92,38 @@ function SurvivorsKanban({
   );
 }
 
-function VolunteersKanban({ data }: { data: any[] }) {
+function VolunteerCard({ item, onClick }: { item: any; onClick: (item: any) => void }) {
+  const name = item.full_name || item.display_name || 'Unknown';
+  const location = [item.city, item.state].filter(Boolean).join(', ');
+  const skills = Array.isArray(item.tow_capability) && item.tow_capability.length > 0
+    ? item.tow_capability.join(', ')
+    : 'No skills listed';
+
+  return (
+    <div
+      className="bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors border border-white/10"
+      onClick={() => onClick(item)}
+    >
+      <p className="text-sm font-medium text-white leading-tight mb-1">{name}</p>
+      {location && <p className="text-xs text-white/40 mb-1">{location}</p>}
+      <p className="text-xs text-white/30 mb-1">{skills}</p>
+      {item.phone && <p className="text-[10px] text-white/20">{item.phone}</p>}
+    </div>
+  );
+}
+
+function VolunteersKanban({ data, onCardClick }: { data: any[]; onCardClick: (item: any) => void }) {
   if (data.length === 0) return <p className="text-white/40 text-sm">Loading volunteers...</p>;
-  return <p className="text-white/60 text-sm">Loaded {data.length} volunteers</p>;
+  return (
+    <KanbanBoard
+      columns={VOLUNTEER_COLUMNS}
+      items={data}
+      groupBy="volunteer_status"
+      renderCard={({ item }) => (
+        <VolunteerCard key={item.id ?? item.person_id} item={item} onClick={onCardClick} />
+      )}
+    />
+  );
 }
 
 function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) {
@@ -208,7 +244,7 @@ export default function ManagePage() {
           {activeTab === 'survivors' && (
             <SurvivorsKanban data={survivors} onCardClick={handleCardClick} />
           )}
-          {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} />}
+          {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} onCardClick={handleCardClick} />}
           {activeTab === 'rvs' && <RVsKanban data={rvs} onCardClick={handleCardClick} />}
         </>
       )}
