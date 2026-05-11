@@ -1,12 +1,10 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { PinDetailCard } from '@/components/partner/pin-detail-card';
 import { DashboardOverlay } from '@/components/partner/dashboard-overlay';
 import { QuickActions } from '@/components/partner/quick-actions';
 import { ervFetch } from '@/lib/erv-api';
-
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
 
 type FilterType = 'all' | 'survivors' | 'volunteers' | 'rvs';
 
@@ -14,7 +12,6 @@ export default function PartnerMapPage() {
   const { orgId, orgSlug } = usePartnerOrg();
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
-  const mapLoadedRef = useRef(false);
   const [selectedPin, setSelectedPin] = useState<any>(null);
   const [survivors, setSurvivors] = useState<any[]>([]);
   const [volunteers, setVolunteers] = useState<any[]>([]);
@@ -23,39 +20,73 @@ export default function PartnerMapPage() {
   const [loading, setLoading] = useState(true);
   const layerClicked = useRef(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-
-    const [survRes, rvsRes, volRes] = await Promise.all([
-      ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] })),
-      ervFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ resources: [] })),
-      ervFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] })),
-    ]);
-    setSurvivors(survRes.requests || []);
-    setRvs(rvsRes.resources || []);
-    setVolunteers(volRes.results || []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Initialize map
+  // Initialize map + fetch data inside map.on('load')
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
-    import('mapbox-gl').then(({ default: mapboxgl }) => {
-      mapboxgl.accessToken = MAPBOX_TOKEN;
-      const map = new mapboxgl.Map({ container: mapContainer.current!, style: 'mapbox://styles/mapbox/dark-v11', center: [-82.14, 29.19], zoom: 7 });
+    let destroyed = false;
+
+    const initMap = async () => {
+      const mapboxgl = (await import('mapbox-gl')).default;
+      await import('mapbox-gl/dist/mapbox-gl.css');
+      if (!mapContainer.current || destroyed) return;
+
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+      const map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [-82.14, 29.19],
+        zoom: 7,
+      });
       mapRef.current = map;
-      map.on('load', () => {
-        mapLoadedRef.current = true;
+
+      map.on('load', async () => {
+        if (destroyed) return;
+
+        const toFeature = (item: any, type: string) => ({
+          type: 'Feature' as const,
+          geometry: { type: 'Point' as const, coordinates: [item.longitude || item.lng || 0, item.latitude || item.lat || 0] },
+          properties: { ...item, _type: type },
+        });
+
+        // Add empty sources + layers first
         map.addSource('survivors', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, cluster: true, clusterMaxZoom: 12, clusterRadius: 50 });
         map.addSource('volunteers', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
         map.addSource('rvs', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
         map.addLayer({ id: 'survivor-clusters', type: 'circle', source: 'survivors', filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#EF4E4B', 50, '#d63a3a', 200, '#b02525'], 'circle-radius': ['step', ['get', 'point_count'], 18, 50, 24, 200, 30], 'circle-opacity': 0.85 } });
         map.addLayer({ id: 'survivor-cluster-count', type: 'symbol', source: 'survivors', filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
         map.addLayer({ id: 'survivor-pins', type: 'circle', source: 'survivors', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 7, 'circle-color': '#EF4E4B', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
         map.addLayer({ id: 'volunteer-pins', type: 'circle', source: 'volunteers', paint: { 'circle-radius': 7, 'circle-color': '#60a5fa', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
         map.addLayer({ id: 'rv-pins', type: 'circle', source: 'rvs', paint: { 'circle-radius': 7, 'circle-color': '#34d399', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
+
+        // Fetch data, then populate sources
+        try {
+          const [survRes, rvsRes, volRes] = await Promise.all([
+            ervFetch('partner-read', { query_type: 'recent_requests', limit: 3000 }).catch(() => ({ requests: [] })),
+            ervFetch('partner-read', { query_type: 'available_resources', limit: 1000 }).catch(() => ({ resources: [] })),
+            ervFetch('partner-read', { query_type: 'driver_availability', limit: 500 }).catch(() => ({ results: [] })),
+          ]);
+
+          if (destroyed) return;
+
+          const survivorData = survRes.requests || [];
+          const rvsData = rvsRes.resources || [];
+          const volunteerData = volRes.results || [];
+
+          (map.getSource('survivors') as any).setData({ type: 'FeatureCollection', features: survivorData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'survivor')) });
+          (map.getSource('volunteers') as any).setData({ type: 'FeatureCollection', features: volunteerData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'volunteer')) });
+          (map.getSource('rvs') as any).setData({ type: 'FeatureCollection', features: rvsData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'rv')) });
+
+          setSurvivors(survivorData);
+          setRvs(rvsData);
+          setVolunteers(volunteerData);
+        } catch (err) {
+          console.error('Map data load error:', err);
+        }
+
+        setLoading(false);
+
+        // Cluster click → zoom
         map.on('click', 'survivor-clusters', (e: any) => {
           const features = map.queryRenderedFeatures(e.point, { layers: ['survivor-clusters'] });
           const clusterId = features[0].properties.cluster_id;
@@ -64,30 +95,31 @@ export default function PartnerMapPage() {
             map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
           });
         });
+
         map.on('mouseenter', 'survivor-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'survivor-clusters', () => { map.getCanvas().style.cursor = ''; });
+
         ['survivor-pins', 'volunteer-pins', 'rv-pins'].forEach(layer => {
           map.on('click', layer, (e: any) => { layerClicked.current = true; setSelectedPin(e.features?.[0]?.properties); });
+          map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
         });
+
         map.on('click', () => { if (!layerClicked.current) setSelectedPin(null); layerClicked.current = false; });
       });
-    });
-  }, []);
+    };
 
-  // Update map data when entity arrays change
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoadedRef.current || !map.getSource('survivors')) return;
-    const toFeature = (item: any, type: string) => ({ type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [item.longitude || item.lng || 0, item.latitude || item.lat || 0] }, properties: { ...item, _type: type } });
-    (map.getSource('survivors') as any).setData({ type: 'FeatureCollection', features: survivors.filter(r => r.latitude || r.lat).map(r => toFeature(r, 'survivor')) });
-    (map.getSource('volunteers') as any).setData({ type: 'FeatureCollection', features: volunteers.filter(r => r.latitude || r.lat).map(r => toFeature(r, 'volunteer')) });
-    (map.getSource('rvs') as any).setData({ type: 'FeatureCollection', features: rvs.filter(r => r.latitude || r.lat).map(r => toFeature(r, 'rv')) });
-  }, [survivors, volunteers, rvs]);
+    initMap();
+    return () => {
+      destroyed = true;
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+    };
+  }, []);
 
   // Toggle layer visibility when filter changes
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoadedRef.current) return;
+    if (!map) return;
     const survivorsVisible = activeFilter === 'all' || activeFilter === 'survivors';
     const layerVisibility: Record<string, boolean> = {
       'survivor-clusters': survivorsVisible,
@@ -112,7 +144,6 @@ export default function PartnerMapPage() {
 
   return (
     <div className="relative w-full h-screen">
-      <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
       <div ref={mapContainer} className="absolute inset-0" />
 
       {/* Toggle bar */}
