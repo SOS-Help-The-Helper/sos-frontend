@@ -50,6 +50,29 @@ export default async function DrivePage({ params }: PageProps) {
     }
   }
 
+  let resourceDescription = 'Delivery';
+  if (transport?.resource_id && partnerConfig?.db_url) {
+    const resRes = await fetch(partnerConfig.db_url + '/functions/v1/partner-read', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + partnerConfig.anon_key,
+        'x-partner-key': partnerConfig.api_key,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query_type: 'resource_lookup', filters: { id: transport.resource_id } }),
+    });
+    if (resRes.ok) {
+      const resData = await resRes.json();
+      const resource = resData.resource || resData.results?.[0];
+      if (resource) {
+        resourceDescription =
+          [resource.year, resource.make, resource.model].filter(Boolean).join(' ') ||
+          resource.description ||
+          'Delivery';
+      }
+    }
+  }
+
   if (!transport) {
     return (
       <div className="min-h-screen bg-[#0F1E2B] flex items-center justify-center">
@@ -65,6 +88,7 @@ export default async function DrivePage({ params }: PageProps) {
       orgSlug={org!.slug}
       partnerConfig={partnerConfig}
       transportConfig={partnerConfig.transport ?? {}}
+      resourceDescription={resourceDescription}
     />
   );
 }

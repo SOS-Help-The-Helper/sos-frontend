@@ -18,14 +18,13 @@ interface Transport {
   request_id?: string;
   driver_person_id?: string | null;
   status: string;
-  origin?: string;
-  destination?: string;
-  resource_description?: string;
+  origin_text?: string;
+  destination_text?: string;
+  coordinator_notes?: string;
   driver_name?: string;
+  distance_miles?: number | null;
   current_lat?: number | null;
   current_lng?: number | null;
-  admin_notes?: string;
-  notes?: string;
 }
 
 interface TransportConfig {
@@ -41,6 +40,7 @@ interface DrivePageClientProps {
   orgSlug: string;
   partnerConfig: PartnerConfig;
   transportConfig: TransportConfig;
+  resourceDescription: string;
 }
 
 const DEFAULT_PIPELINE = [
@@ -247,6 +247,7 @@ export default function DrivePageClient({
   orgSlug,
   partnerConfig,
   transportConfig,
+  resourceDescription,
 }: DrivePageClientProps) {
   const [agentOpen, setAgentOpen] = useState(!transport.driver_person_id);
   const [currentStatus, setCurrentStatus] = useState(transport.status);
@@ -269,7 +270,7 @@ export default function DrivePageClient({
   const beforeAtPickup =
     currentIndex < 0 || currentIndex < pipeline.indexOf('at_pickup');
 
-  const destination = transport.destination ?? '';
+  const destination = transport.destination_text ?? '';
   const displayedDestination =
     beforeAtPickup && destination ? cityOnly(destination) : destination;
 
@@ -347,7 +348,7 @@ export default function DrivePageClient({
     doAdvanceStatus(stage);
   }
 
-  const notes = transport.admin_notes || transport.notes;
+  const notes = transport.coordinator_notes;
 
   return (
     <div className="relative w-full bg-[#0F1E2B]" style={{ minHeight: '100dvh' }}>
@@ -377,7 +378,7 @@ export default function DrivePageClient({
           {/* Title + status */}
           <div className="flex items-start justify-between gap-3">
             <p className="text-lg font-semibold text-white leading-tight">
-              {transport.resource_description || 'Delivery'}
+              {resourceDescription}
             </p>
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${pillClass}`}
@@ -394,14 +395,14 @@ export default function DrivePageClient({
               Pickup
             </p>
             <p className="text-sm text-white mb-2">
-              {transport.origin || '—'}
+              {transport.origin_text || '—'}
             </p>
-            {transport.origin && (
+            {transport.origin_text && (
               <button
                 onClick={() =>
                   window.open(
                     'https://maps.google.com/?q=' +
-                      encodeURIComponent(transport.origin!),
+                      encodeURIComponent(transport.origin_text!),
                     '_blank'
                   )
                 }
@@ -436,12 +437,16 @@ export default function DrivePageClient({
             )}
           </div>
 
-          {/* Distance placeholder */}
-          {transport.origin && destination && (
+          {/* Distance */}
+          {transport.distance_miles != null ? (
+            <p className="text-xs text-white/30 mb-4">
+              {transport.distance_miles} miles
+            </p>
+          ) : transport.origin_text && destination ? (
             <p className="text-xs text-white/30 mb-4">
               Estimated distance will be calculated
             </p>
-          )}
+          ) : null}
 
           {/* Driver notes */}
           {notes && (
@@ -528,7 +533,6 @@ export default function DrivePageClient({
         context="partner"
         partner={orgSlug}
         transportId={transport.id}
-        fullScreen={!transport.driver_person_id}
       />
     </div>
   );
