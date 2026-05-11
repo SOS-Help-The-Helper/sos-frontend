@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { usePartnerOrg } from '@/lib/partner-context';
-import { ERV_URL, ERV_HEADERS } from '@/lib/erv-api';
+import { ervFetch } from '@/lib/erv-api';
 
 const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SOS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -185,16 +185,11 @@ function FindMatchesView({ orgId, onMatchCommitted }: { orgId: string; onMatchCo
   useEffect(() => {
     if (!orgId) return;
     setLoadingSurvivors(true);
-    fetch(`${ERV_URL}/functions/v1/partner-read`, {
-      method: 'POST',
-      headers: ERV_HEADERS,
-      body: JSON.stringify({
-        query_type: 'recent_requests',
-        filters: { partner_status: ['pending', 'approved'] },
-        limit: 500,
-      }),
+    ervFetch('partner-read', {
+      query_type: 'recent_requests',
+      filters: { partner_status: ['pending', 'approved'] },
+      limit: 500,
     })
-      .then(r => r.json())
       .then(data => {
         const rows: any[] = data.results || data.data || [];
         setSurvivors(
@@ -414,16 +409,8 @@ export default function MatchPage() {
     setLoading(true);
 
     const [active, completed] = await Promise.all([
-      fetch(`${ERV_URL}/functions/v1/partner-read`, {
-        method: 'POST',
-        headers: ERV_HEADERS,
-        body: JSON.stringify({ query_type: 'delivery_tracking', filters: {} }),
-      }).then(r => r.json()).catch(() => ({ results: [] })),
-      fetch(`${ERV_URL}/functions/v1/partner-read`, {
-        method: 'POST',
-        headers: ERV_HEADERS,
-        body: JSON.stringify({ query_type: 'delivery_history', filters: {}, limit: 200 }),
-      }).then(r => r.json()).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'delivery_tracking' }).catch(() => ({ results: [] })),
+      ervFetch('partner-read', { query_type: 'delivery_history', limit: 200 }).catch(() => ({ results: [] })),
     ]);
 
     setMatches([...(active.results || []), ...(completed.results || [])]);
