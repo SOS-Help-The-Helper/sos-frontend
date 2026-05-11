@@ -8,6 +8,13 @@ import { usePartnerFetch } from '@/lib/partner-api';
 
 type FilterType = 'all' | 'survivors' | 'volunteers' | 'rvs';
 
+const PILL_ACTIVE: Record<FilterType, string> = {
+  all: 'bg-white/20 text-white',
+  survivors: 'bg-[#EF4E4B]/20 text-[#EF4E4B] border border-[#EF4E4B]/40',
+  rvs: 'bg-[#89CFF0]/20 text-[#89CFF0] border border-[#89CFF0]/40',
+  volunteers: 'bg-[#FFCA28]/20 text-[#FFCA28] border border-[#FFCA28]/40',
+};
+
 export default function PartnerMapPage() {
   const { orgId, orgSlug, disaster } = usePartnerOrg();
   const partnerFetch = usePartnerFetch();
@@ -61,11 +68,35 @@ export default function PartnerMapPage() {
         map.addSource('volunteers', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
         map.addSource('rvs', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
-        map.addLayer({ id: 'survivor-clusters', type: 'circle', source: 'survivors', filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#EF4E4B', 50, '#d63a3a', 200, '#b02525'], 'circle-radius': ['step', ['get', 'point_count'], 18, 50, 24, 200, 30], 'circle-opacity': 0.85 } });
+        // Layer order: glow → clusters → count → rv-pins → volunteer-pins → survivor-pins → hit targets
+
+        // Cluster glow (behind main cluster circle)
+        map.addLayer({ id: 'survivor-cluster-glow', type: 'circle', source: 'survivors', filter: ['has', 'point_count'], paint: {
+          'circle-color': '#EF4E4B',
+          'circle-opacity': 0.3,
+          'circle-blur': 1,
+          'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58],
+        }});
+
+        // Main cluster circle
+        map.addLayer({ id: 'survivor-clusters', type: 'circle', source: 'survivors', filter: ['has', 'point_count'], paint: {
+          'circle-color': '#EF4E4B',
+          'circle-opacity': 0.6,
+          'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32],
+        }});
+
+        // Cluster count label
         map.addLayer({ id: 'survivor-cluster-count', type: 'symbol', source: 'survivors', filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12 }, paint: { 'text-color': '#ffffff' } });
-        map.addLayer({ id: 'survivor-pins', type: 'circle', source: 'survivors', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 7, 'circle-color': '#EF4E4B', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
-        map.addLayer({ id: 'volunteer-pins', type: 'circle', source: 'volunteers', paint: { 'circle-radius': 7, 'circle-color': '#60a5fa', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
-        map.addLayer({ id: 'rv-pins', type: 'circle', source: 'rvs', paint: { 'circle-radius': 7, 'circle-color': '#34d399', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
+
+        // Individual pin layers (rv → volunteer → survivor, bottom to top)
+        map.addLayer({ id: 'rv-pins', type: 'circle', source: 'rvs', paint: { 'circle-radius': 8, 'circle-color': '#89CFF0', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+        map.addLayer({ id: 'volunteer-pins', type: 'circle', source: 'volunteers', paint: { 'circle-radius': 8, 'circle-color': '#FFCA28', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+        map.addLayer({ id: 'survivor-pins', type: 'circle', source: 'survivors', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 8, 'circle-color': '#EF4E4B', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // Invisible hit target layers (larger touch area)
+        map.addLayer({ id: 'survivor-pins-hit', type: 'circle', source: 'survivors', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 22, 'circle-color': 'transparent', 'circle-opacity': 0 } });
+        map.addLayer({ id: 'rv-pins-hit', type: 'circle', source: 'rvs', paint: { 'circle-radius': 22, 'circle-color': 'transparent', 'circle-opacity': 0 } });
+        map.addLayer({ id: 'volunteer-pins-hit', type: 'circle', source: 'volunteers', paint: { 'circle-radius': 22, 'circle-color': 'transparent', 'circle-opacity': 0 } });
 
         // Fetch data, then populate sources
         try {
@@ -94,6 +125,17 @@ export default function PartnerMapPage() {
 
         setLoading(false);
 
+        // Cluster glow pulse animation
+        function animateClusters() {
+          const t = performance.now() / 1000;
+          const opacity = 0.3 * (0.6 + 0.4 * Math.sin(t * 1.2));
+          if (map.getLayer('survivor-cluster-glow')) {
+            map.setPaintProperty('survivor-cluster-glow', 'circle-opacity', opacity);
+          }
+          requestAnimationFrame(animateClusters);
+        }
+        animateClusters();
+
         // Cluster click → zoom
         map.on('click', 'survivor-clusters', (e: any) => {
           const features = map.queryRenderedFeatures(e.point, { layers: ['survivor-clusters'] });
@@ -107,7 +149,8 @@ export default function PartnerMapPage() {
         map.on('mouseenter', 'survivor-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'survivor-clusters', () => { map.getCanvas().style.cursor = ''; });
 
-        ['survivor-pins', 'volunteer-pins', 'rv-pins'].forEach(layer => {
+        // Click handlers on hit target layers for better touch accuracy
+        ['survivor-pins-hit', 'volunteer-pins-hit', 'rv-pins-hit'].forEach(layer => {
           map.on('click', layer, (e: any) => { layerClicked.current = true; setSelectedPin(e.features?.[0]?.properties); });
           map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
           map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
@@ -129,12 +172,18 @@ export default function PartnerMapPage() {
     const map = mapRef.current;
     if (!map) return;
     const survivorsVisible = activeFilter === 'all' || activeFilter === 'survivors';
+    const volunteersVisible = activeFilter === 'all' || activeFilter === 'volunteers';
+    const rvsVisible = activeFilter === 'all' || activeFilter === 'rvs';
     const layerVisibility: Record<string, boolean> = {
+      'survivor-cluster-glow': survivorsVisible,
       'survivor-clusters': survivorsVisible,
       'survivor-cluster-count': survivorsVisible,
       'survivor-pins': survivorsVisible,
-      'volunteer-pins': activeFilter === 'all' || activeFilter === 'volunteers',
-      'rv-pins': activeFilter === 'all' || activeFilter === 'rvs',
+      'survivor-pins-hit': survivorsVisible,
+      'volunteer-pins': volunteersVisible,
+      'volunteer-pins-hit': volunteersVisible,
+      'rv-pins': rvsVisible,
+      'rv-pins-hit': rvsVisible,
     };
     Object.entries(layerVisibility).forEach(([layerId, visible]) => {
       if (map.getLayer(layerId)) {
@@ -163,7 +212,7 @@ export default function PartnerMapPage() {
             <button
               key={pill.key}
               onClick={() => setActiveFilter(pill.key)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${activeFilter === pill.key ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${activeFilter === pill.key ? PILL_ACTIVE[pill.key] : 'bg-white/5 text-white/40'}`}
             >
               {pill.key === 'all' ? pill.label : `${pill.label} (${pill.count})`}
             </button>
