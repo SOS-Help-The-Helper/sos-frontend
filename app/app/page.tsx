@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { usePartnerOrg } from '@/lib/partner-context';
 import { PinDetailCard } from '@/components/partner/pin-detail-card';
 import { DashboardOverlay } from '@/components/partner/dashboard-overlay';
@@ -15,9 +16,17 @@ const PILL_ACTIVE: Record<FilterType, string> = {
   volunteers: 'bg-[#FFCA28]/20 text-[#FFCA28] border border-[#FFCA28]/40',
 };
 
-export default function PartnerMapPage() {
+function PartnerMapPageInner() {
   const { orgId, orgSlug, disaster } = usePartnerOrg();
   const partnerFetch = usePartnerFetch();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  function navigateTo(path: string, extra?: Record<string, string>) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (extra) Object.entries(extra).forEach(([k, v]) => params.set(k, v));
+    router.push(path + '?' + params.toString());
+  }
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const [selectedPin, setSelectedPin] = useState<any>(null);
@@ -227,10 +236,39 @@ export default function PartnerMapPage() {
             type={selectedPin._type === 'survivor' ? 'request' : selectedPin._type === 'volunteer' ? 'driver' : 'resource'}
             data={selectedPin}
             onClose={() => setSelectedPin(null)}
-            onAction={(action) => console.log('Pin action:', action, selectedPin)}
+            onAction={(action) => {
+              const pinId = selectedPin?.id;
+              switch (action) {
+                case 'find_match':
+                  navigateTo('/app/match', { request_id: pinId });
+                  break;
+                case 'update':
+                case 'details':
+                  navigateTo('/app/manage', { record_id: pinId, record_type: selectedPin?._type === 'survivor' ? 'request' : 'resource' });
+                  break;
+                case 'assign_driver':
+                  navigateTo('/app/match', { resource_id: pinId });
+                  break;
+                case 'call':
+                  if (selectedPin?.phone) window.open('tel:' + selectedPin.phone);
+                  break;
+                case 'view_route':
+                  navigateTo('/app/manage', { record_id: pinId });
+                  break;
+              }
+              setSelectedPin(null);
+            }}
           />
         </div>
       )}
     </div>
+  );
+}
+
+export default function PartnerMapPage() {
+  return (
+    <Suspense>
+      <PartnerMapPageInner />
+    </Suspense>
   );
 }
