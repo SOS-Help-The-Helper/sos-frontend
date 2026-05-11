@@ -7,6 +7,24 @@ const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
 type SubTab = 'survivors' | 'volunteers' | 'rvs';
 
+const SURVIVOR_TRANSITIONS: Record<string, string[]> = {
+  pending: ['approved', 'declined'],
+  approved: ['delivered', 'on_hold', 'declined'],
+  on_hold: ['approved', 'declined'],
+  delivered: ['completed'],
+};
+
+const RV_TRANSITIONS: Record<string, string[]> = {
+  pending: ['screening', 'declined'],
+  screening: ['received', 'declined'],
+  received: ['available', 'repair'],
+  available: ['deployed', 'sold', 'cleaning', 'repair'],
+  deployed: ['returned'],
+  returned: ['available', 'repair', 'sold'],
+  repair: ['available', 'sold'],
+  cleaning: ['available'],
+};
+
 const RV_COLUMNS: KanbanColumn[] = [
   { key: 'pending', label: 'Pending', color: '#f59e0b' },
   { key: 'screening', label: 'Screening', color: '#8b5cf6' },
@@ -75,9 +93,11 @@ function SurvivorCard({ item, onClick }: { item: any; onClick: (item: any) => vo
 function SurvivorsKanban({
   data,
   onCardClick,
+  onStatusChange,
 }: {
   data: any[];
   onCardClick: (item: any) => void;
+  onStatusChange: (itemId: string, newStatus: string) => void;
 }) {
   if (data.length === 0) return <p className="text-white/40 text-sm">Loading survivors...</p>;
   return (
@@ -88,6 +108,8 @@ function SurvivorsKanban({
       renderCard={({ item }) => (
         <SurvivorCard key={item.id ?? item.request_id} item={item} onClick={onCardClick} />
       )}
+      onStatusChange={onStatusChange}
+      validTransitions={SURVIVOR_TRANSITIONS}
     />
   );
 }
@@ -151,7 +173,15 @@ function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) 
   );
 }
 
-function RVsKanban({ data, onCardClick }: { data: any[]; onCardClick: (item: any) => void }) {
+function RVsKanban({
+  data,
+  onCardClick,
+  onStatusChange,
+}: {
+  data: any[];
+  onCardClick: (item: any) => void;
+  onStatusChange: (itemId: string, newStatus: string) => void;
+}) {
   if (data.length === 0) return <p className="text-white/40 text-sm">Loading RVs...</p>;
   return (
     <KanbanBoard
@@ -161,6 +191,8 @@ function RVsKanban({ data, onCardClick }: { data: any[]; onCardClick: (item: any
       renderCard={({ item }) => (
         <RVCard key={item.id ?? item.resource_id} item={item} onClick={onCardClick} />
       )}
+      onStatusChange={onStatusChange}
+      validTransitions={RV_TRANSITIONS}
     />
   );
 }
@@ -213,6 +245,40 @@ export default function ManagePage() {
     console.log('Selected item:', item);
   }, []);
 
+  const handleSurvivorStatusChange = useCallback(async (itemId: string, newStatus: string) => {
+    const prev = survivors.find(s => String(s.id ?? s.request_id) === itemId);
+    if (!prev) return;
+    setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: newStatus } : s));
+    const key = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+    const res = await fetch(`${SB_URL}/functions/v1/partner-update`, {
+      method: 'POST',
+      headers: { 'x-partner-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'record_status', record_type: 'request', record_id: itemId, partner_status: newStatus }),
+    }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
+    const body = await (res as Response).json().catch(() => ({}));
+    if (!(res as Response).ok) {
+      setSurvivors(all => all.map(s => String(s.id ?? s.request_id) === itemId ? { ...s, partner_status: prev.partner_status } : s));
+      window.alert(`Failed to update survivor status: ${body.error ?? 'Unknown error'}`);
+    }
+  }, [survivors]);
+
+  const handleRVStatusChange = useCallback(async (itemId: string, newStatus: string) => {
+    const prev = rvs.find(r => String(r.id ?? r.resource_id) === itemId);
+    if (!prev) return;
+    setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: newStatus } : r));
+    const key = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+    const res = await fetch(`${SB_URL}/functions/v1/partner-update`, {
+      method: 'POST',
+      headers: { 'x-partner-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'record_status', record_type: 'resource', record_id: itemId, partner_status: newStatus }),
+    }).catch(e => ({ ok: false, json: async () => ({ error: e.message }) }));
+    const body = await (res as Response).json().catch(() => ({}));
+    if (!(res as Response).ok) {
+      setRvs(all => all.map(r => String(r.id ?? r.resource_id) === itemId ? { ...r, partner_status: prev.partner_status } : r));
+      window.alert(`Failed to update RV status: ${body.error ?? 'Unknown error'}`);
+    }
+  }, [rvs]);
+
   const tabs: { key: SubTab; label: string }[] = [
     { key: 'survivors', label: 'Survivors' },
     { key: 'volunteers', label: 'Volunteers' },
@@ -242,10 +308,10 @@ export default function ManagePage() {
       ) : (
         <>
           {activeTab === 'survivors' && (
-            <SurvivorsKanban data={survivors} onCardClick={handleCardClick} />
+            <SurvivorsKanban data={survivors} onCardClick={handleCardClick} onStatusChange={handleSurvivorStatusChange} />
           )}
           {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} onCardClick={handleCardClick} />}
-          {activeTab === 'rvs' && <RVsKanban data={rvs} onCardClick={handleCardClick} />}
+          {activeTab === 'rvs' && <RVsKanban data={rvs} onCardClick={handleCardClick} onStatusChange={handleRVStatusChange} />}
         </>
       )}
     </div>
