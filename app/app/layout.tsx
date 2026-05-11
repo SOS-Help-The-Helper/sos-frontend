@@ -1,6 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
-import { redirect } from 'next/navigation';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerLayoutClient } from './layout-client';
 
@@ -10,25 +8,9 @@ const supabase = createClient(
 );
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await currentUser();
-  
-  if (!user) {
-    redirect('/join?redirect=/app');
-  }
-
-  // Org slug from Clerk user metadata
-  const orgSlug = (user.publicMetadata as any)?.orgSlug || (user.unsafeMetadata as any)?.orgSlug;
-  
-  if (!orgSlug) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white text-sm text-center px-8">
-        <div>
-          <p className="text-lg font-medium mb-2">No organization assigned</p>
-          <p className="text-white/50">Contact your SOS administrator to get access.</p>
-        </div>
-      </div>
-    );
-  }
+  // TODO: Add auth once Clerk + proxy.ts conflict is resolved
+  // For now, hardcode ERV as the default org
+  const orgSlug = 'erv';
 
   const { data: org } = await supabase
     .from('organizations')
@@ -37,11 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .maybeSingle();
 
   if (!org) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white text-sm">
-        Organization not found
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white text-sm">Organization not found</div>;
   }
 
   return (
