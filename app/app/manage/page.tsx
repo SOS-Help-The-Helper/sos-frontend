@@ -91,14 +91,16 @@ function SurvivorCard({ item, onClick }: { item: any; onClick: (item: any) => vo
 
 function SurvivorsKanban({
   data,
+  loading,
   onCardClick,
   onStatusChange,
 }: {
   data: any[];
+  loading: boolean;
   onCardClick: (item: any) => void;
   onStatusChange: (itemId: string, newStatus: string) => void;
 }) {
-  if (data.length === 0) return <p className="text-white/40 text-sm">Loading survivors...</p>;
+  if (data.length === 0) return <p className="text-white/40 text-sm">{loading ? 'Loading survivors...' : 'No survivors found'}</p>;
   return (
     <KanbanBoard
       columns={SURVIVOR_COLUMNS}
@@ -133,8 +135,8 @@ function VolunteerCard({ item, onClick }: { item: any; onClick: (item: any) => v
   );
 }
 
-function VolunteersKanban({ data, onCardClick }: { data: any[]; onCardClick: (item: any) => void }) {
-  if (data.length === 0) return <p className="text-white/40 text-sm">Loading volunteers...</p>;
+function VolunteersKanban({ data, loading, onCardClick }: { data: any[]; loading: boolean; onCardClick: (item: any) => void }) {
+  if (data.length === 0) return <p className="text-white/40 text-sm">{loading ? 'Loading volunteers...' : 'No volunteers found'}</p>;
   return (
     <KanbanBoard
       columns={VOLUNTEER_COLUMNS}
@@ -174,14 +176,16 @@ function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) 
 
 function RVsKanban({
   data,
+  loading,
   onCardClick,
   onStatusChange,
 }: {
   data: any[];
+  loading: boolean;
   onCardClick: (item: any) => void;
   onStatusChange: (itemId: string, newStatus: string) => void;
 }) {
-  if (data.length === 0) return <p className="text-white/40 text-sm">Loading RVs...</p>;
+  if (data.length === 0) return <p className="text-white/40 text-sm">{loading ? 'Loading RVs...' : 'No RVs found'}</p>;
   return (
     <KanbanBoard
       columns={RV_COLUMNS}
@@ -275,17 +279,13 @@ export default function ManagePage() {
       </div>
 
       {/* Active tab content */}
-      {loading ? (
-        <p className="text-white/40 text-sm">Loading...</p>
-      ) : (
-        <>
-          {activeTab === 'survivors' && (
-            <SurvivorsKanban data={survivors} onCardClick={handleCardClick} onStatusChange={handleSurvivorStatusChange} />
-          )}
-          {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} onCardClick={handleCardClick} />}
-          {activeTab === 'rvs' && <RVsKanban data={rvs} onCardClick={handleCardClick} onStatusChange={handleRVStatusChange} />}
-        </>
-      )}
+      <>
+        {activeTab === 'survivors' && (
+          <SurvivorsKanban data={survivors} loading={loading} onCardClick={handleCardClick} onStatusChange={handleSurvivorStatusChange} />
+        )}
+        {activeTab === 'volunteers' && <VolunteersKanban data={volunteers} loading={loading} onCardClick={handleCardClick} />}
+        {activeTab === 'rvs' && <RVsKanban data={rvs} loading={loading} onCardClick={handleCardClick} onStatusChange={handleRVStatusChange} />}
+      </>
     </div>
   );
 }

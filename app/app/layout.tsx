@@ -1,30 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerLayoutClient } from './layout-client';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+// Hardcoded until Clerk auth is wired — ERV is the only partner
+const ERV_ORG = {
+  id: '3d2e8cc3-46db-4adc-b302-89b5716adfb5',
+  name: 'Emergency RV',
+  slug: 'erv',
+};
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  // TODO: Add auth once Clerk + proxy.ts conflict is resolved
-  // For now, hardcode ERV as the default org
-  const orgSlug = 'erv';
-
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('id, name, slug, metadata')
-    .eq('slug', orgSlug)
-    .maybeSingle();
-
-  if (!org) {
-    return <div className="flex items-center justify-center h-screen bg-[#0F1E2B] text-white text-sm">Organization not found</div>;
-  }
-
   return (
-    <PartnerShell orgSlug={orgSlug}>
-      <PartnerLayoutClient orgId={org.id} orgName={org.name} orgSlug={orgSlug}>
+    <PartnerShell orgSlug={ERV_ORG.slug}>
+      <PartnerLayoutClient orgId={ERV_ORG.id} orgName={ERV_ORG.name} orgSlug={ERV_ORG.slug}>
         {children}
       </PartnerLayoutClient>
     </PartnerShell>

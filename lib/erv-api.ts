@@ -19,5 +19,9 @@ export async function ervFetch(fn: string, body: Record<string, unknown>) {
     headers: ERV_HEADERS,
     body: JSON.stringify(body),
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    console.error(`[ervFetch] ${fn} failed:`, data.error || res.statusText);
+  }
+  return data;
 }
