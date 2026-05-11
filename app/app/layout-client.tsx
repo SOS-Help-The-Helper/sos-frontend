@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CitizenHeader } from '@/components/citizen-header';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { PartnerProvider } from '@/lib/partner-context';
+import { AppCommandProvider, useAppCommandDispatch } from '@/lib/app-command-context';
 
 interface PartnerLayoutClientProps {
   children: React.ReactNode;
@@ -11,11 +12,12 @@ interface PartnerLayoutClientProps {
   orgSlug: string;
 }
 
-export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: PartnerLayoutClientProps) {
+function PartnerLayoutInner({ children, orgName, orgSlug }: { children: React.ReactNode; orgName: string; orgSlug: string }) {
   const [agentOpen, setAgentOpen] = useState(false);
+  const dispatch = useAppCommandDispatch();
 
   return (
-    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug}>
+    <>
       <CitizenHeader
         onAgentTap={() => setAgentOpen(true)}
         locationName={orgName}
@@ -23,12 +25,26 @@ export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: Partn
         agentOpen={agentOpen}
       />
       {children}
+      {/* @ts-expect-error onAppCommand will be wired in Phase 5 */}
       <SOSBottomSheet
         open={agentOpen}
         onClose={() => setAgentOpen(false)}
         context="partner"
         partner={orgSlug}
+        onAppCommand={dispatch}
       />
+    </>
+  );
+}
+
+export function PartnerLayoutClient({ children, orgId, orgName, orgSlug }: PartnerLayoutClientProps) {
+  return (
+    <PartnerProvider orgId={orgId} orgName={orgName} orgSlug={orgSlug}>
+      <AppCommandProvider>
+        <PartnerLayoutInner orgName={orgName} orgSlug={orgSlug}>
+          {children}
+        </PartnerLayoutInner>
+      </AppCommandProvider>
     </PartnerProvider>
   );
 }
