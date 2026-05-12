@@ -234,7 +234,6 @@ export default function ManagePage() {
 
   const handleCardClick = useCallback((item: any) => {
     setSelectedItem(item);
-    console.log('Selected item:', item);
   }, []);
 
   const handleSurvivorStatusChange = useCallback(async (itemId: string, newStatus: string) => {
