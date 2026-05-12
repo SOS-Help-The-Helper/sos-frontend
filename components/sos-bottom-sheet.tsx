@@ -216,10 +216,6 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
           <div className={`${messages.length > 0 ? 'flex-1' : ''} overflow-y-auto px-3 pb-2 space-y-4 overflow-x-hidden ${fullScreen ? 'pt-16' : ''}`}>
             {messages.map(msg => (
               <div key={msg.id}>
-                {/* DEBUG: show what parts we're getting */}
-                <pre className="text-[9px] text-yellow-400/80 bg-black/30 p-1 rounded mb-1 overflow-x-auto">
-                  {JSON.stringify((msg as any).parts?.map((p: any) => ({ type: p.type, state: p.state, hasOutput: !!p.output })), null, 0)}
-                </pre>
                 {/* Render from parts (AI SDK v6 pattern) */}
                 {(msg as any).parts?.map((part: any, pi: number) => {
                   if (part.type === 'text' && part.text) {
