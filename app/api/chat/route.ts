@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   const transportId = req.headers.get('x-transport-id') || '';
   let driverSystemPrompt: string | null = null;
   if (transportId) {
-    const ERV_DB = 'https://xbtrtztzaokeodarqvpr.supabase.co';
+    const ERV_DB = process.env.NEXT_PUBLIC_ERV_SUPABASE_URL || 'https://xbtrtztzaokeodarqvpr.supabase.co';
     const ERV_ANON = process.env.NEXT_PUBLIC_ERV_ANON_KEY || '';
     const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
     try {
