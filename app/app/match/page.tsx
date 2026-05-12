@@ -57,7 +57,7 @@ function CopyLinkButton({ chainId }: { chainId: string }) {
 }
 
 function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }) {
-  const survivorName = match.requests?.persons?.display_name || match.survivor_name || match.request_name || match.full_name || 'Unknown Survivor';
+  const survivorName = match.requests?.persons?.display_name || match.survivor_name || match.request_name || match.full_name || 'Survivor';
   const rvDesc =
     match.resources?.description ||
     match.resource_description ||
@@ -68,29 +68,45 @@ function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }
   const driverName = match.driver_name || match.volunteer_name || null;
   const date = match.delivery_date || match.created_at || match.matched_at || null;
   const dateStr = date
-    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null;
   const chainId = match.chain_id || null;
 
   return (
     <div
-      className="bg-white/5 rounded-lg p-4 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+      className="rounded-xl overflow-hidden cursor-pointer hover:scale-[1.01] transition-all duration-200"
+      style={{ background: 'linear-gradient(135deg, rgba(26,56,80,0.8), rgba(15,30,43,0.95))', border: '1px solid rgba(255,255,255,0.08)' }}
       onClick={() => onClick(match)}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-medium text-white flex-1 leading-tight">{survivorName}</span>
-        <span className="text-white/40 text-xs flex-shrink-0">↔</span>
-        <span className="text-sm font-medium text-white flex-1 text-right leading-tight">{rvDesc}</span>
-      </div>
-      <div className="mb-2">
-        <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusPillClass(status)}`}>
-          {statusLabel(status)}
-        </span>
-      </div>
-      {driverName && <p className="text-xs text-white/30 mb-1">Driver: {driverName}</p>}
-      <div className="flex items-center justify-between">
-        {dateStr ? <p className="text-[10px] text-white/20">{dateStr}</p> : <span />}
-        {chainId && <CopyLinkButton chainId={chainId} />}
+      <div className="p-4">
+        {/* Survivor → RV connection */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-[#EF4E4B]/60 mb-0.5">Survivor</p>
+            <p className="text-sm font-semibold text-white truncate">{survivorName}</p>
+          </div>
+          <div className="flex flex-col items-center gap-0.5 flex-shrink-0 px-1">
+            <div className="w-6 h-[1px] bg-white/20" />
+            <span className="text-[8px] text-white/30">→</span>
+          </div>
+          <div className="flex-1 min-w-0 text-right">
+            <p className="text-[10px] uppercase tracking-wider text-sky-400/60 mb-0.5">RV</p>
+            <p className="text-sm font-semibold text-white truncate">{rvDesc}</p>
+          </div>
+        </div>
+
+        {/* Meta row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${statusPillClass(status)}`}>
+            {statusLabel(status)}
+          </span>
+          {driverName && (
+            <span className="text-[10px] text-white/40">🚛 {driverName}</span>
+          )}
+          <span className="flex-1" />
+          {dateStr && <span className="text-[10px] text-white/25">{dateStr}</span>}
+          {chainId && <CopyLinkButton chainId={chainId} />}
+        </div>
       </div>
     </div>
   );
@@ -460,13 +476,15 @@ export default function MatchPage() {
   return (
     <div className="pt-20 pb-20 px-4 bg-[#0F1E2B] min-h-screen text-white">
       {/* Sub-view toggle */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 relative z-[70]">
         {views.map(v => (
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            className={`text-xs font-medium px-4 py-1.5 rounded-full transition-colors ${
-              view === v.key ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'
+            className={`text-xs font-medium px-4 py-2 rounded-full transition-all duration-200 ${
+              view === v.key
+                ? 'bg-white/15 text-white shadow-sm backdrop-blur-sm border border-white/10'
+                : 'bg-white/5 text-white/40 border border-transparent hover:bg-white/10'
             }`}
           >
             {v.label}
