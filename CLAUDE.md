@@ -41,7 +41,7 @@ Spec: `product/specs/PARTNER_PORTAL_V2_SPEC.md` (COMPLETE reference — read it 
 3. Clerk imports crash with proxy.ts — use client-side hooks only
 4. Match engine is on SOS DB, not ERV DB
 5. Dynamic routes return 404 on Vercel — use static routes only
-6. Git author: ALWAYS `info@sos-help.org` for commits
+6. Git author: do NOT override the developer's configured git identity. Use `info@sos-help.org` only when the actual human committer is that shared org account (e.g. automation under the SOS bot). Otherwise let the local `user.email` / `user.name` stand so commits reflect the real author.
 
 ## Coding Standards
 - TypeScript strict
