@@ -121,11 +121,11 @@ function PartnerMapPageInner() {
           const rvsData = rvsRes.resources || [];
           const volunteerData = volRes.results || [];
 
-          (map.getSource('survivors') as any).setData({ type: 'FeatureCollection', features: survivorData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'survivor')) });
+          (map.getSource('survivors') as any).setData({ type: 'FeatureCollection', features: survivorData.filter((r: any) => (r.latitude || r.lat) && r.household_size).map((r: any) => toFeature(r, 'survivor')) });
           (map.getSource('volunteers') as any).setData({ type: 'FeatureCollection', features: volunteerData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'volunteer')) });
           (map.getSource('rvs') as any).setData({ type: 'FeatureCollection', features: rvsData.filter((r: any) => r.latitude || r.lat).map((r: any) => toFeature(r, 'rv')) });
 
-          setSurvivors(survivorData);
+          setSurvivors(survivorData.filter((r: any) => r.household_size));
           setRvs(rvsData);
           setVolunteers(volunteerData);
         } catch (err) {
