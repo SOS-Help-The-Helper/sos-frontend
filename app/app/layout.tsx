@@ -10,20 +10,38 @@ export default async function AppLayout({
   children: React.ReactNode;
   searchParams: Promise<{ org?: string; disaster?: string }>;
 }) {
-  const params = await searchParams;
+  let params: { org?: string; disaster?: string };
+  try {
+    params = await searchParams;
+  } catch {
+    params = {};
+  }
   const orgSlug = params.org || 'erv';
   const disasterSlug = params.disaster || null;
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  );
+  const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-  const { data: org } = await supabase
+  if (!sbUrl || !sbKey) {
+    console.error('[AppLayout] Missing SUPABASE env vars', { sbUrl: !!sbUrl, sbKey: !!sbKey });
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0F1E2B] text-white">
+        Configuration error — missing database credentials
+      </div>
+    );
+  }
+
+  const supabase = createClient(sbUrl, sbKey);
+
+  const { data: org, error: orgError } = await supabase
     .from('organizations')
     .select('id, name, slug, metadata')
     .eq('slug', orgSlug)
     .maybeSingle();
+
+  if (orgError) {
+    console.error('[AppLayout] Org query error:', orgError);
+  }
 
   if (!org) {
     return (
@@ -36,8 +54,8 @@ export default async function AppLayout({
   const partnerConfig = org.metadata?.partner_config || {};
 
   let disaster = null;
-  if (disasterSlug) {
-    if (partnerConfig?.db_url) {
+  if (disasterSlug && partnerConfig?.db_url) {
+    try {
       const res = await fetch(`${partnerConfig.db_url}/functions/v1/partner-read`, {
         method: 'POST',
         headers: {
@@ -52,6 +70,8 @@ export default async function AppLayout({
       if (d) {
         disaster = { id: d.id, name: d.name, slug: d.slug || disasterSlug, lat: d.latitude ?? d.center_lat, lng: d.longitude ?? d.center_lng };
       }
+    } catch (e) {
+      console.error('[AppLayout] Disaster fetch error:', e);
     }
   }
 
