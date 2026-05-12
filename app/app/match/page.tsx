@@ -78,33 +78,24 @@ function MatchCard({ match, onClick }: { match: any; onClick: (m: any) => void }
       style={{ background: 'linear-gradient(135deg, rgba(26,56,80,0.8), rgba(15,30,43,0.95))', border: '1px solid rgba(255,255,255,0.08)' }}
       onClick={() => onClick(match)}
     >
-      <div className="p-4">
-        {/* Survivor → RV connection */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-[#EF4E4B]/60 mb-0.5">Survivor</p>
-            <p className="text-sm font-semibold text-white truncate">{survivorName}</p>
-          </div>
-          <div className="flex flex-col items-center gap-0.5 flex-shrink-0 px-1">
-            <div className="w-6 h-[1px] bg-white/20" />
-            <span className="text-[8px] text-white/30">→</span>
-          </div>
-          <div className="flex-1 min-w-0 text-right">
-            <p className="text-[10px] uppercase tracking-wider text-sky-400/60 mb-0.5">RV</p>
-            <p className="text-sm font-semibold text-white truncate">{rvDesc}</p>
-          </div>
+      <div className="px-3 py-3">
+        {/* Survivor → RV row */}
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-sm font-medium text-white truncate">{survivorName}</span>
+          <span className="text-white/20 text-xs shrink-0">→</span>
+          <span className="text-sm text-white/70 truncate">{rvDesc}</span>
         </div>
 
         {/* Meta row */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${statusPillClass(status)}`}>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusPillClass(status)}`}>
             {statusLabel(status)}
           </span>
           {driverName && (
             <span className="text-[10px] text-white/40">🚛 {driverName}</span>
           )}
-          <span className="flex-1" />
           {dateStr && <span className="text-[10px] text-white/25">{dateStr}</span>}
+          <span className="flex-1" />
           {chainId && <CopyLinkButton chainId={chainId} />}
         </div>
       </div>
