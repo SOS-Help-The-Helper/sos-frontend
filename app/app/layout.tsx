@@ -3,16 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 import { PartnerShell } from '@/components/partner/partner-shell';
 import { PartnerLayoutClient } from './layout-client';
 
-export default async function AppLayout({
-  children,
-  searchParams,
-}: {
+export default async function AppLayout(props: {
   children: React.ReactNode;
   searchParams: Promise<{ org?: string; disaster?: string }>;
 }) {
-  const params = await searchParams;
-  const orgSlug = params.org || 'erv';
-  const disasterSlug = params.disaster || null;
+  const resolvedParams = await props.searchParams;
+  const orgSlug = resolvedParams?.org || 'erv';
+  const disasterSlug = resolvedParams?.disaster || null;
+  const children = props.children;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
