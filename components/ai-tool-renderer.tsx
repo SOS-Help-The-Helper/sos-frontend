@@ -9,6 +9,12 @@ import { CategoryCards, CounterSelection, CircumstanceChips, LocationInput } fro
 import { SearchResults, DangerCheck } from './tools/map-tools';
 import { PhoneInput, PhotoCapture, ScoreDisplay, FEMACard, ReferralCard } from './tools/identity-tools';
 import { SubmitConfirmation, SOSConfirmationCard, ToggleChipWrapper } from './tools/confirmation-tools';
+import { TapCardGrid } from './agent-tap-cards';
+
+interface ToolRendererProps {
+  toolData: any;
+  onUserAction: (action: any) => void;
+}
 
 export function AIToolRenderer({ toolData, onUserAction }: ToolRendererProps) {
   const tool = toolData?.__tool;

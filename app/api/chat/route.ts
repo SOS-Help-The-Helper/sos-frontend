@@ -48,6 +48,65 @@ export async function POST(req: Request) {
       }
     }
   }
+  // Transport context injection for driver mode
+  const transportId = req.headers.get('x-transport-id') || '';
+  let driverSystemPrompt: string | null = null;
+  if (transportId) {
+    const ERV_DB = 'https://xbtrtztzaokeodarqvpr.supabase.co';
+    const ERV_ANON = process.env.NEXT_PUBLIC_ERV_ANON_KEY || '';
+    const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+    try {
+      const transportRes = await fetch(ERV_DB + '/functions/v1/partner-read', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + ERV_ANON, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query_type: 'transport_assignments', filters: { id: transportId }, limit: 1 }),
+      });
+      const transportData = await transportRes.json();
+      const transport = transportData.results?.[0] || transportData.assignments?.[0];
+      if (transport) {
+        // Fetch resource details for the delivery description
+        let resourceDesc = 'Delivery item';
+        if (transport.resource_id) {
+          try {
+            const resRes = await fetch(ERV_DB + '/functions/v1/partner-read', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + ERV_ANON, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query_type: 'resource_lookup', filters: { id: transport.resource_id } }),
+            });
+            const resData = await resRes.json();
+            const resource = resData.resource || resData.results?.[0];
+            if (resource) {
+              resourceDesc = [resource.year, resource.make, resource.model].filter(Boolean).join(' ') || resource.description || 'RV';
+            }
+          } catch {}
+        }
+
+        driverSystemPrompt = `You are in DRIVER MODE for a specific delivery.
+
+DELIVERY DETAILS:
+- Transport ID: ${transport.id}
+- Status: ${transport.status}
+- Resource: ${resourceDesc}
+- Pickup: ${transport.origin_text || transport.origin || 'TBD'}
+- Dropoff: ${transport.destination_text || transport.destination || 'TBD'}
+- Distance: ${transport.distance_miles ? transport.distance_miles + ' miles' : 'TBD'}
+- Driver: ${transport.driver_name || 'Not yet assigned'}
+- Notes: ${transport.coordinator_notes || 'None'}
+
+RULES:
+- Only answer questions about THIS delivery
+- If no driver is assigned (driver is null), your job is to onboard them: collect name, phone, vehicle description, tow capacity, hitch types
+- Be friendly, practical, focused on getting the delivery done
+- You can explain the delivery process, help with issues, and answer questions about the RV
+- Do NOT access other deliveries, matches, or admin functions
+- Survivor full address is private until pickup is confirmed
+`;
+      }
+    } catch {
+      // Non-blocking — fall through to default prompt if transport fetch fails
+    }
+  }
+
   const authContext = isAuthenticated
     ? `\nUSER CONTEXT: Authenticated user (ID: ${personId}). You already have their phone and location. Skip those questions.`
     : '\nUSER CONTEXT: Anonymous user. Collect phone during match/SOS flows.';
@@ -177,7 +236,9 @@ After collecting info, call submit_join_person to save their details.
 
 DO NOT use tools like show_categories, show_chips, or search_resources. This is a pure conversation — no UI widgets.`;
 
-  const activeSystemPrompt = joinFlow
+  const activeSystemPrompt = driverSystemPrompt
+    ? driverSystemPrompt
+    : joinFlow
     ? JOIN_PROMPT
     : ervFlow && ERV_PROMPTS[ervFlow]
     ? ERV_PROMPTS[ervFlow] + authContext + locationContext
@@ -188,7 +249,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     system: activeSystemPrompt,
     messages,
     // Don't pass tools for join flow (pure conversation)
-    ...(joinFlow ? {} : { tools: getChatTools(userLat, userLng), stopWhen: stepCountIs(5) }),
+    ...(joinFlow ? {} : { tools: getChatTools({ personId, userLat, userLng }), stopWhen: stepCountIs(5) }),
   });
 
   return result.toUIMessageStreamResponse();

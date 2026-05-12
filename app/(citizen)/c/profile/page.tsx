@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import type { SOSScore } from '@/lib/citizen-api';
-import { supabase } from '@/lib/supabase-client';
 import { api } from '@/lib/api';
 import { getPersonId, clearPersonId } from '@/lib/person-cookie';
 
@@ -32,16 +31,14 @@ export default function ProfilePage() {
   useEffect(() => {
     async function load() {
       if (personId) {
-        const [scoreData, { count: mc }, { count: rc }] = await Promise.all([
+        const [scoreData, matchData, reportData] = await Promise.all([
           api.getScore(personId) as Promise<SOSScore>,
-          // KEEP: profile read needs dedicated EF
-          db.from('matches').select('id', { count: 'exact', head: true }).eq('person_id', personId),
-          // KEEP: profile read needs dedicated EF
-          db.from('community_messages').select('id', { count: 'exact', head: true }).eq('person_id', personId).eq('message_type', 'report'),
+          api.efCall<unknown[]>('sos-read', { actor: { type: 'citizen', id: personId }, scope: 'my_records', include: ['matches'] }),
+          api.efCall<unknown[]>('sos-read', { actor: { type: 'citizen', id: personId }, scope: 'my_records', include: ['community_messages'], filters: { message_type: 'report' } }),
         ]);
         setScore(scoreData);
-        setMatchCount(mc || 0);
-        setReportCount(rc || 0);
+        setMatchCount(Array.isArray(matchData) ? matchData.length : 0);
+        setReportCount(Array.isArray(reportData) ? reportData.length : 0);
       }
       setLoading(false);
     }

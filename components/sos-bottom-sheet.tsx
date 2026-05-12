@@ -22,25 +22,33 @@ const ERV_CHIPS = [
   { id: 'drive', label: 'Drive an RV to a family', icon: '🛣️' },
 ];
 
+const PARTNER_ADMIN_CHIPS = [
+  { id: 'queue', label: 'Show priority queue', icon: '📋' },
+  { id: 'stats', label: 'Today\'s stats', icon: '📊' },
+  { id: 'matches', label: 'Find matches', icon: '🔗' },
+  { id: 'fleet', label: 'Fleet status', icon: '🚐' },
+];
+
 interface SOSBottomSheetProps {
   open: boolean;
   onClose: () => void;
-  context: 'map' | 'feed' | 'profile';
+  context: 'map' | 'feed' | 'profile' | 'partner';
   userLat?: number;
   userLng?: number;
   personId?: string;
   isAuthenticated?: boolean;
   fullScreen?: boolean;
   partner?: string; // 'erv', 'fhm', etc. — shows partner-specific chips
+  transportId?: string;
 }
 
-export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false, partner }: SOSBottomSheetProps) {
+export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, userLng = -82.5515, personId, isAuthenticated = false, fullScreen = false, partner, transportId }: SOSBottomSheetProps) {
   const [sheetState, setSheetState] = useState<SheetState>(fullScreen ? 'full' : 'half');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, error: chatError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated), 'x-user-lat': String(userLat || ''), 'x-user-lng': String(userLng || '') } }),
+    transport: new DefaultChatTransport({ api: '/api/chat', headers: { 'x-person-id': personId || '', 'x-authenticated': String(isAuthenticated), 'x-user-lat': String(userLat || ''), 'x-user-lng': String(userLng || ''), 'x-transport-id': transportId || '' } }),
     onError: (err) => console.error('Chat error:', err),
     // No welcome message — agent responds to first user action
   });
@@ -264,9 +272,15 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {/* Opening state — branded welcome */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-4">
+            <img src="/logomark.png" alt="SOS" className="w-10 h-10 mb-3" />
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#EF4E4B] mb-2">SOS Agent</p>
             <p className="text-center text-sm text-white/60 mb-5">How can I help?</p>
-            {partner === 'erv' ? (
+            {context === 'partner' ? (
+              <QuickChips chips={PARTNER_ADMIN_CHIPS} onSelect={(id) => {
+                const prompts: Record<string, string> = { queue: 'Show priority queue', stats: "Today's stats", matches: 'Find matches', fleet: 'Fleet status' };
+                send(prompts[id] || id);
+              }} />
+            ) : partner === 'erv' ? (
               <QuickChips chips={ERV_CHIPS} onSelect={(id) => {
                 const prompts: Record<string, string> = { donate: 'I want to donate an RV', drive: 'I want to volunteer as an RV delivery driver' };
                 send(prompts[id] || id);
@@ -302,8 +316,8 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
           <form onSubmit={handleSubmit} className="flex gap-2 w-full overflow-hidden">
             <input type="text" value={input} onChange={e => setInput(e.target.value)}
               onFocus={() => { if (sheetState === 'collapsed') setSheetState('half'); }}
-              placeholder={messages.length === 0 ? "Find resources near me, report an issue..." : "Ask SOS anything..."} disabled={isLoading}
-              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400 disabled:opacity-50" />
+              placeholder={messages.length === 0 ? (context === 'partner' ? "Ask about requests, fleet, matches..." : "Find resources near me, report an issue...") : "Ask SOS anything..."}
+              className="flex-1 min-w-0 px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-sos-accent-400" />
             <button type="submit" disabled={!input.trim() || isLoading}
               className="w-9 h-9 rounded-xl bg-sos-red-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>

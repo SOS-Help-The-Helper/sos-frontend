@@ -150,7 +150,6 @@ function JoinChat() {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Type your message..."
-            disabled={isLoading}
             enterKeyHint="send"
             autoComplete="off"
             style={{

@@ -54,16 +54,16 @@ export interface MapFeatures {
 export const api = {
   // Matching
   queryMatches: (data: Record<string, unknown>) =>
-    efCall('query-matches', data),
+    efCall('sos-read', { actor: { type: 'citizen' }, scope: 'my_records', include: ['matches'], ...data }),
 
   respondMatch: (matchId: string, response: 'accept' | 'decline', note?: string) =>
-    efCall('respond-match', { match_id: matchId, response, note }),
+    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: matchId, action: response, ...(note ? { data: { reason: note } } : {}) }),
 
   fulfillMatch: (matchId: string, data: Record<string, unknown>) =>
-    efCall('fulfill-match', { match_id: matchId, ...data }),
+    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: matchId, action: 'deliver', data }),
 
   consentFlow: (data: Record<string, unknown>) =>
-    efCall('consent-flow', data),
+    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: data.match_id as string, action: 'consent', data }),
 
   // ERV
   ervQuery: (queryType: string, params: Record<string, unknown>) =>
@@ -77,7 +77,7 @@ export const api = {
 
   // Intake
   submitIntake: (data: Record<string, unknown>) =>
-    efCall('submit-intake', data),
+    efCall('sos-write', data),
 
   // Resources
   searchResources: (keyword: string, lat: number, lng: number, distance?: number) =>
@@ -85,47 +85,50 @@ export const api = {
 
   // Reports
   submitSitrep: (data: Record<string, unknown>) =>
-    efCall('submit-sitrep', data),
+    efCall('sitrep-write', data),
 
   // Partners
   queryPartner: (orgId: string, queryType: string) =>
-    efCall('query-partner', { org_id: orgId, query_type: queryType }),
+    efCall('sos-read', { actor: { type: 'partner', id: orgId }, scope: 'org_records', query_type: queryType }),
 
   onboardPartner: (data: Record<string, unknown>) =>
-    efCall('onboard-partner', data),
+    efCall('partner-onboard', data),
 
   partnerReferral: (data: Record<string, unknown>) =>
-    efCall('partner-referral', data),
+    efCall('referral-track', data),
 
   // Alerts — GET, params forwarded as query string
   getAlerts: (lat: number, lng: number) =>
-    efCall('get-alerts', { lat: String(lat), lng: String(lng) }, { method: 'GET' }),
+    efCall('alerts-feed', { lat: String(lat), lng: String(lng) }, { method: 'GET' }),
 
   // FEMA — GET
   checkFema: (state: string) =>
-    efCall('check-fema', { state }, { method: 'GET' }),
+    efCall('fema-check', { state }, { method: 'GET' }),
 
   // Images
   analyzeImage: (imageBase64: string, context: string) =>
-    efCall('analyze-image', { image_base64: imageBase64, context }),
+    efCall('image-analyze', { image_base64: imageBase64, context }),
 
   // Community
   getMessages: (channelId: string) =>
-    efCall('get-messages', { channel_id: channelId }, { method: 'GET' }),
+    efCall('community-messages', { channel_id: channelId }, { method: 'GET' }),
 
   postMessage: (channelId: string, text: string) =>
-    efCall('post-message', { channel_id: channelId, text }),
+    efCall('community-messages', { channel_id: channelId, text }),
 
   // Inventory
   queryInventory: (params: Record<string, unknown>) =>
-    efCall('query-inventory', params),
+    efCall('inventory-query', params),
 
   writeInventory: (data: Record<string, unknown>) =>
-    efCall('write-inventory', data),
+    efCall('inventory-write', data),
 
   // Notifications (replaces lib/notifications.ts direct DB queries)
   getNotifications: (orgId: string) =>
-    efCall('get-notifications', { org_id: orgId }, { method: 'GET' }),
+    efCall('sos-notify', { org_id: orgId, action: 'list' }),
+
+  getScore: (personId: string) =>
+    efCall('score-compute', { person_id: personId }),
 
   // Raw EF caller — use for one-off queries until a named wrapper is added
   efCall,

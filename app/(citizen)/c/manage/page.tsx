@@ -5,7 +5,7 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
-import { api, db } from '@/lib/api';
+import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 
@@ -49,34 +49,16 @@ export default function ManagePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async (pid: string) => {
-    const [scoreData, reqData, resData] = await Promise.all([
-      getSOSScore(pid),
-      // KEEP: needs dedicated EF
-      db.from('requests').select('id, category, details_sanitized, urgency, status, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
-      // KEEP: needs dedicated EF
-      db.from('resources').select('id, category, details_sanitized, capacity_available, status, created_at').eq('person_id', pid).order('created_at', { ascending: false }).limit(20),
-    ]);
+    const sosData = await api.efCall<any>('sos-read', {
+      actor: { type: 'citizen', id: pid },
+      scope: 'my_records',
+      include: ['matches'],
+    });
+    const scoreData = await getSOSScore(pid);
     setScore(scoreData);
-    setRequests(reqData.data || []);
-    setResources(resData.data || []);
-
-    const requestIds = (reqData.data || []).map((r: any) => r.id);
-    const resourceIds = (resData.data || []).map((r: any) => r.id);
-
-    let requestMatches: any[] = [];
-    if (requestIds.length > 0) {
-      requestMatches = (await api.queryMatches({ request_ids: requestIds, status_exclude: ['cancelled', 'expired'] }) as any[]) || [];
-    }
-
-    let resourceMatches: any[] = [];
-    if (resourceIds.length > 0) {
-      resourceMatches = (await api.queryMatches({ resource_ids: resourceIds, status_exclude: ['cancelled', 'expired'] }) as any[]) || [];
-    }
-
-    const allMatches = [...requestMatches, ...resourceMatches];
-    const unique = Array.from(new Map(allMatches.map(m => [m.id, m])).values());
-    unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    setMatches(unique.slice(0, 20));
+    setRequests(sosData?.requests || []);
+    setResources(sosData?.resources || []);
+    setMatches(sosData?.matches || []);
   }, []);
 
   useEffect(() => {
@@ -112,52 +94,42 @@ export default function ManagePage() {
   async function updateStatus(table: 'requests' | 'resources', id: string, newStatus: string) {
     setUpdatingId(id);
     setErrorId(null);
-    // KEEP: needs dedicated EF
-    const { error } = await db.from(table).update({ status: newStatus }).eq('id', id);
-    setUpdatingId(null);
-    if (error) {
-      showError(id);
-    } else {
+    try {
+      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: table === 'requests' ? 'request' : 'resource', record_id: id, action: 'update', data: { status: newStatus } });
       showFlash(id);
       if (personId) loadData(personId);
+    } catch {
+      showError(id);
     }
+    setUpdatingId(null);
   }
 
   async function saveRequestEdit() {
     if (!editingRequest) return;
     setSaving(true);
-    // KEEP: needs dedicated EF
-    const { error } = await db.from('requests').update({
-      details_sanitized: editingRequest.details_sanitized,
-      urgency: editingRequest.urgency,
-      household_size: editingRequest.household_size,
-    }).eq('id', editingRequest.id);
-    setSaving(false);
-    if (error) {
-      showError(editingRequest.id);
-    } else {
+    try {
+      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: 'request', record_id: editingRequest.id, action: 'update', data: { details_sanitized: editingRequest.details_sanitized, urgency: editingRequest.urgency, household_size: editingRequest.household_size } });
       showFlash(editingRequest.id);
       setEditingRequest(null);
       if (personId) loadData(personId);
+    } catch {
+      showError(editingRequest.id);
     }
+    setSaving(false);
   }
 
   async function saveResourceEdit() {
     if (!editingResource) return;
     setSaving(true);
-    // KEEP: needs dedicated EF
-    const { error } = await db.from('resources').update({
-      details_sanitized: editingResource.details_sanitized,
-      capacity_available: editingResource.capacity_available,
-    }).eq('id', editingResource.id);
-    setSaving(false);
-    if (error) {
-      showError(editingResource.id);
-    } else {
+    try {
+      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: 'resource', record_id: editingResource.id, action: 'update', data: { details_sanitized: editingResource.details_sanitized, capacity_available: editingResource.capacity_available } });
       showFlash(editingResource.id);
       setEditingResource(null);
       if (personId) loadData(personId);
+    } catch {
+      showError(editingResource.id);
     }
+    setSaving(false);
   }
 
   const sections = [
@@ -444,13 +416,7 @@ export default function ManagePage() {
                         <div className="flex gap-2 pt-2">
                           <button
                             onClick={async () => {
-                              const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-                              const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-                              await fetch(`${url}/functions/v1/match-respond`, {
-                                method: 'POST',
-                                headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ match_id: m.id, response: 'accept', actor_id: personId, channel: 'citizen_app' }),
-                              });
+                              await api.respondMatch(m.id, 'accept');
                               setExpandedId(null);
                               if (personId) loadData(personId);
                             }}
@@ -460,13 +426,7 @@ export default function ManagePage() {
                           </button>
                           <button
                             onClick={async () => {
-                              const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-                              const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-                              await fetch(`${url}/functions/v1/match-respond`, {
-                                method: 'POST',
-                                headers: { 'apikey': anon, 'Authorization': `Bearer ${anon}`, 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ match_id: m.id, response: 'decline', actor_id: personId, channel: 'citizen_app' }),
-                              });
+                              await api.respondMatch(m.id, 'decline');
                               setExpandedId(null);
                               if (personId) loadData(personId);
                             }}

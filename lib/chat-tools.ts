@@ -6,8 +6,13 @@ import { zodSchema } from 'ai';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// sos-write requires service role key (runs server-side in API route)
+const SUPABASE_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-export function getChatTools(userLat?: number, userLng?: number) {
+export function getChatTools(opts?: { personId?: string; userLat?: number; userLng?: number }) {
+  const _personId = opts?.personId || '';
+  const userLat = opts?.userLat;
+  const userLng = opts?.userLng;
   return {
       show_categories: {
         description: 'Show disaster need category selection cards. Use when someone says they need help or can help.',
@@ -214,37 +219,25 @@ export function getChatTools(userLat?: number, userLng?: number) {
           urgency: z.string().optional().describe('critical/high/medium/low'),
         })),
         execute: async function({ categories, taxonomy_codes, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
-          // Call intake-write EF
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
+          // Call sos-write EF (replaced intake-write May 2026)
+          const personId = _personId;
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${SUPABASE_SERVICE}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              needs: categories.map((c: string, i: number) => ({
-                category: c,
+              actor: personId ? { id: personId, type: 'citizen' } : { phone: '+10000000000', name: 'Anonymous Web User', type: 'citizen' },
+              records: categories.map((c: string, i: number) => ({
+                type: 'request',
+                taxonomy_code: taxonomy_codes?.[i] || 'HOUSING.TEMPORARY.RV',
                 urgency: urgency || 'high',
-                taxonomy_code: taxonomy_codes?.[i] || undefined,
                 description: `${c.replace(/_/g, ' ')} needed for household of ${count || 1}${circumstances?.length ? '. ' + circumstances.join(', ') : ''}${circumstanceNotes ? '. ' + circumstanceNotes : ''}`,
               })),
-              household_size: parseInt(count) || 1,
-              latitude: lat,
-              longitude: lng,
-              location_name: locationName,
-              metadata: { circumstances, circumstanceNotes },
-              channel: 'web_ai_sdk',
-              consent_given: true,
-              consent_method: 'web',
+              location: { lat, lng, text: locationName || null },
+              household: { size: parseInt(count) || 1, circumstances: circumstances || [] },
+              context: { channel: 'web_ai_sdk' },
             }),
           });
           const result = await resp.json();
-
-          // Fire-and-forget: trigger matching for the new request
-          if (resp.ok && result.sos_id) {
-            fetch(`${SUPABASE_URL}/rest/v1/rpc/run_matching_v2`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ p_entity_type: 'request', p_entity_id: result.sos_id }),
-            }).catch(() => {});
-          }
 
           return JSON.stringify({
             __tool: 'submit_confirmation',

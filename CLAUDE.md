@@ -1,115 +1,144 @@
-# V24 Homepage Polish — Build Plan
+# Partner Portal V2 — Build Context
 
-## Working File
-`public/home-v24.html` — this is a single self-contained HTML file with inline CSS and JS (GSAP + ScrollTrigger).
+## Project
+SOS Frontend — Next.js 16, Turbopack, Vercel, Mapbox GL JS, Supabase Edge Functions
 
-## DO NOT TOUCH
-- Hero section (Section 1) — the 5-phase typing animation is finalized
-- Crisis section (Section 2) — just updated, keep as-is
-- Color scheme: navy #0F1E2B, white, #89CFF0 blue, #EF4E4B red
-- Fonts: DM Serif Display (headings), Nunito Sans (body)
-- GSAP + ScrollTrigger library includes
+## Current Build: Partner Portal V2 (Map / Match / Manage)
+Spec: `product/specs/PARTNER_PORTAL_V2_SPEC.md` (COMPLETE reference — read it for full details)
 
-## CHANGES NEEDED
+## Architecture
+- **Frontend:** `app/app/` routes (static, auth-gated via proxy.ts)
+- **Backend:** Edge functions on ERV Supabase (`partner-read`, `partner-update`) + SOS Supabase (`match-engine`)
+- **Auth:** `x-partner-key` header for ERV DB calls. Bearer token for SOS DB calls.
+- **Org scope:** Hardcoded `erv` until Clerk auth wired
+- **Agent chat:** SOSBottomSheet component with `/api/chat` route
 
-### 1. Ecosystem Section (Section 3: "The Help Exists")
-**Current:** 4 cards in 2x2 grid with paragraph-length text each.
-**Change to:** 3 cards side-by-side (3-column grid) with SHORT copy (2-3 sentences max per card).
+## Key Files
+- `app/app/layout.tsx` — Server layout, fetches org from DB
+- `app/app/layout-client.tsx` — Client wrapper: CitizenHeader + SOSBottomSheet + PartnerProvider
+- `app/app/page.tsx` — Map tab (Mapbox dark theme)
+- `components/partner/partner-shell.tsx` — Bottom nav shell
+- `lib/partner-context.tsx` — React context (orgId, orgName, orgSlug)
+- `proxy.ts` — Route allowlist (CRITICAL — no middleware.ts allowed)
 
-Cards:
-1. **Citizens** — "The actual first responders. Three out of four people turn to neighbors before any agency. People with trucks clear roads. Nurses triage on front porches."
-2. **Organizations** — "Deployed within hours. Small nonprofits manage thousands of requests on spreadsheets. Faith-based groups self-organize through group chats. Everyone responds." 
-3. **Government & Emergency Services** — "Overwhelmed and underfunded. 85% of state emergency agencies cite infrastructure limitations. Working with tools from a different era."
+## ERV Data API
+- `partner-read` on ERV DB: 16 query types (resource_summary, available_resources, priority_queue, etc.)
+- `partner-update` on ERV DB: 11 action types (record_status, match_status, person_update, etc.)
+- `match-engine` on SOS DB: 3 modes (score, propose, commit)
+- ERV partner key: `process.env.NEXT_PUBLIC_ERV_PARTNER_KEY`
+- SOS anon key: `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-Remove the Disaster Economy card (that content moves to Solution section).
-Grid: `grid-template-columns: repeat(3, 1fr)` on desktop, `1fr` on mobile.
-Keep the same eco-card styling but ensure all 3 cards are roughly equal height.
+## Design Rules
+- Dark theme: `bg-[#0F1E2B]`, white text, `white/5` card backgrounds
+- Accent: `#EF4E4B` (SOS red)
+- Mobile-first: iPhone 13 viewport (390×844)
+- Status pills: `text-[10px] px-2 py-0.5 rounded-full`
+- Cards: `bg-white/5 rounded-lg p-3` with `border border-white/10`
 
-### 2. Coordination Section (Section 4: "When coordination fails")
-**Current:** Two comparison blocks (fail vs. work) with long paragraphs + a pull quote.
-**Change:** 
-- Keep the two comparison blocks but trim each to 3 concise lines max.
-- REMOVE the pull quote (it repeats the headline).
-- Keep the "The technology to make this possible didn't exist two years ago. It does now." line at the bottom.
+## Known Gotchas
+1. `proxy.ts` blocks new routes — add to PUBLIC_PATHS/PUBLIC_PREFIXES
+2. Next.js 16 params are Promises — must `await params` in server components
+3. Clerk imports crash with proxy.ts — use client-side hooks only
+4. Match engine is on SOS DB, not ERV DB
+5. Dynamic routes return 404 on Vercel — use static routes only
+6. Git author: ALWAYS `info@sos-help.org` for commits
 
-Fail block: "Three organizations can help one family. Without coordination, two never hear about the need. The third shows up a week late. The family called nine hotlines. Nobody tracks what was spent."
+## Coding Standards
+- TypeScript strict
+- Use existing component patterns (check partner/ components)
+- All data fetches via edge functions, never direct PostgREST
+- `'use client'` directive on all interactive components
+- Tailwind for styling, match existing dark theme
 
-Work block: "The shelter, food team, and medical transport all receive the same match simultaneously. Each knows what the other is doing. Every dollar traced. Every contribution attributed. The system learns."
+## DO NOT
+- Create middleware.ts (proxy.ts handles this)
+- Run `next build` (no node_modules in this env)
+- Deploy edge functions (we deploy manually after audit)
+- Touch proxy.ts allowlist without explicit instruction
+- Hardcode API keys or tokens
 
-### 3. Thesis Section (Section 5: horizontal scroll → vertical fade)
-**Current:** Pinned horizontal scroll with 3 vignette cards + "Everyone is a helper" reveal.
-**Change:** 
-- Remove ALL horizontal scroll code (the thesis-pin-container, ScrollTrigger horizontal pin).
-- Replace with simple vertical layout: 3 vignette cards that fade in on scroll (use existing `gs-fade` class).
-- Keep the vignette content:
-  1. "A displaced family finds temporary housing in a stranger's guest room — then clears roads with their truck by morning."
-  2. "A nurse, still in scrubs, triages her neighbors on the front porch — while her own home floods behind her."
-  3. "A teenager who speaks three languages becomes the only translator for miles — because no agency thought to plan for it."
-- Keep "Everyone is a helper." headline with the thesis-closing text below it.
-- Remove the thesis-dawn gradient div.
-- THEN flow directly into the Maria scenario (merge sections 5 and 7).
-- Maria's scenario cards should use the same scroll-fade reveal (gs-fade) instead of the pinned stacking animation.
+## Phase 1 Acceptance Criteria
+- [ ] PartnerShell tabs: Map | Match | Manage (routes: /app, /app/match, /app/manage)
+- [ ] Old tabs (People, Assets, Deliveries) removed from nav
+- [ ] AppCommandContext created in lib/app-command-context.tsx
+- [ ] useAppCommand hook exported and functional
+- [ ] AppCommandContext wired into layout-client.tsx
+- [ ] No TypeScript errors in changed files
 
-CSS for the thesis section: keep `bg-navy` background. Use a simple centered layout with max-width 640px. Vignette cards stack vertically with `margin-bottom: 48px` between them.
+## Multi-Tenant Partner Portal (Phase 2)
 
-### 4. Solution Section (Section 6: timeline → flywheel)
-**Current:** 5-step linear timeline (Intake → Match → Coordinate → Fulfill → Learn).
-**Change:** Replace the timeline with a circular flywheel SVG diagram.
+### Architecture
+- `?org=` query param (default: 'erv') resolves org from SOS DB `organizations` table
+- Org record has `metadata.partner_config`: `{ db_url, anon_key, api_key }`
+- `?disaster=` query param (optional) scopes all 3 tabs to a specific disaster
+- Layout (server component) fetches org config using SUPABASE_SERVICE_ROLE_KEY
+- Client gets partner config via PartnerProvider context — never sees service role key
 
-Build the flywheel as an SVG:
-- Circular path with 5 nodes equally spaced around it
-- Each node: icon + label (Intake, Match, Coordinate, Fulfill, Learn)
-- Arrows between nodes showing the cycle direction
-- Center: SOS logomark (use /logomark-red.svg)
-- Style: stroke #89CFF0 for the path, white text, nodes as circles with the label below
-- ScrollTrigger: as user scrolls, each node fades in sequentially (stagger), then the center logo pulses
-- On complete: subtle continuous rotation animation on the path
+### SOS DB org lookup (server-side in layout.tsx)
+```ts
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+const { data: org } = await supabase
+  .from('organizations')
+  .select('id, name, slug, metadata')
+  .eq('slug', orgSlug)
+  .maybeSingle();
+// org.metadata.partner_config = { db_url, anon_key, api_key }
+```
 
-Below the flywheel, keep a simplified version of the result-card:
-"The system doesn't just respond to disasters — it learns from them. Revenue from connecting homeowners with vetted contractors funds coordination for people with no insurance, no savings, no safety net."
+### Partner context shape
+```ts
+interface PartnerConfig {
+  dbUrl: string;
+  anonKey: string;
+  apiKey: string;
+}
 
-Keep the section heading "Relief as permaculture." and the intro paragraph.
+interface PartnerContext {
+  orgId: string;
+  orgName: string;
+  orgSlug: string;
+  partnerConfig: PartnerConfig;
+  disaster?: { id: string; name: string; slug: string; lat: number; lng: number; };
+}
+```
 
-### 5. Scenario Section (Section 7) → Merge into Thesis
-Move Maria's scenario to follow directly after "Everyone is a helper" in the merged Thesis section.
-- Remove the separate scenario-section container
-- Remove the pinned stacking ScrollTrigger animation
-- Use simple gs-fade scroll reveal for each scenario card instead
-- Keep all 6 scenario cards (Citizen → SOS Intelligence → Volunteer → Nonprofit → Government → Resolution)
-- Keep the scenario-closing text: "Everyone was a helper. The system just made sure they could find each other."
+### ERV org in SOS DB
+- slug: 'erv'
+- id: da86c92f-d52d-4b13-a474-30e1be8fb808
+- metadata.partner_config.db_url: https://xbtrtztzaokeodarqvpr.supabase.co
 
-### 6. Invitation Section (Section 8: origin story)
-**Current:** Dense paragraph of origin story text.
-**Change:** Break into 3 short visual moments:
+## Driver Page Build
 
-Moment 1: "SOS started during Hurricane Helene. Our founder's farmhouse was damaged. He lived in a donated RV for three months."
+### Spec: product/specs/DRIVER_PAGE_SPEC.md
 
-Moment 2: "Since Helene, SOS has activated for every major disaster — including the Blizzard of 2026, coordinating hundreds of resources across 12 states."
+### Route: app/drive/[id]/page.tsx
+- Server component fetches transport + org config
+- Transport lookup: partner-read on the org's DB (from org.metadata.partner_config)
+- Org lookup: SOS DB organizations table by org_id from transport
 
-Moment 3: "The values are structural, not aspirational. Partners keep their data. Citizens control their privacy. No profiles. No surveillance. Communities deserve infrastructure that works for them, not on them."
+### Key patterns
+- CitizenHeader + SOSBottomSheet (same as /c and /app)
+- No auth — transport_id UUID is the auth token
+- Config-driven: status pipeline, photo stages, onboarding fields from org config
+- proxy.ts already allows /drive/ prefix
 
-Style each as a separate text block with spacing between, not one paragraph.
-
-### 7. Citations
-**Current:** Wall of numbered links at the bottom.
-**Change:** 
-- Move citations INLINE — each claim in the page text should have a small superscript number that links to the source URL.
-- Example: "305 million people needed assistance¹" where ¹ links to the OCHA report.
-- REMOVE the citation block at the bottom entirely.
-- The citations are already linked with `<a href="#cite-X" class="cite">` throughout the page — just make those link to the actual URLs instead of anchors.
-
-### 8. Navigation
-Update nav links to match the new merged section structure:
-- Crisis | Ecosystem | Coordination | Thesis | Solution | Join
-- Remove "Scenario" from nav (merged into Thesis)
-
-## IMPORTANT
-- This is a SINGLE HTML file with everything inline (CSS in <style>, JS in <script>).
-- GSAP and ScrollTrigger are loaded from CDN — keep those includes.
-- The file is ~1400 lines. Work carefully.
-- Test that the gs-fade ScrollTrigger animations still work after restructuring.
-- Mobile responsive: check all grid layouts collapse to single column on mobile (max-width: 640px).
-- Do NOT change any GSAP code in the hero section (the async function at the top of the script).
-
-When completely finished, run this command to notify me:
-openclaw system event --text "Done: V24 homepage polish complete — ecosystem cards, flywheel, thesis merge, copy tightening, inline citations" --mode now
+### Transport data shape (from partner-read transport_assignments query)
+```json
+{
+  "id": "uuid",
+  "match_id": "uuid",
+  "resource_id": "uuid",
+  "request_id": "uuid",
+  "driver_person_id": "uuid or null",
+  "status": "accepted",
+  "origin": "Ocala, FL",
+  "destination": "Atlanta, GA",
+  "resource_description": "2022 Forest River Avenger",
+  "driver_name": "John Smith",
+  "current_lat": null,
+  "current_lng": null
+}
+```
