@@ -10,38 +10,20 @@ export default async function AppLayout({
   children: React.ReactNode;
   searchParams: Promise<{ org?: string; disaster?: string }>;
 }) {
-  let params: { org?: string; disaster?: string };
-  try {
-    params = await searchParams;
-  } catch {
-    params = {};
-  }
+  const params = await searchParams;
   const orgSlug = params.org || 'erv';
   const disasterSlug = params.disaster || null;
 
-  const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
 
-  if (!sbUrl || !sbKey) {
-    console.error('[AppLayout] Missing SUPABASE env vars', { sbUrl: !!sbUrl, sbKey: !!sbKey });
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0F1E2B] text-white">
-        Configuration error — missing database credentials
-      </div>
-    );
-  }
-
-  const supabase = createClient(sbUrl, sbKey);
-
-  const { data: org, error: orgError } = await supabase
+  const { data: org } = await supabase
     .from('organizations')
     .select('id, name, slug, metadata')
     .eq('slug', orgSlug)
     .maybeSingle();
-
-  if (orgError) {
-    console.error('[AppLayout] Org query error:', orgError);
-  }
 
   if (!org) {
     return (
