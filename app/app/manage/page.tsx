@@ -268,7 +268,7 @@ export default function ManagePage() {
   return (
     <div className="pt-20 pb-20 px-4 bg-[#0F1E2B] min-h-screen text-white">
       {/* Sub-tab toggle */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 relative z-[70]">
         {tabs.map(tab => (
           <button
             key={tab.key}
