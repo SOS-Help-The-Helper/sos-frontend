@@ -55,7 +55,6 @@ export default function CitizenMapPage() {
     const pid = params.get('pid');
     if (pid) {
       setPersonId(pid);
-      console.log('Set sos-person-id:', pid);
     }
   }, []);
   // Close sheet when submission animation completes
