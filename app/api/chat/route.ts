@@ -245,7 +245,7 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     : SYSTEM_PROMPT + authContext + locationContext;
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: anthropic('claude-sonnet-4-6'),
     system: activeSystemPrompt,
     messages,
     // Don't pass tools for join flow (pure conversation)
