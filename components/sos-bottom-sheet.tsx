@@ -189,21 +189,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
           WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 20px, black 20px)',
         }} />
 
-        {/* Floating logomark — only in opening state */}
-        {!hasMessages && !isLoading && !fullScreen && (
-          <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 animate-[logoFloat_0.4s_ease-out]">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{
-                background: 'rgba(15,30,43,0.97)',
-                boxShadow: '0 0 30px rgba(239,78,75,0.35), 0 4px 20px rgba(0,0,0,0.4)',
-                border: '2px solid rgba(239,78,75,0.35)',
-              }}>
-              <img src="/logomark-red.svg" alt="SOS" className="w-8 h-8" />
-            </div>
-            {/* Pulse ring behind logomark */}
-            <div className="absolute inset-0 rounded-full animate-ping" style={{ border: '1px solid rgba(239,78,75,0.2)', animationDuration: '2s' }} />
-          </div>
-        )}
+        {/* Floating logomark removed — logomark now inline above "SOS Agent" text */}
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
@@ -272,6 +258,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {/* Opening state — branded welcome */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-4">
+            <img src="/logomark-red.svg" alt="SOS" className="w-10 h-10 mb-3" />
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#EF4E4B] mb-2">SOS Agent</p>
             <p className="text-center text-sm text-white/60 mb-5">How can I help?</p>
             {context === 'partner' ? (
