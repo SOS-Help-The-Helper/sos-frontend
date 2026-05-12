@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
     // React 19 + bundler moduleResolution type resolution issue
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/erv',
+        destination: '/app?org=erv',
+        permanent: true,
+      },
+      {
+        source: '/erv/:path*',
+        destination: '/app?org=erv',
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
