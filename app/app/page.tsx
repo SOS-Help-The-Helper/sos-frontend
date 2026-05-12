@@ -267,7 +267,7 @@ function PartnerMapPageInner() {
 
 export default function PartnerMapPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="w-full h-full bg-[#0F1E2B]" />}>
       <PartnerMapPageInner />
     </Suspense>
   );
