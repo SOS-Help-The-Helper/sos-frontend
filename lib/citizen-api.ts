@@ -51,7 +51,6 @@ export async function getSOSScore(personId: string): Promise<SOSScore> {
 
 // --- 211 Resources ---
 
-// TODO: rename to Resource211 in next refactor
 export interface ExternalResource {
   id: string;
   organization_name: string;
