@@ -65,9 +65,13 @@ function PartnerMapPageInner() {
           properties: {
             ...item,
             _type: type,
-            // Flatten nested person name for pin detail card
+            // Flatten nested person fields for pin detail card (GeoJSON properties must be flat)
             display_name: item.persons?.display_name || item.display_name || item.full_name || item.contact_name || undefined,
-            // Remove nested objects (GeoJSON properties must be flat)
+            is_veteran: item.is_veteran ?? item.persons?.is_veteran,
+            is_first_responder: item.is_first_responder ?? item.persons?.is_first_responder,
+            has_disability: item.has_disability ?? item.persons?.has_disability,
+            has_pets: item.has_pets ?? item.persons?.has_pets,
+            phone: item.phone ?? item.persons?.phone,
             persons: undefined,
           },
         });
