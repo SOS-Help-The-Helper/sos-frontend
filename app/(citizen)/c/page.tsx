@@ -132,31 +132,44 @@ export default function CitizenMapPage() {
         let requestFeatures: any[] = [], resourceFeatures: any[] = [];
         const seenIds = new Set<string>();
         try {
-          const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-          const [a, efResp] = await Promise.all([
+          const ERV_DB = process.env.NEXT_PUBLIC_ERV_SUPABASE_URL || 'https://xbtrtztzaokeodarqvpr.supabase.co';
+          const ERV_ANON = process.env.NEXT_PUBLIC_ERV_ANON_KEY || '';
+          const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+
+          const [a, reqRes, resRes] = await Promise.all([
             getAlerts(lat, lng),
-            fetch(`${API_BASE}/functions/v1/map-data?lat=39&lng=-98&radius=3000`, {
-              headers: { 'Authorization': `Bearer ${API_KEY}` },
-            }),
+            fetch(`${ERV_DB}/functions/v1/partner-read`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${ERV_ANON}`, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query_type: 'recent_requests', limit: 3000 }),
+            }).then(r => r.json()).catch(() => ({ requests: [] })),
+            fetch(`${ERV_DB}/functions/v1/partner-read`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${ERV_ANON}`, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query_type: 'available_resources', limit: 1000 }),
+            }).then(r => r.json()).catch(() => ({ resources: [] })),
           ]);
           alertData = a;
-          const mapData = await efResp.json();
-          (mapData.requests || []).forEach((f: any) => {
-            if (f.properties?.id) seenIds.add(f.properties.id);
-            f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
-            requestFeatures.push(f);
+
+          (reqRes.requests || []).forEach((r: any) => {
+            if (!r.latitude && !r.lat) return;
+            if (!r.household_size) return;
+            requestFeatures.push({
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: [r.longitude || r.lng, r.latitude || r.lat] },
+              properties: { id: r.id, type: 'request', display_name: r.persons?.display_name || r.display_name, household_size: r.household_size, urgency: r.urgency, status: r.status },
+            });
           });
-          (mapData.resources || []).forEach((f: any) => {
-            if (f.properties?.id) seenIds.add(f.properties.id);
-            f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
-            resourceFeatures.push(f);
+
+          (resRes.resources || []).forEach((r: any) => {
+            if (!r.latitude && !r.lat) return;
+            resourceFeatures.push({
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: [r.longitude || r.lng, r.latitude || r.lat] },
+              properties: { id: r.id, type: 'resource', source_type: 'partner', description: r.description, capacity: r.capacity_available, status: r.status },
+            });
           });
-          (mapData.organizations || []).forEach((f: any) => {
-            if (f.properties?.id) seenIds.add(f.properties.id);
-            f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
-            resourceFeatures.push(f);
-          });
+
           setAlerts(alertData);
         } catch (err) {
           console.error('Map data load error:', err);
@@ -214,58 +227,8 @@ export default function CitizenMapPage() {
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
 
-        // === DETAIL FETCH ON ZOOM ===
-        // When zoomed to city level (>=10), fetch detailed data from map-data EF and merge
-        map.on('moveend', async () => {
-          if (destroyed) return;
-          const zoom = map.getZoom();
-          if (zoom < 10) return;
-          const center = map.getCenter();
-          try {
-            const API_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-            const resp = await fetch(`${API_BASE}/functions/v1/map-data?lat=${center.lat}&lng=${center.lng}&radius=25`, {
-              headers: { 'Authorization': `Bearer ${API_KEY}` },
-            });
-            const mapData = await resp.json();
-            let added = false;
-            (mapData.requests || []).forEach((f: any) => {
-              const id = f.properties?.id;
-              if (id && !seenIds.has(id)) {
-                seenIds.add(id);
-                f.properties = { ...f.properties, details: f.properties.text, type: 'request' };
-                requestFeaturesRef.current = [...requestFeaturesRef.current, f];
-                added = true;
-              }
-            });
-            (mapData.resources || []).forEach((f: any) => {
-              const id = f.properties?.id;
-              if (id && !seenIds.has(id)) {
-                seenIds.add(id);
-                f.properties = { ...f.properties, details: f.properties.text, capacity: f.properties.capacity, type: 'resource', source_type: 'sos' };
-                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
-                added = true;
-              }
-            });
-            (mapData.organizations || []).forEach((f: any) => {
-              const id = f.properties?.id;
-              if (id && !seenIds.has(id)) {
-                seenIds.add(id);
-                f.properties = { ...f.properties, type: 'resource', source_type: 'partner' };
-                resourceFeaturesRef.current = [...resourceFeaturesRef.current, f];
-                added = true;
-              }
-            });
-            if (added) {
-              const reqSrc = map.getSource('requests-source') as any;
-              if (reqSrc) reqSrc.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
-              const resSrc = map.getSource('resources-source') as any;
-              if (resSrc) resSrc.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
-            }
-          } catch (err) {
-            console.warn('Detail fetch error:', err);
-          }
-        });
+        // Detail fetch on zoom disabled — map-data EF retired May 4.
+        // All data loaded upfront from partner-read.
 
         // === DISASTERS SOURCE (navy, empty for now) ===
         map.addSource('disasters-source', {
