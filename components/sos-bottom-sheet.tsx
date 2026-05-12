@@ -272,7 +272,6 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
         {/* Opening state — branded welcome */}
         {sheetState !== 'collapsed' && messages.length === 0 && !isLoading && !fullScreen && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-4">
-            <img src="/logomark.png" alt="SOS" className="w-10 h-10 mb-3" />
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#EF4E4B] mb-2">SOS Agent</p>
             <p className="text-center text-sm text-white/60 mb-5">How can I help?</p>
             {context === 'partner' ? (
