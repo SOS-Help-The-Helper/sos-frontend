@@ -59,8 +59,9 @@ function urgencyBadge(score: number) {
 }
 
 function SurvivorCard({ item, onClick }: { item: any; onClick: (item: any) => void }) {
-  const name = item.full_name || item.display_name || 'Unknown';
-  const location = [item.city, item.state].filter(Boolean).join(', ');
+  const name = item.full_name || item.display_name || item.persons?.display_name || null;
+  const location = item.location_text || [item.city, item.state].filter(Boolean).join(', ') || null;
+  const hhSize = item.household_size ? `Family of ${item.household_size}` : null;
   const date = item.created_at
     ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
@@ -73,13 +74,14 @@ function SurvivorCard({ item, onClick }: { item: any; onClick: (item: any) => vo
       onClick={() => onClick(item)}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
-        <span className="text-sm font-medium text-white leading-tight">{name}</span>
+        <span className="text-sm font-medium text-white leading-tight">{name || `Request ${item.id?.slice(0, 8) || ''}`}</span>
         {badge && (
           <span className={`text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 ${badge.className}`}>
             {badge.label}
           </span>
         )}
       </div>
+      {hhSize && <p className="text-xs text-white/50 mb-0.5">{hhSize}</p>}
       {location && <p className="text-xs text-white/40 mb-1">{location}</p>}
       <div className="flex items-center justify-between mt-1">
         {date && <span className="text-[10px] text-white/20">{date}</span>}
@@ -116,21 +118,22 @@ function SurvivorsKanban({
 }
 
 function VolunteerCard({ item, onClick }: { item: any; onClick: (item: any) => void }) {
-  const name = item.full_name || item.display_name || 'Unknown';
-  const location = [item.city, item.state].filter(Boolean).join(', ');
+  const name = item.full_name || item.display_name || item.persons?.display_name || null;
+  const location = item.location_text || [item.city, item.state].filter(Boolean).join(', ') || null;
   const skills = Array.isArray(item.tow_capability) && item.tow_capability.length > 0
     ? item.tow_capability.join(', ')
-    : 'No skills listed';
+    : null;
+  const phone = item.phone || item.persons?.phone || null;
 
   return (
     <div
       className="bg-white/5 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-colors border border-white/10"
       onClick={() => onClick(item)}
     >
-      <p className="text-sm font-medium text-white leading-tight mb-1">{name}</p>
+      <p className="text-sm font-medium text-white leading-tight mb-1">{name || 'Driver'}</p>
+      {item.description && <p className="text-xs text-white/50 mb-1">{item.description}</p>}
       {location && <p className="text-xs text-white/40 mb-1">{location}</p>}
-      <p className="text-xs text-white/30 mb-1">{skills}</p>
-      {item.phone && <p className="text-[10px] text-white/20">{item.phone}</p>}
+      {skills && <p className="text-xs text-white/30 mb-1">{skills}</p>}
     </div>
   );
 }
@@ -158,7 +161,7 @@ function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) 
   const stars = item.condition_rating
     ? '★'.repeat(item.condition_rating) + '☆'.repeat(5 - item.condition_rating)
     : null;
-  const location = item.current_lot || item.location_text || 'Location unknown';
+  const location = item.current_lot || item.location_text || [item.city, item.state].filter(Boolean).join(', ') || null;
 
   return (
     <div
@@ -169,7 +172,7 @@ function RVCard({ item, onClick }: { item: any; onClick: (item: any) => void }) 
       {item.length_ft && <p className="text-xs text-white/40 mb-1">{item.length_ft} ft</p>}
       {vin && <p className="text-[10px] text-white/20 mb-1">{vin}</p>}
       {stars && <p className="text-xs text-yellow-400 mb-1">{stars}</p>}
-      <p className="text-[10px] text-white/30">{location}</p>
+      {location && <p className="text-[10px] text-white/30">{location}</p>}
     </div>
   );
 }
