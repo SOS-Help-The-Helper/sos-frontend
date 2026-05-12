@@ -123,7 +123,6 @@ export const api = {
   writeInventory: (data: Record<string, unknown>) =>
     efCall('inventory-write', data),
 
-  // Notifications (replaces lib/notifications.ts direct DB queries)
   getNotifications: (orgId: string) =>
     efCall('sos-notify', { org_id: orgId, action: 'list' }),
 
