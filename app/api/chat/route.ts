@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, stepCountIs } from 'ai';
 import { sanitize } from '@/lib/pii-sanitizer';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
@@ -248,7 +248,8 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     model: anthropic('claude-sonnet-4-20250514'),
     system: activeSystemPrompt,
     messages,
-    tools: getChatTools({ personId }),
+    // Don't pass tools for join flow (pure conversation)
+    ...(joinFlow ? {} : { tools: getChatTools({ personId, userLat, userLng }), stopWhen: stepCountIs(5) }),
   });
 
   return result.toUIMessageStreamResponse();
