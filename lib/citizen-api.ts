@@ -1,4 +1,3 @@
-// TODO: migrate all queries to use taxonomy_code as primary filter, category as fallback
 /**
  * Citizen API helpers — calls Supabase edge functions.
  * Never calls Supabase directly for operational data.
