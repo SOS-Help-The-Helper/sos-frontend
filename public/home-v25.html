@@ -438,7 +438,13 @@
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.15s ease;
   }
+  .hero-cta:hover { background-color: rgba(255, 255, 255, 0.06); }
+  .hero-cta:hover > span { border-bottom-color: currentColor !important; }
+  .hero-cta:active { transform: translateY(1px); }
 
   /* ── Are you heading ── */
   .are-you-heading {
@@ -629,10 +635,10 @@
         <span id="heroSosText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.6); letter-spacing: 0.15em; z-index: 3; padding-right: 0.18em; margin-left: 2px; opacity: 0;">SOS</span>
       </div>
       <div id="heroTagline" style="opacity: 0; margin-top: 80px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
-        <div class="tag-word" style="opacity: 0; display: flex; align-items: center; gap: 32px;">
-          <a href="/c?flow=get-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(239,78,75,0.4);">Get Help</a>
+        <div class="tag-word" style="opacity: 0; display: flex; align-items: center; gap: 16px;">
+          <a href="/c?flow=get-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; padding: 14px 16px;"><span style="border-bottom: 1.5px solid rgba(239,78,75,0.4); padding-bottom: 4px;">Get Help</span></a>
           <span style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></span>
-          <a href="/c?flow=give-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; transition: opacity 0.3s; padding: 8px 0; border-bottom: 1.5px solid rgba(137,207,240,0.3);">Give Help</a>
+          <a href="/c?flow=give-help" class="hero-cta" style="font-family: 'Nunito Sans', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #89CFF0; text-decoration: none; padding: 14px 16px;"><span style="border-bottom: 1.5px solid rgba(137,207,240,0.3); padding-bottom: 4px;">Give Help</span></a>
         </div>
         <a href="#crisis" class="tag-word" id="learnMoreLink" style="opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
           <span style="font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Learn more</span>
