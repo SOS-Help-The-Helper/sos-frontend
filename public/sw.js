@@ -3,27 +3,23 @@
  *
  * Cache strategy:
  *   Static assets: cache-first (CSS, JS, images, fonts)
- *   Citizen pages: stale-while-revalidate (home, help, offer, readiness)
+ *   App routes: stale-while-revalidate (home, /c citizen map, /app partner portal)
  *   API/EF calls: network-first, fall back to cached
  *   Person data: cached after first load (risk profile, contacts, route)
  *   New requests: queued offline via IndexedDB, synced on reconnect
  */
 
-const CACHE_NAME = 'sos-v2';
+// Bump cache name so existing PWA installs drop the old (stale) pre-cache on activate.
+const CACHE_NAME = 'sos-v3';
 const PERSON_CACHE = 'sos-person-v1';
 
 const STATIC_ASSETS = [
+  '/',
   '/c',
-  '/help',
-  '/offer',
-  '/readiness',
-  '/community',
-  '/matches',
-  '/find',
-  '/chat',
-  '/invite',
+  '/app',
   '/logomark.svg',
   '/logomark.png',
+  '/logomark-red.svg',
   '/manifest.json',
 ];
 
@@ -35,10 +31,14 @@ const PERSON_DATA_PATTERNS = [
   '/functions/v1/alerts-feed',
 ];
 
-// Install: pre-cache critical assets
+// Install: pre-cache critical assets.
+// Add each entry individually so a single 404 doesn't reject the whole install
+// (previously the entire SW install failed if any asset returned non-200).
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(STATIC_ASSETS.map((url) => cache.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
