@@ -4,10 +4,15 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
 import "./globals.css";
 
+// Use the prod canonical when set (production), the Vercel preview URL on previews,
+// and fall back to the prod canonical for local dev / unset env so OG image probes still resolve.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
+  ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://sosconnect.org');
+
 export const metadata: Metadata = {
   title: "SOS | Connect",
   description: "Everyone is a helper. A free public platform connecting people in need with helpers during disasters.",
-  metadataBase: new URL('https://sosconnect.org'),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "SOS | Community Coordination",
     description: "Everyone is a helper. We help the helpers.",
