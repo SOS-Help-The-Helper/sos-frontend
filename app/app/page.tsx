@@ -178,7 +178,10 @@ function PartnerMapPageInner() {
       destroyed = true;
       if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
     };
-  }, []);
+    // Re-init when disaster scope changes so the map recenters and refetches
+    // with the new disaster_id filter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disaster?.id]);
 
   // Toggle layer visibility when filter changes
   useEffect(() => {
