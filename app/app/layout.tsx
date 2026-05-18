@@ -56,7 +56,7 @@ export default async function AppLayout(props: {
   }
 
   return (
-    <PartnerShell orgSlug={org.slug}>
+    <PartnerShell orgSlug={org.slug} orgId={org.id}>
       <PartnerLayoutClient
         orgId={org.id}
         orgName={org.name}
