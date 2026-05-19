@@ -1,27 +1,97 @@
 'use client';
 
+import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
-import { shifts, orgs } from "@/lib/prototype-data";
+import { shifts as protoShifts, orgs } from "@/lib/prototype-data";
 import { Plus, Users } from "lucide-react";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
-const days = [
-  { label: "Mon", date: "Mar 16" },
-  { label: "Tue", date: "Mar 17" },
-  { label: "Wed", date: "Mar 18" },
-  { label: "Thu", date: "Mar 19" },
-  { label: "Fri", date: "Mar 20" },
-  { label: "Sat", date: "Mar 21" },
-  { label: "Sun", date: "Mar 22" },
-];
+type Shift = {
+  id: string;
+  title: string;
+  date: string; // "Mar 18"
+  time: string;
+  slots: number;
+  filled: number;
+  org: string;
+};
+
+function getWeekBounds(): { weekStart: string; weekEnd: string; days: { label: string; date: string; iso: string }[] } {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((day + 6) % 7));
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const label = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i];
+    const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const iso = d.toISOString().slice(0, 10);
+    return { label, date, iso };
+  });
+  return { weekStart: days[0].iso, weekEnd: days[6].iso, days };
+}
+
+function mapEventsToShifts(data: unknown): Shift[] {
+  if (!Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[]).map((e, i) => {
+    const startIso = String(e.start_time ?? e.starts_at ?? e.date ?? "");
+    let date = "";
+    if (startIso) {
+      const d = new Date(startIso);
+      if (!isNaN(d.getTime())) {
+        date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      }
+    }
+    const endIso = String(e.end_time ?? e.ends_at ?? "");
+    let timeStr = String(e.time ?? "");
+    if (!timeStr && startIso && endIso) {
+      const fmt = (s: string) => {
+        const d = new Date(s);
+        return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).replace(":00", "").toLowerCase().replace(" ", "");
+      };
+      timeStr = `${fmt(startIso)}–${fmt(endIso)}`;
+    }
+    return {
+      id: String(e.id ?? e.event_id ?? `EV-${i + 1}`),
+      title: String(e.title ?? e.name ?? e.event_type ?? "Event"),
+      date,
+      time: timeStr,
+      slots: Number(e.slots ?? e.capacity ?? e.max_volunteers ?? 0),
+      filled: Number(e.filled ?? e.registered ?? e.volunteer_count ?? 0),
+      org: String(e.org_id ?? e.org ?? ""),
+    };
+  });
+}
+
+const { weekStart, weekEnd, days: WEEK_DAYS } = getWeekBounds();
+const WEEK_LABEL = `Week of ${WEEK_DAYS[0].date}, ${new Date(weekStart).getFullYear()}`;
 
 export default function CalendarPage() {
+  const { orgId } = useAuthContext();
+  const [shifts, setShifts] = useState<Shift[]>(protoShifts);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmEventsList(orgId, { from: weekStart, to: weekEnd })
+      .then((res) => {
+        const raw = (res as Record<string, unknown>)?.data ?? res;
+        const items = mapEventsToShifts(Array.isArray(raw) ? raw : []);
+        if (items.length) setShifts(items);
+      })
+      .catch(() => {
+        // fallback to prototype data already set
+      });
+  }, [orgId]);
+
   return (
     <CrmShell module="Calendar">
       <ManageTabs />
       <PageHeader
         title="Calendar"
-        subtitle="Week of Mar 16, 2026"
+        subtitle={WEEK_LABEL}
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Plus size={12} /> New shift
@@ -31,7 +101,7 @@ export default function CalendarPage() {
       <div className="px-6 pt-6 pb-10">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/8">
-            {days.map((d) => (
+            {WEEK_DAYS.map((d) => (
               <div key={d.label} className="p-3 text-center border-r border-white/5 last:border-r-0">
                 <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{d.label}</p>
                 <p className="text-[15px] font-semibold mt-0.5">{d.date.split(" ")[1]}</p>
@@ -39,7 +109,7 @@ export default function CalendarPage() {
             ))}
           </div>
           <div className="grid grid-cols-7 min-h-[340px]">
-            {days.map((d) => {
+            {WEEK_DAYS.map((d) => {
               const dayShifts = shifts.filter((s) => s.date === d.date);
               return (
                 <div key={d.label} className="p-2 border-r border-white/5 last:border-r-0 space-y-2">
