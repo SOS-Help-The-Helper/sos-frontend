@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Users, LayoutGrid, Map, Package, Calendar, BarChart3, Radio,
-  Sparkles, Settings, ChevronsLeft, ChevronsRight, ChevronDown,
+  Sparkles, Settings, ChevronsLeft, ChevronsRight, ChevronDown, Truck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { CommandPalette } from "@/components/command-palette";
@@ -26,6 +26,7 @@ const groups: NavGroup[] = [
     id: "ops",
     label: "Ops",
     items: [
+      { href: "/transport", icon: Truck, label: "Transport", matchPrefix: "/transport" },
       { href: "/inventory", icon: Package, label: "Inventory", matchPrefix: "/inventory" },
       { href: "/calendar", icon: Calendar, label: "Calendar", matchPrefix: "/calendar" },
     ],
