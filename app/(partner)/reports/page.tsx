@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
