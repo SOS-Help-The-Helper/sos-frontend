@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { AiSummary } from "@/components/crm/ai-summary";
 import {
@@ -10,6 +10,7 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
 import { resources, type ResourceDetail } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
 import { User, MapPin, Package, Calendar, GitBranch } from "lucide-react";
 
 type HistEntry = ResourceDetail["history"][number];
@@ -18,7 +19,39 @@ export default function ResourcePage() {
   const params = useParams();
   const id = params.id as string;
 
-  const r = useMemo(() => resources.find((x) => x.id === id), [id]);
+  const proto = useMemo(() => resources.find((x) => x.id === id), [id]);
+  const [liveData, setLiveData] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    api.from("resources").select("*").eq("id", id).single().then(({ data }) => {
+      if (data) setLiveData(data);
+    });
+  }, [id]);
+
+  const r: ResourceDetail | null = useMemo(() => {
+    if (liveData) {
+      const loc = liveData.locations as Record<string, unknown> | null | undefined;
+      const locationText = loc
+        ? [loc.street_address, loc.city, loc.state].filter(Boolean).join(", ")
+        : (liveData.latitude && liveData.longitude ? `${liveData.latitude}, ${liveData.longitude}` : "Unknown");
+      return {
+        id: liveData.id as string,
+        title: (liveData.taxonomy_code as string) ?? "Resource",
+        taxonomy: liveData.category as string,
+        status: (liveData.status as ResourceDetail["status"]) ?? "available",
+        ownerName: liveData.org_id as string,
+        ownerId: liveData.org_id as string,
+        org: undefined,
+        location: locationText,
+        capacity: liveData.capacity_available != null
+          ? `${liveData.capacity_available} / ${liveData.capacity_total ?? "?"}`
+          : "Unknown",
+        matchedTo: undefined,
+        history: [],
+      } as ResourceDetail;
+    }
+    return proto ?? null;
+  }, [liveData, proto]);
 
   if (!r) {
     return (

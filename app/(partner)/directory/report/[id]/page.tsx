@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { AiSummary } from "@/components/crm/ai-summary";
 import {
@@ -10,6 +10,7 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
 import { reports, type ReportDetail } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
 import { MapPin, ShieldCheck, Camera, User, AlertTriangle, Calendar } from "lucide-react";
 
 const SEV: Record<ReportDetail["severity"], string> = {
@@ -22,7 +23,39 @@ export default function ReportPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const r = useMemo(() => reports.find((x) => x.id === id), [id]);
+  const proto = useMemo(() => reports.find((x) => x.id === id), [id]);
+  const [liveData, setLiveData] = useState<ReportDetail | null>(null);
+
+  useEffect(() => {
+    api.getReports().then(({ data }) => {
+      if (!data) return;
+      const found = data.find((r: Record<string, unknown>) => r.id === id);
+      if (!found) return;
+      const sevMap: Record<string, ReportDetail["severity"]> = {
+        critical: "Critical", elevated: "Elevated", routine: "Routine",
+      };
+      const rawSev = (found.severity as string | undefined)?.toLowerCase() ?? "";
+      setLiveData({
+        id: found.id as string,
+        taxonomy: found.category as string,
+        severity: sevMap[rawSev] ?? "Routine",
+        reporterId: "",
+        reporterName: "Unknown",
+        location: found.latitude && found.longitude
+          ? `${found.latitude}, ${found.longitude}`
+          : "Unknown",
+        disaster: "",
+        date: found.created_at
+          ? new Date(found.created_at as string).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : "Unknown",
+        verifiedBy: found.verification_status === "verified" ? "Verified" : undefined,
+        corroborators: 0,
+        resolution: found.status === "resolved" ? "Resolved" : undefined,
+      });
+    });
+  }, [id]);
+
+  const r: ReportDetail | null = liveData ?? proto ?? null;
 
   if (!r) {
     return (
