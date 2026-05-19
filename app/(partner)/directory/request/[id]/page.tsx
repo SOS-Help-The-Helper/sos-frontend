@@ -12,13 +12,14 @@ import {
 import { UrgencyBadge, SubStatusPill } from "@/components/crm/pills";
 import {
   requests, matches as protoMatches, deliveries, cases,
+  transportAssignments, orgTransportConfig, TRANSPORT_STATUS_LABEL,
   type ReqDetail, type MatchCandidate, type DeliveryDetail,
 } from "@/lib/prototype-data";
 import { api } from "@/lib/api";
 import {
   MapPin, Calendar, User, Check, X, Camera, Truck, Package,
   ShieldCheck, Phone, MessageSquare, MoreHorizontal, Sparkles,
-  StickyNote, Users, GitBranch,
+  StickyNote, Users, GitBranch, ExternalLink,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -266,38 +267,83 @@ function RequestTabs({
       count: r.notes.length + (delivery ? delivery.steps.length : 0),
       content: (
         <div className="space-y-5">
-          {delivery && (
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">
-                Delivery · {delivery.origin} → {delivery.destination}
-              </p>
-              <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
-                {delivery.steps.map((s, i) => {
-                  const past = delivery.steps.findIndex((x) => x.key === delivery.current) >= i;
-                  const isCurrent = s.key === delivery.current;
-                  const Icon = s.key === "picked_up" || s.key === "delivered" ? Camera : s.key === "in_transit" ? Truck : s.key === "confirmed" ? ShieldCheck : Package;
-                  const color = past ? "#34D399" : "rgba(245,235,214,0.35)";
-                  return (
-                    <li key={s.key} className="relative">
-                      <span
-                        className={`absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
-                        style={{ background: past ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
-                      >
-                        <Icon size={12} style={{ color }} />
-                      </span>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
-                          {s.label}
-                        </p>
-                        <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>
-                      </div>
-                      {s.location && <p className="font-mono text-[10px] text-white/45 mt-0.5">{s.location}</p>}
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-          )}
+          {delivery && (() => {
+            const ta = transportAssignments.find(t => t.resourceId === delivery.resourceId);
+            const cfg = ta ? orgTransportConfig[ta.org] : null;
+            const pipeline = cfg?.statusPipeline ?? [];
+            const currentIdx = ta ? pipeline.indexOf(ta.status) : -1;
+            return (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
+                    Delivery · {delivery.origin} → {delivery.destination}
+                    {ta && <span className="ml-2 text-white/35">· {ta.id}</span>}
+                  </p>
+                  {ta && (
+                    <Link
+                      href={`/drive/${ta.id}`}
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
+                    >
+                      <ExternalLink size={10} /> Driver page
+                    </Link>
+                  )}
+                </div>
+                {ta && pipeline.length > 0 ? (
+                  <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-6">
+                    {pipeline.map((s, i) => {
+                      const past = i < currentIdx;
+                      const isCurrent = i === currentIdx;
+                      const color = past || isCurrent ? "#34D399" : "rgba(245,235,214,0.35)";
+                      const hist = ta.statusHistory.find(h => h.status === s);
+                      return (
+                        <li key={s} className="relative">
+                          <span
+                            className={`absolute -left-[30px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
+                            style={{ background: past || isCurrent ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                          </span>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[12.5px] font-medium" style={{ color: past || isCurrent ? "white" : "rgba(255,255,255,0.5)" }}>
+                              {TRANSPORT_STATUS_LABEL[s]}
+                              {hist?.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
+                            </p>
+                            <span className="font-mono text-[10px] text-white/40">{hist?.timestamp ?? ""}</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
+                    {delivery.steps.map((s, i) => {
+                      const past = delivery.steps.findIndex((x) => x.key === delivery.current) >= i;
+                      const isCurrent = s.key === delivery.current;
+                      const Icon = s.key === "picked_up" || s.key === "delivered" ? Camera : s.key === "in_transit" ? Truck : s.key === "confirmed" ? ShieldCheck : Package;
+                      const color = past ? "#34D399" : "rgba(245,235,214,0.35)";
+                      return (
+                        <li key={s.key} className="relative">
+                          <span
+                            className={`absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
+                            style={{ background: past ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
+                          >
+                            <Icon size={12} style={{ color }} />
+                          </span>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
+                              {s.label}
+                            </p>
+                            <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>
+                          </div>
+                          {s.location && <p className="font-mono text-[10px] text-white/45 mt-0.5">{s.location}</p>}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+            );
+          })()}
           <div>
             <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Activity</p>
             <div className="divide-y divide-[var(--hairline)]">

@@ -9,9 +9,9 @@ import {
   DetailTopBar, IdentityBand, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
-import { resources, type ResourceDetail } from "@/lib/prototype-data";
+import { resources, assetEvents, type ResourceDetail } from "@/lib/prototype-data";
 import { api } from "@/lib/api";
-import { User, MapPin, Package, Calendar, GitBranch } from "lucide-react";
+import { User, MapPin, Package, Calendar, GitBranch, ArrowRight } from "lucide-react";
 
 type HistEntry = ResourceDetail["history"][number];
 
@@ -65,6 +65,8 @@ export default function ResourcePage() {
   const statusColor =
     r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#F5EBD6";
 
+  const events = assetEvents.filter(e => e.resourceId === r.id);
+
   const tabs: DetailTab[] = [
     {
       key: "timeline",
@@ -86,6 +88,39 @@ export default function ResourcePage() {
               </div>
             </li>
           ))}
+        </ol>
+      ),
+    },
+    {
+      key: "asset_history",
+      label: "Asset history",
+      count: events.length,
+      content: events.length === 0 ? (
+        <EmptyTab label="No asset events recorded." />
+      ) : (
+        <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-5">
+          {events.map((e) => {
+            const color =
+              e.eventType === "status_change" ? "#89CFF0" :
+              e.eventType === "location_move" ? "#34D399" :
+              e.eventType === "condition_update" ? "#F5EBD6" :
+              e.eventType === "assignment" ? "#EF4E4B" : "white";
+            return (
+              <li key={e.id} className="relative">
+                <span className="absolute -left-[28px] top-0.5 w-4 h-4 rounded-full ring-4 ring-[var(--surface-1)]" style={{ background: `${color}33` }}>
+                  <span className="absolute inset-1 rounded-full" style={{ background: color }} />
+                </span>
+                <p className="font-mono text-[9.5px] uppercase tracking-wider" style={{ color }}>{e.eventType.replace(/_/g, " ")}</p>
+                <p className="text-[12.5px] text-white/85 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  {e.fromStatus && e.toStatus && (<><span>{e.fromStatus}</span><ArrowRight size={10} className="text-white/35" /><span>{e.toStatus}</span></>)}
+                  {e.fromLocation && e.toLocation && (<><span>{e.fromLocation}</span><ArrowRight size={10} className="text-white/35" /><span>{e.toLocation}</span></>)}
+                  {!e.fromStatus && !e.fromLocation && e.notes}
+                </p>
+                {e.notes && (e.fromStatus || e.fromLocation) && <p className="text-[11.5px] text-white/55 mt-0.5">{e.notes}</p>}
+                <p className="font-mono text-[9.5px] text-white/40 mt-1">{e.performedBy} <span className="text-white/25">·</span> {e.actorType} <span className="text-white/25">·</span> {e.timestamp}</p>
+              </li>
+            );
+          })}
         </ol>
       ),
     },
