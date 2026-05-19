@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
@@ -9,8 +9,10 @@ import {
   DetailTopBar, IdentityBand, DetailSection, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
-import { umbrella, cases, orgs, matches, STATUS_LABEL } from "@/lib/prototype-data";
+import { umbrella as umbrellaProto, cases, orgs, matches, STATUS_LABEL, type MatchCandidate } from "@/lib/prototype-data";
 import { UrgencyBadge } from "@/components/crm/pills";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 import {
   Phone, MessageSquare, MapPin, Users, Plus, AlertTriangle,
   CheckCircle2, FileText, Send, MoreHorizontal, Inbox, Route as RouteIcon,
@@ -34,15 +36,161 @@ const NEED_STATE: Record<string, { label: string; fg: string; bg: string }> = {
   resolved:    { label: "Resolved",    fg: "#34D399", bg: "rgba(52,211,153,0.14)" },
 };
 
+function LoadingSkeleton() {
+  return (
+    <CrmShell module="Cases">
+      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <main className="max-w-[960px] mx-auto px-6 py-7 space-y-5 animate-pulse">
+        {/* Identity band skeleton */}
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-white/10 shrink-0" />
+          <div className="flex-1 space-y-2 pt-1">
+            <div className="h-2.5 w-24 bg-white/10 rounded" />
+            <div className="h-5 w-40 bg-white/15 rounded" />
+            <div className="flex gap-2 mt-2">
+              <div className="h-5 w-24 bg-white/8 rounded-full" />
+              <div className="h-5 w-20 bg-white/8 rounded-full" />
+            </div>
+          </div>
+        </div>
+        {/* KPI strip skeleton */}
+        <div className="grid grid-cols-4 gap-px bg-[var(--hairline)] rounded-xl overflow-hidden">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-[var(--surface-1)] px-4 py-3 space-y-1.5">
+              <div className="h-2 w-14 bg-white/10 rounded" />
+              <div className="h-6 w-8 bg-white/15 rounded" />
+            </div>
+          ))}
+        </div>
+        {/* Summary skeleton */}
+        <div className="rounded-xl bg-white/4 border border-[var(--hairline)] p-4 space-y-2">
+          <div className="h-2.5 w-full bg-white/10 rounded" />
+          <div className="h-2.5 w-4/5 bg-white/10 rounded" />
+          <div className="h-2.5 w-3/5 bg-white/10 rounded" />
+        </div>
+        {/* Tabs skeleton */}
+        <div className="rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 space-y-3">
+          <div className="flex gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-3 w-16 bg-white/10 rounded" />
+            ))}
+          </div>
+          <div className="h-px bg-[var(--hairline)]" />
+          <div className="space-y-3 pt-1">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-3">
+                <div className="w-7 h-7 rounded-full bg-white/8 shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-2.5 w-32 bg-white/10 rounded" />
+                  <div className="h-2.5 w-48 bg-white/8 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    </CrmShell>
+  );
+}
+
 export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
   const isUmbrella = id.startsWith("U-");
-  const childCases = isUmbrella ? cases.filter((c) => umbrella.children.includes(c.id)) : cases.filter((c) => c.id === id);
+  const { orgId } = useAuthContext();
+
+  const [umbrellaData, setUmbrellaData] = useState(umbrellaProto);
+  const [childCasesData, setChildCasesData] = useState<typeof cases>(() =>
+    isUmbrella
+      ? cases.filter((c) => umbrellaProto.children.includes(c.id))
+      : cases.filter((c) => c.id === id)
+  );
+  const [liveMatches, setLiveMatches] = useState<MatchCandidate[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
-  const orgsInvolved = new Set(childCases.map((c) => c.org)).size;
-  const resolvedCount = childCases.filter((c) => c.status === "fulfilled" || c.status === "closed").length;
-  const fulfillment = childCases.length ? Math.round((resolvedCount / childCases.length) * 100) : 0;
+  const [postingNote, setPostingNote] = useState(false);
+
+  useEffect(() => {
+    const efParams = isUmbrella ? { person_id: id } : { request_id: id };
+    api.crmCasesDetail(efParams)
+      .then((data: any) => {
+        if (!data) return;
+        // Map timeline events if present
+        if (data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0) {
+          setUmbrellaData((prev) => ({
+            ...prev,
+            timeline: data.timeline.map((t: any) => ({
+              t: t.time ?? t.t ?? "",
+              date: t.date ?? "",
+              who: t.who ?? t.author ?? "",
+              actor: t.actor ?? t.actor_id ?? "",
+              kind: t.kind ?? t.event_type ?? "note",
+              msg: t.msg ?? t.text ?? t.message ?? "",
+              caseId: t.case_id ?? t.caseId ?? null,
+            })),
+          }));
+        }
+        // Map requests/child cases if present
+        if (data.requests && Array.isArray(data.requests) && data.requests.length > 0) {
+          const mapped = data.requests.map((r: any) => ({
+            id: r.id,
+            citizen: r.citizen ?? r.person_name ?? "",
+            county: r.county ?? "",
+            taxonomy: Array.isArray(r.taxonomy) ? r.taxonomy : [r.taxonomy_code ?? r.category ?? ""],
+            status: r.status ?? "active",
+            urgency: r.urgency ?? "medium",
+            org: r.org_id ?? r.org ?? "",
+            opened: r.opened ?? r.created_at ?? "",
+            daysOpen: r.days_open ?? 0,
+            umbrella: r.umbrella_id ?? null,
+            assignedTo: r.assigned_to ?? null,
+            matchCount: r.match_count ?? 0,
+          }));
+          setChildCasesData(mapped as typeof cases);
+        }
+        // Map matches if present
+        if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
+          setLiveMatches(
+            data.matches.map((m: any): MatchCandidate => ({
+              id: m.id ?? m.match_id,
+              title: m.title ?? m.resource_name ?? m.id,
+              blurb: m.blurb ?? m.description ?? "",
+              score: m.score ?? 0,
+              breakdown: m.breakdown ?? { category: 0, distance: 0, urgency: 0, capacity: 0, trust: 0 },
+              approved: m.approved ?? false,
+              rationale: m.rationale ?? "",
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id, isUmbrella]);
+
+  const handlePostNote = useCallback(async () => {
+    const text = note.trim();
+    if (!text) return;
+    setPostingNote(true);
+    try {
+      const requestId = isUmbrella ? (childCasesData[0]?.id ?? id) : id;
+      await api.crmCaseAction("add_note", {
+        request_id: requestId,
+        author_id: orgId,
+        text,
+      });
+      setNote("");
+    } catch {
+      // fall through — note stays in input so user can retry
+    } finally {
+      setPostingNote(false);
+    }
+  }, [note, id, isUmbrella, childCasesData, orgId]);
+
+  if (loading) return <LoadingSkeleton />;
+
+  const orgsInvolved = new Set(childCasesData.map((c) => c.org)).size;
+  const resolvedCount = childCasesData.filter((c) => c.status === "fulfilled" || c.status === "closed").length;
+  const fulfillment = childCasesData.length ? Math.round((resolvedCount / childCasesData.length) * 100) : 0;
 
   return (
     <CrmShell module="Cases">
@@ -52,25 +200,25 @@ export default function UmbrellaView() {
         <IdentityBand
           avatar={
             <div className="w-14 h-14 rounded-2xl bg-[#EF4E4B]/15 text-[#EF4E4B] flex items-center justify-center text-[18px] font-semibold">
-              {umbrella.citizen.name.split(" ").map((s) => s[0]).join("")}
+              {umbrellaData.citizen.name.split(" ").map((s) => s[0]).join("")}
             </div>
           }
-          eyebrow={<span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Umbrella · {umbrella.id}</span>}
+          eyebrow={<span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Umbrella · {umbrellaData.id}</span>}
           pills={
             <>
-              <UrgencyBadge urgency={umbrella.urgency} />
+              <UrgencyBadge urgency={umbrellaData.urgency} />
               <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#89CFF0]/15 text-[#89CFF0]">
-                {umbrella.status}
+                {umbrellaData.status}
               </span>
             </>
           }
-          title={umbrella.citizen.name}
+          title={umbrellaData.citizen.name}
           chips={
             <>
-              <MetaChip icon={Phone}>{umbrella.citizen.phone}</MetaChip>
-              <MetaChip icon={MapPin}>{umbrella.citizen.county} County</MetaChip>
-              <MetaChip icon={Users}>Household of {umbrella.citizen.household}</MetaChip>
-              <MetaChip icon={Calendar}>Filed {umbrella.filedAt}</MetaChip>
+              <MetaChip icon={Phone}>{umbrellaData.citizen.phone}</MetaChip>
+              <MetaChip icon={MapPin}>{umbrellaData.citizen.county} County</MetaChip>
+              <MetaChip icon={Users}>Household of {umbrellaData.citizen.household}</MetaChip>
+              <MetaChip icon={Calendar}>Filed {umbrellaData.filedAt}</MetaChip>
             </>
           }
           actions={
@@ -87,40 +235,62 @@ export default function UmbrellaView() {
 
         {/* KPI strip */}
         <div className="grid grid-cols-4 gap-px bg-[var(--hairline)] rounded-xl overflow-hidden">
-          <Kpi label="Child cases" value={childCases.length} />
+          <Kpi label="Child cases" value={childCasesData.length} />
           <Kpi label="Orgs involved" value={orgsInvolved} />
           <Kpi label="Fulfilled" value={`${fulfillment}%`} accent={fulfillment === 100 ? "#34D399" : "#F5EBD6"} />
           <Kpi label="Days open" value={3} />
         </div>
 
         <AiSummary
-          id={umbrella.id}
-          summary={`Umbrella case for ${umbrella.citizen.name} (household of ${umbrella.citizen.household}, ${umbrella.citizen.county} County) filed ${umbrella.filedAt}. ${childCases.length} child case${childCases.length === 1 ? "" : "s"} spanning ${umbrella.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrella.needs.find((n) => n.state === "unmet") ? `; ${umbrella.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrella.citizen.notes}`}
+          id={umbrellaData.id}
+          summary={`Umbrella case for ${umbrellaData.citizen.name} (household of ${umbrellaData.citizen.household}, ${umbrellaData.citizen.county} County) filed ${umbrellaData.filedAt}. ${childCasesData.length} child case${childCasesData.length === 1 ? "" : "s"} spanning ${umbrellaData.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrellaData.needs.find((n) => n.state === "unmet") ? `; ${umbrellaData.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrellaData.citizen.notes}`}
         />
 
-        <CaseTabs note={note} setNote={setNote} childCases={childCases} />
+        <CaseTabs
+          note={note}
+          setNote={setNote}
+          childCases={childCasesData}
+          umbrellaData={umbrellaData}
+          liveMatches={liveMatches}
+          onPostNote={handlePostNote}
+          postingNote={postingNote}
+        />
       </main>
     </CrmShell>
   );
 }
 
 function CaseTabs({
-  note, setNote, childCases,
+  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote,
 }: {
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
+  umbrellaData: typeof umbrellaProto;
+  liveMatches: MatchCandidate[] | null;
+  onPostNote: () => void;
+  postingNote: boolean;
 }) {
   const allMatchIds = Array.from(new Set(childCases.flatMap(() => Object.keys(matches))));
-  const aggMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
-  const noteEvents = umbrella.timeline.filter((t) => t.kind === "note");
+  const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
+  const aggMatches = liveMatches ?? protoMatches;
+  const noteEvents = umbrellaData.timeline.filter((t) => t.kind === "note");
 
   const tabs: DetailTab[] = [
     {
       key: "timeline",
       label: "Timeline",
-      count: umbrella.timeline.length,
-      content: <TimelineTab note={note} setNote={setNote} childCases={childCases} />,
+      count: umbrellaData.timeline.length,
+      content: (
+        <TimelineTab
+          note={note}
+          setNote={setNote}
+          childCases={childCases}
+          umbrellaData={umbrellaData}
+          onPostNote={onPostNote}
+          postingNote={postingNote}
+        />
+      ),
     },
     {
       key: "requests",
@@ -192,7 +362,7 @@ function CaseTabs({
             </div>
           ))}
           <div className="pt-3 mt-3 border-t border-[var(--hairline)]">
-            <p className="text-[12.5px] text-white/75 leading-relaxed">{umbrella.citizen.notes}</p>
+            <p className="text-[12.5px] text-white/75 leading-relaxed">{umbrellaData.citizen.notes}</p>
           </div>
         </div>
       ) : (
@@ -220,8 +390,15 @@ function CaseTabs({
 }
 
 function TimelineTab({
-  note, setNote, childCases,
-}: { note: string; setNote: (v: string) => void; childCases: typeof cases }) {
+  note, setNote, childCases, umbrellaData, onPostNote, postingNote,
+}: {
+  note: string;
+  setNote: (v: string) => void;
+  childCases: typeof cases;
+  umbrellaData: typeof umbrellaProto;
+  onPostNote: () => void;
+  postingNote: boolean;
+}) {
   return (
     <div className="-m-4">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--hairline)] bg-white/[0.02]">
@@ -231,13 +408,18 @@ function TimelineTab({
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a note, status update, or @mention an org…"
           className="flex-1 bg-transparent text-[13px] placeholder:text-white/35 focus:outline-none"
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && note.trim()) onPostNote(); }}
         />
-        <button className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40" disabled={!note.trim()}>
-          <Send size={11} /> Post
+        <button
+          onClick={onPostNote}
+          disabled={!note.trim() || postingNote}
+          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40"
+        >
+          <Send size={11} /> {postingNote ? "Posting…" : "Post"}
         </button>
       </div>
       <ol className="relative">
-        {[...umbrella.timeline].reverse().map((t, i, arr) => {
+        {[...umbrellaData.timeline].reverse().map((t, i, arr) => {
           const meta = KIND_META[t.kind] ?? KIND_META.note;
           const org = orgs.find((o) => o.id === t.actor);
           const linkedCase = t.caseId ? childCases.find((c) => c.id === t.caseId) : null;
