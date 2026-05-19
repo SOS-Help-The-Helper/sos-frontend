@@ -1,179 +1,83 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { DashboardShell } from '@/components/dashboard-shell';
-// TODO: rewire to lib/api.ts (Phase 3-5) — import { getSystemConfig } from '@/lib/org-queries';
-import { useAuthContext } from '@/lib/auth-context';
-import { getNotificationPreferences, saveNotificationPreferences, type NotificationPreferences } from '@/lib/notifications';
+import { useState } from 'react';
+import { CrmShell } from '@/components/crm-shell';
+import { PageHeader } from '@/components/crm/manage-tabs';
+import { Check } from 'lucide-react';
+
+const modules = ['Directory', 'Cases', 'Map', 'Match', 'Calendar', 'Inventory', 'Volunteers', 'Reports', 'Command'];
 
 export default function SettingsPage() {
-  const { orgId } = useAuthContext();
-  const [configs, setConfigs] = useState<any[]>([]);
-  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({ slack: true, email: false, sms: false });
-  const [savingNotif, setSavingNotif] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      const data = await getSystemConfig();
-      setConfigs(data);
-      if (orgId) {
-        const prefs = await getNotificationPreferences(orgId);
-        setNotifPrefs(prefs);
-      }
-      setLoading(false);
-    }
-    load();
-  }, [orgId]);
-
-  async function toggleNotifPref(key: keyof NotificationPreferences) {
-    if (!orgId) return;
-    const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
-    setNotifPrefs(updated);
-    setSavingNotif(true);
-    await saveNotificationPreferences(orgId, updated);
-    setSavingNotif(false);
-  }
-
-  if (loading) {
-    return (
-      <DashboardShell title="Settings" subtitle="Loading...">
-        <div className="space-y-4">
-          {[1, 2].map(i => (
-            <div key={i} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5 h-40 animate-pulse" />
-          ))}
-        </div>
-      </DashboardShell>
-    );
-  }
+  const [enabled, setEnabled] = useState<string[]>(['Directory', 'Cases', 'Map', 'Match', 'Calendar']);
+  const [density, setDensity] = useState<'small' | 'mid' | 'large'>('mid');
 
   return (
-    <DashboardShell title="Settings" subtitle="Platform configuration and system weights">
-      <div className="space-y-4">
-        {configs.map((config: any) => (
-          <div key={config.id} className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-sos-blue-800 capitalize">
-                  {config.config_key?.replace(/_/g, ' ')}
-                </h3>
-                <p className="text-[10px] text-sos-gray-500 mt-0.5">
-                  Version {config.version} · {config.change_reason || 'No reason documented'}
-                </p>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sos-gray-200 text-sos-gray-600">
-                v{config.version}
-              </span>
-            </div>
-
-            {config.config_value && typeof config.config_value === 'object' && (
-              <div className="space-y-2.5">
-                {Object.entries(config.config_value).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="text-xs text-sos-gray-600 capitalize">{key.replace(/_/g, ' ')}</span>
-                    <div className="flex items-center gap-3">
-                      {/* Visual weight bar */}
-                      <div className="w-24 h-1.5 bg-sos-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-sos-accent-500 rounded-full"
-                          style={{ width: `${Math.min(100, (value as number) * (config.config_key === 'triage_factors' ? 4 : 3.33))}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-sos-blue-800 w-8 text-right">{value as number}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Notification Preferences */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Match Notifications</h3>
-          <p className="text-xs text-sos-gray-600 mb-4">Get notified when new matches are found for your organization.</p>
+    <CrmShell module="Settings">
+      <PageHeader title="Settings" subtitle="Mountain Area Aid" />
+      <div className="px-6 pt-6 pb-10 max-w-3xl space-y-6">
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="text-[15px] font-semibold mb-1">Org profile</h2>
+          <p className="text-[12px] text-white/55 mb-4">Visible across SOS Connect.</p>
           <div className="space-y-3">
-            {[
-              { key: 'slack' as const, icon: '💬', label: 'Slack', desc: 'Notifications in your Slack workspace' },
-              { key: 'email' as const, icon: '📧', label: 'Email', desc: 'Notifications to your org email' },
-              { key: 'sms' as const, icon: '📱', label: 'SMS', desc: 'Text message alerts (coordinator phone)' },
-            ].map(channel => (
-              <div key={channel.key} className="flex items-center justify-between p-3 rounded-lg border border-sos-gray-300">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{channel.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-sos-blue-800">{channel.label}</p>
-                    <p className="text-[10px] text-sos-gray-500">{channel.desc}</p>
-                  </div>
-                </div>
+            <Field label="Org name" value="Mountain Area Aid" />
+            <Field label="Primary county" value="Burke" />
+            <Field label="Contact email" value="ops@mountainareaaid.org" />
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="text-[15px] font-semibold mb-1">Modules</h2>
+          <p className="text-[12px] text-white/55 mb-4">Toggle what your team sees in the sidebar.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {modules.map((m) => {
+              const on = enabled.includes(m);
+              return (
                 <button
-                  onClick={() => toggleNotifPref(channel.key)}
-                  disabled={savingNotif}
-                  className={`w-11 h-6 rounded-full transition-colors relative ${
-                    notifPrefs[channel.key] ? 'bg-green-500' : 'bg-sos-gray-300'
+                  key={m}
+                  onClick={() => setEnabled((s) => (s.includes(m) ? s.filter((x) => x !== m) : [...s, m]))}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition ${
+                    on ? 'border-[#89CFF0]/40 bg-[#89CFF0]/8' : 'border-white/10 bg-white/3 hover:bg-white/5'
                   }`}
                 >
-                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    notifPrefs[channel.key] ? 'translate-x-5' : 'translate-x-0.5'
-                  }`} />
+                  <span className="text-[13px] font-medium">{m}</span>
+                  {on && <Check size={13} className="text-[#89CFF0]" />}
                 </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <p className="text-[10px] text-sos-gray-400 mt-3">Browser notifications are also shown when the dashboard is open.</p>
-        </div>
+        </section>
 
-        {/* Platform Info */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-          <h3 className="text-sm font-bold text-sos-blue-800 mb-4">Platform</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            <div>
-              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Database</span>
-              <p className="text-xs text-sos-blue-800">Supabase · us-east-2</p>
-              <p className="text-[10px] text-sos-gray-500">rtduqguwhkczexnoawej</p>
-            </div>
-            <div>
-              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Schema</span>
-              <p className="text-xs text-sos-blue-800">SIGNAL V2</p>
-              <p className="text-[10px] text-sos-gray-500">29 intelligence tables + operational</p>
-            </div>
-            <div>
-              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Repo</span>
-              <p className="text-xs text-sos-accent-700">SOS-Help-The-Helper/sos-frontend</p>
-            </div>
-            <div>
-              <span className="text-[10px] text-sos-gray-500 uppercase tracking-wider">Runtime</span>
-              <p className="text-xs text-sos-blue-800">OpenClaw · 12 agents</p>
-              <p className="text-[10px] text-sos-gray-500">7 SOS product agents</p>
-            </div>
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="text-[15px] font-semibold mb-1">Density</h2>
+          <p className="text-[12px] text-white/55 mb-4">Auto-adapts to org size. Override below.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(['small', 'mid', 'large'] as const).map((d) => {
+              const a = density === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setDensity(d)}
+                  className={`px-3 py-3 rounded-xl border text-left transition ${a ? 'border-[#89CFF0] bg-[#89CFF0]/8' : 'border-white/10 bg-white/3 hover:bg-white/5'}`}
+                >
+                  <p className="font-medium text-[13px] capitalize">{d}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mt-0.5">
+                    {d === 'small' ? '<5 ppl' : d === 'mid' ? '5–50' : '50+'}
+                  </p>
+                </button>
+              );
+            })}
           </div>
-        </div>
-
-        {/* Links */}
-        <div className="bg-[#FDFCFA] rounded-xl border border-sos-gray-300 p-5">
-          <h3 className="text-sm font-bold text-sos-blue-800 mb-3">Quick Links</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {[
-              { label: 'Supabase Dashboard', href: 'https://supabase.com/dashboard/project/rtduqguwhkczexnoawej' },
-              { label: 'Vercel Dashboard', href: 'https://vercel.com/sos2' },
-              { label: 'GitHub Repo', href: 'https://github.com/SOS-Help-The-Helper/sos-frontend' },
-              { label: 'Figma UI Kit', href: 'https://figma.com/design/zm3th1z8vqPHTZepACCWD5' },
-              { label: 'sosconnect.org', href: 'https://sosconnect.org' },
-              { label: 'Architecture Viz', href: 'https://sos-architecture-viz.vercel.app' },
-            ].map(link => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-sos-accent-700 hover:text-sos-accent-900 py-1.5 px-3 rounded-lg bg-sos-gray-200/50 hover:bg-sos-accent-50 transition-colors"
-              >
-                {link.label} ↗
-              </a>
-            ))}
-          </div>
-        </div>
+        </section>
       </div>
-    </DashboardShell>
+    </CrmShell>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
+      <input defaultValue={value} className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40" />
+    </div>
   );
 }

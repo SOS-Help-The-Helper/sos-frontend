@@ -1,103 +1,132 @@
 'use client';
 
 import { useState } from 'react';
-import { Shell } from '@/components/onboarding/Shell';
-import { Screen1OrgType } from '@/components/onboarding/Screen1OrgType';
-import { Screen2Details } from '@/components/onboarding/Screen2Details';
-import { Screen3Modules } from '@/components/onboarding/Screen3Modules';
-import { Screen4Import } from '@/components/onboarding/Screen4Import';
-import { Screen5Done } from '@/components/onboarding/Screen5Done';
-import { DEFAULT_MODULES, type OrgType, type ModuleId, type OnboardingData } from '@/components/onboarding/types';
-import { api } from '@/lib/api';
+import Link from 'next/link';
+import { SosLogo } from '@/components/onboarding/SosLogo';
+import { Check, ArrowRight, Users, LayoutGrid, Map, Calendar, Package, HeartHandshake, BarChart3 } from 'lucide-react';
 
-const EMPTY: OnboardingData = {
-  orgType: null, orgName: '', domain: '', location: '', email: '',
-  modules: [], importedFile: null, importedCount: 0,
-};
+const orgTypes = [
+  { id: 'small', label: 'Small / mutual aid', sub: '< 5 people' },
+  { id: 'mid', label: 'Mid-size org', sub: '5–50 people' },
+  { id: 'large', label: 'Large org / EM', sub: '50+ people' },
+];
+
+const allModules = [
+  { id: 'directory', label: 'Directory', icon: Users },
+  { id: 'cases', label: 'Cases', icon: LayoutGrid },
+  { id: 'map', label: 'Map', icon: Map },
+  { id: 'calendar', label: 'Calendar', icon: Calendar },
+  { id: 'inventory', label: 'Inventory', icon: Package },
+  { id: 'volunteers', label: 'Volunteers', icon: HeartHandshake },
+  { id: 'reports', label: 'Reports', icon: BarChart3 },
+];
 
 export default function OnboardPage() {
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<OnboardingData>(EMPTY);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const update = (partial: Partial<OnboardingData>) => setData(prev => ({ ...prev, ...partial }));
-
-  const next = () => setStep(s => s + 1);
-  const back = () => setStep(s => Math.max(1, s - 1));
-
-  async function handleStep2Continue() {
-    setLoading(true);
-    try {
-      const res = await api.efCall<{ org_id: string }>('crm-onboard', {
-        action: 'create_org',
-        name: data.orgName,
-        org_type: data.orgType,
-        contact_email: data.email,
-        location_name: data.location,
-      });
-      setOrgId(res.org_id);
-    } catch { /* non-blocking — proceed anyway */ }
-    setLoading(false);
-    next();
-  }
-
-  async function handleStep3Continue() {
-    setLoading(true);
-    try {
-      await api.efCall('crm-onboard', { action: 'set_modules', org_id: orgId, modules: data.modules });
-    } catch { /* non-blocking */ }
-    setLoading(false);
-    next();
-  }
-
-  async function handleStep4Continue() {
-    setLoading(true);
-    try {
-      await api.efCall('crm-onboard', { action: 'complete_onboarding', org_id: orgId });
-    } catch { /* non-blocking */ }
-    setLoading(false);
-    next();
-  }
+  const [step, setStep] = useState(0);
+  const [orgType, setOrgType] = useState('mid');
+  const [selected, setSelected] = useState<string[]>(['directory', 'cases', 'map']);
+  const [invites, setInvites] = useState('');
 
   return (
-    <Shell step={step - 1} onBack={step > 1 && step < 5 ? back : undefined}>
-      {step === 1 && (
-        <Screen1OrgType
-          selected={data.orgType}
-          onSelect={(id: OrgType) => update({ orgType: id, modules: DEFAULT_MODULES[id] })}
-          onContinue={next}
-        />
-      )}
-      {step === 2 && (
-        <Screen2Details
-          data={data}
-          onUpdate={update}
-          onContinue={handleStep2Continue}
-        />
-      )}
-      {step === 3 && (
-        <Screen3Modules
-          selected={data.modules}
-          onToggle={(id: ModuleId) => update({ modules: data.modules.includes(id) ? data.modules.filter(m => m !== id) : [...data.modules, id] })}
-          onContinue={handleStep3Continue}
-        />
-      )}
-      {step === 4 && (
-        <Screen4Import
-          data={data}
-          onUpdate={update}
-          onContinue={handleStep4Continue}
-          onSkip={handleStep4Continue}
-        />
-      )}
-      {step === 5 && <Screen5Done data={data} />}
-      {loading && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,30,43,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ width: 32, height: 32, border: '3px solid rgba(255,255,255,0.2)', borderTopColor: '#EF4E4B', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="min-h-screen bg-[#0F1E2B] text-white flex items-center justify-center px-5">
+      <div className="max-w-lg w-full py-12">
+        <div className="flex items-center gap-2.5 mb-8">
+          <SosLogo size={28} />
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">Onboarding · {step + 1} of 3</span>
         </div>
-      )}
-    </Shell>
+
+        <div className="flex gap-1.5 mb-8">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-[#89CFF0]' : 'bg-white/10'}`} />
+          ))}
+        </div>
+
+        {step === 0 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">What kind of org?</h1>
+            <p className="text-white/55 mt-2">This calibrates the UI density and which modules ship enabled.</p>
+            <div className="mt-6 space-y-2">
+              {orgTypes.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setOrgType(o.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition text-left ${
+                    orgType === o.id ? 'border-[#89CFF0] bg-[#89CFF0]/8' : 'border-white/10 bg-white/5 hover:bg-white/8'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${orgType === o.id ? 'border-[#89CFF0] bg-[#89CFF0]' : 'border-white/30'}`}>
+                    {orgType === o.id && <Check size={12} className="text-[#0F1E2B]" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{o.label}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{o.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 1 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">Pick your modules</h1>
+            <p className="text-white/55 mt-2">You can enable more later in Settings.</p>
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              {allModules.map((m) => {
+                const on = selected.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelected((s) => (s.includes(m.id) ? s.filter((x) => x !== m.id) : [...s, m.id]))}
+                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition ${
+                      on ? 'border-[#89CFF0] bg-[#89CFF0]/8' : 'border-white/10 bg-white/5 hover:bg-white/8'
+                    }`}
+                  >
+                    <m.icon size={16} className={on ? 'text-[#89CFF0]' : 'text-white/55'} strokeWidth={1.75} />
+                    <span className="text-[13px] font-medium">{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">Invite your team</h1>
+            <p className="text-white/55 mt-2">Optional. One email per line.</p>
+            <textarea
+              value={invites}
+              onChange={(e) => setInvites(e.target.value)}
+              placeholder={'alex@yourorg.com\njess@yourorg.com'}
+              rows={6}
+              className="mt-6 w-full rounded-xl bg-white/5 border border-white/10 p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+            />
+          </>
+        )}
+
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            className="text-[13px] text-white/45 hover:text-white transition disabled:opacity-30"
+            disabled={step === 0}
+          >
+            Back
+          </button>
+          {step < 2 ? (
+            <button
+              onClick={() => setStep((s) => s + 1)}
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition"
+            >
+              Continue <ArrowRight size={14} />
+            </button>
+          ) : (
+            <Link href="/map" className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition">
+              Open SOS Connect <ArrowRight size={14} />
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
