@@ -1,88 +1,124 @@
-'use client';
+"use client";
 
-import { CrmShell } from '@/components/crm-shell';
-import { PageHeader } from '@/components/crm/manage-tabs';
-import { kpis, orgs, cases } from '@/lib/prototype-data';
-import { AlertTriangle, Radio } from 'lucide-react';
-
-const incidents = [
-  { id: 'I-01', name: 'Helene aftermath', county: 'Buncombe', cases: 8, priority: 'urgent', status: 'active' },
-  { id: 'I-02', name: 'Burke flooding', county: 'Burke', cases: 3, priority: 'normal', status: 'active' },
-  { id: 'I-03', name: 'Madison food shortage', county: 'Madison', cases: 2, priority: 'normal', status: 'monitoring' },
-];
+import Link from "next/link";
+import { CrmShell } from "@/components/crm-shell";
+import { PageHeader } from "@/components/crm/manage-tabs";
+import { incidents, reports as reportsData } from "@/lib/prototype-data";
+import { useAllDashboards } from "@/lib/dashboard-store";
+import { AlertTriangle, Radio, ChevronRight, FileText } from "lucide-react";
 
 export default function CommandPage() {
+  const pinnedMap = useAllDashboards();
+
   return (
     <CrmShell module="Command">
       <PageHeader
         title="Command"
-        subtitle="Multi-incident dashboard · for county EM and large orgs"
+        subtitle="One dashboard per active incident"
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Radio size={12} /> Declare incident
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10 space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {kpis.map((k) => (
-            <div key={k.label} className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{k.label}</p>
-              <p className="text-[28px] font-semibold tracking-tight mt-2 tabular-nums">{k.value}</p>
-              <p className="font-mono text-[10px] text-[#34D399] mt-1">{k.delta}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid lg:grid-cols-[1fr_320px] gap-3">
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Active incidents</p>
-            <div className="space-y-2">
-              {incidents.map((i) => (
-                <div key={i.id} className="rounded-xl bg-white/5 hover:bg-white/8 p-4 flex items-center gap-4 transition cursor-pointer">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${i.priority === 'urgent' ? 'bg-[#EF4E4B]/15 text-[#EF4E4B]' : 'bg-[#F5EBD6]/15 text-[#F5EBD6]'}`}>
+      <div className="px-6 pt-6 pb-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {incidents.map((i) => {
+            const pinnedIds = pinnedMap[i.id] ?? [];
+            const pinned = pinnedIds
+              .map((id) => reportsData.find((r) => r.id === id))
+              .filter(Boolean)
+              .slice(0, 3);
+            const isUrgent = i.priority === "urgent";
+            return (
+              <Link
+                key={i.id}
+                href={`/command/${i.id}`}
+                className="group rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] hover:border-white/20 p-5 transition flex flex-col gap-4"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      isUrgent
+                        ? "bg-[#EF4E4B]/15 text-[#EF4E4B]"
+                        : "bg-[#F5EBD6]/15 text-[#F5EBD6]"
+                    }`}
+                  >
                     <AlertTriangle size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{i.name}</p>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/50 mt-0.5">{i.id} · {i.county}</p>
+                    <p className="font-medium truncate">{i.name}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/50 mt-0.5">
+                      {i.id} · {i.county} · {i.status}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-mono text-[20px] font-semibold tabular-nums">{i.cases}</p>
-                    <p className="font-mono text-[9px] uppercase tracking-wider text-white/45">cases</p>
-                  </div>
+                  <ChevronRight
+                    size={14}
+                    className="text-white/30 group-hover:text-white/70 transition"
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <aside className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Org load</p>
-            <div className="space-y-3">
-              {orgs.map((o) => (
-                <div key={o.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: o.color }} />
-                    <span className="text-[12px] truncate">{o.name}</span>
-                  </div>
-                  <span className="font-mono text-[11px] tabular-nums text-white/65">{o.open} open</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <Stat label="Cases" value={i.cases} />
+                  <Stat label="Reports" value={pinnedIds.length} />
+                  <Stat label="Lead" value={i.lead.split(" ")[0]} small />
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 pt-4 border-t border-white/8">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Recent activity</p>
-              <div className="space-y-2 text-[12px] text-white/65">
-                {cases.slice(0, 4).map((c) => (
-                  <div key={c.id} className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] text-white/40">{c.opened}</span>
-                    <span className="truncate">{c.citizen} · {c.taxonomy[0]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
+
+                <div className="pt-3 border-t border-white/8 min-h-[60px]">
+                  <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/40 mb-2">
+                    Pinned reports
+                  </p>
+                  {pinned.length === 0 ? (
+                    <p className="text-[11.5px] text-white/35 italic">
+                      None yet — pin from /reports
+                    </p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {pinned.map(
+                        (r) =>
+                          r && (
+                            <li
+                              key={r.id}
+                              className="flex items-center gap-2 text-[11.5px] text-white/75"
+                            >
+                              <FileText size={10} className="text-white/40 shrink-0" />
+                              <span className="truncate">
+                                {r.taxonomy} · {r.location}
+                              </span>
+                            </li>
+                          )
+                      )}
+                    </ul>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </CrmShell>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  small,
+}: {
+  label: string;
+  value: string | number;
+  small?: boolean;
+}) {
+  return (
+    <div className="rounded-lg bg-white/4 px-3 py-2">
+      <p className="font-mono text-[9px] uppercase tracking-wider text-white/45">{label}</p>
+      <p
+        className={`${
+          small ? "text-[13px]" : "text-[18px]"
+        } font-semibold tabular-nums mt-0.5 truncate`}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
