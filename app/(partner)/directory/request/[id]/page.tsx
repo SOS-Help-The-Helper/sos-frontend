@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { AiSummary } from "@/components/crm/ai-summary";
 import {
@@ -10,18 +10,169 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
 import { UrgencyBadge, SubStatusPill } from "@/components/crm/pills";
-import { requests, matches, deliveries, cases, type ReqDetail, type MatchCandidate } from "@/lib/prototype-data";
+import {
+  requests, matches as protoMatches, deliveries, cases,
+  type ReqDetail, type MatchCandidate, type DeliveryDetail,
+} from "@/lib/prototype-data";
+import { api } from "@/lib/api";
 import {
   MapPin, Calendar, User, Check, X, Camera, Truck, Package,
   ShieldCheck, Phone, MessageSquare, MoreHorizontal, Sparkles,
   StickyNote, Users, GitBranch,
 } from "lucide-react";
 
+// ---------------------------------------------------------------------------
+// API → local type mappers
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapApiToReqDetail(data: Record<string, any>): ReqDetail {
+  const hh = data.household ?? {};
+  return {
+    id: data.request_id ?? data.id ?? "",
+    caseId: data.case_id ?? data.caseId ?? "",
+    taxonomy: data.taxonomy ?? data.category ?? "",
+    airs: data.airs ?? "",
+    ocha: data.ocha ?? "",
+    status: data.status ?? "open",
+    urgency: data.urgency ?? "medium",
+    disaster: data.disaster ?? "",
+    county: data.county ?? data.location_county ?? "",
+    daysOpen: data.days_open ?? data.daysOpen ?? 0,
+    assignedTo: data.assigned_to ?? data.assignedTo ?? "",
+    personId: data.person_id ?? data.personId ?? "",
+    personName: data.person_name ?? data.personName ?? "",
+    household: {
+      adults: hh.adults ?? 1,
+      children: hh.children ?? 0,
+      ...(hh.pets != null ? { pets: hh.pets } : {}),
+    },
+    matchIds: data.match_ids ?? data.matchIds ?? [],
+    notes: data.notes ?? [],
+    ...(data.delivery_id ? { deliveryId: data.delivery_id } : {}),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapApiToMatchCandidates(data: Record<string, any>): MatchCandidate[] {
+  const raw: Record<string, any>[] = data.matches ?? data.match_candidates ?? [];
+  return raw.map((m) => ({
+    id: m.id ?? m.match_id ?? "",
+    title: m.title ?? m.resource_name ?? m.id ?? "",
+    blurb: m.blurb ?? m.description ?? "",
+    score: m.score ?? 0,
+    breakdown: {
+      category: m.breakdown?.category ?? m.category_score ?? 0,
+      distance: m.breakdown?.distance ?? m.distance_score ?? 0,
+      urgency: m.breakdown?.urgency ?? m.urgency_score ?? 0,
+      capacity: m.breakdown?.capacity ?? m.capacity_score ?? 0,
+      trust: m.breakdown?.trust ?? m.trust_score ?? 0,
+    },
+    approved: m.approved ?? m.status === "approved",
+    rationale: m.rationale ?? "",
+  }));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapApiToDelivery(data: Record<string, any>): DeliveryDetail | null {
+  const items: Record<string, any>[] = data.deliveries ?? data.items ?? (Array.isArray(data) ? data : []);
+  if (!items.length) return null;
+  const d = items[0];
+  return {
+    id: d.id ?? d.delivery_id ?? "",
+    resourceId: d.resource_id ?? d.resourceId ?? "",
+    caseId: d.case_id ?? d.caseId ?? "",
+    origin: d.origin ?? "",
+    destination: d.destination ?? "",
+    current: d.current_step ?? d.current ?? d.status ?? "pending",
+    steps: (d.steps ?? []).map((s: Record<string, any>) => ({
+      key: s.key ?? s.status ?? "pending",
+      label: s.label ?? s.key ?? "",
+      timestamp: s.timestamp ?? s.ts,
+      location: s.location,
+      photo: s.photo,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function RequestPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const r = useMemo(() => requests.find((x) => x.id === id), [id]);
+  const protoReq = requests.find((x) => x.id === id);
+
+  const [r, setR] = useState<ReqDetail | null>(protoReq ?? null);
+  const [cands, setCands] = useState<MatchCandidate[]>(
+    protoReq ? protoReq.matchIds.map((mid) => protoMatches[mid]).filter(Boolean) : []
+  );
+  const [delivery, setDelivery] = useState<DeliveryDetail | undefined>(
+    protoReq?.deliveryId ? deliveries.find((d) => d.id === protoReq.deliveryId) : undefined
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const detail = await api.crmCasesDetail({ request_id: id }) as Record<string, any>;
+        if (cancelled) return;
+
+        const mapped = mapApiToReqDetail(detail);
+        setR(mapped);
+
+        // Match candidates embedded in detail response
+        const apiCands = mapApiToMatchCandidates(detail);
+        if (apiCands.length > 0) {
+          setCands(apiCands);
+        } else {
+          // Fall back to prototype match lookup
+          setCands(mapped.matchIds.map((mid) => protoMatches[mid]).filter(Boolean));
+        }
+
+        // Fetch delivery if matchIds present
+        if (mapped.matchIds.length > 0) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const deliveryData = await api.crmDeliveryList(mapped.matchIds[0]) as Record<string, any>;
+            if (!cancelled) {
+              const mappedDelivery = mapApiToDelivery(deliveryData);
+              if (mappedDelivery) setDelivery(mappedDelivery);
+            }
+          } catch {
+            // keep prototype delivery
+          }
+        }
+      } catch {
+        // keep prototype data already in state
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const handleMatchAction = useCallback(async (matchId: string, action: "approve" | "reject") => {
+    try {
+      await api.crmCaseAction(action === "approve" ? "approve_match" : "reject_match", {
+        match_id: matchId,
+        request_id: id,
+      });
+      setCands((prev) =>
+        prev.map((c) =>
+          c.id === matchId
+            ? { ...c, approved: action === "approve" }
+            : c
+        )
+      );
+    } catch {
+      // silently fail — UI stays unchanged
+    }
+  }, [id]);
 
   if (!r) {
     return (
@@ -32,8 +183,6 @@ export default function RequestPage() {
     );
   }
 
-  const cands: MatchCandidate[] = r.matchIds.map((mid: string) => matches[mid]).filter(Boolean);
-  const delivery = r.deliveryId ? deliveries.find((d) => d.id === r.deliveryId) : null;
   const initials = r.personName.split(" ").map((s: string) => s[0]).join("");
   const householdSize = r.household.adults + r.household.children;
 
@@ -93,18 +242,19 @@ export default function RequestPage() {
           summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
 
-        <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
+        <RequestTabs r={r} cands={cands} delivery={delivery} onMatchAction={handleMatchAction} />
       </main>
     </CrmShell>
   );
 }
 
 function RequestTabs({
-  r, cands, delivery,
+  r, cands, delivery, onMatchAction,
 }: {
   r: ReqDetail;
   cands: MatchCandidate[];
-  delivery: ReturnType<typeof deliveries.find>;
+  delivery: DeliveryDetail | undefined;
+  onMatchAction: (matchId: string, action: "approve" | "reject") => void;
 }) {
   const parentCase = cases.find((c) => c.id === r.caseId);
   const relatedCases = cases.filter((c) => c.citizen.toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()) && c.id !== r.caseId);
@@ -195,7 +345,7 @@ function RequestTabs({
       key: "matches",
       label: "Matches",
       count: cands.length,
-      content: <MatchesList cands={cands} />,
+      content: <MatchesList cands={cands} onAction={onMatchAction} />,
     },
     {
       key: "notes",
@@ -227,7 +377,13 @@ function RequestTabs({
   return <DetailTabs tabs={tabs} defaultKey="timeline" />;
 }
 
-function MatchesList({ cands }: { cands: MatchCandidate[] }) {
+function MatchesList({
+  cands,
+  onAction,
+}: {
+  cands: MatchCandidate[];
+  onAction: (matchId: string, action: "approve" | "reject") => void;
+}) {
   return (
     <div className="space-y-3">
       {cands.map((c: MatchCandidate) => (
@@ -263,10 +419,16 @@ function MatchesList({ cands }: { cands: MatchCandidate[] }) {
           <p className="text-[12px] text-white/55 italic mt-3">{c.rationale}</p>
           {!c.approved && (
             <div className="flex items-center gap-2 mt-3">
-              <button className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#34D399]/15 text-[#34D399] text-[11px] font-medium hover:bg-[#34D399]/25 transition">
+              <button
+                onClick={() => onAction(c.id, "approve")}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#34D399]/15 text-[#34D399] text-[11px] font-medium hover:bg-[#34D399]/25 transition"
+              >
                 <Check size={11} /> Approve
               </button>
-              <button className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-white/6 text-white/65 text-[11px] font-medium hover:bg-white/12 transition">
+              <button
+                onClick={() => onAction(c.id, "reject")}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-white/6 text-white/65 text-[11px] font-medium hover:bg-white/12 transition"
+              >
                 <X size={11} /> Reject
               </button>
             </div>
