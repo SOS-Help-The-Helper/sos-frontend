@@ -132,6 +132,65 @@ export const api = {
 
   // Raw EF caller — use for one-off queries until a named wrapper is added
   efCall,
+
+  // CRM — Cases
+  crmCasesList: (orgId: string, filters?: { status?: string; urgency?: string; county?: string; assigned_to?: string; category?: string }) =>
+    efCall("crm-cases", { action: "list", org_id: orgId, ...filters }),
+
+  crmCasesDetail: (params: { person_id?: string; request_id?: string }) =>
+    efCall("crm-cases", { action: "detail", ...params }),
+
+  // CRM — Case Actions (write path)
+  crmCaseAction: (action: string, data: Record<string, unknown>) =>
+    efCall("crm-case-action", { action, ...data }),
+
+  // CRM — Search
+  crmSearch: (query: string, orgId: string, filters?: Record<string, unknown>) =>
+    efCall("crm-search", { query, org_id: orgId, ...filters }),
+
+  // CRM — Directory
+  crmBrowsePersons: (orgId: string, params?: { limit?: number; offset?: number; sort?: string }) =>
+    efCall("crm-directory", { action: "browse_persons", org_id: orgId, ...params }),
+
+  crmBrowseOrgs: (params?: { limit?: number; offset?: number }) =>
+    efCall("crm-directory", { action: "browse_orgs", ...params }),
+
+  crmOrgMembers: (orgId: string) =>
+    efCall("crm-directory", { action: "list_org_members", org_id: orgId }),
+
+  // CRM — Events / Calendar
+  crmEventsList: (orgId: string, params?: { from?: string; to?: string; event_type?: string }) =>
+    efCall("crm-events", { action: "list", org_id: orgId, ...params }),
+
+  // CRM — Delivery
+  crmDeliveryList: (matchId: string) =>
+    efCall("crm-delivery", { action: "list", match_id: matchId }),
+
+  crmDeliveryUpdate: (deliveryId: string, status: string, data?: Record<string, unknown>) =>
+    efCall("crm-delivery", { action: "update_status", delivery_id: deliveryId, status, ...data }),
+
+  // CRM — Volunteers
+  crmVolunteersAvailable: (orgId: string, params?: { day?: number; skill?: string; lat?: number; lng?: number; radius?: number }) =>
+    efCall("crm-volunteers", { action: "query_available", org_id: orgId, ...params }),
+
+  // CRM — Reports
+  crmImpactDashboard: (orgId: string, params?: { disaster_id?: string; days?: number }) =>
+    efCall("crm-reports", { action: "impact_dashboard", org_id: orgId, ...params }),
+
+  // CRM — Facilities
+  crmFacilitiesList: (orgId: string) =>
+    efCall("crm-facilities", { action: "list_by_org", org_id: orgId }),
+
+  // CRM — Credentials
+  crmCredentialsList: (personId: string) =>
+    efCall("crm-credentials", { action: "list_by_person", person_id: personId }),
+
+  // CRM — Onboard
+  crmOnboardOrg: (data: Record<string, unknown>) =>
+    efCall("crm-onboard", { action: "create_org", ...data }),
+
+  crmSetModules: (orgId: string, modules: string[]) =>
+    efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---
