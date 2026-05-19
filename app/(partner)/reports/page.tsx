@@ -113,13 +113,13 @@ export default function ReportsPage() {
             <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Cases by org</p>
             <div className="space-y-3">
               {byOrg.map((b) => (
-                <div key={b.org.id}>
+                <div key={b.org?.id ?? b.name}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[12px]">{b.org.name}</span>
+                    <span className="text-[12px]">{b.org?.name ?? b.name}</span>
                     <span className="font-mono text-[11px] tabular-nums text-white/65">{b.count}</span>
                   </div>
                   <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${(b.count / max) * 100}%`, background: b.org.color }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(b.count / max) * 100}%`, background: b.org?.color ?? '#89CFF0' }} />
                   </div>
                 </div>
               ))}
