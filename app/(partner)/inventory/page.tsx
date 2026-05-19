@@ -1,11 +1,52 @@
 'use client';
 
+import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
-import { inventory, orgs } from "@/lib/prototype-data";
+import { inventory as protoInventory, orgs } from "@/lib/prototype-data";
 import { AlertTriangle, Plus } from "lucide-react";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
+
+type InventoryItem = {
+  id: string;
+  item: string;
+  qty: number;
+  threshold: number;
+  org: string;
+  location: string;
+};
+
+function mapResponseToInventory(data: unknown): InventoryItem[] {
+  if (!data || !Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[]).map((r, i) => ({
+    id: (r.id as string) ?? (r.item_id as string) ?? `INV-${String(i + 1).padStart(3, "0")}`,
+    item: (r.item as string) ?? (r.name as string) ?? (r.item_name as string) ?? "Unknown",
+    qty: Number(r.qty ?? r.quantity ?? r.quantity_available ?? 0),
+    threshold: Number(r.threshold ?? r.min_qty ?? r.reorder_point ?? 10),
+    org: (r.org as string) ?? (r.org_id as string) ?? "",
+    location: (r.location as string) ?? (r.location_text as string) ?? "",
+  }));
+}
 
 export default function InventoryPage() {
+  const { orgId } = useAuthContext();
+  const [inventory, setInventory] = useState<InventoryItem[]>(protoInventory);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.queryInventory({ org_id: orgId, query_type: "inventory_status" })
+      .then((res) => {
+        const items = mapResponseToInventory(
+          (res as Record<string, unknown>).items ?? (res as Record<string, unknown>).data ?? res
+        );
+        if (items.length > 0) setInventory(items);
+      })
+      .catch(() => {
+        // fallback: keep prototype data
+      });
+  }, [orgId]);
+
   const lowStock = inventory.filter((i) => i.qty < i.threshold);
   return (
     <CrmShell module="Inventory">
@@ -54,7 +95,7 @@ export default function InventoryPage() {
                         {it.item}
                       </div>
                     </td>
-                    <td className="px-4 py-3" style={{ color: org?.color }}>{org?.name}</td>
+                    <td className="px-4 py-3" style={{ color: org?.color }}>{org?.name ?? it.org}</td>
                     <td className="px-4 py-3 text-white/65 text-[12px]">{it.location}</td>
                     <td className={`px-4 py-3 font-mono text-right tabular-nums ${low ? "text-[#F5EBD6]" : "text-white/80"}`}>{it.qty}</td>
                     <td className="px-4 py-3 font-mono text-right tabular-nums text-white/40">{it.threshold}</td>

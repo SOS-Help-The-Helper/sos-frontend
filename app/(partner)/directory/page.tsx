@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Upload, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { people, orgs } from "@/lib/directory-data";
+import { people as protoPeople, orgs as protoOrgs } from "@/lib/directory-data";
 import { volunteers as protoVolunteers } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
 type TypeFilter = "all" | "people" | "orgs" | "volunteers";
 
@@ -29,7 +31,56 @@ type Row = {
 
 type SortKey = "name" | "type" | "org" | "county" | "score";
 
+// ---------------------------------------------------------------------------
+// Response mappers
+// ---------------------------------------------------------------------------
+
+function mapPersonsResponse(data: unknown): typeof protoPeople {
+  if (!data || !Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[]).map((r) => ({
+    id: (r.id as string) ?? "",
+    name: (r.name as string) ?? (r.display_name as string) ?? "Unknown",
+    role: (r.role as string) ?? (r.job_title as string) ?? "",
+    org: {
+      id: (r.org_id as string) ?? "",
+      name: (r.org_name as string) ?? (r.organization as string) ?? "",
+    },
+    county: (r.county as string) ?? "",
+    skills: Array.isArray(r.skills)
+      ? (r.skills as string[]).map((s) => ({ name: s }))
+      : [],
+    credentials: Array.isArray(r.credentials)
+      ? (r.credentials as string[]).map((c) => ({ type: c }))
+      : [],
+    sosScore: Number(r.sos_score ?? r.sosScore ?? 0),
+  }));
+}
+
+function mapOrgsResponse(data: unknown): typeof protoOrgs {
+  if (!data || !Array.isArray(data)) return [];
+  return (data as Record<string, unknown>[]).map((r) => ({
+    id: (r.id as string) ?? "",
+    name: (r.name as string) ?? "",
+    type: (r.type as string) ?? (r.org_type as string) ?? "",
+    counties: Array.isArray(r.counties) ? (r.counties as string[]) : [],
+    memberCount: Number(r.member_count ?? r.memberCount ?? 0),
+    activeCases: Number(r.active_cases ?? r.activeCases ?? 0),
+  }));
+}
+
+function extractList(res: unknown, keys: string[]): unknown[] {
+  if (Array.isArray(res)) return res;
+  const obj = res as Record<string, unknown>;
+  for (const k of keys) {
+    if (Array.isArray(obj?.[k])) return obj[k] as unknown[];
+  }
+  return [];
+}
+
+// ---------------------------------------------------------------------------
+
 export default function DirectoryPage() {
+  const { orgId } = useAuthContext();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>("all");
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -37,12 +88,67 @@ export default function DirectoryPage() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
+  const [livePeople, setLivePeople] = useState(protoPeople);
+  const [liveOrgs, setLiveOrgs] = useState(protoOrgs);
+  const [searchRows, setSearchRows] = useState<Row[] | null>(null);
+
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load people + orgs on mount
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmBrowsePersons(orgId)
+      .then((res) => {
+        const items = mapPersonsResponse(extractList(res, ["persons", "people", "data", "results"]));
+        if (items.length > 0) setLivePeople(items);
+      })
+      .catch(() => {});
+
+    api.crmBrowseOrgs()
+      .then((res) => {
+        const items = mapOrgsResponse(extractList(res, ["orgs", "organizations", "data", "results"]));
+        if (items.length > 0) setLiveOrgs(items);
+      })
+      .catch(() => {});
+  }, [orgId]);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    const q = query.trim();
+    if (!q || !orgId) {
+      setSearchRows(null);
+      return;
+    }
+    searchTimerRef.current = setTimeout(() => {
+      api.crmSearch(q, orgId)
+        .then((res) => {
+          const raw = extractList(res, ["results", "data", "hits"]);
+          if (raw.length === 0) { setSearchRows(null); return; }
+          const mapped: Row[] = (raw as Record<string, unknown>[]).map((r) => {
+            const kind = (r.type as string) === "org" ? "org" : "person";
+            return {
+              kind,
+              id: (r.id as string) ?? "",
+              name: (r.name as string) ?? (r.display_name as string) ?? "Unknown",
+              subtitle: (r.role as string) ?? (r.org_name as string) ?? (r.org_type as string) ?? "",
+              meta: (r.county as string) ?? (r.location as string) ?? "",
+              score: r.sos_score !== undefined ? Number(r.sos_score) : undefined,
+              href: kind === "org" ? `/directory/org/${r.id}` : `/directory/person/${r.id}`,
+            };
+          });
+          setSearchRows(mapped);
+        })
+        .catch(() => setSearchRows(null));
+    }, 300);
+  }, [query, orgId]);
+
   const q = query.trim().toLowerCase();
 
-  const rows = useMemo<Row[]>(() => {
+  const localRows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     if (type === "all" || type === "people") {
-      for (const p of people) {
+      for (const p of livePeople) {
         if (q && !p.name.toLowerCase().includes(q) && !p.org.name.toLowerCase().includes(q) && !p.role.toLowerCase().includes(q) && !p.skills.some((s) => s.name.toLowerCase().includes(q))) continue;
         if (filters.county && p.county !== filters.county) continue;
         if (filters.skill && !p.skills.some((s) => s.name.includes(filters.skill))) continue;
@@ -59,7 +165,7 @@ export default function DirectoryPage() {
       }
     }
     if (type === "all" || type === "orgs") {
-      for (const o of orgs) {
+      for (const o of liveOrgs) {
         if (q && !o.name.toLowerCase().includes(q) && !o.type.toLowerCase().includes(q)) continue;
         if (filters.county && !o.counties.includes(filters.county)) continue;
         out.push({
@@ -102,14 +208,17 @@ export default function DirectoryPage() {
       return v * dir;
     });
     return out;
-  }, [q, type, filters, sortKey, sortDir]);
+  }, [q, type, filters, sortKey, sortDir, livePeople, liveOrgs]);
+
+  // Use search results when available (non-empty query + EF returned results)
+  const rows = searchRows ?? localRows;
 
   const activeFilterCount = Object.keys(filters).length;
   const counts = useMemo(() => ({
-    people: people.length,
-    orgs: orgs.length,
+    people: livePeople.length,
+    orgs: liveOrgs.length,
     volunteers: protoVolunteers.length,
-  }), []);
+  }), [livePeople, liveOrgs]);
 
   const onSort = (k: SortKey) => {
     if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
