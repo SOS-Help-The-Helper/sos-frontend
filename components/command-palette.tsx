@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Send, MapPin, Users, Package, FileText, Calendar, Layers, ArrowRight, Mic, Command as CmdIcon, X, Radio } from "lucide-react";
 import Link from "next/link";
-import { cases, orgs, people, inventory, shifts } from "@/lib/prototype-data";
+import { cases, orgs, people, inventory, events as shifts } from "@/lib/prototype-data";
 
 type Msg = { who: "user" | "agent"; text?: string; block?: React.ReactNode };
 

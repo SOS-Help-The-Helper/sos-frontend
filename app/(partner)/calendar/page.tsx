@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
-import { shifts as protoShifts, orgs } from "@/lib/prototype-data";
+import { events as protoShifts, orgs } from "@/lib/prototype-data";
 import { Plus, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
