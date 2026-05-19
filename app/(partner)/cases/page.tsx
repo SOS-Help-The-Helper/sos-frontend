@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
@@ -16,6 +16,8 @@ import {
   type RequestStatus,
   type Bucket,
 } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 import { Plus, Link2, AlertTriangle } from "lucide-react";
 
 type TabKey = "cases" | "requests" | "resources" | "reports";
@@ -114,27 +116,145 @@ function buildReportCards(): Card[] {
   }));
 }
 
+// Map live API cases to Card shape
+function liveToCards(items: any[]): Card[] {
+  return items.map((c) => ({
+    id: c.id ?? c.request_id ?? String(Math.random()),
+    col: bucketOf(c.status),
+    title: c.display_name ?? c.person_name ?? c.citizen ?? c.id,
+    meta: [c.county, c.category ?? c.taxonomy_code].filter(Boolean).join(" · "),
+    sub: c.days_open != null ? `${c.days_open}d` : undefined,
+    href: `/cases/${c.umbrella_id ?? c.id}`,
+    urgency: c.urgency,
+    status: c.status,
+  }));
+}
+
+// Map live API requests to Card shape
+function liveRequestsToCards(items: any[]): Card[] {
+  return items.map((r) => ({
+    id: r.id,
+    col: bucketOf(r.status),
+    title: r.display_name ?? r.person_name ?? r.id,
+    meta: [r.city ?? r.locations?.city, r.category ?? r.taxonomy_code].filter(Boolean).join(" · "),
+    sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
+    href: `/directory/request/${r.id}`,
+    urgency: r.urgency,
+    status: r.status,
+  }));
+}
+
+// Map live API resources to Card shape
+function liveResourcesToCards(items: any[]): Card[] {
+  return items.map((r) => ({
+    id: r.id,
+    col: r.status ?? "available",
+    title: r.category ?? r.taxonomy_code ?? r.id,
+    meta: r.locations?.city ?? r.city ?? undefined,
+    sub: r.capacity_available != null ? `${r.capacity_available} avail` : undefined,
+    href: `/directory/resource/${r.id}`,
+  }));
+}
+
+function SkeletonColumn({ accent }: { accent: string }) {
+  return (
+    <div className="snap-start rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] p-3 animate-pulse">
+      <div className="flex items-center gap-2 px-1.5 pb-3">
+        <span className="w-2 h-2 rounded-full" style={{ background: accent }} />
+        <span className="h-2 w-16 bg-white/10 rounded" />
+      </div>
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl p-3 bg-white/4 border border-transparent space-y-2">
+            <div className="h-2 w-24 bg-white/10 rounded" />
+            <div className="h-3 w-32 bg-white/15 rounded" />
+            <div className="h-2 w-20 bg-white/10 rounded" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CasesPage() {
+  const { orgId } = useAuthContext();
   const [tab, setTab] = useState<TabKey>("cases");
 
-  // Per-tab state so drag changes persist while switching tabs in-session
+  // Live data from EFs (null = not yet loaded or EF failed → fall back to prototype)
+  const [liveCases, setLiveCases] = useState<Card[] | null>(null);
+  const [liveRequests, setLiveRequests] = useState<Card[] | null>(null);
+  const [liveResources, setLiveResources] = useState<Card[] | null>(null);
+
+  const [loadingCases, setLoadingCases] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingResources, setLoadingResources] = useState(true);
+
+  // Per-tab kanban state (initialized from prototype, overwritten by live data)
   const [caseCards, setCaseCards] = useState<Card[]>(() => buildCaseCards());
   const [requestCards, setRequestCards] = useState<Card[]>(() => buildRequestCards());
   const [resourceCards, setResourceCards] = useState<Card[]>(() => buildResourceCards());
   const [reportCards, setReportCards] = useState<Card[]>(() => buildReportCards());
 
-  const { cards, setCards, columns, label } = useMemo(() => {
+  // Fetch cases from EF
+  useEffect(() => {
+    if (!orgId) { setLoadingCases(false); return; }
+    api.crmCasesList(orgId)
+      .then((data: any) => {
+        const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
+        if (items.length > 0) {
+          const cards = liveToCards(items);
+          setLiveCases(cards);
+          setCaseCards(cards);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingCases(false));
+  }, [orgId]);
+
+  // Fetch requests from EF
+  useEffect(() => {
+    if (!orgId) { setLoadingRequests(false); return; }
+    api.getRequests({ org_id: orgId, limit: 100 })
+      .then((res: any) => {
+        const items: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+        if (items.length > 0) {
+          const cards = liveRequestsToCards(items);
+          setLiveRequests(cards);
+          setRequestCards(cards);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingRequests(false));
+  }, [orgId]);
+
+  // Fetch resources from EF
+  useEffect(() => {
+    if (!orgId) { setLoadingResources(false); return; }
+    api.getResources({ org_id: orgId, limit: 100 })
+      .then((res: any) => {
+        const items: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+        if (items.length > 0) {
+          const cards = liveResourcesToCards(items);
+          setLiveResources(cards);
+          setResourceCards(cards);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingResources(false));
+  }, [orgId]);
+
+  const { cards, setCards, columns, label, loading } = useMemo(() => {
     switch (tab) {
       case "requests":
-        return { cards: requestCards, setCards: setRequestCards, columns: CASE_COLS, label: "request" };
+        return { cards: requestCards, setCards: setRequestCards, columns: CASE_COLS, label: "request", loading: loadingRequests };
       case "resources":
-        return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource" };
+        return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource", loading: loadingResources };
       case "reports":
-        return { cards: reportCards, setCards: setReportCards, columns: REPORT_COLS, label: "report" };
+        return { cards: reportCards, setCards: setReportCards, columns: REPORT_COLS, label: "report", loading: false };
       default:
-        return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case" };
+        return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case", loading: loadingCases };
     }
-  }, [tab, caseCards, requestCards, resourceCards, reportCards]);
+  }, [tab, caseCards, requestCards, resourceCards, reportCards, loadingCases, loadingRequests, loadingResources]);
 
   const totalOpen = cards.filter((c) => c.col !== "resolved" && c.col !== "Resolved").length;
 
@@ -143,9 +263,15 @@ export default function CasesPage() {
 
   const onDrop = (colId: string) => {
     if (!dragId) return;
+    const card = cards.find((c) => c.id === dragId);
+    // Optimistic update
     setCards((prev) => prev.map((c) => (c.id === dragId ? { ...c, col: colId } : c)));
     setDragId(null);
     setDragOverCol(null);
+    // API mutation (fire-and-forget, no rollback on error)
+    if (card && (tab === "cases" || tab === "requests")) {
+      api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId }).catch(() => {});
+    }
   };
 
   const TABS: { id: TabKey; label: string; count: number }[] = [
@@ -195,59 +321,61 @@ export default function CasesPage() {
           className="grid gap-3 overflow-x-auto snap-x md:snap-none"
           style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(260px, 1fr))` }}
         >
-          {columns.map((col) => {
-            const items = cards.filter((c) => c.col === col.id);
-            const isOver = dragOverCol === col.id;
-            return (
-              <div
-                key={col.id}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (dragOverCol !== col.id) setDragOverCol(col.id);
-                }}
-                onDragLeave={() => {
-                  if (dragOverCol === col.id) setDragOverCol(null);
-                }}
-                onDrop={() => onDrop(col.id)}
-                className={`snap-start rounded-2xl border p-3 transition ${
-                  isOver
-                    ? "bg-white/[0.06] border-white/20"
-                    : "bg-[var(--surface-1)] border-[var(--hairline)]"
-                }`}
-              >
-                <div className="flex items-center justify-between px-1.5 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-white/75">
-                      {col.label}
-                    </span>
-                  </div>
-                  <CountChip>{items.length}</CountChip>
-                </div>
-
-                <div className="space-y-2 min-h-[80px]">
-                  {items.map((c) => (
-                    <DraggableCard
-                      key={c.id}
-                      card={c}
-                      tab={tab}
-                      onDragStart={() => setDragId(c.id)}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setDragOverCol(null);
-                      }}
-                      isDragging={dragId === c.id}
-                    />
-                  ))}
-                  {items.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-white/8 py-6 text-center font-mono text-[10px] uppercase tracking-wider text-white/30">
-                      Drop here
+          {loading
+            ? columns.map((col) => <SkeletonColumn key={col.id} accent={col.accent} />)
+            : columns.map((col) => {
+                const items = cards.filter((c) => c.col === col.id);
+                const isOver = dragOverCol === col.id;
+                return (
+                  <div
+                    key={col.id}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (dragOverCol !== col.id) setDragOverCol(col.id);
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverCol === col.id) setDragOverCol(null);
+                    }}
+                    onDrop={() => onDrop(col.id)}
+                    className={`snap-start rounded-2xl border p-3 transition ${
+                      isOver
+                        ? "bg-white/[0.06] border-white/20"
+                        : "bg-[var(--surface-1)] border-[var(--hairline)]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between px-1.5 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-white/75">
+                          {col.label}
+                        </span>
+                      </div>
+                      <CountChip>{items.length}</CountChip>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+
+                    <div className="space-y-2 min-h-[80px]">
+                      {items.map((c) => (
+                        <DraggableCard
+                          key={c.id}
+                          card={c}
+                          tab={tab}
+                          onDragStart={() => setDragId(c.id)}
+                          onDragEnd={() => {
+                            setDragId(null);
+                            setDragOverCol(null);
+                          }}
+                          isDragging={dragId === c.id}
+                        />
+                      ))}
+                      {items.length === 0 && (
+                        <div className="rounded-xl border border-dashed border-white/8 py-6 text-center font-mono text-[10px] uppercase tracking-wider text-white/30">
+                          Drop here
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
         </div>
       </div>
     </CrmShell>
