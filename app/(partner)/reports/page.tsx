@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
 type Kpi = { label: string; value: string | number; delta: string };
-type OrgBar = { org: { id: string; name: string; color: string }; count: number };
+type OrgBar = { org?: { id: string; name: string; color: string }; name?: string; count: number };
 type TaxEntry = [string, number];
 
 function mapDashboardToKpis(data: unknown): Kpi[] {
