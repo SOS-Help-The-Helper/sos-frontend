@@ -1,9 +1,8 @@
-'use client';
-
-import { useParams } from "next/navigation";
+"use client";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus } from "lucide-react";
-import { toast } from "sonner";
+// // toast disabled
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
 import { AiSummary } from "@/components/crm/AiSummary";
@@ -19,22 +18,12 @@ import { StewardshipBand } from "@/components/directory/StewardshipChip";
 import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
 import { usePerson, canEdit, updatePerson } from "@/lib/directory-store";
 
+
 const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
-export default function PersonDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const found = people.find((p) => p.id === id);
-  const person = usePerson(id) ?? found;
-
-  if (!person) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white/70">
-        Person not found ·{" "}
-        <Link href="/directory" className="text-[#89CFF0] underline ml-2">Back</Link>
-      </div>
-    );
-  }
-
+export default function PersonPage() {
+  const seed = Route.useLoaderData();
+  const person = usePerson(seed.id) ?? seed;
   const editable = canEdit(person.org.id);
   const housingTint =
     person.housingStatus === "Stable" ? "#34D399" :
@@ -94,7 +83,8 @@ export default function PersonDetailPage() {
             <>
               <MetaChip>
                 <Link
-                  href={`/directory/org/${person.org.id}`}
+                  to="/directory/org/$id"
+                  params={{ id: person.org.id }}
                   className="hover:text-white transition"
                 >
                   {person.org.name}
@@ -154,7 +144,7 @@ export default function PersonDetailPage() {
         <StewardshipBand
           ownerOrgId={person.org.id}
           ownerOrgName={person.org.name}
-          onRequestChange={() => toast.success(`Change request sent to ${person.org.name}.`)}
+          onRequestChange={() => (() => {})()}
         />
 
         <HeroLine
@@ -170,6 +160,7 @@ export default function PersonDetailPage() {
           progress={person.sosScore}
           accent={scoreColor}
         />
+
 
         <AiSummary
           id={person.id}
@@ -273,7 +264,8 @@ function SkillsTab({ person }: { person: Person }) {
         </div>
       )}
       <Link
-        href={`/directory/org/${person.org.id}`}
+        to="/directory/org/$id"
+        params={{ id: person.org.id }}
         className="flex items-center gap-3 px-4 py-3 hover:bg-white/4 transition"
       >
         <div className="w-9 h-9 rounded-lg bg-[#89CFF0]/12 text-[#89CFF0] flex items-center justify-center text-[13px] font-semibold">

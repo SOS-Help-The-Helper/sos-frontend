@@ -1,17 +1,16 @@
 "use client";
-
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { AiSummary } from "@/components/crm/ai-summary";
+import { AiSummary } from "@/components/crm/AiSummary";
 import {
   DetailTopBar, IdentityBand, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
-} from "@/components/crm/detail-shell";
+  StatusPill, MetaPopover, OverflowMenu, ActionBtn,
+} from "@/components/crm/DetailShell";
 import { reports, type ReportDetail } from "@/lib/prototype-data";
-import { api } from "@/lib/api";
-import { MapPin, ShieldCheck, Camera, User, AlertTriangle, Calendar } from "lucide-react";
+import { MapPin, ShieldCheck, Camera, User, AlertTriangle, Calendar, Phone, Share2, Flag, XCircle } from "lucide-react";
+
 
 const SEV: Record<ReportDetail["severity"], string> = {
   Critical: "#EF4E4B",
@@ -20,52 +19,7 @@ const SEV: Record<ReportDetail["severity"], string> = {
 };
 
 export default function ReportPage() {
-  const params = useParams();
-  const id = params.id as string;
-
-  const proto = useMemo(() => reports.find((x) => x.id === id), [id]);
-  const [liveData, setLiveData] = useState<ReportDetail | null>(null);
-
-  useEffect(() => {
-    Promise.resolve({ data: null as any }).then(({ data }) => {
-      if (!data) return;
-      const found = data.find((r: Record<string, unknown>) => r.id === id);
-      if (!found) return;
-      const sevMap: Record<string, ReportDetail["severity"]> = {
-        critical: "Critical", elevated: "Elevated", routine: "Routine",
-      };
-      const rawSev = (found.severity as string | undefined)?.toLowerCase() ?? "";
-      setLiveData({
-        id: found.id as string,
-        taxonomy: found.category as string,
-        severity: sevMap[rawSev] ?? "Routine",
-        reporterId: "",
-        reporterName: "Unknown",
-        location: found.latitude && found.longitude
-          ? `${found.latitude}, ${found.longitude}`
-          : "Unknown",
-        disaster: "",
-        date: found.created_at
-          ? new Date(found.created_at as string).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-          : "Unknown",
-        verifiedBy: found.verification_status === "verified" ? "Verified" : undefined,
-        corroborators: 0,
-        resolution: found.status === "resolved" ? "Resolved" : undefined,
-      });
-    });
-  }, [id]);
-
-  const r: ReportDetail | null = liveData ?? proto ?? null;
-
-  if (!r) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white/70">
-        Report not found ·{" "}
-        <Link href="/reports" className="text-[#89CFF0] underline ml-2">Back</Link>
-      </div>
-    );
-  }
-
+  const r = Route.useLoaderData();
   const sev = SEV[r.severity as ReportDetail["severity"]];
 
   const timelineEntries: { label: string; date: string; color: string }[] = [
@@ -76,8 +30,8 @@ export default function ReportPage() {
 
   const tabs: DetailTab[] = [
     {
-      key: "timeline",
-      label: "Timeline",
+      key: "activity",
+      label: "Activity",
       count: timelineEntries.length,
       content: (
         <div className="space-y-5">
@@ -109,11 +63,17 @@ export default function ReportPage() {
                 </span>
                 <div className="flex items-center justify-between">
                   <p className="text-[13px] text-white/85">{t.label}</p>
-                  <span className="font-mono text-[10px] text-white/40">{t.date}</span>
+                  <span className="text-[10.5px] text-white/40" title={t.date}>{t.date}</span>
                 </div>
               </li>
             ))}
           </ol>
+          {r.resolution && (
+            <p className="text-[12.5px] text-white/65 pt-2 border-t border-[var(--hairline)]">
+              <span className="text-white/45">Resolution: </span>
+              {r.resolution}
+            </p>
+          )}
         </div>
       ),
     },
@@ -123,32 +83,15 @@ export default function ReportPage() {
       content: <EmptyTab label="No cases linked to this report." />,
     },
     {
-      key: "matches",
-      label: "Matches",
-      content: <EmptyTab label="No matches generated from this report." />,
-    },
-    {
-      key: "notes",
-      label: "Notes",
-      content: (
-        <div className="space-y-3 text-[13px] text-white/85">
-          <p>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/45 mr-2">Resolution</span>
-            {r.resolution ?? "Open · awaiting resolution"}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "reports",
-      label: "Reports",
+      key: "files",
+      label: "Files",
       count: r.corroborators,
       content: r.corroborators > 0 ? (
         <p className="text-[13px] text-white/75">
           {r.corroborators} corroborating report{r.corroborators === 1 ? "" : "s"} from nearby reporters.
         </p>
       ) : (
-        <EmptyTab label="No corroborating reports." />
+        <EmptyTab label="No files or corroborating reports." />
       ),
     },
   ];
@@ -157,7 +100,7 @@ export default function ReportPage() {
     <CrmShell module="Cases">
       <DetailTopBar backTo="/reports" backLabel="Reports" />
 
-      <main className="max-w-[960px] mx-auto px-6 py-7 space-y-5">
+      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <div
@@ -167,43 +110,48 @@ export default function ReportPage() {
               <AlertTriangle size={22} />
             </div>
           }
-          eyebrow={<span className="font-mono text-[10px] text-white/45">{r.id}</span>}
           pills={
-            <>
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[9px] uppercase tracking-wider"
-                style={{ color: sev, background: `${sev}1A` }}
-              >
-                {r.severity}
-              </span>
-              {r.verifiedBy && (
-                <span className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-[#34D399]">
-                  <ShieldCheck size={11} /> verified
-                </span>
-              )}
-            </>
+            <StatusPill tint={sev}>
+              {r.severity} · {r.verifiedBy ? "verified" : "unverified"}
+            </StatusPill>
           }
           title={r.taxonomy}
           chips={
             <>
-              <MetaChip icon={User}>
-                <Link href={`/directory/person/${r.reporterId}`} className="hover:text-white transition">
-                  {r.reporterName}
-                </Link>
-              </MetaChip>
               <MetaChip icon={MapPin}>{r.location}</MetaChip>
-              <MetaChip icon={Calendar}>{r.date}</MetaChip>
-              <span className="font-mono text-[11px] text-white/40">{r.disaster}</span>
+              <MetaPopover>
+                <MetaChip icon={User}>
+                  <Link to="/directory/person/$id" params={{ id: r.reporterId }} className="hover:text-white transition">
+                    {r.reporterName}
+                  </Link>
+                </MetaChip>
+                <MetaChip icon={Calendar}>{r.date}</MetaChip>
+                <span className="font-mono text-[10px] text-white/40">{r.id}</span>
+                <span className="font-mono text-[10px] text-white/40">{r.disaster}</span>
+              </MetaPopover>
+            </>
+          }
+          actions={
+            <>
+              <ActionBtn icon={Phone} label="Call reporter" />
+              <OverflowMenu
+                actions={[
+                  { label: "Share", icon: Share2 },
+                  { label: "Flag report", icon: Flag, danger: true },
+                  { label: "Close report", icon: XCircle, danger: true },
+                ]}
+              />
             </>
           }
         />
 
         <AiSummary
           id={r.id}
+          tldr={`${r.severity} ${r.taxonomy.toLowerCase()} at ${r.location} · ${r.verifiedBy ? "verified" : "unverified"} · +${r.corroborators}.`}
           summary={`${r.severity} ${r.taxonomy} report filed by ${r.reporterName} at ${r.location} during ${r.disaster} on ${r.date}. ${r.verifiedBy ? `Verified by ${r.verifiedBy} with ${r.corroborators} corroborating report${r.corroborators === 1 ? "" : "s"}.` : `Unverified, ${r.corroborators} corroborating report${r.corroborators === 1 ? "" : "s"}.`} ${r.resolution ?? "Currently open and awaiting resolution."}`}
         />
 
-        <DetailTabs tabs={tabs} defaultKey="timeline" />
+        <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>
     </CrmShell>
   );

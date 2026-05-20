@@ -1,269 +1,115 @@
 "use client";
-
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { AiSummary } from "@/components/crm/ai-summary";
+import { AiSummary } from "@/components/crm/AiSummary";
 import {
   DetailTopBar, IdentityBand, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
-} from "@/components/crm/detail-shell";
-import { UrgencyBadge, SubStatusPill } from "@/components/crm/pills";
-import {
-  requests, matches as protoMatches, deliveries, cases,
-  transportAssignments, orgTransportConfig, TRANSPORT_STATUS_LABEL,
-  type ReqDetail, type MatchCandidate, type DeliveryDetail,
-} from "@/lib/prototype-data";
-import { api } from "@/lib/api";
+  StatusPill, MetaPopover, OverflowMenu, ActionBtn,
+} from "@/components/crm/DetailShell";
+import { STATUS_LABEL } from "@/lib/prototype-data";
+import { requests, matches, deliveries, cases, transportAssignments, orgTransportConfig, TRANSPORT_STATUS_LABEL, type ReqDetail, type MatchCandidate } from "@/lib/prototype-data";
 import {
   MapPin, Calendar, User, Check, X, Camera, Truck, Package,
-  ShieldCheck, Phone, MessageSquare, MoreHorizontal, Sparkles,
-  StickyNote, Users, GitBranch, ExternalLink,
+  ShieldCheck, Phone, MessageSquare, Sparkles,
+  Users, GitBranch, ExternalLink, Flag, XCircle, Share2,
 } from "lucide-react";
 
-// ---------------------------------------------------------------------------
-// API → local type mappers
-// ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapApiToReqDetail(data: Record<string, any>): ReqDetail {
-  const hh = data.household ?? {};
-  return {
-    id: data.request_id ?? data.id ?? "",
-    caseId: data.case_id ?? data.caseId ?? "",
-    taxonomy: data.taxonomy ?? data.category ?? "",
-    airs: data.airs ?? "",
-    ocha: data.ocha ?? "",
-    status: data.status ?? "open",
-    urgency: data.urgency ?? "medium",
-    disaster: data.disaster ?? "",
-    county: data.county ?? data.location_county ?? "",
-    daysOpen: data.days_open ?? data.daysOpen ?? 0,
-    assignedTo: data.assigned_to ?? data.assignedTo ?? "",
-    personId: data.person_id ?? data.personId ?? "",
-    personName: data.person_name ?? data.personName ?? "",
-    household: {
-      adults: hh.adults ?? 1,
-      children: hh.children ?? 0,
-      ...(hh.pets != null ? { pets: hh.pets } : {}),
-    },
-    matchIds: data.match_ids ?? data.matchIds ?? [],
-    notes: data.notes ?? [],
-    ...(data.delivery_id ? { deliveryId: data.delivery_id } : {}),
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapApiToMatchCandidates(data: Record<string, any>): MatchCandidate[] {
-  const raw: Record<string, any>[] = data.matches ?? data.match_candidates ?? [];
-  return raw.map((m) => ({
-    id: m.id ?? m.match_id ?? "",
-    title: m.title ?? m.resource_name ?? m.id ?? "",
-    blurb: m.blurb ?? m.description ?? "",
-    score: m.score ?? 0,
-    breakdown: {
-      category: m.breakdown?.category ?? m.category_score ?? 0,
-      distance: m.breakdown?.distance ?? m.distance_score ?? 0,
-      urgency: m.breakdown?.urgency ?? m.urgency_score ?? 0,
-      capacity: m.breakdown?.capacity ?? m.capacity_score ?? 0,
-      trust: m.breakdown?.trust ?? m.trust_score ?? 0,
-    },
-    approved: m.approved ?? m.status === "approved",
-    rationale: m.rationale ?? "",
-  }));
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapApiToDelivery(data: Record<string, any>): DeliveryDetail | null {
-  const items: Record<string, any>[] = data.deliveries ?? data.items ?? (Array.isArray(data) ? data : []);
-  if (!items.length) return null;
-  const d = items[0];
-  return {
-    id: d.id ?? d.delivery_id ?? "",
-    resourceId: d.resource_id ?? d.resourceId ?? "",
-    caseId: d.case_id ?? d.caseId ?? "",
-    origin: d.origin ?? "",
-    destination: d.destination ?? "",
-    current: d.current_step ?? d.current ?? d.status ?? "pending",
-    steps: (d.steps ?? []).map((s: Record<string, any>) => ({
-      key: s.key ?? s.status ?? "pending",
-      label: s.label ?? s.key ?? "",
-      timestamp: s.timestamp ?? s.ts,
-      location: s.location,
-      photo: s.photo,
-    })),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function RequestPage() {
-  const params = useParams();
-  const id = params.id as string;
-
-  const protoReq = requests.find((x) => x.id === id);
-
-  const [r, setR] = useState<ReqDetail | null>(protoReq ?? null);
-  const [cands, setCands] = useState<MatchCandidate[]>(
-    protoReq ? protoReq.matchIds.map((mid) => protoMatches[mid]).filter(Boolean) : []
-  );
-  const [delivery, setDelivery] = useState<DeliveryDetail | undefined>(
-    protoReq?.deliveryId ? deliveries.find((d) => d.id === protoReq.deliveryId) : undefined
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const detail = await api.crmCasesDetail({ request_id: id }) as Record<string, any>;
-        if (cancelled) return;
-
-        const mapped = mapApiToReqDetail(detail);
-        setR(mapped);
-
-        // Match candidates embedded in detail response
-        const apiCands = mapApiToMatchCandidates(detail);
-        if (apiCands.length > 0) {
-          setCands(apiCands);
-        } else {
-          // Fall back to prototype match lookup
-          setCands(mapped.matchIds.map((mid) => protoMatches[mid]).filter(Boolean));
-        }
-
-        // Fetch delivery if matchIds present
-        if (mapped.matchIds.length > 0) {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const deliveryData = await api.crmDeliveryList(mapped.matchIds[0]) as Record<string, any>;
-            if (!cancelled) {
-              const mappedDelivery = mapApiToDelivery(deliveryData);
-              if (mappedDelivery) setDelivery(mappedDelivery);
-            }
-          } catch {
-            // keep prototype delivery
-          }
-        }
-      } catch {
-        // keep prototype data already in state
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [id]);
-
-  const handleMatchAction = useCallback(async (matchId: string, action: "approve" | "reject") => {
-    try {
-      await api.crmCaseAction(action === "approve" ? "approve_match" : "reject_match", {
-        match_id: matchId,
-        request_id: id,
-      });
-      setCands((prev) =>
-        prev.map((c) =>
-          c.id === matchId
-            ? { ...c, approved: action === "approve" }
-            : c
-        )
-      );
-    } catch {
-      // silently fail — UI stays unchanged
-    }
-  }, [id]);
-
-  if (!r) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white/70">
-        Request not found ·{" "}
-        <Link href="/cases" className="text-[#89CFF0] underline ml-2">Back</Link>
-      </div>
-    );
-  }
-
+  const r = Route.useLoaderData();
+  const cands: MatchCandidate[] = r.matchIds.map((id: string) => matches[id]).filter(Boolean);
+  const delivery = r.deliveryId ? deliveries.find((d) => d.id === r.deliveryId) : null;
   const initials = r.personName.split(" ").map((s: string) => s[0]).join("");
   const householdSize = r.household.adults + r.household.children;
+  const urgencyTint =
+    r.urgency === "critical" ? "#EF4E4B" :
+    r.urgency === "high" ? "#F5EBD6" :
+    r.urgency === "medium" ? "#89CFF0" :
+    "rgba(245,235,214,0.55)";
 
   return (
     <CrmShell module="Cases">
       <DetailTopBar backTo="/cases" backLabel="Cases" />
 
-      <main className="max-w-[960px] mx-auto px-6 py-7 space-y-5">
+      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <Link
-              href={`/directory/person/${r.personId}`}
+              to="/directory/person/$id"
+              params={{ id: r.personId }}
               className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
               title={`View ${r.personName}`}
             >
               {initials}
             </Link>
           }
-          eyebrow={<span className="font-mono text-[10px] text-white/45">{r.id} · {r.caseId}</span>}
-          pills={
-            <>
-              <SubStatusPill status={r.status} />
-              <UrgencyBadge urgency={r.urgency} />
-            </>
-          }
+          pills={<StatusPill tint={urgencyTint}>{r.urgency} · {STATUS_LABEL[r.status as keyof typeof STATUS_LABEL] ?? r.status}</StatusPill>}
           title={r.taxonomy}
           chips={
             <>
               <MetaChip icon={User}>
-                <Link href={`/directory/person/${r.personId}`} className="hover:text-white transition">
+                <Link to="/directory/person/$id" params={{ id: r.personId }} className="hover:text-white transition">
                   {r.personName}
                 </Link>
               </MetaChip>
-              <MetaChip icon={Users}>
-                {r.household.adults}a · {r.household.children}c
-                {r.household.pets ? ` · ${r.household.pets}p` : ""}
-              </MetaChip>
               <MetaChip icon={MapPin}>{r.county} County</MetaChip>
-              <MetaChip icon={Calendar}>{r.daysOpen}d open</MetaChip>
-              <span className="font-mono text-[11px] text-white/40">AIRS {r.airs} · OCHA {r.ocha}</span>
+              <MetaPopover>
+                <MetaChip icon={Users}>
+                  {r.household.adults}a · {r.household.children}c
+                  {r.household.pets ? ` · ${r.household.pets}p` : ""}
+                </MetaChip>
+                <MetaChip icon={Calendar}>{r.daysOpen}d open</MetaChip>
+                <span className="font-mono text-[10px] text-white/40">{r.id} · {r.caseId}</span>
+                <span className="font-mono text-[10px] text-white/40">AIRS {r.airs} · OCHA {r.ocha}</span>
+              </MetaPopover>
             </>
           }
           actions={
             <>
               <ActionBtn icon={Phone} label="Call" />
-              <ActionBtn icon={MessageSquare} label="Message" />
               <ActionBtn icon={Check} label="Approve match" primary />
-              <button className="w-8 h-8 rounded-md hover:bg-white/8 text-white/55 hover:text-white flex items-center justify-center transition">
-                <MoreHorizontal size={14} />
-              </button>
+              <OverflowMenu
+                actions={[
+                  { label: "Message citizen", icon: MessageSquare },
+                  { label: "Reassign", icon: Users },
+                  { label: "Share", icon: Share2 },
+                  { label: "Flag for review", icon: Flag, danger: true },
+                  { label: "Close request", icon: XCircle, danger: true },
+                ]}
+              />
             </>
           }
         />
 
         <AiSummary
           id={`${r.id} · ${r.caseId}`}
+          tldr={`${r.urgency} ${r.taxonomy.toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
           summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
 
-        <RequestTabs r={r} cands={cands} delivery={delivery} onMatchAction={handleMatchAction} />
+        <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
       </main>
     </CrmShell>
   );
 }
 
 function RequestTabs({
-  r, cands, delivery, onMatchAction,
+  r, cands, delivery,
 }: {
   r: ReqDetail;
   cands: MatchCandidate[];
-  delivery: DeliveryDetail | undefined;
-  onMatchAction: (matchId: string, action: "approve" | "reject") => void;
+  delivery: ReturnType<typeof deliveries.find>;
 }) {
   const parentCase = cases.find((c) => c.id === r.caseId);
   const relatedCases = cases.filter((c) => c.citizen.toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()) && c.id !== r.caseId);
 
   const tabs: DetailTab[] = [
     {
-      key: "timeline",
-      label: "Timeline",
+      key: "activity",
+      label: "Activity",
       count: r.notes.length + (delivery ? delivery.steps.length : 0),
       content: (
         <div className="space-y-5">
@@ -281,7 +127,8 @@ function RequestTabs({
                   </p>
                   {ta && (
                     <Link
-                      href={`/drive/${ta.id}`}
+                      to="/drive/$id"
+                      params={{ id: ta.id }}
                       className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
                     >
                       <ExternalLink size={10} /> Driver page
@@ -364,15 +211,21 @@ function RequestTabs({
       ),
     },
     {
-      key: "cases",
-      label: "Cases",
-      count: (parentCase ? 1 : 0) + relatedCases.length,
-      content: (
+      key: "matches",
+      label: "Matches",
+      count: cands.length,
+      content: <MatchesList cands={cands} />,
+    },
+    {
+      key: "files",
+      label: "Files",
+      content: (parentCase || relatedCases.length > 0) ? (
         <ul className="space-y-1">
           {[parentCase, ...relatedCases].filter(Boolean).map((c) => c && (
             <li key={c.id}>
               <Link
-                href={`/cases/${c.id}`}
+                to="/cases/$id"
+                params={{ id: c.id }}
                 className="flex items-center gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
               >
                 <GitBranch size={13} className="text-white/40" />
@@ -385,51 +238,16 @@ function RequestTabs({
             </li>
           ))}
         </ul>
+      ) : (
+        <EmptyTab label="No linked cases or reports." />
       ),
-    },
-    {
-      key: "matches",
-      label: "Matches",
-      count: cands.length,
-      content: <MatchesList cands={cands} onAction={onMatchAction} />,
-    },
-    {
-      key: "notes",
-      label: "Notes",
-      count: r.notes.length,
-      content: (
-        <div className="divide-y divide-[var(--hairline)] -my-2">
-          {r.notes.map((n: ReqDetail["notes"][number], i: number) => (
-            <div key={i} className="py-3">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${n.system ? "bg-white/6 text-white/55" : "bg-[#89CFF0]/12 text-[#89CFF0]"}`}>
-                  {n.system ? "system" : "manual"}
-                </span>
-                <span className="font-mono text-[10px] text-white/45">{n.ts} · {n.who}</span>
-              </div>
-              <p className="text-[13px] text-white/85">{n.msg}</p>
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: "reports",
-      label: "Reports",
-      content: <EmptyTab label="No reports linked to this request." />,
     },
   ];
 
-  return <DetailTabs tabs={tabs} defaultKey="timeline" />;
+  return <DetailTabs tabs={tabs} defaultKey="activity" />;
 }
 
-function MatchesList({
-  cands,
-  onAction,
-}: {
-  cands: MatchCandidate[];
-  onAction: (matchId: string, action: "approve" | "reject") => void;
-}) {
+function MatchesList({ cands }: { cands: MatchCandidate[] }) {
   return (
     <div className="space-y-3">
       {cands.map((c: MatchCandidate) => (
@@ -465,16 +283,10 @@ function MatchesList({
           <p className="text-[12px] text-white/55 italic mt-3">{c.rationale}</p>
           {!c.approved && (
             <div className="flex items-center gap-2 mt-3">
-              <button
-                onClick={() => onAction(c.id, "approve")}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#34D399]/15 text-[#34D399] text-[11px] font-medium hover:bg-[#34D399]/25 transition"
-              >
+              <button className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#34D399]/15 text-[#34D399] text-[11px] font-medium hover:bg-[#34D399]/25 transition">
                 <Check size={11} /> Approve
               </button>
-              <button
-                onClick={() => onAction(c.id, "reject")}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-white/6 text-white/65 text-[11px] font-medium hover:bg-white/12 transition"
-              >
+              <button className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-white/6 text-white/65 text-[11px] font-medium hover:bg-white/12 transition">
                 <X size={11} /> Reject
               </button>
             </div>
@@ -485,20 +297,7 @@ function MatchesList({
   );
 }
 
-function ActionBtn({ icon: Icon, label, primary }: { icon: typeof Phone; label: string; primary?: boolean }) {
-  return (
-    <button
-      className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] font-medium transition ${
-        primary
-          ? "bg-[#EF4E4B] hover:bg-[#d94340] text-white"
-          : "bg-white/6 hover:bg-white/10 text-white/85"
-      }`}
-    >
-      <Icon size={12} strokeWidth={2} />
-      {label}
-    </button>
-  );
-}
+
 
 function Bar({ label, v, max }: { label: string; v: number; max: number }) {
   return (

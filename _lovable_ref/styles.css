@@ -1,0 +1,135 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-panel: var(--panel);
+  --color-panel-border: var(--panel-border);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: #0B1822;
+  --surface-app: #0B1822;
+  --surface-1: #15293A;
+  --surface-2: #1E3A50;
+  --foreground: #F5EBD6;
+  --card: #15293A;
+  --card-foreground: #F5EBD6;
+  --popover: #15293A;
+  --popover-foreground: #F5EBD6;
+  --primary: #EF4E4B;
+  --primary-foreground: #F5EBD6;
+  --secondary: #89CFF0;
+  --secondary-foreground: #0B1822;
+  --muted: rgba(245,235,214,0.04);
+  --muted-foreground: rgba(245,235,214,0.6);
+  --accent: #89CFF0;
+  --accent-foreground: #0B1822;
+  --destructive: #EF4E4B;
+  --destructive-foreground: #F5EBD6;
+  --border: rgba(245,235,214,0.1);
+  --hairline: rgba(245,235,214,0.1);
+  --input: rgba(245,235,214,0.1);
+  --ring: #89CFF0;
+  --panel: #15293A;
+  --panel-border: rgba(245,235,214,0.1);
+  --text-secondary: rgba(245,235,214,0.7);
+  --text-tertiary: rgba(245,235,214,0.42);
+  --cream: #F5EBD6;
+  --cream-dim: #C9BFA8;
+  --warning: #F5EBD6;
+  --success: #34D399;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+  }
+  body { min-height: 100vh; }
+  h1, h2, h3, h4 { letter-spacing: -0.022em; }
+  input, button, select { font-family: inherit; }
+  /* Force white-family utilities to render as cream so the whole app reads in the SOS palette */
+  .text-white { color: var(--cream) !important; }
+}
+
+@layer utilities {
+  .font-mono { font-family: var(--font-mono); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { scrollbar-width: none; }
+  .hairline { box-shadow: inset 0 -1px 0 var(--hairline); }
+  .glass {
+    background: color-mix(in oklab, var(--background) 96%, transparent);
+    backdrop-filter: saturate(140%) blur(20px);
+    -webkit-backdrop-filter: saturate(140%) blur(20px);
+  }
+  /* HubSpot-esque type scale */
+  .t-page { font-size: 22px; line-height: 1.18; font-weight: 600; letter-spacing: -0.018em; }
+  .t-section { font-size: 14px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; }
+  .t-body { font-size: 13px; line-height: 1.45; }
+  .t-meta { font-family: var(--font-mono); font-size: 11px; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+  /* Hairline-separated row pattern (replaces card-in-card) */
+  .row { display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px; border-bottom: 1px solid var(--hairline); transition: background-color 120ms ease; }
+  .row:last-child { border-bottom: 0; }
+  .row-tall { height: 56px; }
+  .row:hover, .row-hover:hover { background: rgba(255,255,255,0.04); }
+  .row-active { background: rgba(137,207,240,0.08); box-shadow: inset 3px 0 0 #89CFF0; }
+  /* Quiet sticky toolbar */
+  .toolbar {
+    position: sticky; top: 0; z-index: 20;
+    height: 52px; padding: 0 24px;
+    display: flex; align-items: center; gap: 10px;
+    background: color-mix(in oklab, var(--background) 88%, transparent);
+    backdrop-filter: saturate(140%) blur(16px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  /* Subtle panel without nesting cards */
+  .panel { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 14px; }
+  .panel-flat { background: transparent; border: 1px solid var(--hairline); border-radius: 14px; }
+  /* Modern table column differentiation: subtle vertical separators + zebra rows */
+  .t-cols th + th,
+  .t-cols td + td { border-left: 1px solid rgba(245,235,214,0.05); }
+  .t-cols tbody tr:nth-child(even) td { background: rgba(245,235,214,0.018); }
+  .t-cols tbody tr:hover td { background: rgba(245,235,214,0.05); }
+  /* Standard page-content padding (clears the PageHeader hairline) */
+  .page-body { padding: 24px 24px 40px; }
+}

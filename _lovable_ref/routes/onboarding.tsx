@@ -1,0 +1,141 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Logomark } from "@/components/Logomark";
+import { Check, ArrowRight, Users, LayoutGrid, Map, Calendar, Package, HeartHandshake, BarChart3, Radio, Truck } from "lucide-react";
+import { bulkSet, type ModuleId, type OrgType } from "@/lib/prefs-store";
+
+export const Route = createFileRoute("/onboarding")({
+  head: () => ({ meta: [{ title: "Onboarding — SOS Connect" }] }),
+  component: Onboarding,
+});
+
+const orgTypes: { id: OrgType; label: string; sub: string }[] = [
+  { id: "small", label: "Small / mutual aid", sub: "< 5 people" },
+  { id: "mid", label: "Mid-size org", sub: "5–50 people" },
+  { id: "large", label: "Large org / EM", sub: "50+ people" },
+];
+const allModules: { id: ModuleId; label: string; icon: typeof Users }[] = [
+  { id: "directory", label: "Directory", icon: Users },
+  { id: "cases", label: "Cases", icon: LayoutGrid },
+  { id: "map", label: "Map", icon: Map },
+  { id: "transport", label: "Transport", icon: Truck },
+  { id: "calendar", label: "Calendar", icon: Calendar },
+  { id: "inventory", label: "Inventory", icon: Package },
+  { id: "volunteers", label: "Volunteers", icon: HeartHandshake },
+  { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "command", label: "Command", icon: Radio },
+];
+
+function Onboarding() {
+  const [step, setStep] = useState(0);
+  const [orgType, setOrgType] = useState<OrgType>("mid");
+  const [selected, setSelected] = useState<ModuleId[]>(["directory", "cases", "map"]);
+  const [invites, setInvites] = useState("");
+
+  return (
+    <div className="min-h-screen bg-[var(--background)] text-white flex items-center justify-center px-5">
+      <div className="max-w-lg w-full py-12">
+        <div className="flex items-center gap-2.5 mb-8">
+          <Logomark size={28} />
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">Onboarding · {step + 1} of 3</span>
+        </div>
+
+        <div className="flex gap-1.5 mb-8">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-[#89CFF0]" : "bg-white/10"}`} />
+          ))}
+        </div>
+
+        {step === 0 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">What kind of org?</h1>
+            <p className="text-white/55 mt-2">This calibrates the UI density and which modules ship enabled.</p>
+            <div className="mt-6 space-y-2">
+              {orgTypes.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setOrgType(o.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition text-left ${
+                    orgType === o.id ? "border-[#89CFF0] bg-[#89CFF0]/8" : "border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${orgType === o.id ? "border-[#89CFF0] bg-[#89CFF0]" : "border-white/30"}`}>
+                    {orgType === o.id && <Check size={12} className="text-[#0F1E2B]" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{o.label}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{o.sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 1 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">Pick your modules</h1>
+            <p className="text-white/55 mt-2">You can enable more later in Settings.</p>
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              {allModules.map((m) => {
+                const on = selected.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelected((s) => (s.includes(m.id) ? s.filter((x) => x !== m.id) : [...s, m.id]))}
+                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition ${
+                      on ? "border-[#89CFF0] bg-[#89CFF0]/8" : "border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]"
+                    }`}
+                  >
+                    <m.icon size={16} className={on ? "text-[#89CFF0]" : "text-white/55"} strokeWidth={1.75} />
+                    <span className="text-[13px] font-medium">{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h1 className="text-[28px] font-semibold tracking-tight">Invite your team</h1>
+            <p className="text-white/55 mt-2">Optional. One email per line.</p>
+            <textarea
+              value={invites}
+              onChange={(e) => setInvites(e.target.value)}
+              placeholder="alex@yourorg.com&#10;jess@yourorg.com"
+              rows={6}
+              className="mt-6 w-full rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+            />
+          </>
+        )}
+
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            className="text-[13px] text-white/45 hover:text-white transition disabled:opacity-30"
+            disabled={step === 0}
+          >
+            Back
+          </button>
+          {step < 2 ? (
+            <button
+              onClick={() => setStep((s) => s + 1)}
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition"
+            >
+              Continue <ArrowRight size={14} />
+            </button>
+          ) : (
+            <Link
+              to="/map"
+              onClick={() => bulkSet({ orgType, enabled: selected })}
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition"
+            >
+              Open SOS Connect <ArrowRight size={14} />
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,111 +1,108 @@
 "use client";
-
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
-import { ChevronLeft, Clock, Activity } from "lucide-react";
+import { Clock, Phone, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
 import { CrmShell } from "@/components/crm-shell";
+import { Avatar } from "@/components/directory/Avatar";
+import { AiSummary } from "@/components/crm/AiSummary";
+import {
+  DetailTopBar, IdentityBand, MetaChip,
+  DetailTabs, EmptyTab, type DetailTab,
+  StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
+} from "@/components/crm/DetailShell";
 import { volunteers } from "@/lib/prototype-data";
 
-function Avatar({ name, size }: { name: string; size: number }) {
-  const initials = name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <div
-      className="rounded-full bg-white/10 flex items-center justify-center font-semibold text-white/85 shrink-0"
-      style={{ width: size, height: size, fontSize: size * 0.32 }}
-    >
-      {initials}
-    </div>
-  );
-}
+type Volunteer = (typeof volunteers)[number];
+
 
 export default function VolunteerPage() {
-  const params = useParams();
-  const id = params.id as string;
+  const v = Route.useLoaderData();
+  const statusTint =
+    v.status === "active" ? "#34D399" :
+    v.status === "new" ? "#89CFF0" :
+    "rgba(245,235,214,0.55)";
 
-  const v = useMemo(() => volunteers.find((x) => x.id === id), [id]);
-
-  if (!v) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white/70">
-        Volunteer not found ·{" "}
-        <Link href="/directory" className="text-[#89CFF0] underline ml-2">
-          Back
-        </Link>
-      </div>
-    );
-  }
-
-  const statusTone =
-    v.status === "active"
-      ? "bg-[#34D399]/15 text-[#34D399]"
-      : v.status === "new"
-      ? "bg-[#89CFF0]/15 text-[#89CFF0]"
-      : "bg-white/10 text-white/55";
+  const tabs: DetailTab[] = [
+    {
+      key: "activity",
+      label: "Activity",
+      content: <EmptyTab label="No recent activity logged." />,
+    },
+    {
+      key: "assignments",
+      label: "Assignments",
+      content: <EmptyTab label="No active assignments." />,
+    },
+    {
+      key: "skills",
+      label: "Skills",
+      count: v.skills.length,
+      content: v.skills.length === 0 ? (
+        <EmptyTab label="No skills listed." />
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {v.skills.map((s: string) => (
+            <span key={s} className="h-7 px-2.5 inline-flex items-center rounded-md bg-white/6 text-[12px] text-white/85">
+              {s}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <CrmShell module="Directory">
-      <div className="min-h-screen text-white">
-        <header className="sticky top-0 z-30 glass border-b border-[var(--hairline)]">
-          <div className="max-w-[900px] mx-auto px-5 md:px-10 h-12 flex items-center">
-            <Link
-              href="/directory"
-              className="inline-flex items-center gap-1 text-[15px] text-[#89CFF0] -ml-1.5"
-            >
-              <ChevronLeft size={20} />
-              <span>Directory</span>
-            </Link>
-          </div>
-        </header>
+      <DetailTopBar backTo="/directory" backLabel="Directory" />
 
-        <main className="max-w-[900px] mx-auto px-5 md:px-10 py-6 md:py-10">
-          <div className="flex flex-col items-center text-center pt-2 pb-7">
-            <Avatar name={v.name} size={96} />
-            <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight mt-4">
-              {v.name}
-            </h1>
-            <p className="text-[15px] text-white/55 mt-0.5">Volunteer · {v.id}</p>
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-              <span
-                className={`px-3 py-1 text-[12px] font-medium rounded-full capitalize ${statusTone}`}
-              >
-                {v.status}
-              </span>
-              <span className="px-3 py-1 text-[12px] font-medium rounded-full bg-white/8 text-white/75 inline-flex items-center gap-1">
-                <Clock size={12} strokeWidth={2} /> {v.hours}h logged
-              </span>
-            </div>
-          </div>
+      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+        <IdentityBand
+          avatar={<Avatar name={v.name} size={56} />}
+          pills={<StatusPill tint={statusTint}>{v.status}</StatusPill>}
+          title={v.name}
+          chips={
+            <>
+              <MetaChip icon={Clock}>{v.hours}h logged</MetaChip>
+              <MetaPopover>
+                <span className="font-mono text-[10px] text-white/40">{v.id}</span>
+                <MetaChip>{v.skills.length} skill{v.skills.length === 1 ? "" : "s"}</MetaChip>
+              </MetaPopover>
+            </>
+          }
+          actions={
+            <>
+              <ActionBtn icon={Phone} label="Call" />
+              <ActionBtn icon={MessageSquare} label="Message" />
+              <OverflowMenu
+                actions={[
+                  { label: "Share", icon: Share2 },
+                  { label: "Flag", icon: Flag, danger: true },
+                  { label: "Deactivate", icon: XCircle, danger: true },
+                ]}
+              />
+            </>
+          }
+        />
 
-          <section className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">
-              Skills
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {v.skills.map((s: string) => (
-                <span
-                  key={s}
-                  className="h-7 px-2.5 inline-flex items-center rounded-md bg-white/6 text-[12px] text-white/85"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </section>
+        <HeroLine
+          primary={
+            <>
+              <span className="font-semibold tabular-nums">{v.hours}</span>
+              <span className="text-white/55"> hours logged · </span>
+              <span className="text-white/70 capitalize">{v.status}</span>
+            </>
+          }
+          meta={`${v.skills.length} ${v.skills.length === 1 ? "skill" : "skills"}`}
+        />
 
-          <section className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] p-5 mt-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3 inline-flex items-center gap-1.5">
-              <Activity size={11} /> Activity
-            </p>
-            <p className="text-[13px] text-white/55">No recent activity logged.</p>
-          </section>
-        </main>
-      </div>
+        <AiSummary
+          id={v.id}
+          tldr={`${v.status} volunteer · ${v.hours}h logged.`}
+          summary={`${v.name} is a ${v.status} volunteer with ${v.hours} hours logged. Tracked skills: ${v.skills.length > 0 ? v.skills.join(", ") : "none on file"}.`}
+        />
+
+        <DetailTabs tabs={tabs} defaultKey="activity" />
+      </main>
     </CrmShell>
   );
 }
