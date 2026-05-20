@@ -1,18 +1,57 @@
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { volunteers, volunteerDetails, orgs, type VolunteerDetail } from "@/lib/prototype-data";
+import { volunteers as protoVolunteers, volunteerDetails, orgs, type VolunteerDetail } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 import { Plus, ShieldCheck, Search, X, Star, Truck, CheckCircle2, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+function extractList(res: unknown, keys: string[]): unknown[] {
+  if (Array.isArray(res)) return res;
+  const obj = res as Record<string, unknown>;
+  for (const k of keys) {
+    if (Array.isArray(obj?.[k])) return obj[k] as unknown[];
+  }
+  return [];
+}
+
+type VolunteerRow = typeof protoVolunteers[number];
+
+function mapVolunteers(data: unknown[]): VolunteerRow[] {
+  return data.map((r) => {
+    const v = r as Record<string, unknown>;
+    return {
+      id: String(v.id ?? v.volunteer_id ?? ""),
+      name: String(v.name ?? v.full_name ?? ""),
+      skills: Array.isArray(v.skills) ? (v.skills as string[]) : [],
+      hours: Number(v.hours ?? v.total_hours ?? 0),
+      status: (v.status as VolunteerRow["status"]) ?? "active",
+    };
+  }).filter(v => v.id && v.name);
+}
+
 export default function VolunteersPage() {
+  const { orgId } = useAuthContext();
+  const [volunteers, setVolunteers] = useState(protoVolunteers);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmVolunteersAvailable(orgId)
+      .then((res) => {
+        const items = mapVolunteers(extractList(res, ["volunteers", "data", "results"]));
+        if (items.length > 0) setVolunteers(items);
+      })
+      .catch(() => {});
+  }, [orgId]);
+
   const active = volunteers.filter(v => v.status === "active").length;
   const assigned = volunteerDetails.filter(v => v.status === "assigned").length;
   const allSkills = Array.from(new Set(volunteers.flatMap(v => v.skills))).sort();
