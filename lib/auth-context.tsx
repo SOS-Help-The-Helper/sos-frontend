@@ -14,7 +14,7 @@ interface AuthContext {
 
 // Demo bypass: always admin, never loading
 const DEMO_CTX: AuthContext = {
-  orgId: null,
+  orgId: 'da86c92f-d52d-4b13-a474-30e1be8fb808', // Emergency RV — hardcoded for demo
   orgName: 'SOS Platform',
   orgType: 'admin',
   role: 'admin',
