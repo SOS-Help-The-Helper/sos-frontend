@@ -1,11 +1,10 @@
 'use client';
-import { db } from '@/lib/api';
+import { api } from '@/lib/api';
 
 import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { CrmShell } from '@/components/crm-shell';
 import { useViewContext } from '@/lib/view-context';
 import { useAuthContext } from '@/lib/auth-context';
-// TODO: rewire to lib/api.ts (Phase 3-5) — import { getMatchLines } from '@/lib/map-queries';
 import { getMapViews, createMapView, updateMapView, deleteMapView, updateMapViewFilters, type MapView } from '@/lib/map-views';
 import { MapPin, Link2, Plus, X, Save, GripVertical } from 'lucide-react';
 import { PersonaToggle, usePersonas } from '@/components/partner/persona-toggle';
@@ -63,26 +62,39 @@ function MapContent() {
 
   // Load map data
   useEffect(() => {
+    if (!currentOrgId) return;
     async function loadData() {
-      let reqQuery = db.from('requests').select('id, category, urgency, latitude, longitude, status, details_sanitized, triage_score, sos_id, org_id, disaster_id, taxonomy_code, created_at, source, person_id, household_size').not('latitude', 'is', null);
-      let resQuery = db.from('resources').select('id, category, latitude, longitude, status, capacity_available, details_sanitized, sos_id, org_id, taxonomy_code, created_at, source, persona_type').not('latitude', 'is', null);
-      // Coordination orgs see all network data; other orgs see only their own
-      if (effectiveOrgId && effectiveOrgType !== 'coordination') {
-        reqQuery = reqQuery.eq('org_id', effectiveOrgId);
-        resQuery = resQuery.eq('org_id', effectiveOrgId);
-      }
-      const [reqData, resData, disData, lines] = await Promise.all([
-        reqQuery, resQuery,
-        db.from('disasters').select('id, name, status'),
-        getMatchLines(effectiveOrgId),
-      ]);
-      setRequests(reqData.data || []);
-      setResources(resData.data || []);
-      setDisasters(disData.data || []);
-      setMatchLines(lines);
+      const result = await api.crmMapFeatures(currentOrgId);
+      const features: any[] = result?.features || [];
+
+      const cases = features
+        .filter((f: any) => f.properties?.layer === 'case')
+        .map((f: any) => ({
+          id: f.properties.id,
+          latitude: f.geometry.coordinates[1],
+          longitude: f.geometry.coordinates[0],
+          status: f.properties.status,
+          urgency: f.properties.urgency,
+          taxonomy_code: f.properties.taxonomy,
+          description: f.properties.title,
+        }));
+
+      const resourceItems = features
+        .filter((f: any) => f.properties?.layer === 'resource')
+        .map((f: any) => ({
+          id: f.properties.id,
+          latitude: f.geometry.coordinates[1],
+          longitude: f.geometry.coordinates[0],
+          status: f.properties.status,
+          taxonomy_code: f.properties.taxonomy,
+          description: f.properties.title,
+        }));
+
+      setRequests(cases);
+      setResources(resourceItems);
     }
     loadData();
-  }, [effectiveOrgId]);
+  }, [currentOrgId]);
 
   // Get active view config
   const activeView = activeTabId === ALL_TAB_ID || activeTabId === MATCHES_TAB_ID
