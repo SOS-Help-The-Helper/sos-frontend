@@ -27,7 +27,7 @@ const PUBLIC_PREFIXES = [
   '/app/',         // partner portal
   '/drive/',       // driver delivery pages
   '/cases/',       // partner: cases
-  '/directory/',   // partner: directory
+  '/directory/',   // partner: directory + detail pages (person, org, etc)
   '/transport/',   // partner: transport
   '/map/',         // partner: map
   '/match/',       // partner: match
