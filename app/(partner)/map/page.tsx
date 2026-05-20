@@ -1,12 +1,155 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 import { orgs, cases } from "@/lib/prototype-data";
 import { Filter, Plus, Calendar } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+
+const LAYER_COLORS: Record<string, string> = {
+  case: "#EF4E4B", resource: "#89CFF0", facility: "#4ADE80", event: "#A855F7",
+};
+
+const LAYERS = ["case", "resource", "facility", "event"] as const;
+
+function MapboxEmbed({ orgId }: { orgId: string }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<any>(null);
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstance.current) return;
+    let cancelled = false;
+
+    // Inject Mapbox CSS
+    if (!document.getElementById("mapbox-css")) {
+      const link = document.createElement("link");
+      link.id = "mapbox-css";
+      link.rel = "stylesheet";
+      link.href = "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css";
+      document.head.appendChild(link);
+    }
+
+    (async () => {
+      const mapboxgl = (await import("mapbox-gl")).default;
+      if (cancelled || !mapRef.current) return;
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+
+      const map = new mapboxgl.Map({
+        container: mapRef.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-82.5, 35.5],
+        zoom: 8,
+      });
+      mapInstance.current = map;
+
+      map.on("load", async () => {
+        try {
+          const data = await api.crmMapFeatures(orgId);
+          const features: any[] = (data as any)?.features ?? [];
+
+          for (const layer of LAYERS) {
+            const geojson = {
+              type: "FeatureCollection" as const,
+              features: features.filter((f: any) => f.properties?.layer === layer),
+            };
+            const srcId = `${layer}-source`;
+            const color = LAYER_COLORS[layer];
+
+            map.addSource(srcId, {
+              type: "geojson",
+              data: geojson,
+              cluster: true,
+              clusterMaxZoom: 14,
+              clusterRadius: 50,
+            });
+
+            // Cluster circles — solid, no labels
+            map.addLayer({
+              id: `${layer}-clusters`,
+              type: "circle",
+              source: srcId,
+              filter: ["has", "point_count"],
+              paint: {
+                "circle-color": color,
+                "circle-opacity": 0.75,
+                "circle-radius": ["interpolate", ["linear"], ["get", "point_count"], 10, 14, 50, 22, 200, 32],
+                "circle-blur": 0.15,
+              },
+            });
+
+            // Cluster glow ring
+            map.addLayer({
+              id: `${layer}-cluster-glow`,
+              type: "circle",
+              source: srcId,
+              filter: ["has", "point_count"],
+              paint: {
+                "circle-color": color,
+                "circle-opacity": 0.2,
+                "circle-radius": ["interpolate", ["linear"], ["get", "point_count"], 10, 22, 50, 32, 200, 44],
+              },
+            });
+
+            // Unclustered points
+            map.addLayer({
+              id: `${layer}-unclustered`,
+              type: "circle",
+              source: srcId,
+              filter: ["!", ["has", "point_count"]],
+              paint: {
+                "circle-color": color,
+                "circle-radius": 6,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": "#0F1E2B",
+              },
+            });
+
+            // Unclustered glow
+            map.addLayer({
+              id: `${layer}-glow`,
+              type: "circle",
+              source: srcId,
+              filter: ["!", ["has", "point_count"]],
+              paint: {
+                "circle-color": color,
+                "circle-radius": 12,
+                "circle-opacity": 0.2,
+              },
+            });
+
+            // Click cluster → zoom in
+            map.on("click", `${layer}-clusters`, (e: any) => {
+              const features = map.queryRenderedFeatures(e.point, { layers: [`${layer}-clusters`] });
+              const clusterId = features[0]?.properties?.cluster_id;
+              if (!clusterId) return;
+              (map.getSource(srcId) as any).getClusterExpansionZoom(clusterId, (_: any, zoom: number) => {
+                map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
+              });
+            });
+
+            // Hover cursor
+            map.on("mouseenter", `${layer}-clusters`, () => { map.getCanvas().style.cursor = "pointer"; });
+            map.on("mouseleave", `${layer}-clusters`, () => { map.getCanvas().style.cursor = ""; });
+            map.on("mouseenter", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = "pointer"; });
+            map.on("mouseleave", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = ""; });
+          }
+        } catch (e) {
+          console.warn("Map data load failed:", e);
+        }
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      mapInstance.current?.remove();
+      mapInstance.current = null;
+    };
+  }, [orgId]);
+
+  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
+}
 
 // Rough stylized "WNC" county blobs, hand-placed coords (svg viewBox 0 0 800 500)
 const counties = [
@@ -96,108 +239,7 @@ export default function MapPage() {
 
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden aspect-[16/10] relative">
-          <svg viewBox="0 0 800 500" className="w-full h-full">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="800" height="500" fill="url(#grid)" />
-            {counties.map((c) => {
-              const active = c.name === activeCounty;
-              return (
-                <g key={c.name} onClick={() => setActive(c.name)} className="cursor-pointer">
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r={c.r}
-                    fill={active ? "rgba(137,207,240,0.18)" : "rgba(255,255,255,0.04)"}
-                    stroke={active ? "#89CFF0" : "rgba(255,255,255,0.18)"}
-                    strokeWidth={active ? 2 : 1}
-                    className="transition-all"
-                  />
-                  <text x={c.x} y={c.y + 4} textAnchor="middle" fill={active ? "#fff" : "rgba(255,255,255,0.5)"} fontSize="11" fontFamily="JetBrains Mono" className="uppercase tracking-wider pointer-events-none">
-                    {c.name}
-                  </text>
-                </g>
-              );
-            })}
-
-            {hasRealData ? (
-              <>
-                {/* Cases: red (critical) or cream dots */}
-                {layers.cases.map((f, i) => {
-                  const [lng, lat] = f.geometry.coordinates;
-                  const [px, py] = toSVG(lng, lat);
-                  const urgency = f.properties.urgency as string;
-                  const color = urgency === 'critical' ? '#EF4E4B' : '#F5EBD6';
-                  return (
-                    <g key={`case-${i}`}>
-                      <circle cx={px} cy={py} r="6" fill={color} stroke="#0F1E2B" strokeWidth="2" />
-                      <circle cx={px} cy={py} r="11" fill={color} opacity="0.25">
-                        <animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
-                      </circle>
-                    </g>
-                  );
-                })}
-
-                {/* Resources: blue dots */}
-                {layers.resources.map((f, i) => {
-                  const [lng, lat] = f.geometry.coordinates;
-                  const [px, py] = toSVG(lng, lat);
-                  return (
-                    <g key={`resource-${i}`}>
-                      <circle cx={px} cy={py} r="6" fill="#4A9EE8" stroke="#0F1E2B" strokeWidth="2" />
-                    </g>
-                  );
-                })}
-
-                {/* Facilities: green squares */}
-                {layers.facilities.map((f, i) => {
-                  const [lng, lat] = f.geometry.coordinates;
-                  const [px, py] = toSVG(lng, lat);
-                  return (
-                    <rect key={`facility-${i}`} x={px - 6} y={py - 6} width="12" height="12" fill="#4ADE80" stroke="#0F1E2B" strokeWidth="2" rx="2" />
-                  );
-                })}
-
-                {/* Events: purple calendar icons (circle + cross) */}
-                {layers.events.map((f, i) => {
-                  const [lng, lat] = f.geometry.coordinates;
-                  const [px, py] = toSVG(lng, lat);
-                  return (
-                    <g key={`event-${i}`}>
-                      <circle cx={px} cy={py} r="8" fill="#A855F7" stroke="#0F1E2B" strokeWidth="2" />
-                      {/* Calendar icon: simple grid lines */}
-                      <rect x={px - 4} y={py - 4} width="8" height="8" fill="none" stroke="#fff" strokeWidth="1" rx="1" />
-                      <line x1={px - 4} y1={py - 1} x2={px + 4} y2={py - 1} stroke="#fff" strokeWidth="1" />
-                      <line x1={px - 2} y1={py - 4} x2={px - 2} y2={py - 2} stroke="#fff" strokeWidth="1" />
-                      <line x1={px + 2} y1={py - 4} x2={px + 2} y2={py - 2} stroke="#fff" strokeWidth="1" />
-                    </g>
-                  );
-                })}
-              </>
-            ) : (
-              /* Prototype fallback pins */
-              cases.slice(0, 5).map((c, i) => {
-                const co = counties.find((x) => x.name === c.county);
-                if (!co) return null;
-                const px = co.x + (i % 2 === 0 ? -18 : 22);
-                const py = co.y - 18 - (i * 6) % 24;
-                const color = c.urgency === "critical" ? "#EF4E4B" : "#F5EBD6";
-                return (
-                  <g key={c.id}>
-                    <circle cx={px} cy={py} r="6" fill={color} stroke="#0F1E2B" strokeWidth="2" />
-                    <circle cx={px} cy={py} r="11" fill={color} opacity="0.25">
-                      <animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                  </g>
-                );
-              })
-            )}
-          </svg>
+          <MapboxEmbed orgId={orgId} />
 
           <div className="absolute bottom-3 left-3 flex gap-1.5">
             {["HOUSING", "FOOD", "MEDICAL", "CHILDCARE"].map((t) => (
