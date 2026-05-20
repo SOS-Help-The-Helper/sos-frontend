@@ -2,19 +2,21 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 import {
-  facilities,
-  inventory,
+  facilities as prototypeFacilities,
+  inventory as prototypeInventory,
   orgs,
-  resources,
+  resources as prototypeResources,
   assetEvents,
   type Facility,
   type ResourceDetail,
 } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 import { AlertTriangle, Plus, Warehouse, Truck, Package, MapPin, X, ArrowRightLeft, ChevronRight, Star } from "lucide-react";
 
 const TYPE_ICON: Record<Facility["type"], React.ElementType> = {
@@ -25,8 +27,29 @@ const TYPE_ICON: Record<Facility["type"], React.ElementType> = {
 };
 
 export default function InventoryPage() {
+  const { orgId } = useAuthContext();
   const [facilityId, setFacilityId] = useState<string | "all">("all");
   const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [facilities, setFacilities] = useState<Facility[]>(prototypeFacilities);
+  const [inventory, setInventory] = useState(prototypeInventory);
+  const [resources, setResources] = useState<ResourceDetail[]>(prototypeResources);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmFacilitiesList(orgId)
+      .then((data: unknown) => {
+        const rows = (data as { facilities?: Facility[] })?.facilities;
+        if (rows?.length) setFacilities(rows);
+      })
+      .catch(() => {/* fall back to prototype */});
+    api.queryInventory({ org_id: orgId })
+      .then((data: unknown) => {
+        const d = data as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+        if (d?.inventory?.length) setInventory(d.inventory);
+        if (d?.resources?.length) setResources(d.resources);
+      })
+      .catch(() => {/* fall back to prototype */});
+  }, [orgId]);
 
   const filteredItems = useMemo(() => {
     if (facilityId === "all") return inventory;
@@ -34,7 +57,7 @@ export default function InventoryPage() {
     return inventory.filter(
       (i) => i.location === fac?.name || i.location.includes(fac?.address.split(",")[0] ?? "")
     );
-  }, [facilityId]);
+  }, [facilityId, facilities, inventory]);
 
   const lowStock = filteredItems.filter((i) => i.qty < i.threshold);
   const activeFac = facilities.find((f) => f.id === facilityId);

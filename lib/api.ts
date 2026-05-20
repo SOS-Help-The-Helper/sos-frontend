@@ -215,6 +215,11 @@ export const api = {
     efCall("partner-update", { action: "report_transport_issue", transport_id: assignmentId, issue_type: issueType, description }),
   transportUpdateLocation: (assignmentId: string, lat: number, lng: number) =>
     efCall("partner-update", { action: "update_transport_location", transport_id: assignmentId, latitude: lat, longitude: lng }),
+
+  inventoryUpdateCondition: (resourceId: string, condition: number, notes?: string) =>
+    efCall("partner-update", { action: "update_resource_condition", resource_id: resourceId, condition_rating: condition, notes }),
+  inventoryMoveToFacility: (resourceId: string, facilityId: string) =>
+    efCall("partner-update", { action: "move_to_facility", resource_id: resourceId, facility_id: facilityId }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---
