@@ -50,6 +50,10 @@ function MapContent() {
   const [pinLabel, setPinLabel] = useState('');
 
   const currentOrgId = effectiveOrgId || orgId;
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [layerVisibility, setLayerVisibility] = useState({ requests: true, resources: true, facilities: true, events: true });
+
   const [personas, setPersonas] = usePersonas();
   const [filterConfig, setFilterConfig] = useState<FilterConfig>(DEFAULT_FILTER);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -90,8 +94,32 @@ function MapContent() {
           description: f.properties.title,
         }));
 
+      const facilityItems = features
+        .filter((f: any) => f.properties?.layer === 'facility')
+        .map((f: any) => ({
+          id: f.properties.id,
+          latitude: f.geometry.coordinates[1],
+          longitude: f.geometry.coordinates[0],
+          status: f.properties.status,
+          name: f.properties.title,
+          description: f.properties.title,
+        }));
+
+      const eventItems = features
+        .filter((f: any) => f.properties?.layer === 'event')
+        .map((f: any) => ({
+          id: f.properties.id,
+          latitude: f.geometry.coordinates[1],
+          longitude: f.geometry.coordinates[0],
+          title: f.properties.title,
+          date: f.properties.date,
+          description: f.properties.description,
+        }));
+
       setRequests(cases);
       setResources(resourceItems);
+      setFacilities(facilityItems);
+      setEvents(eventItems);
     }
     loadData();
   }, [currentOrgId]);
@@ -233,6 +261,58 @@ function MapContent() {
             'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff',
           } });
 
+        // === FACILITIES SOURCE (green, clustered) ===
+        const facilityFeatures = facilities
+          .filter(f => f.latitude && f.longitude)
+          .map(f => ({
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [f.longitude, f.latitude] },
+            properties: { id: f.id, type: 'facility', name: f.name, status: f.status },
+          }));
+
+        map.addSource('facilities-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: facilityFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+        });
+
+        map.addLayer({ id: 'facilities-clusters', type: 'circle', source: 'facilities-source',
+          filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#4ADE80', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
+        map.addLayer({ id: 'facilities-cluster-count', type: 'symbol', source: 'facilities-source',
+          filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'facilities-points', type: 'circle', source: 'facilities-source',
+          filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#4ADE80', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
+        // === EVENTS SOURCE (purple, clustered) ===
+        const eventFeatures = events
+          .filter(ev => ev.latitude && ev.longitude)
+          .map(ev => ({
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [ev.longitude, ev.latitude] },
+            properties: { id: ev.id, type: 'event', title: ev.title, date: ev.date },
+          }));
+
+        map.addSource('events-source', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: eventFeatures },
+          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+        });
+
+        map.addLayer({ id: 'events-clusters', type: 'circle', source: 'events-source',
+          filter: ['has', 'point_count'],
+          paint: { 'circle-color': '#A855F7', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff40' } });
+        map.addLayer({ id: 'events-cluster-count', type: 'symbol', source: 'events-source',
+          filter: ['has', 'point_count'],
+          layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium'], 'text-size': 12 },
+          paint: { 'text-color': '#ffffff' } });
+        map.addLayer({ id: 'events-points', type: 'circle', source: 'events-source',
+          filter: ['!', ['has', 'point_count']],
+          paint: { 'circle-color': '#A855F7', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+
         // === PIN CLICK HANDLERS ===
         map.on('click', 'requests-points', (e: any) => {
           if (!e.features?.length) return;
@@ -248,13 +328,27 @@ function MapContent() {
           const res = filteredResources.find(r => r.id === id);
           if (res) setSelected({ type: 'resource', ...res });
         });
-        ['requests-points', 'resources-points'].forEach(layer => {
+        map.on('click', 'facilities-points', (e: any) => {
+          if (!e.features?.length) return;
+          layerClickedRef.current = true;
+          const props = e.features[0].properties;
+          const fac = facilities.find(f => f.id === props.id);
+          if (fac) setSelected({ type: 'facility', ...fac });
+        });
+        map.on('click', 'events-points', (e: any) => {
+          if (!e.features?.length) return;
+          layerClickedRef.current = true;
+          const props = e.features[0].properties;
+          const ev = events.find(ev => ev.id === props.id);
+          if (ev) setSelected({ type: 'event', ...ev });
+        });
+        ['requests-points', 'resources-points', 'facilities-points', 'events-points'].forEach(layer => {
           map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
           map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
         });
 
         // Cluster click → zoom in
-        ['requests-clusters', 'resources-clusters'].forEach(layer => {
+        ['requests-clusters', 'resources-clusters', 'facilities-clusters', 'events-clusters'].forEach(layer => {
           map.on('click', layer, (e: any) => {
             layerClickedRef.current = true;
             const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
@@ -342,7 +436,24 @@ function MapContent() {
     }
 
     return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
-  }, [filteredRequests, filteredResources, matchLines, activeTabId, activeView]);
+  }, [filteredRequests, filteredResources, facilities, events, matchLines, activeTabId, activeView]);
+
+  // Sync layer visibility toggles onto existing map instance
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const pairs: [string, keyof typeof layerVisibility][] = [
+      ['requests-clusters', 'requests'], ['requests-cluster-count', 'requests'], ['requests-points', 'requests'],
+      ['resources-clusters', 'resources'], ['resources-cluster-count', 'resources'], ['resources-points', 'resources'],
+      ['facilities-clusters', 'facilities'], ['facilities-cluster-count', 'facilities'], ['facilities-points', 'facilities'],
+      ['events-clusters', 'events'], ['events-cluster-count', 'events'], ['events-points', 'events'],
+    ];
+    pairs.forEach(([layerId, key]) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', layerVisibility[key] ? 'visible' : 'none');
+      }
+    });
+  }, [layerVisibility]);
 
   // Create new tab from current viewport
   async function handleCreateTab() {
@@ -534,13 +645,31 @@ function MapContent() {
         <div ref={mapRef} className="h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] bg-sos-blue-900" />
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 flex gap-2 z-10">
-          <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
+        <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 z-10">
+          <button
+            onClick={() => setLayerVisibility(v => ({ ...v, requests: !v.requests }))}
+            className={`text-[10px] backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-opacity ${layerVisibility.requests ? 'bg-black/60 text-white' : 'bg-black/30 text-white/40'}`}
+          >
             <span className="w-2 h-2 rounded-full bg-sos-red-500" /> {filteredRequests.length} needs
-          </span>
-          <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sos-accent-500" /> {filteredResources.length} resources
-          </span>
+          </button>
+          <button
+            onClick={() => setLayerVisibility(v => ({ ...v, resources: !v.resources }))}
+            className={`text-[10px] backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-opacity ${layerVisibility.resources ? 'bg-black/60 text-white' : 'bg-black/30 text-white/40'}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#89CFF0]" /> {filteredResources.length} resources
+          </button>
+          <button
+            onClick={() => setLayerVisibility(v => ({ ...v, facilities: !v.facilities }))}
+            className={`text-[10px] backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-opacity ${layerVisibility.facilities ? 'bg-black/60 text-white' : 'bg-black/30 text-white/40'}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#4ADE80]" /> {facilities.length} facilities
+          </button>
+          <button
+            onClick={() => setLayerVisibility(v => ({ ...v, events: !v.events }))}
+            className={`text-[10px] backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-opacity ${layerVisibility.events ? 'bg-black/60 text-white' : 'bg-black/30 text-white/40'}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#A855F7]" /> {events.length} events
+          </button>
           {isMatchesTab && (
             <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
               <Link2 className="h-3 w-3" /> {matchLines.length} matches
