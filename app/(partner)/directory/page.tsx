@@ -58,7 +58,8 @@ function orgName(id: string): string {
 }
 
 export default function DirectoryPage() {
-  const search = useSearch({ from: "/directory/" });
+  const searchParams = useSearchParams();
+  const search = Object.fromEntries(searchParams);
   const people = usePeople();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>(search.type ?? "all");
@@ -458,8 +459,8 @@ function tierDot(score: number | undefined): string {
 }
 
 function RowItem({ row }: { row: Row }) {
-  const navigate = useRouter();
-  const onNav = () => navigate({ to: row.href, params: row.hrefParams as never });
+  const router = useRouter();
+  const onNav = () => router.push(row.href);
   const isPerson = row.kind === "person";
   return (
     <tr className="border-b border-[var(--hairline)] last:border-0 hover:bg-white/[0.03] transition">
@@ -524,10 +525,10 @@ function RowItem({ row }: { row: Row }) {
 }
 
 function CardItem({ row }: { row: Row }) {
-  const navigate = useRouter();
+  const router = useRouter();
   return (
     <button
-      onClick={() => navigate({ to: row.href, params: row.hrefParams as never })}
+      onClick={() => router.push(row.href)}
       className="w-full text-left rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-white/[0.03] transition px-3.5 py-3 active:scale-[0.99]"
     >
       <div className="flex items-start justify-between gap-3">
