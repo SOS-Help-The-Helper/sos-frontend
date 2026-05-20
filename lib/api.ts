@@ -201,6 +201,13 @@ export const api = {
   crmSetModules: (orgId: string, modules: string[]) =>
     efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
 
+  // Transport — list + create
+  transportList: (orgId: string, filters?: Record<string, unknown>) =>
+    efCall("partner-read", { query_type: "transport_assignments", org_id: orgId, ...filters }),
+
+  transportCreate: (data: Record<string, unknown>) =>
+    efCall("partner-update", { action: "create_transport_assignment", ...data }),
+
   // Transport / Driver
   transportUpdateStatus: (assignmentId: string, status: string, data?: Record<string, unknown>) =>
     efCall("partner-update", { action: "update_transport_status", transport_id: assignmentId, status, ...data }),

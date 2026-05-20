@@ -5,10 +5,12 @@ export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { transportAssignments, convoys, orgs, TRANSPORT_STATUS_LABEL, orgTransportConfig, type TransportAssignment, type TransportStatus } from "@/lib/prototype-data";
+import { transportAssignments as protoAssignments, convoys, orgs, TRANSPORT_STATUS_LABEL, orgTransportConfig, type TransportAssignment, type TransportStatus } from "@/lib/prototype-data";
 import { Truck, Plus, MapPin, Clock, AlertTriangle, ChevronDown, ChevronRight, Camera, ArrowRight, Map as MapIcon, List, ExternalLink } from "lucide-react";
-import { useMemo, useState, Fragment } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
 const STATUS_COLOR: Record<TransportStatus, string> = {
   assigned: "#F5EBD6",
@@ -24,23 +26,66 @@ const STATUS_COLOR: Record<TransportStatus, string> = {
   completed: "#34D399",
 };
 
+function mapApiToAssignment(raw: Record<string, unknown>): TransportAssignment {
+  const proto = protoAssignments[0];
+  return {
+    ...proto,
+    id: String(raw.id ?? proto.id),
+    status: (raw.status as TransportStatus) ?? proto.status,
+    driverName: String(raw.driver_name ?? proto.driverName),
+    resourceSummary: String(raw.resource_description ?? proto.resourceSummary),
+    origin: String(raw.origin ?? proto.origin),
+    destination: String(raw.destination ?? proto.destination),
+    originLat: Number(raw.origin_lat ?? proto.originLat),
+    originLng: Number(raw.origin_lng ?? proto.originLng),
+    destinationLat: Number(raw.destination_lat ?? proto.destinationLat),
+    destinationLng: Number(raw.destination_lng ?? proto.destinationLng),
+    currentLat: raw.current_lat != null ? Number(raw.current_lat) : null,
+    currentLng: raw.current_lng != null ? Number(raw.current_lng) : null,
+    estimatedArrival: raw.estimated_arrival != null ? String(raw.estimated_arrival) : null,
+    priority: (raw.priority as TransportAssignment["priority"]) ?? "normal",
+    convoyId: raw.convoy_id != null ? String(raw.convoy_id) : null,
+    convoyPosition: raw.convoy_position != null ? Number(raw.convoy_position) : null,
+    statusHistory: [],
+    issues: [],
+    photos: [],
+  };
+}
+
 export default function TransportPage() {
+  const { orgId } = useAuthContext();
+  const [assignments, setAssignments] = useState<TransportAssignment[]>(protoAssignments);
   const [view, setView] = useState<"list" | "map">("list");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  useEffect(() => {
+    if (!orgId) return;
+    (async () => {
+      try {
+        const res = await api.transportList(orgId) as { data?: unknown[] } | unknown[];
+        const rows = Array.isArray(res) ? res : (res as { data?: unknown[] }).data ?? [];
+        if (rows.length > 0) {
+          setAssignments(rows.map(r => mapApiToAssignment(r as Record<string, unknown>)));
+        }
+      } catch {
+        // fallback to prototype data — already set
+      }
+    })();
+  }, [orgId]);
+
   const kpis = useMemo(() => {
-    const active = transportAssignments.filter(t => t.status !== "completed" && t.status !== "verified").length;
-    const inTransit = transportAssignments.filter(t => t.status === "in_transit").length;
-    const delivered = transportAssignments.filter(t => t.status === "delivered" || t.status === "verified").length;
+    const active = assignments.filter(t => t.status !== "completed" && t.status !== "verified").length;
+    const inTransit = assignments.filter(t => t.status === "in_transit").length;
+    const delivered = assignments.filter(t => t.status === "delivered" || t.status === "verified").length;
     return { active, inTransit, delivered, avg: "1d 8h" };
-  }, []);
+  }, [assignments]);
 
   return (
     <CrmShell module="Transport">
       <PageHeader
         title="Transport"
-        subtitle={`${transportAssignments.length} assignments · ${convoys.length} convoy${convoys.length === 1 ? "" : "s"} active`}
+        subtitle={`${assignments.length} assignments · ${convoys.length} convoy${convoys.length === 1 ? "" : "s"} active`}
         actions={
           <>
             <div className="flex items-center gap-0.5 rounded-lg bg-white/6 p-0.5">
@@ -84,7 +129,7 @@ export default function TransportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transportAssignments.map((t) => {
+                    {assignments.map((t) => {
                       const isOpen = expanded === t.id;
                       return (
                         <Fragment key={t.id}>
@@ -135,7 +180,7 @@ export default function TransportPage() {
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Convoys</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {convoys.map((c) => {
-                  const items = c.assignmentIds.map(id => transportAssignments.find(t => t.id === id)!).filter(Boolean);
+                  const items = c.assignmentIds.map(id => assignments.find(t => t.id === id)!).filter(Boolean);
                   const done = items.filter(i => i.status === "delivered" || i.status === "verified").length;
                   const pct = (done / items.length) * 100;
                   const org = orgs.find(o => o.id === c.org);
@@ -168,11 +213,17 @@ export default function TransportPage() {
             </section>
           </>
         ) : (
-          <MapView />
+          <MapView assignments={assignments} />
         )}
       </div>
 
-      {sheetOpen && <NewAssignmentSheet onClose={() => setSheetOpen(false)} />}
+      {sheetOpen && (
+        <NewAssignmentSheet
+          orgId={orgId ?? ""}
+          onClose={() => setSheetOpen(false)}
+          onCreated={(t) => setAssignments(prev => [t, ...prev])}
+        />
+      )}
     </CrmShell>
   );
 }
@@ -252,12 +303,12 @@ function ExpandedRow({ t }: { t: TransportAssignment }) {
   );
 }
 
-function MapView() {
+function MapView({ assignments }: { assignments: TransportAssignment[] }) {
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] aspect-[16/9] relative overflow-hidden">
       <svg viewBox="0 0 800 450" className="w-full h-full">
         <rect width="800" height="450" fill="rgba(255,255,255,0.02)" />
-        {transportAssignments.map((t, i) => {
+        {assignments.map((t, i) => {
           const x1 = 100 + (t.originLng + 85) * 8;
           const y1 = 350 - (t.originLat - 28) * 30;
           const x2 = 100 + (t.destinationLng + 85) * 8;
@@ -278,12 +329,61 @@ function MapView() {
           );
         })}
       </svg>
-      <p className="absolute bottom-3 left-3 font-mono text-[10px] text-white/45">Live transport map · 4 active routes</p>
+      <p className="absolute bottom-3 left-3 font-mono text-[10px] text-white/45">Live transport map · {assignments.filter(t => t.status === "in_transit").length} active routes</p>
     </div>
   );
 }
 
-function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
+function NewAssignmentSheet({ orgId, onClose, onCreated }: { orgId: string; onClose: () => void; onCreated: (t: TransportAssignment) => void }) {
+  const [resourceId, setResourceId] = useState("RES-RV-415");
+  const [driverPersonId, setDriverPersonId] = useState("driver-marcus-lee");
+  const [origin, setOrigin] = useState("Ocala, FL");
+  const [destination, setDestination] = useState("");
+  const [priority, setPriority] = useState<"normal" | "urgent" | "critical">("normal");
+  const [convoyId, setConvoyId] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleCreate() {
+    setLoading(true);
+    try {
+      const res = await api.transportCreate({
+        org_id: orgId,
+        resource_id: resourceId,
+        driver_person_id: driverPersonId,
+        origin,
+        destination,
+        priority,
+        ...(convoyId ? { convoy_id: convoyId } : {}),
+      }) as Record<string, unknown>;
+      const proto = protoAssignments[0];
+      const created: TransportAssignment = {
+        ...proto,
+        id: String(res.id ?? res.transport_id ?? `tmp-${Date.now()}`),
+        status: "assigned",
+        driverName: driverPersonId,
+        resourceSummary: resourceId,
+        origin,
+        destination,
+        priority,
+        convoyId: convoyId || null,
+        convoyPosition: null,
+        estimatedArrival: null,
+        currentLat: null,
+        currentLng: null,
+        statusHistory: [],
+        issues: [],
+        photos: [],
+      };
+      onCreated(created);
+      toast.success("Transport assignment created");
+      onClose();
+    } catch (err) {
+      toast.error("Failed to create assignment");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -291,23 +391,39 @@ function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
         <h2 className="text-[18px] font-semibold mb-1">New transport assignment</h2>
         <p className="text-[12px] text-white/55 mb-5">Assign a driver to move a resource.</p>
         <div className="space-y-4">
-          <Field label="Resource"><select className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]"><option>RES-RV-415 — 2018 Coachmen 24ft</option></select></Field>
-          <Field label="Driver (CDL holders)"><select className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]"><option>Marcus Lee — CDL Class A · 5th wheel</option><option>Tina Park — CDL Class B · bumper pull</option></select></Field>
+          <Field label="Resource">
+            <select value={resourceId} onChange={e => setResourceId(e.target.value)} className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]">
+              <option value="RES-RV-415">RES-RV-415 — 2018 Coachmen 24ft</option>
+            </select>
+          </Field>
+          <Field label="Driver (CDL holders)">
+            <select value={driverPersonId} onChange={e => setDriverPersonId(e.target.value)} className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]">
+              <option value="driver-marcus-lee">Marcus Lee — CDL Class A · 5th wheel</option>
+              <option value="driver-tina-park">Tina Park — CDL Class B · bumper pull</option>
+            </select>
+          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Origin"><input className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]" defaultValue="Ocala, FL" /></Field>
-            <Field label="Destination"><input className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]" placeholder="Buncombe County, NC" /></Field>
+            <Field label="Origin"><input value={origin} onChange={e => setOrigin(e.target.value)} className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]" /></Field>
+            <Field label="Destination"><input value={destination} onChange={e => setDestination(e.target.value)} className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]" placeholder="Buncombe County, NC" /></Field>
           </div>
           <Field label="Priority">
             <div className="flex gap-1.5">
-              {["normal", "urgent", "critical"].map(p => (
-                <button key={p} className="px-2.5 h-7 rounded-md bg-white/6 text-[11px] capitalize hover:bg-white/12 transition">{p}</button>
+              {(["normal", "urgent", "critical"] as const).map(p => (
+                <button key={p} onClick={() => setPriority(p)} className={`px-2.5 h-7 rounded-md text-[11px] capitalize transition ${priority === p ? "bg-white/20 text-white" : "bg-white/6 hover:bg-white/12"}`}>{p}</button>
               ))}
             </div>
           </Field>
-          <Field label="Convoy (optional)"><select className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]"><option value="">— None —</option><option>GA-2026-05 — Georgia Convoy</option></select></Field>
+          <Field label="Convoy (optional)">
+            <select value={convoyId} onChange={e => setConvoyId(e.target.value)} className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px]">
+              <option value="">— None —</option>
+              <option value="GA-2026-05">GA-2026-05 — Georgia Convoy</option>
+            </select>
+          </Field>
         </div>
         <div className="flex gap-2 mt-6">
-          <button onClick={() => { toast.success("Assignment created (prototype)"); onClose(); }} className="flex-1 h-9 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12.5px] font-medium transition">Create</button>
+          <button onClick={handleCreate} disabled={loading} className="flex-1 h-9 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12.5px] font-medium transition">
+            {loading ? "Creating…" : "Create"}
+          </button>
           <button onClick={onClose} className="px-4 h-9 rounded-lg bg-white/6 text-[12.5px] font-medium hover:bg-white/12 transition">Cancel</button>
         </div>
       </aside>
