@@ -223,6 +223,13 @@ export const api = {
   // CRM — Map
   crmMapFeatures: (orgId: string, filters?: Record<string, unknown>) =>
     efCall("crm-map", { action: "get_features", org_id: orgId, ...filters }),
+
+  // CRM — Command
+  crmCommandIncidents: () =>
+    efCall("crm-command", { action: "list_incidents" }),
+
+  crmCommandSummary: (disasterId: string) =>
+    efCall("crm-command", { action: "incident_summary", disaster_id: disasterId }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---

@@ -1,14 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { incidents, reports as reportsData } from "@/lib/prototype-data";
+import { incidents as prototypeIncidents, type Incident, reports as reportsData } from "@/lib/prototype-data";
 import { useAllDashboards } from "@/lib/dashboard-store";
 import { AlertTriangle, Radio, ChevronRight, FileText } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function CommandPage() {
   const pinnedMap = useAllDashboards();
+  const [incidents, setIncidents] = useState<Incident[]>(prototypeIncidents);
+
+  useEffect(() => {
+    api.crmCommandIncidents()
+      .then((res: unknown) => {
+        const data = res as { incidents?: Incident[] };
+        if (Array.isArray(data?.incidents) && data.incidents.length > 0) {
+          setIncidents(data.incidents);
+        }
+      })
+      .catch(() => {/* fallback to prototype data */});
+  }, []);
 
   return (
     <CrmShell module="Command">
