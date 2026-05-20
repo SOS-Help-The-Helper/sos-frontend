@@ -219,6 +219,10 @@ export const api = {
     efCall("partner-update", { action: "update_resource_condition", resource_id: resourceId, condition_rating: condition, notes }),
   inventoryMoveToFacility: (resourceId: string, facilityId: string) =>
     efCall("partner-update", { action: "move_to_facility", resource_id: resourceId, facility_id: facilityId }),
+
+  // CRM — Map
+  crmMapFeatures: (orgId: string, filters?: Record<string, unknown>) =>
+    efCall("crm-map", { action: "get_features", org_id: orgId, ...filters }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---
