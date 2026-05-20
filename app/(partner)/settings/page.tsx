@@ -29,8 +29,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!orgId) return;
     api.efCall<{ org?: { name?: string; county?: string; contact_email?: string }; modules?: string[] }>(
-      'crm-onboard',
-      { action: 'get_org', org_id: orgId }
+      'crm-settings',
+      { action: 'get_settings', org_id: orgId }
     ).then((data) => {
       if (data.modules) setEnabled(data.modules);
       if (data.org) {
