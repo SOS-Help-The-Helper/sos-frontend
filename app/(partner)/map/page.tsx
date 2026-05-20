@@ -129,6 +129,44 @@ function MapboxEmbed({ orgId }: { orgId: string }) {
               });
             });
 
+            // Click unclustered → show detail card popup
+            map.on("click", `${layer}-unclustered`, (e: any) => {
+              const feat = e.features?.[0];
+              if (!feat) return;
+              const coords = (feat.geometry as any).coordinates.slice();
+              const p = feat.properties || {};
+              const label = layer === "case" ? "Case" : layer === "resource" ? "Resource" : layer === "facility" ? "Facility" : "Event";
+              const title = p.title || p.name || p.id?.slice(0, 8) || label;
+              const status = p.status || "";
+              const extra = layer === "facility"
+                ? `<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5)">Capacity: ${p.capacity || "—"}</div>`
+                : layer === "event"
+                ? `<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5)">${p.event_type || ""}</div>`
+                : p.urgency
+                ? `<div style="margin-top:6px;font-size:11px;color:${p.urgency === "critical" ? "#EF4E4B" : "#F5EBD6"}">${p.urgency}</div>`
+                : "";
+
+              new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: true,
+                maxWidth: "260px",
+                className: "sos-popup",
+              })
+                .setLngLat(coords)
+                .setHTML(`
+                  <div style="background:#0F1E2B;border:1.5px solid ${color};border-radius:12px;padding:14px 16px;box-shadow:0 0 20px ${color}40;min-width:180px">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                      <span style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}"></span>
+                      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:${color};font-family:monospace">${label}</span>
+                    </div>
+                    <div style="font-size:14px;font-weight:600;color:#fff;line-height:1.3">${title}</div>
+                    ${status ? `<div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,0.5)">${status}</div>` : ""}
+                    ${extra}
+                  </div>
+                `)
+                .addTo(map);
+            });
+
             // Hover cursor
             map.on("mouseenter", `${layer}-clusters`, () => { map.getCanvas().style.cursor = "pointer"; });
             map.on("mouseleave", `${layer}-clusters`, () => { map.getCanvas().style.cursor = ""; });
