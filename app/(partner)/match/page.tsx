@@ -91,7 +91,7 @@ export default function MatchPage() {
     (async () => {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const res = await api.efCall("crm-case-action", { action: "find_candidates", request_id: activeId }) as any;
+        const res = await api.efCall("match-engine", { mode: "propose", request_id: activeId }) as any;
         const raw: unknown[] = res?.candidates ?? [];
         if (!cancelled && raw.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
