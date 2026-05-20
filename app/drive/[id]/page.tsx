@@ -9,6 +9,7 @@ import {
   MapPin, Truck, CheckCircle2, Lock, X, Send, Radio,
 } from 'lucide-react';
 import { CommandPalette } from '@/components/command-palette';
+import { api } from '@/lib/api';
 import {
   transportAssignments,
   orgTransportConfig,
@@ -50,6 +51,7 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
   const [issueOpen, setIssueOpen] = useState(false);
   const [shareLocation, setShareLocation] = useState(assignment.status === 'in_transit');
   const fileRef = useRef<HTMLInputElement>(null);
+  const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cfg = orgTransportConfig[assignment.org];
   const pipeline = cfg?.statusPipeline ?? ['assigned', 'in_transit', 'delivered'];
@@ -79,6 +81,13 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
       statusHistory: [...a.statusHistory, { status: nextStatus, timestamp: ts }],
     }));
     toast.success(`Updated to ${TRANSPORT_STATUS_LABEL[nextStatus]}`);
+    try {
+      api.transportUpdateStatus(assignment.id, nextStatus).catch(() => {
+        toast.error('Failed to sync status — coordinator may not see update');
+      });
+    } catch {
+      toast.error('Failed to sync status — coordinator may not see update');
+    }
   }
 
   function onPhoto() {
@@ -102,6 +111,13 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
     }));
     setIssueOpen(false);
     toast.success('Coordinator notified');
+    try {
+      api.transportReportIssue(assignment.id, type, description).catch(() => {
+        toast.error('Failed to send issue report — try calling coordinator');
+      });
+    } catch {
+      toast.error('Failed to send issue report — try calling coordinator');
+    }
   }
 
   return (
@@ -342,7 +358,25 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
             </p>
           </div>
           <button
-            onClick={() => setShareLocation((v) => !v)}
+            onClick={() => {
+              setShareLocation((v) => {
+                const next = !v;
+                if (next) {
+                  // Start sending mock location every 30s
+                  locationIntervalRef.current = setInterval(() => {
+                    api.transportUpdateLocation(assignment.id, 29.5 + Math.random() * 0.01, -82.0 + Math.random() * 0.01).catch(() => {
+                      toast.error('Location update failed');
+                    });
+                  }, 30_000);
+                } else {
+                  if (locationIntervalRef.current !== null) {
+                    clearInterval(locationIntervalRef.current);
+                    locationIntervalRef.current = null;
+                  }
+                }
+                return next;
+              });
+            }}
             className={`relative w-10 h-6 rounded-full transition ${shareLocation ? 'bg-[#34D399]' : 'bg-white/15'}`}
           >
             <span

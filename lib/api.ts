@@ -200,6 +200,14 @@ export const api = {
 
   crmSetModules: (orgId: string, modules: string[]) =>
     efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
+
+  // Transport / Driver
+  transportUpdateStatus: (assignmentId: string, status: string, data?: Record<string, unknown>) =>
+    efCall("partner-update", { action: "update_transport_status", transport_id: assignmentId, status, ...data }),
+  transportReportIssue: (assignmentId: string, issueType: string, description: string) =>
+    efCall("partner-update", { action: "report_transport_issue", transport_id: assignmentId, issue_type: issueType, description }),
+  transportUpdateLocation: (assignmentId: string, lat: number, lng: number) =>
+    efCall("partner-update", { action: "update_transport_location", transport_id: assignmentId, latitude: lat, longitude: lng }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---
