@@ -276,7 +276,7 @@ export default function MapPage() {
       />
 
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
-        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden aspect-[16/10] relative">
+        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100vh-220px)] min-h-[500px]">
           <MapboxEmbed orgId={orgId} />
 
           <div className="absolute bottom-3 left-3 flex gap-1.5">
@@ -310,52 +310,41 @@ export default function MapPage() {
           )}
         </div>
 
-        <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">
-            {activeCounty ?? "All counties"} · {countyCases.length} open
-          </p>
-          <div className="space-y-2">
-            {countyCases.map((c) => {
-              const org = orgs.find((o) => o.id === c.org);
-              return (
-                <div key={c.id} className="rounded-xl bg-white/5 hover:bg-white/8 p-3 transition cursor-pointer">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-[10px] text-white/45">{c.id}</span>
-                    <span className={`font-mono text-[9px] uppercase tracking-wider ${c.urgency === "critical" ? "text-[#EF4E4B]" : "text-[#F5EBD6]"}`}>
-                      {c.urgency}
-                    </span>
-                  </div>
-                  <p className="text-[13px] font-medium">{c.citizen}</p>
-                  <p className="font-mono text-[10px] text-white/50 mt-1">
-                    {c.taxonomy.join(" · ")}
-                  </p>
-                  {org && <p className="text-[11px] text-white/45 mt-1.5" style={{ color: org.color }}>{org.name}</p>}
+        <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 h-fit">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Map Layers</p>
+          <div className="space-y-3">
+            {[
+              { label: "Cases", color: "#EF4E4B", count: layers?.cases?.length ?? 0 },
+              { label: "Resources", color: "#89CFF0", count: layers?.resources?.length ?? 0 },
+              { label: "Facilities", color: "#4ADE80", count: layers?.facilities?.length ?? 0 },
+              { label: "Events", color: "#A855F7", count: layers?.events?.length ?? 0 },
+            ].map((l) => (
+              <div key={l.label} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.color, boxShadow: `0 0 6px ${l.color}60` }} />
+                  <span className="text-[13px] text-white/70">{l.label}</span>
                 </div>
-              );
-            })}
-
-            {hasRealData && layers.events.length > 0 && (
-              <div className="mt-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-[#A855F7] mb-2">
-                  Events · {layers.events.length}
-                </p>
-                {layers.events.map((f, i) => (
-                  <div key={`event-side-${i}`} className="rounded-xl bg-white/5 hover:bg-white/8 p-3 transition cursor-pointer mb-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar size={10} className="text-[#A855F7]" />
-                      <span className="font-mono text-[10px] text-white/45">{f.properties.event_type as string ?? 'event'}</span>
-                    </div>
-                    <p className="text-[13px] font-medium">{f.properties.title as string ?? f.properties.name as string ?? 'Untitled'}</p>
-                    {f.properties.starts_at && (
-                      <p className="font-mono text-[10px] text-white/50 mt-1">
-                        {new Date(f.properties.starts_at as string).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                <span className="font-mono text-[12px] text-white/45">{l.count.toLocaleString()}</span>
               </div>
-            )}
+            ))}
           </div>
+
+          {hasRealData && (layers?.events?.length ?? 0) > 0 && (
+            <div className="mt-5 pt-4 border-t border-white/10">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-[#A855F7] mb-3">
+                Upcoming Events
+              </p>
+              {layers?.events?.slice(0, 5).map((f, i) => (
+                <div key={`event-side-${i}`} className="rounded-xl bg-white/5 hover:bg-white/8 p-3 transition cursor-pointer mb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar size={10} className="text-[#A855F7]" />
+                    <span className="font-mono text-[10px] text-white/45">{f.properties.event_type as string ?? 'event'}</span>
+                  </div>
+                  <p className="text-[12px] font-medium">{f.properties.title as string ?? 'Untitled'}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
       </div>
     </CrmShell>
