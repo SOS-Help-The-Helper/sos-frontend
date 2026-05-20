@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Camera, Navigation, Phone, MessageSquare, AlertTriangle, Sparkles,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { CommandPalette } from '@/components/command-palette';
 import { api } from '@/lib/api';
+import { useAuthContext } from '@/lib/auth-context';
 import {
   transportAssignments,
   orgTransportConfig,
@@ -20,6 +21,32 @@ import {
 } from '@/lib/prototype-data';
 
 const PRIVACY_REVEAL_AFTER: TransportStatus[] = ['at_pickup', 'hooked_up', 'loaded', 'in_transit', 'at_staging', 'delivered', 'verified', 'completed'];
+
+function mapApiToAssignment(raw: Record<string, unknown>): TransportAssignment {
+  const proto = transportAssignments[0];
+  return {
+    ...proto,
+    id: String(raw.id ?? proto.id),
+    status: (raw.status as TransportStatus) ?? proto.status,
+    driverName: String(raw.driver_name ?? proto.driverName),
+    resourceSummary: String(raw.resource_description ?? proto.resourceSummary),
+    origin: String(raw.origin ?? proto.origin),
+    destination: String(raw.destination ?? proto.destination),
+    originLat: Number(raw.origin_lat ?? proto.originLat),
+    originLng: Number(raw.origin_lng ?? proto.originLng),
+    destinationLat: Number(raw.destination_lat ?? proto.destinationLat),
+    destinationLng: Number(raw.destination_lng ?? proto.destinationLng),
+    currentLat: raw.current_lat != null ? Number(raw.current_lat) : null,
+    currentLng: raw.current_lng != null ? Number(raw.current_lng) : null,
+    estimatedArrival: raw.estimated_arrival != null ? String(raw.estimated_arrival) : null,
+    priority: (raw.priority as TransportAssignment['priority']) ?? 'normal',
+    convoyId: raw.convoy_id != null ? String(raw.convoy_id) : null,
+    convoyPosition: raw.convoy_position != null ? Number(raw.convoy_position) : null,
+    statusHistory: [],
+    issues: [],
+    photos: [],
+  };
+}
 
 function Logomark({ size }: { size: number }) {
   return (
@@ -32,9 +59,28 @@ function Logomark({ size }: { size: number }) {
 
 export default function DriverPage() {
   const { id } = useParams<{ id: string }>();
-  const found = transportAssignments.find((a) => a.id === id);
+  const { orgId } = useAuthContext();
+  const [base, setBase] = useState<TransportAssignment | null>(
+    () => transportAssignments.find((a) => a.id === id) ?? null
+  );
 
-  if (!found) {
+  useEffect(() => {
+    if (!orgId) return;
+    (async () => {
+      try {
+        const res = await api.transportList(orgId) as { data?: unknown[] } | unknown[];
+        const rows = Array.isArray(res) ? res : (res as { data?: unknown[] }).data ?? [];
+        const match = rows.find((r) => (r as Record<string, unknown>).id === id);
+        if (match) {
+          setBase(mapApiToAssignment(match as Record<string, unknown>));
+        }
+      } catch {
+        // fallback to prototype data — already set
+      }
+    })();
+  }, [orgId, id]);
+
+  if (!base) {
     return (
       <div className="min-h-screen bg-[#0F1E2B] flex items-center justify-center">
         <p className="text-white/60 text-sm">Trip not found.</p>
@@ -42,7 +88,7 @@ export default function DriverPage() {
     );
   }
 
-  return <DriverPageInner base={found} />;
+  return <DriverPageInner base={base} />;
 }
 
 function DriverPageInner({ base }: { base: TransportAssignment }) {
