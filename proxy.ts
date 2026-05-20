@@ -8,12 +8,36 @@ const PUBLIC_PATHS = new Set([
   '/home-v25.html',
   '/join',
   '/app',
+  '/cases',
+  '/directory',
+  '/transport',
+  '/map',
+  '/match',
+  '/command',
+  '/calendar',
+  '/inventory',
+  '/onboard',
+  '/reports',
+  '/settings',
+  '/volunteers',
 ]);
 
 const PUBLIC_PREFIXES = [
   '/c/',           // citizen portal subpages
   '/app/',         // partner portal
   '/drive/',       // driver delivery pages
+  '/cases/',       // partner: cases
+  '/directory/',   // partner: directory
+  '/transport/',   // partner: transport
+  '/map/',         // partner: map
+  '/match/',       // partner: match
+  '/command/',     // partner: command
+  '/calendar/',    // partner: calendar
+  '/inventory/',   // partner: inventory
+  '/onboard/',     // partner: onboard
+  '/reports/',     // partner: reports
+  '/settings/',    // partner: settings
+  '/volunteers/',  // partner: volunteers
   '/_next/',       // Next.js assets
   '/api/',         // API routes
   '/logomark',     // brand assets
