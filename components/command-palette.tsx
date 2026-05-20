@@ -52,14 +52,48 @@ export function CommandPalette({
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
   }, [thread, thinking]);
 
-  function ask(q: string, kind?: Kind) {
-    setThread((t) => [...t, { who: "user", text: q }]);
+  async function ask(q: string, kind?: Kind) {
+    const userMsg: Msg = { who: "user", text: q };
+    setThread((t) => [...t, userMsg]);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
+
+    if (kind) {
+      // Canned queries: keep existing rich UI blocks
+      setTimeout(() => {
+        setThinking(false);
+        setThread((t) => [...t, { who: "agent", block: renderBlock(kind, q, onClose) }]);
+      }, 520);
+      return;
+    }
+
+    // Free-text: call real /api/chat
+    try {
+      const history = [...thread, userMsg].map((m) => ({
+        role: m.who === "user" ? "user" : "assistant",
+        content: m.text ?? "",
+      }));
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history }),
+      });
+      if (!res.ok) throw new Error("API error");
+      // Parse AI SDK stream: text chunks on lines prefixed with 0:"..."
+      const raw = await res.text();
+      const parts: string[] = [];
+      for (const line of raw.split("\n")) {
+        if (line.startsWith("0:")) {
+          try { parts.push(JSON.parse(line.slice(2))); } catch {}
+        }
+      }
+      const content = parts.length > 0 ? parts.join("") : raw;
       setThinking(false);
-      setThread((t) => [...t, { who: "agent", block: renderBlock(kind, q, onClose) }]);
-    }, 520);
+      setThread((t) => [...t, { who: "agent", text: content || "No response." }]);
+    } catch {
+      setThinking(false);
+      setThread((t) => [...t, { who: "agent", text: "Agent unavailable — try again later." }]);
+    }
   }
 
   function onSubmit(e: React.FormEvent) {
