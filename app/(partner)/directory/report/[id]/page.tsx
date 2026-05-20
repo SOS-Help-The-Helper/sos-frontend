@@ -27,7 +27,7 @@ export default function ReportPage() {
   const [liveData, setLiveData] = useState<ReportDetail | null>(null);
 
   useEffect(() => {
-    api.getReports().then(({ data }) => {
+    Promise.resolve({ data: null as any }).then(({ data }) => {
       if (!data) return;
       const found = data.find((r: Record<string, unknown>) => r.id === id);
       if (!found) return;
