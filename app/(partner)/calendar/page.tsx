@@ -8,6 +8,8 @@ import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
 import { events as seedEvents, orgs } from "@/lib/prototype-data";
 import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
 type CalEvent = {
   id: string;
@@ -32,6 +34,7 @@ const days = [
 ];
 
 export default function CalendarPage() {
+  const { orgId } = useAuthContext();
   const [items, setItems] = useState<CalEvent[]>(seedEvents as CalEvent[]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
@@ -39,22 +42,67 @@ export default function CalendarPage() {
 
   const selected = useMemo(() => items.find((s) => s.id === selectedId) ?? null, [items, selectedId]);
 
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmEventsList(orgId).then((res) => {
+      const data = (res as { events?: unknown[] }).events;
+      if (Array.isArray(data) && data.length > 0) {
+        setItems(data as CalEvent[]);
+      }
+    }).catch(() => {
+      // fallback: keep seedEvents
+    });
+  }, [orgId]);
+
   function openNew(date?: string) {
     setPrefillDate(date ?? null);
     setNewOpen(true);
   }
 
-  function addEvent(s: Omit<CalEvent, "id" | "filled">) {
-    const id = `E-${Math.floor(Math.random() * 9000 + 1000)}`;
-    setItems((prev) => [...prev, { ...s, id, filled: 0 }]);
+  async function addEvent(s: Omit<CalEvent, "id" | "filled">) {
+    const optimisticId = `E-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const optimistic: CalEvent = { ...s, id: optimisticId, filled: 0 };
+    setItems((prev) => [...prev, optimistic]);
     setNewOpen(false);
     toast.success(`Added ${s.title} · ${s.date}`);
+    if (orgId) {
+      try {
+        const res = await api.crmEventsCreate(orgId, {
+          title: s.title,
+          date: s.date,
+          time: s.time,
+          slots: s.slots,
+          location: s.location,
+          notes: s.notes,
+        });
+        const created = (res as { event?: CalEvent }).event;
+        if (created?.id) {
+          setItems((prev) => prev.map((e) => e.id === optimisticId ? { ...e, id: created.id } : e));
+        }
+      } catch {
+        toast.error("Failed to save event — kept locally");
+      }
+    }
   }
 
-  function removeEvent(id: string) {
+  async function removeEvent(id: string) {
     setItems((prev) => prev.filter((s) => s.id !== id));
     setSelectedId(null);
     toast.success("Removed");
+    try {
+      await api.crmEventsDelete(id);
+    } catch {
+      toast.error("Failed to delete event on server");
+    }
+  }
+
+  async function updateEvent(id: string, patch: Partial<CalEvent>) {
+    setItems((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    try {
+      await api.crmEventsUpdate(id, patch as Record<string, unknown>);
+    } catch {
+      toast.error("Failed to save changes on server");
+    }
   }
 
   return (
@@ -134,7 +182,7 @@ export default function CalendarPage() {
           event={selected}
           onClose={() => setSelectedId(null)}
           onRemove={() => removeEvent(selected.id)}
-          onUpdate={(patch) => setItems((prev) => prev.map((s) => (s.id === selected.id ? { ...s, ...patch } : s)))}
+          onUpdate={(patch) => updateEvent(selected.id, patch)}
         />
       )}
       {newOpen && (

@@ -162,6 +162,15 @@ export const api = {
   crmEventsList: (orgId: string, params?: { from?: string; to?: string; event_type?: string }) =>
     efCall("crm-events", { action: "list", org_id: orgId, ...params }),
 
+  crmEventsCreate: (orgId: string, data: Record<string, unknown>) =>
+    efCall("crm-events", { action: "create", org_id: orgId, ...data }),
+
+  crmEventsUpdate: (eventId: string, data: Record<string, unknown>) =>
+    efCall("crm-events", { action: "update", event_id: eventId, ...data }),
+
+  crmEventsDelete: (eventId: string) =>
+    efCall("crm-events", { action: "delete", event_id: eventId }),
+
   // CRM — Delivery
   crmDeliveryList: (matchId: string) =>
     efCall("crm-delivery", { action: "list", match_id: matchId }),
