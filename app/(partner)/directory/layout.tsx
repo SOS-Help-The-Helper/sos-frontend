@@ -1,5 +1,2 @@
-import { headers } from "next/headers";
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  await headers();
-  return <>{children}</>;
-}
+export const dynamic = 'force-dynamic';
+export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }
