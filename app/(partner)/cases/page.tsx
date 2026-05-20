@@ -214,9 +214,9 @@ export default function CasesPage() {
   // Fetch requests from EF
   useEffect(() => {
     if (!orgId) { setLoadingRequests(false); return; }
-    api.crmCasesList(orgId)
+    api.crmRequestsList(orgId)
       .then((data: any) => {
-        const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
+        const items: any[] = data?.requests ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
           const cards = liveRequestsToCards(items);
           setLiveRequests(cards);
@@ -230,9 +230,9 @@ export default function CasesPage() {
   // Fetch resources from EF
   useEffect(() => {
     if (!orgId) { setLoadingResources(false); return; }
-    api.crmCasesList(orgId)
+    api.crmResourcesList(orgId)
       .then((data: any) => {
-        const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
+        const items: any[] = data?.resources ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
           const cards = liveResourcesToCards(items);
           setLiveResources(cards);
