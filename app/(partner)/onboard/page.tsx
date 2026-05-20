@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { SosLogo } from '@/components/onboarding/SosLogo';
 import { Check, ArrowRight, Users, LayoutGrid, Map, Calendar, Package, HeartHandshake, BarChart3 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 const orgTypes = [
   { id: 'small', label: 'Small / mutual aid', sub: '< 5 people' },
@@ -22,10 +24,31 @@ const allModules = [
 ];
 
 export default function OnboardPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [orgType, setOrgType] = useState('mid');
   const [selected, setSelected] = useState<string[]>(['directory', 'cases', 'map']);
+  const [orgName, setOrgName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [invites, setInvites] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    try {
+      await api.crmOnboardOrg({
+        org_type: orgType,
+        modules: selected,
+        name: orgName,
+        contact_email: contactEmail,
+      });
+      router.push('/cases');
+    } catch {
+      toast.error('Failed to create org — please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0F1E2B] text-white flex items-center justify-center px-5">
@@ -93,15 +116,39 @@ export default function OnboardPage() {
 
         {step === 2 && (
           <>
-            <h1 className="text-[28px] font-semibold tracking-tight">Invite your team</h1>
-            <p className="text-white/55 mt-2">Optional. One email per line.</p>
-            <textarea
-              value={invites}
-              onChange={(e) => setInvites(e.target.value)}
-              placeholder={'alex@yourorg.com\njess@yourorg.com'}
-              rows={6}
-              className="mt-6 w-full rounded-xl bg-white/5 border border-white/10 p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
-            />
+            <h1 className="text-[28px] font-semibold tracking-tight">Finish setup</h1>
+            <p className="text-white/55 mt-2">Tell us about your org, then optionally invite your team.</p>
+            <div className="mt-6 space-y-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Org name</p>
+                <input
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  placeholder="Mountain Area Aid"
+                  className="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                />
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Contact email</p>
+                <input
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="ops@yourorg.com"
+                  type="email"
+                  className="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                />
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Invite team (optional)</p>
+                <textarea
+                  value={invites}
+                  onChange={(e) => setInvites(e.target.value)}
+                  placeholder={'alex@yourorg.com\njess@yourorg.com'}
+                  rows={4}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                />
+              </div>
+            </div>
           </>
         )}
 
@@ -121,9 +168,13 @@ export default function OnboardPage() {
               Continue <ArrowRight size={14} />
             </button>
           ) : (
-            <Link href="/map" className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition">
-              Open SOS Connect <ArrowRight size={14} />
-            </Link>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-[#EF4E4B] hover:bg-[#d94340] font-medium text-[13px] transition disabled:opacity-60"
+            >
+              {submitting ? 'Setting up…' : 'Open SOS Connect'} <ArrowRight size={14} />
+            </button>
           )}
         </div>
       </div>
