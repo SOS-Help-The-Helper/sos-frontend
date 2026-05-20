@@ -143,6 +143,12 @@ export const api = {
   crmCaseAction: (action: string, data: Record<string, unknown>) =>
     efCall("crm-case-action", { action, ...data }),
 
+  // CRM — Requests and Resources (via partner-read)
+  crmRequestsList: (orgId: string, filters?: Record<string, unknown>) =>
+    efCall("partner-read", { query_type: "request_summary", org_id: orgId, ...filters }),
+  crmResourcesList: (orgId: string, filters?: Record<string, unknown>) =>
+    efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
+
   // CRM — Search
   crmSearch: (query: string, orgId: string, filters?: Record<string, unknown>) =>
     efCall("crm-search", { query, org_id: orgId, ...filters }),
