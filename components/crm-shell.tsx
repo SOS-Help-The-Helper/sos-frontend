@@ -44,10 +44,10 @@ const groups: NavGroup[] = [
 interface CrmShellProps {
   children: ReactNode;
   module?: string;
-  user: { name: string; org: string };
+  user?: { name: string; org: string };
 }
 
-export function CrmShell({ children, module = "Directory", user }: CrmShellProps) {
+export function CrmShell({ children, module = "Directory", user = { name: 'Admin', org: 'SOS' } }: CrmShellProps) {
   const [expanded, setExpanded] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ crm: true, ops: true, insights: true });
