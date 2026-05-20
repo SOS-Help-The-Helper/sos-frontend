@@ -92,8 +92,7 @@ export default function DirectoryPage() {
           ownerOrgName: p.org.name,
           scope,
           editable: canEdit(p.org.id),
-          href: "/directory/person/$id",
-          hrefParams: { id: p.id },
+          href: `/directory/person/${p.id}`,
           role: p.role,
           county: p.county,
           housingStatus: p.housingStatus,
@@ -116,8 +115,7 @@ export default function DirectoryPage() {
           ownerOrgName: o.name,
           scope,
           editable: canEdit(o.id),
-          href: "/directory/org/$id",
-          hrefParams: { id: o.id },
+          href: `/directory/org/${o.id}`,
         });
       }
     }
@@ -138,8 +136,7 @@ export default function DirectoryPage() {
           ownerOrgName: orgName(ownerOrgId),
           scope: "yours",
           editable: true,
-          href: "/directory/volunteer/$id",
-          hrefParams: { id: v.id },
+          href: `/directory/volunteer/${v.id}`,
         });
       }
     }
@@ -194,7 +191,7 @@ export default function DirectoryPage() {
             </p>
           </div>
           <Link
-            to="/directory/import"
+            href="/directory/import"
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-white/8 hover:bg-white/12 text-[12px] font-medium transition shrink-0"
           >
             <Upload size={13} strokeWidth={2} />

@@ -121,7 +121,7 @@ export default function ReportPage() {
               <MetaChip icon={MapPin}>{r.location}</MetaChip>
               <MetaPopover>
                 <MetaChip icon={User}>
-                  <Link to="/directory/person/$id" params={{ id: r.reporterId }} className="hover:text-white transition">
+                  <Link href="#" className="hover:text-white transition">
                     {r.reporterName}
                   </Link>
                 </MetaChip>

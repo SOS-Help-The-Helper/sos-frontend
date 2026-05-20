@@ -38,8 +38,8 @@ export default function RequestPage() {
         <IdentityBand
           avatar={
             <Link
-              to="/directory/person/$id"
-              params={{ id: r.personId }}
+              href="#"
+             
               className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
               title={`View ${r.personName}`}
             >
@@ -51,7 +51,7 @@ export default function RequestPage() {
           chips={
             <>
               <MetaChip icon={User}>
-                <Link to="/directory/person/$id" params={{ id: r.personId }} className="hover:text-white transition">
+                <Link href="#" className="hover:text-white transition">
                   {r.personName}
                 </Link>
               </MetaChip>
@@ -127,8 +127,8 @@ function RequestTabs({
                   </p>
                   {ta && (
                     <Link
-                      to="/drive/$id"
-                      params={{ id: ta.id }}
+                      href="#"
+                     
                       className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
                     >
                       <ExternalLink size={10} /> Driver page
@@ -224,8 +224,8 @@ function RequestTabs({
           {[parentCase, ...relatedCases].filter(Boolean).map((c) => c && (
             <li key={c.id}>
               <Link
-                to="/cases/$id"
-                params={{ id: c.id }}
+                href="#"
+               
                 className="flex items-center gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
               >
                 <GitBranch size={13} className="text-white/40" />
