@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { DetailTopBar } from "@/components/crm/detail-shell";
 import { incidents, reports as reportsData, cases, orgs, kpis } from "@/lib/prototype-data";
 import { useDashboard, unpinReport } from "@/lib/dashboard-store";
+import { api } from "@/lib/api";
 import { AlertTriangle, FileText, X, Plus, MapPin, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 import type { ReactNode } from "react";
@@ -21,6 +23,19 @@ export default function IncidentDashboard() {
   const id = params.id as string;
   const incident = incidents.find((i) => i.id === id);
   const pinnedIds = useDashboard(id);
+
+  const [efStats, setEfStats] = useState<{
+    open_cases: number;
+    orgs_involved: number;
+    resources_deployed: number;
+    fulfilled_pct: number;
+  } | null>(null);
+
+  useEffect(() => {
+    api.crmCommandSummary(id)
+      .then((res) => setEfStats(res as typeof efStats))
+      .catch(() => {});
+  }, [id]);
 
   if (!incident) {
     return (
@@ -38,6 +53,14 @@ export default function IncidentDashboard() {
   const incidentCases = cases.slice(0, incident.cases);
   const orgsInvolved = new Set(incidentCases.map((c) => c.org)).size;
   const isUrgent = incident.priority === "urgent";
+
+  const displayCases = efStats?.open_cases ?? incidentCases.length;
+  const displayOrgs = efStats?.orgs_involved ?? orgsInvolved;
+  const displayKpis = kpis.map((k, i) => {
+    if (i === 0 && efStats?.resources_deployed != null) return { ...k, value: efStats.resources_deployed };
+    if (i === 1 && efStats?.fulfilled_pct != null) return { ...k, value: `${efStats.fulfilled_pct}%` };
+    return k;
+  });
 
   function handleUnpin(reportId: string) {
     unpinReport(id, reportId);
@@ -76,8 +99,8 @@ export default function IncidentDashboard() {
 
         {/* Incident KPI strip */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Tile label="Cases" value={incidentCases.length} tone="#89CFF0" />
-          <Tile label="Orgs engaged" value={orgsInvolved} tone="#F5EBD6" />
+          <Tile label="Cases" value={displayCases} tone="#89CFF0" />
+          <Tile label="Orgs engaged" value={displayOrgs} tone="#F5EBD6" />
           <Tile label="Reports pinned" value={pinnedIds.length} tone="#34D399" />
           <Tile
             label="Priority"
@@ -88,7 +111,7 @@ export default function IncidentDashboard() {
 
         {/* Trend KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {kpis.map((k) => (
+          {displayKpis.map((k) => (
             <div
               key={k.label}
               className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4"
