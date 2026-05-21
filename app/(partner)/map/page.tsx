@@ -14,6 +14,30 @@ const LAYER_COLORS: Record<string, string> = {
 
 const LAYERS = ["case", "resource", "facility", "event"] as const;
 
+const WNC_COUNTY_CENTROIDS: Record<string, [number, number]> = {
+  buncombe:     [-82.55, 35.55],
+  henderson:    [-82.47, 35.33],
+  madison:      [-82.73, 35.84],
+  mcdowell:     [-82.03, 35.69],
+  burke:        [-81.72, 35.76],
+  catawba:      [-81.38, 35.66],
+  haywood:      [-83.00, 35.55],
+  transylvania: [-82.83, 35.20],
+  yancey:       [-82.33, 35.90],
+  mitchell:     [-82.17, 36.00],
+  avery:        [-81.90, 36.05],
+  watauga:      [-81.70, 36.20],
+  caldwell:     [-81.57, 35.97],
+  rutherford:   [-81.87, 35.40],
+  polk:         [-82.07, 35.30],
+  cherokee:     [-83.92, 35.12],
+  graham:       [-83.83, 35.35],
+  swain:        [-83.50, 35.49],
+  jackson:      [-83.13, 35.30],
+  macon:        [-83.42, 35.16],
+  clay:         [-83.76, 35.05],
+};
+
 function MapboxEmbed({ orgId }: { orgId: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
@@ -185,6 +209,36 @@ function MapboxEmbed({ orgId }: { orgId: string }) {
       mapInstance.current = null;
     };
   }, [orgId]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const map = mapInstance.current;
+      if (!map) return;
+      const cmd = (e as CustomEvent).detail;
+      if (!cmd) return;
+
+      if (cmd.action === "flyTo") {
+        map.flyTo({ center: [cmd.lng, cmd.lat], zoom: cmd.zoom || 12 });
+      } else if (cmd.action === "filter") {
+        for (const layer of LAYERS) {
+          const vis = Array.isArray(cmd.layers) && cmd.layers.includes(layer) ? "visible" : "none";
+          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow"]) {
+            const layerId = `${layer}${suffix}`;
+            if (map.getLayer(layerId)) {
+              map.setLayoutProperty(layerId, "visibility", vis);
+            }
+          }
+        }
+        if (cmd.county) {
+          const centroid = WNC_COUNTY_CENTROIDS[cmd.county.toLowerCase()];
+          if (centroid) map.flyTo({ center: centroid, zoom: 10 });
+        }
+      }
+    };
+
+    window.addEventListener("sos-map-cmd", handler);
+    return () => window.removeEventListener("sos-map-cmd", handler);
+  }, []);
 
   return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }
