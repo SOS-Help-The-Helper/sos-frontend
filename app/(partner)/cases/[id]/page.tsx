@@ -76,6 +76,29 @@ const NEED_STATE: Record<string, { label: string; fg: string; bg: string }> = {
   resolved:    { label: "Resolved",    fg: "#34D399", bg: "rgba(52,211,153,0.14)" },
 };
 
+function CaseNotFound() {
+  return (
+    <CrmShell module="Cases">
+      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <main className="max-w-[960px] mx-auto px-6 py-7 flex flex-col items-center justify-center gap-4 min-h-[40vh] text-center">
+        <div className="w-14 h-14 rounded-2xl bg-white/8 flex items-center justify-center">
+          <AlertTriangle className="w-6 h-6 text-white/40" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-white font-medium">Case not found</p>
+          <p className="text-white/45 text-sm">This case ID doesn&apos;t exist or you don&apos;t have access to it.</p>
+        </div>
+        <Link
+          href="/cases"
+          className="mt-2 px-4 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-sm text-white/70 hover:text-white transition-colors"
+        >
+          Back to Cases
+        </Link>
+      </main>
+    </CrmShell>
+  );
+}
+
 function LoadingSkeleton() {
   return (
     <CrmShell module="Cases">
@@ -147,6 +170,7 @@ export default function UmbrellaView() {
   );
   const [liveMatches, setLiveMatches] = useState<MatchCandidate[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [note, setNote] = useState("");
   const [postingNote, setPostingNote] = useState(false);
 
