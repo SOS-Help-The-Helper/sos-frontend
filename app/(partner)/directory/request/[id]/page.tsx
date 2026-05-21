@@ -19,7 +19,9 @@ import {
 
 
 export default function RequestPage() {
-  const r = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const r = requests.find((x: any) => x.caseId === id || x.id === id);
+  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Request not found</div></CrmShell>;
   const cands: MatchCandidate[] = r.matchIds.map((id: string) => matches[id]).filter(Boolean);
   const delivery = r.deliveryId ? deliveries.find((d) => d.id === r.deliveryId) : null;
   const initials = r.personName.split(" ").map((s: string) => s[0]).join("");

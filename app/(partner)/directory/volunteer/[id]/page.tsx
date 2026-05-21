@@ -16,7 +16,9 @@ type Volunteer = (typeof volunteers)[number];
 
 
 export default function VolunteerPage() {
-  const v = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const v = volunteers.find((x: any) => x.id === id);
+  if (!v) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Volunteer not found</div></CrmShell>;
   const statusTint =
     v.status === "active" ? "#34D399" :
     v.status === "new" ? "#89CFF0" :

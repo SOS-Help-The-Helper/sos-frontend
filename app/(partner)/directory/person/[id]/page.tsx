@@ -22,7 +22,9 @@ import { usePerson, canEdit, updatePerson } from "@/lib/directory-store";
 const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
 export default function PersonPage() {
-  const seed = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const seed = people.find((p) => p.id === id);
+  if (!seed) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Person not found</div></CrmShell>;
   const person = usePerson(seed.id) ?? seed;
   const editable = canEdit(person.org.id);
   const housingTint =

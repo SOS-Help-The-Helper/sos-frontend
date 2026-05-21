@@ -236,6 +236,28 @@ export const api = {
 
   crmCommandSummary: (disasterId: string) =>
     efCall("crm-command", { action: "incident_summary", disaster_id: disasterId }),
+
+  // Person/Org detail
+  crmGetPerson: (personId: string) =>
+    efCall("crm-directory", { action: "get_person", person_id: personId }),
+  crmUpdatePerson: (personId: string, field: string, value: string) =>
+    efCall("crm-directory", { action: "update_person", person_id: personId, field, value }),
+  crmOrgMembers: (orgId: string) =>
+    efCall("crm-directory", { action: "org_members", org_id: orgId }),
+  crmOrgStats: (orgId: string) =>
+    efCall("crm-directory", { action: "org_stats", org_id: orgId }),
+
+  // Notes
+  crmGetNotes: (entityType: string, entityId: string) =>
+    efCall("crm-case-action", { action: "get_notes", entity_type: entityType, entity_id: entityId }),
+  crmGetCaseNotes: (sosId: string) =>
+    efCall("crm-case-action", { action: "get_case_notes", sos_id: sosId }),
+
+  // Detail reads  
+  crmResourceDetail: (resourceId: string) =>
+    efCall("partner-read", { query_type: "resource_detail", resource_id: resourceId }),
+  crmReportDetail: (reportId: string) =>
+    efCall("crm-reports", { report_type: "report_detail", report_id: reportId }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---

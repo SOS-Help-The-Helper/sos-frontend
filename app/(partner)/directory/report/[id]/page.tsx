@@ -19,7 +19,9 @@ const SEV: Record<ReportDetail["severity"], string> = {
 };
 
 export default function ReportPage() {
-  const r = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const r = reports.find((x: any) => x.id === id);
+  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Report not found</div></CrmShell>;
   const sev = SEV[r.severity as ReportDetail["severity"]];
 
   const timelineEntries: { label: string; date: string; color: string }[] = [

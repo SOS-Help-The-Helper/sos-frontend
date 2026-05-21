@@ -14,7 +14,9 @@ import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, Messa
 
 
 export default function ResourcePage() {
-  const r = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const r = resources.find((x: any) => x.id === id);
+  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Resource not found</div></CrmShell>;
   const statusColor =
     r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#F5EBD6";
   const events = assetEvents.filter(e => e.resourceId === r.id);

@@ -20,7 +20,9 @@ const CAP_COLORS: Record<string, string> = {
 };
 
 export default function OrgPage() {
-  const org: Org = Route.useLoaderData();
+  const { id } = useParams<{ id: string }>();
+  const org = orgs.find((o) => o.id === id);
+  if (!org) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Organization not found</div></CrmShell>;
   const trustPct = Math.round(org.trust * 100);
   const trustTint = trustPct >= 85 ? "#34D399" : trustPct >= 65 ? "#89CFF0" : "#F5EBD6";
 
