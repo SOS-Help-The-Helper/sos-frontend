@@ -110,7 +110,7 @@ export default function CalendarPage() {
       <ManageTabs />
       <PageHeader
         title="Calendar"
-        subtitle="Week of Mar 16, 2026"
+        subtitle="Shifts, call-ups, and events."
         actions={
           <button
             onClick={() => openNew()}

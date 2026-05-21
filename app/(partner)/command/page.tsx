@@ -28,7 +28,7 @@ export default function CommandPage() {
     <CrmShell module="Command">
       <PageHeader
         title="Command"
-        subtitle="One dashboard per active incident"
+        subtitle="One dashboard per active disaster."
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Radio size={12} /> Declare incident

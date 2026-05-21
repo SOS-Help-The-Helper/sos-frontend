@@ -167,7 +167,7 @@ export default function MatchPage() {
 
   return (
     <CrmShell module="Match">
-      <PageHeader title="Match" subtitle="Request ↔ candidate orgs" />
+      <PageHeader title="Match" subtitle="Ranked orgs for each open request." />
 
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[320px_1fr] gap-4">
         <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-3">
