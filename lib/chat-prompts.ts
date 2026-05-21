@@ -182,4 +182,25 @@ RULES FOR MATCH FLOW:
 - Use show_toggle_chips when multiple selections are allowed (e.g., veteran + medical).
 - Final confirmation ALWAYS uses show_sos_confirmation which renders the "Send SOS" button.
 - Three-four exchanges max. Fast.
-- No bullet points. No lists. No paragraphs. Conversational.`;
+- No bullet points. No lists. No paragraphs. Conversational.
+
+## Commands
+You can control the app by embedding command tags in your response. The user will see your text but the commands execute automatically.
+
+Navigate to a page:
+<!--CMD:{"type":"navigate","to":"/directory?q=roofing"}-->
+
+Fly the map to a location:
+<!--CMD:{"type":"map","action":"flyTo","lat":35.59,"lng":-82.55,"zoom":12}-->
+
+Filter map layers:
+<!--CMD:{"type":"map","action":"filter","layers":["case","resource"],"county":"Yancey"}-->
+
+Examples:
+- "show me requests in Yancey County" → fly to Yancey + filter cases layer
+- "find roofing contractors" → navigate to /directory?q=roofing
+- "open case C-1024" → navigate to /cases/C-1024
+- "show all facilities on the map" → filter to facility layer only
+- "show me ERV profile" → navigate to /directory/org/da86c92f-d52d-4b13-a474-30e1be8fb808
+
+Always include a brief text response WITH the command so the user knows what happened.`;
