@@ -294,6 +294,7 @@ export default function UmbrellaView() {
           liveMatches={liveMatches}
           onPostNote={handlePostNote}
           postingNote={postingNote}
+          orgId={orgId}
         />
       </main>
     </CrmShell>
@@ -301,7 +302,7 @@ export default function UmbrellaView() {
 }
 
 function CaseTabs({
-  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote,
+  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId,
 }: {
   note: string;
   setNote: (v: string) => void;
@@ -310,6 +311,7 @@ function CaseTabs({
   liveMatches: MatchCandidate[] | null;
   onPostNote: () => void;
   postingNote: boolean;
+  orgId: string;
 }) {
   const allMatchIds = Array.from(new Set(childCases.flatMap(() => Object.keys(matches))));
   const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
@@ -408,6 +410,11 @@ function CaseTabs({
       ) : (
         <EmptyTab label="No notes yet." />
       ),
+    },
+    {
+      key: "comms",
+      label: "Communication",
+      content: <CommunicationTab umbrellaId={umbrellaData.id} orgId={orgId} />,
     },
     {
       key: "reports",
@@ -544,5 +551,96 @@ function AdminItem({ icon: Icon, label, danger }: { icon: typeof Users; label: s
       <span className="flex-1 text-left">{label}</span>
       <ChevronRight size={12} className="text-white/30" />
     </button>
+  );
+}
+
+function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: string }) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const data = await api.crmGetCaseNotes(umbrellaId);
+      if (Array.isArray(data)) setMessages(data);
+      else if (data && Array.isArray((data as any).notes)) setMessages((data as any).notes);
+    } catch {
+      // leave messages empty on error
+    } finally {
+      setLoading(false);
+    }
+  }, [umbrellaId]);
+
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+
+  const handleSend = async () => {
+    const text = newMessage.trim();
+    if (!text) return;
+    try {
+      await api.crmCaseAction("add_case_note", { sos_id: umbrellaId, note_text: text, org_id: orgId });
+      setNewMessage("");
+      await fetchMessages();
+    } catch {
+      // leave input populated so user can retry
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white/5 rounded-lg p-3 space-y-1.5 border border-white/10">
+            <div className="h-2 w-24 bg-white/10 rounded" />
+            <div className="h-2.5 w-3/4 bg-white/8 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="space-y-2">
+        {messages.length === 0 ? (
+          <p className="text-[13px] text-white/40 py-4 text-center">No messages yet.</p>
+        ) : (
+          messages.map((m: any, i: number) => {
+            const isSystem = m.note_type === "system";
+            return (
+              <div
+                key={m.id ?? i}
+                className="bg-white/5 rounded-lg p-3 border border-white/10"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-medium text-white/70">{m.org_name ?? m.author ?? "Unknown"}</span>
+                  <span className="font-mono text-[10px] text-white/35">{m.created_at ?? m.timestamp ?? ""}</span>
+                </div>
+                <p className={`text-[13px] leading-snug ${isSystem ? "italic text-white/45" : "text-white/85"}`}>
+                  {m.note_text ?? m.text ?? m.message ?? ""}
+                </p>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="flex items-end gap-2 pt-1">
+        <textarea
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Write a message…"
+          rows={2}
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] placeholder:text-white/35 focus:outline-none focus:border-white/20 resize-none"
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && newMessage.trim()) { e.preventDefault(); handleSend(); } }}
+        />
+        <button
+          onClick={handleSend}
+          disabled={!newMessage.trim()}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40 shrink-0"
+        >
+          <Send size={12} /> Send
+        </button>
+      </div>
+    </div>
   );
 }
