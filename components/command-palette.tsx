@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, Send, MapPin, Users, Package, FileText, Calendar, Layers, ArrowRight, Mic, Command as CmdIcon, X, Radio } from "lucide-react";
 import Link from "next/link";
 import { cases, orgs, people, inventory, events as shifts } from "@/lib/prototype-data";
@@ -27,6 +28,7 @@ export function CommandPalette({
   onClose: () => void;
   module?: string;
 }) {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [thread, setThread] = useState<Msg[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -87,7 +89,21 @@ export function CommandPalette({
           try { parts.push(JSON.parse(line.slice(2))); } catch {}
         }
       }
-      const content = parts.length > 0 ? parts.join("") : raw;
+      const rawContent = parts.length > 0 ? parts.join("") : raw;
+      // Parse and execute agent command blocks, strip them from display text
+      const cmdRegex = /<!--CMD:([\s\S]*?)-->/g;
+      let match;
+      while ((match = cmdRegex.exec(rawContent)) !== null) {
+        try {
+          const cmd = JSON.parse(match[1]);
+          if (cmd.type === "navigate") {
+            router.push(cmd.to);
+          } else if (cmd.type === "map") {
+            window.dispatchEvent(new CustomEvent("sos-map-cmd", { detail: cmd }));
+          }
+        } catch {}
+      }
+      const content = rawContent.replace(/<!--CMD:[\s\S]*?-->/g, "").trim();
       setThinking(false);
       setThread((t) => [...t, { who: "agent", text: content || "No response." }]);
     } catch {
