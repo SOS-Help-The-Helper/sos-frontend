@@ -87,6 +87,15 @@ export const api = {
   submitSitrep: (data: Record<string, unknown>) =>
     efCall('sitrep-write', data),
 
+  // Portal Config
+  getPortalConfig: (orgId: string) =>
+    efCall<{ org_id: string; org_name: string; org_type: string; portal_config: Record<string, unknown> }>(
+      'partner-read', { query_type: 'portal_config', org_id: orgId }
+    ),
+
+  updatePortalConfig: (orgId: string, config: Record<string, unknown>) =>
+    efCall('partner-update', { update_type: 'update_portal_config', data: { org_id: orgId, config } }),
+
   // Partners
   queryPartner: (orgId: string, queryType: string) =>
     efCall('sos-read', { actor: { type: 'partner', id: orgId }, scope: 'org_records', query_type: queryType }),

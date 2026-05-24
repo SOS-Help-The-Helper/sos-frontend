@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
+import { PortalConfigProviderWrapper } from "@/lib/portal-config-wrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -47,7 +48,9 @@ export default function RootLayout({
       <body style={{ background: '#0F1E2B' }}>
         <AuthProvider>
           <ViewProvider>
-            {children}
+            <PortalConfigProviderWrapper>
+              {children}
+            </PortalConfigProviderWrapper>
           </ViewProvider>
         </AuthProvider>
         {/* HubSpot Tracking Code */}
