@@ -217,7 +217,7 @@ export default function CasesPage() {
           setCaseCards(cards);
         }
       })
-      .catch(() => {})
+      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
       .finally(() => setLoadingCases(false));
   }, []);
 
@@ -233,7 +233,7 @@ export default function CasesPage() {
           setRequestCards(cards);
         }
       })
-      .catch(() => {})
+      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
       .finally(() => setLoadingRequests(false));
   }, [orgId]);
 
@@ -249,7 +249,7 @@ export default function CasesPage() {
           setResourceCards(cards);
         }
       })
-      .catch(() => {})
+      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
       .finally(() => setLoadingResources(false));
   }, [orgId]);
 
@@ -280,7 +280,7 @@ export default function CasesPage() {
     setDragOverCol(null);
     // API mutation (fire-and-forget, no rollback on error)
     if (card && (tab === "cases" || tab === "requests")) {
-      api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId }).catch(() => {});
+      api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId }).catch((err) => { console.error("[cases] soses fetch failed:", err); });
     }
   };
 
