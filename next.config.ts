@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: '/erv/:path*',
+        source: '/erv/:path((?!impact).*)',
         destination: '/app?org=erv',
         permanent: true,
       },
