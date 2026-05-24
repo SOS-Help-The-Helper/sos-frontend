@@ -6,6 +6,7 @@ import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SideDrawer } from "@/components/crm/SideDrawer";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({ meta: [{ title: "Calendar — SOS Connect" }] }),
@@ -67,7 +68,7 @@ function CalendarPage() {
       <ManageTabs />
       <PageHeader
         title="Calendar"
-        subtitle="Schedule shifts, volunteer call-ups, and partner events across the week. Click any slot for detail or add a new event."
+        subtitle="Shifts, call-ups, and events."
         actions={
           <button
             onClick={() => openNew()}
@@ -77,7 +78,7 @@ function CalendarPage() {
           </button>
         }
       />
-      <div className="px-4 md:px-6 pt-5 md:pt-6 pb-10">
+      <div className="px-4 pt-4 pb-4">
         {isMobile ? (
           <MobileAgenda
             items={items}
@@ -123,7 +124,7 @@ function CalendarPage() {
                             {full ? (
                               <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
                             ) : (
-                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#EF4E4B]">need {s.slots - s.filled}</span>
                             )}
                           </div>
                         </button>
@@ -250,7 +251,7 @@ function MobileAgenda({
                 )}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
-                    <div className="h-full" style={{ width: `${pct}%`, background: full ? "#34D399" : "#F5EBD6" }} />
+                    <div className="h-full" style={{ width: `${pct}%`, background: full ? "#34D399" : "#89CFF0" }} />
                   </div>
                   <span className={`font-mono text-[10px] tabular-nums shrink-0 ${full ? "text-[#34D399]" : "text-white/65"}`}>
                     {s.filled}/{s.slots}
@@ -287,9 +288,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
   const org = orgs.find((o) => o.id === event.org);
   const pct = (event.filled / event.slots) * 100;
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
+    <SideDrawer onClose={onClose}>
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className="font-mono text-[10px] text-white/45">{event.id}</p>
@@ -327,7 +326,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
               <span className="font-mono text-[10.5px] tabular-nums text-white/55">{Math.round(pct)}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-              <div className="h-full" style={{ width: `${pct}%`, background: pct >= 100 ? "#34D399" : "#F5EBD6" }} />
+              <div className="h-full" style={{ width: `${pct}%`, background: pct >= 100 ? "#34D399" : "#89CFF0" }} />
             </div>
             <div className="flex gap-2 mt-3">
               <button
@@ -365,8 +364,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
             <Trash2 size={12} /> Remove event
           </button>
         </div>
-      </aside>
-    </div>
+      </SideDrawer>
   );
 }
 
@@ -407,9 +405,7 @@ function EventFormDrawer({
   const isEdit = mode === "edit";
 
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
+    <SideDrawer onClose={onClose}>
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between">
           <p className="font-medium text-[14px]">{isEdit ? "Edit event" : "New event"}</p>
           <button onClick={onClose} className="p-1.5 hover:bg-white/8 rounded"><X size={14} /></button>
@@ -498,8 +494,7 @@ function EventFormDrawer({
             <button onClick={onClose} className="h-9 px-3 rounded-lg bg-white/6 hover:bg-white/12 text-[12.5px] transition">Cancel</button>
           </div>
         </div>
-      </aside>
-    </div>
+      </SideDrawer>
   );
 }
 

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/directory/org/$id")({
     ],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Org not found · <Link to="/directory" className="text-[#89CFF0] underline ml-2">Back</Link>
     </div>
   ),
@@ -33,14 +33,14 @@ export const Route = createFileRoute("/directory/org/$id")({
 });
 
 const CAP_COLORS: Record<string, string> = {
-  Housing: "#89CFF0", Food: "#F5EBD6", Medical: "#EF4E4B",
-  Logistics: "#F5EBD6", Transport: "#34D399", Wellness: "#EF4E4B",
+  Housing: "#89CFF0", Food: "#89CFF0", Medical: "#EF4E4B",
+  Logistics: "#89CFF0", Transport: "#34D399", Wellness: "#EF4E4B",
 };
 
 function OrgPage() {
   const org: Org = Route.useLoaderData();
   const trustPct = Math.round(org.trust * 100);
-  const trustTint = trustPct >= 85 ? "#34D399" : trustPct >= 65 ? "#89CFF0" : "#F5EBD6";
+  const trustTint = trustPct >= 85 ? "#34D399" : trustPct >= 65 ? "#89CFF0" : "#EF4E4B";
 
   const tabs: DetailTab[] = [
     {
@@ -66,7 +66,7 @@ function OrgPage() {
     <CrmShell module="Directory">
       <DetailTopBar backTo="/directory" backLabel="Directory" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <div className="w-14 h-14 rounded-2xl bg-[#89CFF0]/12 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold tracking-tight">
@@ -178,7 +178,7 @@ function CoverageTab({ org }: { org: Org }) {
           </div>
         ))}
       </div>
-      <div className="h-[180px] rounded-xl overflow-hidden bg-[#0B1822]">
+      <div className="h-[180px] rounded-xl overflow-hidden" style={{ background: "var(--sos-card-gray)" }}>
         <svg viewBox="0 0 400 200" className="w-full h-full">
           <defs>
             <radialGradient id="cov" cx="50%" cy="50%" r="50%">
@@ -186,8 +186,8 @@ function CoverageTab({ org }: { org: Org }) {
               <stop offset="100%" stopColor="#EF4E4B" stopOpacity="0" />
             </radialGradient>
           </defs>
-          <rect width="400" height="200" fill="#0B1822" />
-          <path d="M 40 80 Q 120 40 200 70 T 380 90 L 370 170 Q 240 195 160 160 T 40 150 Z" fill="#15293A" stroke="rgba(137,207,240,0.18)" strokeWidth="1" />
+          <rect width="400" height="200" fill="#F4F5F7" />
+          <path d="M 40 80 Q 120 40 200 70 T 380 90 L 370 170 Q 240 195 160 160 T 40 150 Z" fill="#E5E7EB" stroke="rgba(15,30,43,0.22)" strokeWidth="1" />
           <circle cx="200" cy="110" r="80" fill="url(#cov)" />
           <circle cx="200" cy="110" r="5" fill="#EF4E4B" />
         </svg>

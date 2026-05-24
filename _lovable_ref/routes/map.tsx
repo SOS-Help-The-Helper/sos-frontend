@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import maplibregl from "maplibre-gl";
+import type { StyleSpecification } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { PageHeader } from "@/components/crm/ManageTabs";
 import {
@@ -12,16 +13,30 @@ import {
   incidents,
   type County,
 } from "@/lib/prototype-data";
-import { Filter, Layers, ChevronRight } from "lucide-react";
+import { Filter, Layers, ChevronRight, MapPin, Flame } from "lucide-react";
 
 export const Route = createFileRoute("/map")({
   head: () => ({ meta: [{ title: "Map — SOS Connect" }] }),
   component: MapPage,
 });
 
-mapboxgl.accessToken =
-  (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ||
-  "pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw";
+// Free, token-less dark raster basemap (CARTO). Raster avoids external glyph/font failures blocking demo pins.
+const BASEMAP_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-dark": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO",
+    },
+  },
+  layers: [{ id: "carto-dark", type: "raster", source: "carto-dark" }],
+};
 
 // ---------- Geo: WNC counties + representative cities ----------
 type CountyGeo = { lng: number; lat: number; cities: { name: string; lng: number; lat: number }[] };
@@ -91,9 +106,20 @@ type Feature = {
   disaster?: string;
 };
 
+function projectToMap(lng: number, lat: number) {
+  const minLng = -82.95;
+  const maxLng = -81.05;
+  const minLat = 35.18;
+  const maxLat = 35.98;
+  return {
+    x: Math.min(94, Math.max(6, ((lng - minLng) / (maxLng - minLng)) * 100)),
+    y: Math.min(92, Math.max(8, (1 - (lat - minLat) / (maxLat - minLat)) * 100)),
+  };
+}
+
 const LAYER_META: Record<Layer, { label: string; color: string }> = {
   cases: { label: "Cases", color: "#EF4E4B" },
-  requests: { label: "Requests", color: "#F5EBD6" },
+  requests: { label: "Requests", color: "#89CFF0" },
   resources: { label: "Resources", color: "#34D399" },
   reports: { label: "Reports", color: "#89CFF0" },
 };
@@ -168,20 +194,22 @@ function buildFeatures(): Feature[] {
 const ALL_FEATURES = buildFeatures();
 
 function MapPage() {
+  const navigate = useNavigate();
   const mapEl = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+  const styleReady = useRef(false);
 
   const [activeLayers, setActiveLayers] = useState<Record<Layer, boolean>>({
     cases: true, requests: true, resources: true, reports: true,
   });
   const [disaster, setDisaster] = useState<string>("all"); // "all" | incident.name
+  const [mode, setMode] = useState<"pins" | "heatmap">("pins");
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const features = useMemo(() => {
     return ALL_FEATURES.filter((f) => activeLayers[f.layer]).filter((f) => {
       if (disaster === "all") return true;
-      // match by disaster name OR by county of the selected incident
       const inc = incidents.find((i) => i.name === disaster);
       if (!inc) return true;
       if (f.disaster && f.disaster === disaster) return true;
@@ -189,50 +217,205 @@ function MapPage() {
     });
   }, [activeLayers, disaster]);
 
+  const geojson = useMemo(
+    () => ({
+      type: "FeatureCollection" as const,
+      features: features.map((f) => ({
+        type: "Feature" as const,
+        properties: {
+          id: f.id,
+          layer: f.layer,
+          title: f.title,
+          subtitle: f.subtitle,
+          city: f.city,
+          href: f.href,
+          color: f.color,
+        },
+        geometry: { type: "Point" as const, coordinates: [f.lng, f.lat] },
+      })),
+    }),
+    [features],
+  );
+
   // Init map once
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: mapEl.current,
-      style: "mapbox://styles/mapbox/dark-v11",
+      style: BASEMAP_STYLE,
       center: [-82.4, 35.65],
       zoom: 7.6,
       attributionControl: false,
     });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    requestAnimationFrame(() => map.resize());
     mapRef.current = map;
+
+    map.on("load", () => {
+      map.addSource("sos", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+
+      // Heatmap (hidden by default)
+      map.addLayer({
+        id: "sos-heat",
+        type: "heatmap",
+        source: "sos",
+        maxzoom: 13,
+        layout: { visibility: "none" },
+        paint: {
+          "heatmap-weight": ["interpolate", ["linear"], ["coalesce", ["get", "point_count"], 1], 0, 0.6, 20, 1],
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 6, 0.7, 12, 2.2],
+          "heatmap-color": [
+            "interpolate", ["linear"], ["heatmap-density"],
+            0, "rgba(15,30,43,0)",
+            0.2, "rgba(137,207,240,0.35)",
+            0.4, "rgba(52,211,153,0.55)",
+            0.65, "rgba(245,235,214,0.75)",
+            0.9, "rgba(239,78,75,0.9)",
+          ],
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 6, 14, 12, 42],
+          "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 11, 0.9, 13, 0],
+        },
+      });
+
+      // Cluster bubbles
+      map.addLayer({
+        id: "sos-clusters",
+        type: "circle",
+        source: "sos",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step", ["get", "point_count"],
+            "rgba(137,207,240,0.85)", 5,
+            "rgba(245,235,214,0.9)", 15,
+            "rgba(239,78,75,0.9)",
+          ],
+          "circle-radius": ["step", ["get", "point_count"], 14, 5, 20, 15, 26],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#0F1E2B",
+        },
+      });
+
+      // Unclustered points — colored by layer
+      map.addLayer({
+        id: "sos-points",
+        type: "circle",
+        source: "sos",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": [
+            "match", ["get", "layer"],
+            "cases", "#EF4E4B",
+            "requests", "#89CFF0",
+            "resources", "#34D399",
+            "reports", "#89CFF0",
+            "#ffffff",
+          ],
+          "circle-radius": 6,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#0F1E2B",
+        },
+      });
+      map.addLayer({
+        id: "sos-point-halo",
+        type: "circle",
+        source: "sos",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-radius": 13,
+          "circle-color": [
+            "match", ["get", "layer"],
+            "cases", "rgba(239,78,75,0.18)",
+            "requests", "rgba(245,235,214,0.18)",
+            "resources", "rgba(52,211,153,0.18)",
+            "reports", "rgba(137,207,240,0.18)",
+            "#E5E7EB",
+          ],
+          "circle-stroke-width": 0,
+        },
+      }, "sos-points");
+
+      // Interactions
+      map.on("click", "sos-clusters", (e: maplibregl.MapMouseEvent) => {
+        const f = map.queryRenderedFeatures(e.point, { layers: ["sos-clusters"] })[0];
+        if (!f) return;
+        const clusterId = f.properties?.cluster_id as number | undefined;
+        if (clusterId == null) return;
+        const src = map.getSource("sos") as maplibregl.GeoJSONSource;
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        const result = src.getClusterExpansionZoom(clusterId) as unknown;
+        Promise.resolve(result as Promise<number>)
+          .then((zoom) => map.easeTo({ center: coords, zoom: zoom ?? map.getZoom() + 2 }))
+          .catch(() => map.easeTo({ center: coords, zoom: map.getZoom() + 2 }));
+      });
+      map.on("click", "sos-points", (e: maplibregl.MapLayerMouseEvent) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        const coords = (f.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+        const p = f.properties as Record<string, string>;
+        popupRef.current?.remove();
+        popupRef.current = new maplibregl.Popup({ offset: 14, closeButton: false })
+          .setLngLat(coords)
+          .setHTML(
+            `<div style="font-family:Inter,sans-serif;color:#0F1E2B;min-width:200px">
+               <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#64748b">${LAYER_META[p.layer as Layer].label} · ${p.city}</div>
+               <div style="font-weight:600;margin-top:2px">${p.title}</div>
+               <div style="font-size:11px;color:#475569;margin-top:2px">${p.subtitle}</div>
+               <button id="sos-go" style="margin-top:8px;font-size:11px;font-weight:600;color:#0F1E2B;background:#89CFF0;border-radius:6px;padding:4px 8px;cursor:pointer;border:0">Open →</button>
+             </div>`,
+          )
+          .addTo(map);
+        setTimeout(() => {
+          document.getElementById("sos-go")?.addEventListener("click", () => {
+            popupRef.current?.remove();
+            navigate({ to: p.href });
+          });
+        }, 0);
+      });
+
+      const setCursor = (c: string) => () => (map.getCanvas().style.cursor = c);
+      map.on("mouseenter", "sos-clusters", setCursor("pointer"));
+      map.on("mouseleave", "sos-clusters", setCursor(""));
+      map.on("mouseenter", "sos-points", setCursor("pointer"));
+      map.on("mouseleave", "sos-points", setCursor(""));
+
+      styleReady.current = true;
+      (map.getSource("sos") as maplibregl.GeoJSONSource).setData(geojson);
+    });
+
     const onResize = () => map.resize();
     window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); map.remove(); mapRef.current = null; };
+    return () => {
+      window.removeEventListener("resize", onResize);
+      popupRef.current?.remove();
+      map.remove();
+      mapRef.current = null;
+      styleReady.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-
-  // Render markers when features change
+  // Push data on change
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
+    if (!map || !styleReady.current) return;
+    const src = map.getSource("sos") as maplibregl.GeoJSONSource | undefined;
+    src?.setData(geojson);
+  }, [geojson]);
 
-    for (const f of features) {
-      const el = document.createElement("a");
-      el.href = f.href;
-      el.className = "block";
-      el.style.cssText = `width:14px;height:14px;border-radius:9999px;background:${f.color};box-shadow:0 0 0 2px #0F1E2B, 0 0 12px ${f.color}80;cursor:pointer;transition:transform .15s`;
-      el.onmouseenter = () => (el.style.transform = "scale(1.4)");
-      el.onmouseleave = () => (el.style.transform = "scale(1)");
-      const popup = new mapboxgl.Popup({ offset: 14, closeButton: false }).setHTML(
-        `<div style="font-family:Inter,sans-serif;color:#0F1E2B;min-width:180px">
-           <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#64748b">${LAYER_META[f.layer].label} · ${f.city}</div>
-           <div style="font-weight:600;margin-top:2px">${f.title}</div>
-           <div style="font-size:11px;color:#475569;margin-top:2px">${f.subtitle}</div>
-         </div>`
-      );
-      const marker = new mapboxgl.Marker({ element: el }).setLngLat([f.lng, f.lat]).setPopup(popup).addTo(map);
-      markersRef.current.push(marker);
-    }
-  }, [features]);
+  // Toggle pin vs heatmap mode
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleReady.current) return;
+    const pinsOn = mode === "pins";
+    map.setLayoutProperty("sos-clusters", "visibility", pinsOn ? "visible" : "none");
+    map.setLayoutProperty("sos-point-halo", "visibility", pinsOn ? "visible" : "none");
+    map.setLayoutProperty("sos-points", "visibility", pinsOn ? "visible" : "none");
+    map.setLayoutProperty("sos-heat", "visibility", pinsOn ? "none" : "visible");
+  }, [mode]);
 
   // Fly when disaster changes
   useEffect(() => {
@@ -270,9 +453,23 @@ function MapPage() {
     <CrmShell module="Map">
       <PageHeader
         title="Map"
-        subtitle="Live operating picture for Western North Carolina — incidents, resources, and field reports plotted as you work."
+        subtitle="Live operating picture for WNC."
         actions={
           <>
+            <div className="inline-flex items-center rounded-lg bg-white/[0.05] p-0.5">
+              <button
+                onClick={() => setMode("pins")}
+                className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${mode === "pins" ? "bg-white/12 text-white" : "text-white/55 hover:text-white/85"}`}
+              >
+                <MapPin size={11} /> Pins
+              </button>
+              <button
+                onClick={() => setMode("heatmap")}
+                className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${mode === "heatmap" ? "bg-white/12 text-white" : "text-white/55 hover:text-white/85"}`}
+              >
+                <Flame size={11} /> Heatmap
+              </button>
+            </div>
             <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
               <Filter size={12} /> Filter
             </button>
@@ -281,11 +478,11 @@ function MapPage() {
       />
 
       {/* Disaster toggle */}
-      <div className="px-4 md:px-6 pt-4 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+      <div className="px-4 pt-4 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setDisaster("all")}
-          className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-medium transition ${
-            disaster === "all" ? "bg-white text-[#0F1E2B]" : "bg-white/8 hover:bg-white/12 text-white/80"
+          className={`shrink-0 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${
+            disaster === "all" ? "bg-white/12 text-white" : "bg-white/[0.05] hover:bg-white/8 text-white/55 hover:text-white/85"
           }`}
         >
           All disasters
@@ -294,8 +491,8 @@ function MapPage() {
           <button
             key={i.id}
             onClick={() => setDisaster(i.name)}
-            className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-medium transition flex items-center gap-1.5 ${
-              disaster === i.name ? "bg-white text-[#0F1E2B]" : "bg-white/8 hover:bg-white/12 text-white/80"
+            className={`shrink-0 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition flex items-center gap-1.5 ${
+              disaster === i.name ? "bg-white/12 text-white" : "bg-white/[0.05] hover:bg-white/8 text-white/55 hover:text-white/85"
             }`}
           >
             {i.priority === "urgent" && <span className="w-1.5 h-1.5 rounded-full bg-[#EF4E4B]" />}
@@ -306,7 +503,7 @@ function MapPage() {
       </div>
 
       {/* Layer chips */}
-      <div className="px-4 md:px-6 pt-3 flex items-center gap-1.5 overflow-x-auto md:flex-wrap md:overflow-visible scrollbar-hide">
+      <div className="px-4 pt-3 flex items-center gap-1.5 overflow-x-auto md:flex-wrap md:overflow-visible scrollbar-hide">
         <span className="shrink-0 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-white/45 mr-1">
           <Layers size={11} /> Layers
         </span>
@@ -332,6 +529,29 @@ function MapPage() {
       <div className="md:grid md:px-6 md:pt-4 md:pb-6 md:lg:grid-cols-[1fr_340px] md:gap-4">
         <div className="relative md:rounded-2xl md:bg-[var(--surface-1)] md:border md:border-[var(--hairline)] overflow-hidden md:aspect-[16/10] h-[calc(100dvh-260px)] min-h-[360px] md:h-auto md:min-h-0 mt-3 md:mt-0 border-y md:border-y border-[var(--hairline)]">
           <div ref={mapEl} className="absolute inset-0" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_35%_35%,rgba(137,207,240,0.12),transparent_28%),linear-gradient(135deg,#E5E7EB,transparent_35%)]" />
+          <div className="pointer-events-none absolute inset-0">
+            {features.map((f) => {
+              const p = projectToMap(f.lng, f.lat);
+              return (
+                <a
+                  key={f.id}
+                  href={f.href}
+                  className="pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 group"
+                  style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                  aria-label={`${LAYER_META[f.layer].label}: ${f.title}`}
+                >
+                  <span className="absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25 transition group-hover:scale-125" style={{ background: f.color }} />
+                  <span className="relative block h-3.5 w-3.5 rounded-full border-2 border-[var(--background)] shadow-[0_0_0_1px_#9CA3AF]" style={{ background: f.color }} />
+                  <span className="pointer-events-none absolute left-4 top-1/2 hidden min-w-40 -translate-y-1/2 rounded-lg border border-[var(--hairline)] bg-[var(--surface-2)] px-2.5 py-2 text-left shadow-xl group-hover:block">
+                    <span className="block font-mono text-[9px] uppercase tracking-wider text-white/45">{LAYER_META[f.layer].label} · {f.city}</span>
+                    <span className="block text-[12px] font-semibold text-white">{f.title}</span>
+                    <span className="block truncate text-[10px] text-white/55">{f.subtitle}</span>
+                  </span>
+                </a>
+              );
+            })}
+          </div>
           <button
             onClick={() => setSheetOpen(true)}
             className="md:hidden absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-white text-[#0F1E2B] text-[12.5px] font-semibold shadow-lg"

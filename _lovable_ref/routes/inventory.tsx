@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/crm/ManageTabs";
 import { facilities, inventory, orgs, resources, assetEvents, type Facility, type ResourceDetail } from "@/lib/prototype-data";
 import { AlertTriangle, Plus, Warehouse, Truck, Package, MapPin, X, ArrowRightLeft, ChevronRight, Star } from "lucide-react";
 import { useState, useMemo } from "react";
+import { SideDrawer } from "@/components/crm/SideDrawer";
 
 export const Route = createFileRoute("/inventory")({
   head: () => ({ meta: [{ title: "Inventory — SOS Connect" }] }),
@@ -29,14 +30,14 @@ function InventoryPage() {
     <CrmShell module="Inventory">
       <PageHeader
         title="Inventory"
-        subtitle="Every facility, every pallet — track stock levels across warehouses and flag low items before they run out."
+        subtitle="Stock levels across facilities."
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Plus size={12} /> Add item
           </button>
         }
       />
-      <div className="px-4 md:px-6 pt-5 md:pt-6 pb-10 space-y-5">
+      <div className="px-4 pt-4 pb-4 space-y-4">
         {/* Facility selector */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           <FacilityChip active={facilityId === "all"} onClick={() => setFacilityId("all")} label="All facilities" count={facilities.length} />
@@ -56,32 +57,9 @@ function InventoryPage() {
 
         {activeFac && <FacilityHeader f={activeFac} />}
 
-        {facilityId === "all" && (
-          <section>
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Capacity by facility</p>
-            <div className="space-y-2">
-              {facilities.map((f) => {
-                const pct = (f.currentCount / f.capacity) * 100;
-                const color = pct > 90 ? "#EF4E4B" : pct > 70 ? "#F5EBD6" : "#34D399";
-                return (
-                  <div key={f.id} className="rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[12.5px] font-medium">{f.name}</span>
-                      <span className="font-mono text-[10.5px] tabular-nums text-white/65">{f.currentCount} / {f.capacity}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-                      <div className="h-full" style={{ width: `${pct}%`, background: color }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
         {lowStock.length > 0 && (
-          <div className="rounded-2xl bg-[#F5EBD6]/10 border border-[#F5EBD6]/30 p-4 flex items-start gap-3">
-            <AlertTriangle size={16} className="text-[#F5EBD6] mt-0.5 shrink-0" />
+          <div className="rounded-2xl bg-[#EF4E4B]/10 border border-[#EF4E4B]/30 p-4 flex items-start gap-3">
+            <AlertTriangle size={16} className="text-[#EF4E4B] mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-[13px]">{lowStock.length} items below threshold{activeFac && ` at ${activeFac.name}`}</p>
               <p className="text-[12px] text-white/65 mt-0.5">{lowStock.map(i => i.item).join(" · ")}</p>
@@ -175,14 +153,14 @@ function InventoryPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        {low && <span className="w-1.5 h-1.5 rounded-full bg-[#F5EBD6]" />}
+                        {low && <span className="w-1.5 h-1.5 rounded-full bg-[#EF4E4B]" />}
                         <p className="font-medium text-[13.5px] truncate">{it.item}</p>
                       </div>
                       <p className="text-[11.5px] truncate text-white/70">{org?.name}</p>
                       <p className="text-[11.5px] text-white/55 truncate">{it.location}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`font-mono text-[16px] tabular-nums ${low ? "text-[#F5EBD6]" : "text-white"}`}>{it.qty}</p>
+                      <p className={`font-mono text-[16px] tabular-nums ${low ? "text-[#EF4E4B]" : "text-white"}`}>{it.qty}</p>
                       <p className="font-mono text-[10px] text-white/40">min {it.threshold}</p>
                     </div>
                   </div>
@@ -211,13 +189,13 @@ function InventoryPage() {
                     <tr key={it.id} className="border-t border-white/5 hover:bg-white/4 transition">
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-2">
-                          {low && <span className="w-1.5 h-1.5 rounded-full bg-[#F5EBD6]" />}
+                          {low && <span className="w-1.5 h-1.5 rounded-full bg-[#EF4E4B]" />}
                           {it.item}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-white/80">{org?.name}</td>
                       <td className="px-4 py-3 text-white/65 text-[12px]">{it.location}</td>
-                      <td className={`px-4 py-3 font-mono text-right tabular-nums ${low ? "text-[#F5EBD6]" : "text-white/80"}`}>{it.qty}</td>
+                      <td className={`px-4 py-3 font-mono text-right tabular-nums ${low ? "text-[#EF4E4B]" : "text-white/80"}`}>{it.qty}</td>
                       <td className="px-4 py-3 font-mono text-right tabular-nums text-white/40">{it.threshold}</td>
                     </tr>
                   );
@@ -236,7 +214,7 @@ function InventoryPage() {
 function FacilityChip({ active, onClick, label, count, capacity, color, type }: { active: boolean; onClick: () => void; label: string; count: number; capacity?: number; color?: string; type?: Facility["type"] }) {
   const Icon = type ? TYPE_ICON[type] : Warehouse;
   const pct = capacity ? (count / capacity) * 100 : 0;
-  const cap = pct > 90 ? "#EF4E4B" : pct > 70 ? "#F5EBD6" : "#34D399";
+  const cap = pct > 90 ? "#EF4E4B" : pct > 70 ? "#EF4E4B" : "#34D399";
   return (
     <button
       onClick={onClick}
@@ -280,7 +258,7 @@ function FacilityHeader({ f }: { f: Facility }) {
 }
 
 function StatusPill({ status }: { status: ResourceDetail["status"] }) {
-  const c = status === "deployed" ? "#34D399" : status === "matched" ? "#89CFF0" : "#F5EBD6";
+  const c = status === "deployed" ? "#34D399" : status === "matched" ? "#89CFF0" : "#4A5462";
   return <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: c, background: `${c}1A` }}>{status}</span>;
 }
 
@@ -288,7 +266,7 @@ function Stars({ n }: { n: number }) {
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} size={10} className={i < n ? "fill-[#F5EBD6] text-[#F5EBD6]" : "text-white/20"} />
+        <Star key={i} size={10} className={i < n ? "fill-[#0F1E2B] text-[#0F1E2B]" : "text-white/20"} />
       ))}
     </div>
   );
@@ -297,9 +275,7 @@ function Stars({ n }: { n: number }) {
 function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void }) {
   const events = assetEvents.filter(e => e.resourceId === r.id);
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
+    <SideDrawer onClose={onClose}>
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between">
           <div className="min-w-0">
             <p className="font-mono text-[10px] text-white/45">{r.id}</p>
@@ -331,7 +307,7 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
                   const color =
                     e.eventType === "status_change" ? "#89CFF0" :
                     e.eventType === "location_move" ? "#34D399" :
-                    e.eventType === "condition_update" ? "#F5EBD6" :
+                    e.eventType === "condition_update" ? "#4A5462" :
                     e.eventType === "assignment" ? "#EF4E4B" : "white";
                   return (
                     <li key={e.id} className="relative">
@@ -356,7 +332,6 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
             Open full record
           </Link>
         </div>
-      </aside>
-    </div>
+      </SideDrawer>
   );
 }

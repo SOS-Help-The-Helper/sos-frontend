@@ -33,7 +33,7 @@ function JoinPage() {
   const referrer = lookupReferrer(ref);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white flex flex-col">
+    <div className="min-h-dvh bg-[var(--background)] text-white flex flex-col">
       <header className="h-14 px-5 flex items-center border-b border-[var(--hairline)]">
         <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition">
           <Logomark size={22} />

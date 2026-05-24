@@ -8,12 +8,15 @@ import { useScrollToTop } from "@/hooks/useScrollToTop";
 import {
   incidents, reports as reportsData, cases, orgs,
   people, inventory, BUCKETS, bucketOf, STATUS_LABEL,
+  availableResources,
+  type Taxonomy,
 } from "@/lib/prototype-data";
 import { useDashboard, unpinReport } from "@/lib/dashboard-store";
 import {
   AlertTriangle, FileText, X, Plus, MapPin, Calendar, User,
   Radio, Download, Megaphone, Truck, ShieldCheck, Phone, ArrowRight,
   Package, ChevronRight, Activity, ChevronDown, TrendingUp, TrendingDown,
+  Home, Utensils, HeartPulse, Baby, Bus, LayoutGrid,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,20 +27,36 @@ export const Route = createFileRoute("/command/$id")({
 
 const SEV_TONE: Record<string, string> = {
   Critical: "#EF4E4B",
-  Elevated: "#F5EBD6",
+  Elevated: "#89CFF0",
   Routine: "#89CFF0",
 };
 const URG_TONE: Record<string, string> = {
   critical: "#EF4E4B",
-  high: "#F5EBD6",
+  high: "#EF4E4B",
   medium: "#89CFF0",
   low: "#34D399",
 };
+
+type CategoryId = "housing" | "food" | "health" | "childcare" | "transport";
+const CATEGORIES: {
+  id: CategoryId;
+  label: string;
+  icon: typeof Home;
+  tone: string;
+  taxonomies: Taxonomy[];
+}[] = [
+  { id: "housing",   label: "Housing",   icon: Home,       tone: "#89CFF0", taxonomies: ["HOUSING.TEMPORARY", "HOUSING.REPAIR"] },
+  { id: "food",      label: "Food",      icon: Utensils,   tone: "#89CFF0", taxonomies: ["FOOD.PANTRY", "FOOD.HOT_MEAL"] },
+  { id: "health",    label: "Health",    icon: HeartPulse, tone: "#EF4E4B", taxonomies: ["MEDICAL.SUPPLIES", "MENTAL_HEALTH"] },
+  { id: "childcare", label: "Childcare", icon: Baby,       tone: "#34D399", taxonomies: ["CHILDCARE"] },
+  { id: "transport", label: "Transport", icon: Bus,        tone: "#A78BFA", taxonomies: ["TRANSPORT"] },
+];
 
 function IncidentDashboard() {
   const { id } = Route.useParams();
   useScrollToTop(id);
   const [showMore, setShowMore] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryId | "all">("all");
   const incident = incidents.find((i) => i.id === id);
   const pinnedIds = useDashboard(id);
 
@@ -45,7 +64,7 @@ function IncidentDashboard() {
     return (
       <CrmShell module="Command">
         <DetailTopBar backTo="/command" backLabel="Command" />
-        <div className="px-6 py-10 text-white/60">Incident not found.</div>
+        <div className="px-4 py-10 text-white/60">Incident not found.</div>
       </CrmShell>
     );
   }
@@ -57,16 +76,35 @@ function IncidentDashboard() {
   const incidentCases = cases.slice(0, incident.cases);
   const orgsInvolved = Array.from(new Set(incidentCases.map((c) => c.org)));
   const isUrgent = incident.priority === "urgent";
-  const critical = incidentCases.filter((c) => c.urgency === "critical" || c.urgency === "high");
   const lowInventory = inventory.filter((i) => i.qty < i.threshold).slice(0, 4);
   const incidentLead = people.find((p) => p.name === incident.lead) ?? people[0];
 
-  // Bucket distribution
+  // Per-category request + resource counts (always computed from full set)
+  const categoryStats = CATEGORIES.map((cat) => {
+    const requests = incidentCases.filter((c) =>
+      c.taxonomy.some((t) => cat.taxonomies.includes(t)),
+    ).length;
+    const resources = availableResources.filter((r) =>
+      cat.taxonomies.includes(r.taxonomy),
+    ).length;
+    return { ...cat, requests, resources };
+  });
+  const maxBar = Math.max(1, ...categoryStats.flatMap((s) => [s.requests, s.resources]));
+
+  // Apply category filter to downstream visualizations
+  const activeCategory = CATEGORIES.find((c) => c.id === categoryFilter);
+  const scopedCases = activeCategory
+    ? incidentCases.filter((c) => c.taxonomy.some((t) => activeCategory.taxonomies.includes(t)))
+    : incidentCases;
+
+  const critical = scopedCases.filter((c) => c.urgency === "critical" || c.urgency === "high");
+
+  // Bucket distribution (scoped)
   const bucketCounts = BUCKETS.map((b) => ({
     ...b,
-    count: incidentCases.filter((c) => bucketOf(c.status) === b.id).length,
+    count: scopedCases.filter((c) => bucketOf(c.status) === b.id).length,
   }));
-  const totalCases = incidentCases.length || 1;
+  const totalCases = scopedCases.length || 1;
 
   function handleUnpin(reportId: string) {
     unpinReport(id, reportId);
@@ -80,7 +118,7 @@ function IncidentDashboard() {
   return (
     <CrmShell module="Command">
       <DetailTopBar backTo="/command" backLabel="Command" />
-      <main className="max-w-[1240px] mx-auto px-6 py-6 space-y-5">
+      <main className="max-w-[1240px] mx-auto px-4 py-4 md:py-6 space-y-5">
         {/* ============ Command header ============ */}
         <div
           className="rounded-2xl border p-5 relative overflow-hidden"
@@ -98,7 +136,7 @@ function IncidentDashboard() {
             </div>
           )}
           <div className="flex items-start gap-4">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${isUrgent ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-[#F5EBD6]/15 text-[#F5EBD6]"}`}>
+            <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${isUrgent ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-[#89CFF0]/15 text-[#89CFF0]"}`}>
               <AlertTriangle size={22} />
             </div>
             <div className="flex-1 min-w-0">
@@ -172,6 +210,84 @@ function IncidentDashboard() {
           />
         </div>
 
+        {/* ============ Needs & resources by category ============ */}
+        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
+                Needs &amp; resources
+              </p>
+              <p className="text-[13px] font-medium mt-0.5">
+                Open requests vs offered resources by core government need
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-white/4">
+              <CategoryChip
+                active={categoryFilter === "all"}
+                onClick={() => setCategoryFilter("all")}
+                icon={LayoutGrid}
+                label="All"
+                tone="#89CFF0"
+              />
+              {CATEGORIES.map((c) => (
+                <CategoryChip
+                  key={c.id}
+                  active={categoryFilter === c.id}
+                  onClick={() => setCategoryFilter(c.id)}
+                  icon={c.icon}
+                  label={c.label}
+                  tone={c.tone}
+                />
+              ))}
+            </div>
+          </div>
+          <ul className="space-y-3">
+            {categoryStats
+              .filter((s) => categoryFilter === "all" || s.id === categoryFilter)
+              .map((s) => {
+                const Icon = s.icon;
+                const reqPct = (s.requests / maxBar) * 100;
+                const resPct = (s.resources / maxBar) * 100;
+                const gap = s.requests - s.resources;
+                return (
+                  <li key={s.id} className="grid grid-cols-[140px_1fr_auto] gap-3 items-center">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: `${s.tone}1A`, color: s.tone }}
+                      >
+                        <Icon size={13} />
+                      </span>
+                      <span className="text-[12.5px] truncate">{s.label}</span>
+                    </div>
+                    <div className="space-y-1.5 min-w-0">
+                      <BarRow label="Requests" count={s.requests} pct={reqPct} tone={s.tone} solid />
+                      <BarRow label="Resources" count={s.resources} pct={resPct} tone={s.tone} />
+                    </div>
+                    <span
+                      className="font-mono text-[10.5px] tabular-nums shrink-0 px-1.5 py-0.5 rounded"
+                      style={{
+                        color: gap > 0 ? "#EF4E4B" : gap < 0 ? "#34D399" : "#9CA3AF",
+                        background: gap > 0 ? "rgba(239,78,75,0.10)" : gap < 0 ? "rgba(52,211,153,0.10)" : "transparent",
+                      }}
+                      title={gap > 0 ? "Unmet demand" : gap < 0 ? "Surplus capacity" : "Balanced"}
+                    >
+                      {gap > 0 ? `+${gap} gap` : gap < 0 ? `${Math.abs(gap)} extra` : "—"}
+                    </span>
+                  </li>
+                );
+              })}
+          </ul>
+          {categoryFilter !== "all" && (
+            <p className="font-mono text-[10px] text-white/45 mt-4">
+              Filtering case posture &amp; critical list by <span className="text-white/75">{activeCategory?.label}</span>.{" "}
+              <button onClick={() => setCategoryFilter("all")} className="text-[#89CFF0] hover:underline">
+                Clear
+              </button>
+            </p>
+          )}
+        </div>
+
         {/* ============ Case posture (donut) ============ */}
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
           <div className="flex items-center justify-between mb-4">
@@ -187,7 +303,7 @@ function IncidentDashboard() {
             <Donut
               size={150}
               thickness={16}
-              centerLabel={String(incidentCases.length)}
+              centerLabel={String(scopedCases.length)}
               centerSub="cases"
               slices={bucketCounts.map((b) => ({ label: b.label, value: b.count, color: b.accent }))}
             />
@@ -558,6 +674,54 @@ function NowTile({
           />
         )}
       </div>
+    </div>
+  );
+}
+
+function CategoryChip({
+  active, onClick, icon: Icon, label, tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Home;
+  label: string;
+  tone: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${
+        active ? "bg-white/12 text-white" : "text-white/60 hover:text-white hover:bg-white/6"
+      }`}
+      style={active ? { boxShadow: `inset 0 0 0 1px ${tone}55` } : undefined}
+    >
+      <Icon size={12} style={{ color: active ? tone : undefined }} />
+      {label}
+    </button>
+  );
+}
+
+function BarRow({
+  label, count, pct, tone, solid,
+}: { label: string; count: number; pct: number; tone: string; solid?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-[9.5px] uppercase tracking-wider text-white/45 w-16 shrink-0">
+        {label}
+      </span>
+      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${Math.max(count > 0 ? 4 : 0, pct)}%`,
+            background: tone,
+            opacity: solid ? 0.95 : 0.45,
+          }}
+        />
+      </div>
+      <span className="font-mono text-[11px] tabular-nums text-white/80 w-6 text-right shrink-0">
+        {count}
+      </span>
     </div>
   );
 }

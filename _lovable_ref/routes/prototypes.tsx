@@ -17,7 +17,7 @@ const protos: { id: string; title: string; path: string; audience: Audience; sta
   { id: "C3", title: "Manage shell", path: "/manage", audience: "coord", status: "done", blurb: "Tabs spine over CRM back-office", icon: Layers },
   { id: "C3a", title: "— Directory", path: "/directory", audience: "coord", status: "done", blurb: "People, orgs, credentials", icon: Users },
   { id: "C3b", title: "— Cases (Kanban)", path: "/cases", audience: "coord", status: "done", blurb: "Triage → Open → In Progress → Closed", icon: LayoutGrid },
-  { id: "C3c", title: "— SOS Umbrella viewer", path: "/cases/U-204", audience: "coord", status: "done", blurb: "3-pane: timeline · children · citizen", icon: Layers },
+  { id: "C3c", title: "— SOS Case viewer", path: "/cases/U-204", audience: "coord", status: "done", blurb: "3-pane: timeline · children · citizen", icon: Layers },
   { id: "C3d", title: "— Volunteers", path: "/volunteers", audience: "coord", status: "done", blurb: "Cards, filters, find-available, week grid", icon: HeartHandshake },
   { id: "C3d2", title: "— Transport", path: "/transport", audience: "coord", status: "done", blurb: "KPIs, active table, convoys, map view", icon: Truck },
   { id: "C3e", title: "— Inventory v2", path: "/inventory", audience: "coord", status: "done", blurb: "Facility-aware with asset event drawer", icon: Package },
@@ -40,7 +40,7 @@ function PrototypesHub() {
   ];
   return (
     <CrmShell module="Prototypes">
-      <div className="px-6 pt-10 pb-16 max-w-5xl">
+      <div className="px-4 pt-6 md:pt-10 pb-12 md:pb-16 max-w-5xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45 mb-2">Review hub</p>
         <h1 className="text-[32px] font-semibold tracking-tight">Prototypes</h1>
         <p className="text-white/55 mt-2 max-w-xl">Every screen in the SOS Connect design system. Three verbs, two audiences, one cohesive shell.</p>

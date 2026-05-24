@@ -29,7 +29,7 @@ export const Route = createFileRoute("/directory/person/$id")({
     ],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Person not found · <Link to="/directory" className="text-[#89CFF0] underline ml-2">Back</Link>
     </div>
   ),
@@ -45,9 +45,9 @@ function PersonPage() {
   const editable = canEdit(person.org.id);
   const housingTint =
     person.housingStatus === "Stable" ? "#34D399" :
-    person.housingStatus === "Displaced" ? "#F5EBD6" :
+    person.housingStatus === "Displaced" ? "#EF4E4B" :
     "#EF4E4B";
-  const scoreColor = person.sosScore >= 75 ? "#34D399" : person.sosScore >= 50 ? "#89CFF0" : "#F5EBD6";
+  const scoreColor = person.sosScore >= 75 ? "#34D399" : person.sosScore >= 50 ? "#89CFF0" : "#EF4E4B";
 
   const tabs: DetailTab[] = [
     {
@@ -74,7 +74,7 @@ function PersonPage() {
     <CrmShell module="Directory">
       <DetailTopBar backTo="/directory" backLabel="Directory" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={<Avatar name={person.name} size={56} />}
           pills={
@@ -220,7 +220,7 @@ function CredentialsTab({ person }: { person: Person }) {
               {c.status === "verified" ? (
                 <><ShieldCheck size={13} className="text-[#34D399]" /> Verified by {c.verifiedBy} · {c.verifiedOn}</>
               ) : c.status === "pending" ? (
-                <><Clock size={13} className="text-[#F5EBD6]" /> Awaiting verification</>
+                <><Clock size={13} className="text-[#89CFF0]" /> Awaiting verification</>
               ) : (
                 <span className="text-[#EF4E4B]">Expired — renew required</span>
               )}
@@ -261,7 +261,7 @@ function SkillsTab({ person }: { person: Person }) {
               <div
                 key={n}
                 className="flex-1 h-1 rounded-full"
-                style={{ background: n <= s.level ? "#89CFF0" : "rgba(255,255,255,0.08)" }}
+                style={{ background: n <= s.level ? "#89CFF0" : "#E5E7EB" }}
               />
             ))}
           </div>

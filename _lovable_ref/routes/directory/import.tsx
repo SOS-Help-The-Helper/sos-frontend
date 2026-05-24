@@ -57,7 +57,7 @@ function ImportPage() {
 
   return (
     <CrmShell module="Directory">
-      <div className="min-h-screen text-white">
+      <div className="min-h-dvh text-white">
         <header className="sticky top-0 z-30 glass border-b border-[var(--hairline)]">
           <div className="max-w-[800px] mx-auto px-5 md:px-10 h-12 flex items-center">
             <Link to="/directory" className="inline-flex items-center gap-1 text-[15px] text-[#89CFF0] -ml-1.5">
@@ -139,7 +139,7 @@ function ImportPage() {
                             onChange={(e) => setMapping({ ...mapping, [h.header]: e.target.value })}
                             className="w-full appearance-none bg-white/6 hover:bg-white/10 rounded-lg pl-3 pr-8 h-9 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40 transition"
                           >
-                            {SOS_FIELDS.map((f) => <option key={f} value={f} className="bg-[#1A3850]">{f}</option>)}
+                            {SOS_FIELDS.map((f) => <option key={f} value={f} className="bg-white text-[var(--foreground)]">{f}</option>)}
                           </select>
                           <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
                         </div>
@@ -217,6 +217,6 @@ function ImportPage() {
 
 function ConfIcon({ conf }: { conf: "high" | "med" | "low" }) {
   if (conf === "high") return <Check size={16} className="text-[#34D399]" />;
-  if (conf === "med") return <HelpCircle size={16} className="text-[#F5EBD6]" />;
+  if (conf === "med") return <HelpCircle size={16} className="text-[#89CFF0]" />;
   return <X size={16} className="text-[#EF4E4B]" />;
 }

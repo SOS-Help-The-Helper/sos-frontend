@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/crm/ManageTabs";
 import { volunteers, volunteerDetails, orgs, type VolunteerDetail } from "@/lib/prototype-data";
 import { Plus, ShieldCheck, Search, X, Star, Clock, Truck, CheckCircle2, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useState, Fragment } from "react";
+import { SideDrawer } from "@/components/crm/SideDrawer";
 
 export const Route = createFileRoute("/volunteers")({
   head: () => ({ meta: [{ title: "Volunteers — SOS Connect" }] }),
@@ -30,14 +31,14 @@ function VolunteersPage() {
     <CrmShell module="Volunteers">
       <PageHeader
         title="Volunteers"
-        subtitle="Your roster of trained responders — see who's available, what skills they bring, and what they can tow."
+        subtitle="Roster, skills, and availability."
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Plus size={12} /> Add volunteer
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
+      <div className="px-4 pt-4 pb-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
         <div className="space-y-4">
           {/* Filters */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -103,7 +104,7 @@ function VolunteersPage() {
                       <p className="font-mono text-[15px] tabular-nums text-white/85 mt-1">{v.hours}<span className="text-[10px] text-white/40">h</span></p>
                       {detail && (
                         <div className="flex items-center gap-0.5 justify-end mt-0.5">
-                          <Star size={9} className="fill-[#F5EBD6] text-[#F5EBD6]" />
+                          <Star size={9} className="fill-[#0F1E2B] text-[#0F1E2B]" />
                           <span className="font-mono text-[10px] text-white/65">{detail.rating}</span>
                         </div>
                       )}
@@ -134,10 +135,10 @@ function VolunteersPage() {
                     {DAYS.map((d) => {
                       const slot = v.availability.find(a => a.day === d);
                       const filled = slot ? slot.slots.length : 0;
-                      const color = filled === 0 ? "transparent" : filled >= 3 ? "#34D399" : filled === 2 ? "#89CFF0" : "#F5EBD6";
+                      const color = filled === 0 ? "transparent" : filled >= 3 ? "#34D399" : filled === 2 ? "#89CFF0" : "#EF4E4B";
                       return (
                         <td key={d} className="px-2 py-2 text-center">
-                          <div className="w-6 h-6 mx-auto rounded" style={{ background: filled === 0 ? "rgba(255,255,255,0.04)" : `${color}33`, border: filled === 0 ? "1px dashed rgba(255,255,255,0.08)" : `1px solid ${color}66` }}>
+                          <div className="w-6 h-6 mx-auto rounded" style={{ background: filled === 0 ? "#E5E7EB" : `${color}33`, border: filled === 0 ? "1px dashed #E5E7EB" : `1px solid ${color}66` }}>
                             {filled > 0 && <span className="font-mono text-[9px]" style={{ color }}>{filled}</span>}
                           </div>
                         </td>
@@ -189,9 +190,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
   const [tab, setTab] = useState<"profile" | "availability" | "deployments" | "credentials">("profile");
   const org = orgs.find(o => o.id === v.org);
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
+    <SideDrawer onClose={onClose}>
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between">
           <div className="min-w-0">
             <p className="font-mono text-[10px] text-white/45">{v.id}</p>
@@ -288,8 +287,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
             Open full record
           </Link>
         </div>
-      </aside>
-    </div>
+      </SideDrawer>
   );
 }
 

@@ -1,8 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowRight, Search, Map, Heart, Layers, Smartphone } from "lucide-react";
 import { Logomark } from "@/components/Logomark";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    throw redirect({ to: "/command" });
+  },
   head: () => ({
     meta: [
       { title: "SOS Connect — Humanitarian CRM" },
@@ -14,7 +17,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white flex items-center justify-center px-5">
+    <div className="min-h-dvh bg-[var(--background)] text-white flex items-center justify-center px-5">
       <div className="max-w-xl w-full py-16">
         <div className="flex items-center gap-2.5 mb-5">
           <Logomark size={32} />
@@ -29,7 +32,7 @@ function Home() {
 
         <div className="mt-10 space-y-2">
           <Tile to="/prototypes" icon={Search} color="#89CFF0" label="All prototypes" sub="Review hub · every screen" />
-          <Tile to="/map" icon={Map} color="#F5EBD6" label="Coordinator · Map" sub="Situational awareness" />
+          <Tile to="/map" icon={Map} color="#89CFF0" label="Coordinator · Map" sub="Situational awareness" />
           <Tile to="/match" icon={Heart} color="#EF4E4B" label="Coordinator · Match" sub="Request ↔ org pairing" />
           <Tile to="/manage" icon={Layers} color="#34D399" label="Coordinator · Manage" sub="Directory, Cases, Volunteers…" />
           <Tile to="/c" icon={Smartphone} color="#89CFF0" label="Citizen portal" sub="Map · Match · Manage (mobile)" />

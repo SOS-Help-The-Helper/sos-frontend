@@ -18,7 +18,7 @@ export type Factor = {
 const DEFAULT_TIERS: ScoreTier[] = [
   { label: "Champion", color: "#34D399", min: 80 },
   { label: "Resilient", color: "#89CFF0", min: 60 },
-  { label: "Prepared", color: "#F5EBD6", min: 30 },
+  { label: "Prepared", color: "#89CFF0", min: 30 },
   { label: "Basic", color: "#94a3b8", min: 0 },
 ];
 
@@ -53,7 +53,7 @@ export function ScoreRing({
     <div className="flex flex-col items-center gap-2 shrink-0">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
           <circle
             cx={size / 2}
             cy={size / 2}

@@ -30,7 +30,7 @@ const MEMBERS: Member[] = [
 
 const ROLE_TINT: Record<Role, string> = {
   Owner: "#EF4E4B",
-  Admin: "#F5EBD6",
+  Admin: "#EF4E4B",
   Coordinator: "#89CFF0",
   Volunteer: "#94a3b8",
 };
@@ -71,7 +71,7 @@ function PeopleSettings() {
                 <div className="flex items-center gap-2">
                   <p className="text-[13.5px] font-medium truncate">{m.name}</p>
                   {m.status === "Invited" && (
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#F5EBD6] bg-[#F5EBD6]/12 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] bg-[#89CFF0]/12 px-1.5 py-0.5 rounded">
                       Pending
                     </span>
                   )}

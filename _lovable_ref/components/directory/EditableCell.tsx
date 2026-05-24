@@ -87,10 +87,10 @@ export function EditableSelect({ value, editable, onCommit, options, className =
       value={value}
       onChange={(e) => onCommit?.(e.target.value)}
       onClick={(e) => e.stopPropagation()}
-      className={`h-6 -my-0.5 px-1 rounded bg-transparent hover:bg-white/[0.06] focus:bg-white/10 text-white text-[13px] outline-none cursor-pointer ${className}`}
+      className={`h-6 -my-0.5 px-1 rounded bg-transparent hover:bg-[var(--sos-card-gray)] focus:bg-[var(--sos-card-gray)] text-[var(--sos-navy)] text-[13px] outline-none cursor-pointer ${className}`}
     >
       {options.map((o) => (
-        <option key={o} value={o} className="bg-[#1a1a1a]">
+        <option key={o} value={o} className="bg-white text-[#0F1E2B]">
           {o}
         </option>
       ))}

@@ -1,26 +1,18 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { Search, Upload, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Search, Users, Building2, AlertTriangle, Package, ArrowRight, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { PageHeader } from "@/components/crm/ManageTabs";
 import { orgs } from "@/lib/directory-data";
-import { volunteers as protoVolunteers } from "@/lib/prototype-data";
+import { requests, resources } from "@/lib/prototype-data";
 import {
   usePeople,
   scopeForOrg,
-  canEdit,
-  updatePerson,
   CURRENT_ORG_ID,
   CONNECTED_ORG_IDS,
-  type Scope,
 } from "@/lib/directory-store";
-import { StewardshipChip } from "@/components/directory/StewardshipChip";
-import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
 
 type TypeFilter = "all" | "people" | "orgs" | "volunteers";
-type ScopeFilter = "all" | "yours" | "shared" | "public";
-type ViewMode = "cards" | "table";
-
-const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
 export const Route = createFileRoute("/directory/")({
   validateSearch: (s: Record<string, unknown>): { type?: TypeFilter } => ({
@@ -31,542 +23,198 @@ export const Route = createFileRoute("/directory/")({
   head: () => ({
     meta: [
       { title: "Directory — SOS Connect" },
-      { name: "description", content: "Your CRM and the shared network in one place — your records, connected orgs, and the public directory." },
+      {
+        name: "description",
+        content:
+          "Search people, organizations, requests, and resources across your records and the shared partner network.",
+      },
     ],
   }),
   component: DirectoryPage,
 });
 
-const filterDefs = [
-  { key: "county", label: "County", options: ["Buncombe", "Watauga", "Henderson", "Madison", "Yancey", "Mitchell", "Avery"] },
-  { key: "skill", label: "Skill", options: ["First Aid", "Logistics", "Spanish", "Case Management", "Kitchen Ops"] },
-  { key: "credential", label: "Credential", options: ["FEMA IS-100", "Wilderness First Aid", "CDL Class A", "Food Handler"] },
-];
-
-type Row = {
-  kind: "person" | "org" | "volunteer";
-  id: string;
-  name: string;
-  subtitle: string;
-  meta: string;
-  score?: number;
-  badge?: string;
-  ownerOrgId: string;
-  ownerOrgName: string;
-  scope: Scope;
-  editable: boolean;
-  href: string;
-  hrefParams?: Record<string, string>;
-  // editable person fields (only meaningful when kind === "person")
-  role?: string;
-  county?: string;
-  housingStatus?: string;
-};
-
-type SortKey = "name" | "type" | "org" | "county" | "score";
-
-function orgName(id: string): string {
-  return orgs.find((o) => o.id === id)?.name ?? id;
-}
+type Counts = { total: number; yours: number; network: number };
 
 function DirectoryPage() {
-  const search = useSearch({ from: "/directory/" });
+  const navigate = useNavigate();
   const people = usePeople();
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<TypeFilter>(search.type ?? "all");
-  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [openFilter, setOpenFilter] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [view, setView] = useState<ViewMode>("table");
 
-  const q = query.trim().toLowerCase();
-
-  const rows = useMemo<Row[]>(() => {
-    const out: Row[] = [];
-    if (type === "all" || type === "people") {
-      for (const p of people) {
-        if (q && !p.name.toLowerCase().includes(q) && !p.org.name.toLowerCase().includes(q) && !p.role.toLowerCase().includes(q) && !p.skills.some((s) => s.name.toLowerCase().includes(q))) continue;
-        if (filters.county && p.county !== filters.county) continue;
-        if (filters.skill && !p.skills.some((s) => s.name.includes(filters.skill))) continue;
-        if (filters.credential && !p.credentials.some((c) => c.type === filters.credential)) continue;
-        const scope = scopeForOrg(p.org.id);
-        out.push({
-          kind: "person",
-          id: p.id,
-          name: p.name,
-          subtitle: p.role,
-          meta: `${p.org.name} · ${p.county}`,
-          score: p.sosScore,
-          ownerOrgId: p.org.id,
-          ownerOrgName: p.org.name,
-          scope,
-          editable: canEdit(p.org.id),
-          href: "/directory/person/$id",
-          hrefParams: { id: p.id },
-          role: p.role,
-          county: p.county,
-          housingStatus: p.housingStatus,
-        });
-      }
+  const counts = useMemo(() => {
+    const peopleCounts: Counts = { total: 0, yours: 0, network: 0 };
+    for (const p of people) {
+      peopleCounts.total++;
+      if (scopeForOrg(p.org.id) === "yours") peopleCounts.yours++;
+      else peopleCounts.network++;
     }
-    if (type === "all" || type === "orgs") {
-      for (const o of orgs) {
-        if (q && !o.name.toLowerCase().includes(q) && !o.type.toLowerCase().includes(q)) continue;
-        if (filters.county && !o.counties.includes(filters.county)) continue;
-        const scope = scopeForOrg(o.id);
-        out.push({
-          kind: "org",
-          id: o.id,
-          name: o.name,
-          subtitle: o.type,
-          meta: `${o.memberCount} members · ${o.activeCases} active`,
-          badge: `${o.activeCases} active`,
-          ownerOrgId: o.id,
-          ownerOrgName: o.name,
-          scope,
-          editable: canEdit(o.id),
-          href: "/directory/org/$id",
-          hrefParams: { id: o.id },
-        });
-      }
+    const orgCounts: Counts = { total: orgs.length, yours: 0, network: 0 };
+    for (const o of orgs) {
+      if (o.id === CURRENT_ORG_ID) orgCounts.yours++;
+      else orgCounts.network++;
     }
-    if (type === "all" || type === "volunteers") {
-      for (const v of protoVolunteers) {
-        if (q && !v.name.toLowerCase().includes(q) && !v.skills.some((s) => s.toLowerCase().includes(q))) continue;
-        if (filters.skill && !v.skills.some((s) => s.includes(filters.skill))) continue;
-        // Volunteers in mock data are not tied to a specific org — treat as your-org for demo.
-        const ownerOrgId = CURRENT_ORG_ID;
-        out.push({
-          kind: "volunteer",
-          id: v.id,
-          name: v.name,
-          subtitle: v.skills.join(", "),
-          meta: `${v.hours}h · ${v.status}`,
-          score: Math.min(99, 30 + v.hours / 2),
-          ownerOrgId,
-          ownerOrgName: orgName(ownerOrgId),
-          scope: "yours",
-          editable: true,
-          href: "/directory/volunteer/$id",
-          hrefParams: { id: v.id },
-        });
-      }
+    const reqCounts: Counts = { total: requests.length, yours: 0, network: 0 };
+    for (const r of requests) {
+      const owner = people.find((p) => p.id === r.personId)?.org.id;
+      if (owner === CURRENT_ORG_ID) reqCounts.yours++;
+      else reqCounts.network++;
     }
-
-    const scoped = scopeFilter === "all" ? out : out.filter((r) => r.scope === scopeFilter);
-
-    const dir = sortDir === "asc" ? 1 : -1;
-    scoped.sort((a, b) => {
-      const v = (() => {
-        switch (sortKey) {
-          case "name": return a.name.localeCompare(b.name);
-          case "type": return a.kind.localeCompare(b.kind);
-          case "org": return a.subtitle.localeCompare(b.subtitle);
-          case "county": return a.meta.localeCompare(b.meta);
-          case "score": return (a.score ?? 0) - (b.score ?? 0);
-        }
-      })();
-      return v * dir;
-    });
-    return scoped;
-  }, [people, q, type, scopeFilter, filters, sortKey, sortDir]);
-
-  const activeFilterCount = Object.keys(filters).length;
-  const counts = useMemo(() => ({
-    people: people.length,
-    orgs: orgs.length,
-    volunteers: protoVolunteers.length,
-  }), [people.length]);
-
-  const scopeCounts = useMemo(() => {
-    const c = { yours: 0, shared: 0, public: 0 };
-    for (const p of people) c[scopeForOrg(p.org.id)]++;
-    for (const o of orgs) c[scopeForOrg(o.id)]++;
-    c.yours += protoVolunteers.length;
-    return c;
+    const resCounts: Counts = { total: resources.length, yours: 0, network: 0 };
+    for (const r of resources) {
+      if (r.org === CURRENT_ORG_ID) resCounts.yours++;
+      else resCounts.network++;
+    }
+    return { people: peopleCounts, orgs: orgCounts, requests: reqCounts, resources: resCounts };
   }, [people]);
 
-  const onSort = (k: SortKey) => {
-    if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
-    else { setSortKey(k); setSortDir("asc"); }
-  };
+  const totalAll =
+    counts.people.total + counts.orgs.total + counts.requests.total + counts.resources.total;
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    navigate({ to: "/directory", search: { type: "people" } });
+  }
 
   return (
     <CrmShell module="Directory">
-      <div className="min-h-screen text-white">
-        {/* Page header */}
-        <header className="px-4 md:px-6 pt-5 md:pt-6 pb-3 flex items-end justify-between gap-4 border-b border-[var(--hairline)]">
-          <div className="min-w-0">
-            <h1 className="t-page">Directory</h1>
-            <p className="text-[12.5px] text-white/55 mt-1 max-w-2xl">
-              Your CRM and the shared network in one place. Records your org owns are editable inline; records from connected orgs ({CONNECTED_ORG_IDS.size}) are read-only.
-            </p>
-          </div>
-          <Link
-            to="/directory/import"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-white/8 hover:bg-white/12 text-[12px] font-medium transition shrink-0"
-          >
-            <Upload size={13} strokeWidth={2} />
-            <span className="hidden sm:inline">Import</span>
-          </Link>
-        </header>
-
-        {/* Type tabs */}
-        <div className="px-4 md:px-6 border-b border-[var(--hairline)] flex items-center gap-1 overflow-x-auto scrollbar-hide">
-          {(["all", "people", "orgs", "volunteers"] as const).map((t) => {
-            const active = type === t;
-            const n = t === "all" ? counts.people + counts.orgs + counts.volunteers : counts[t];
-            return (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className={`relative h-10 px-3 text-[13px] font-medium capitalize transition ${
-                  active ? "text-white" : "text-white/55 hover:text-white/85"
-                }`}
-              >
-                <span>{t}</span>
-                <span className={`ml-1.5 font-mono text-[10px] ${active ? "text-[#89CFF0]" : "text-white/30"}`}>
-                  {n}
-                </span>
-                {active && <span className="absolute left-2 right-2 -bottom-px h-[2px] bg-[#89CFF0] rounded-full" />}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scope segmented control */}
-        <div className="px-4 md:px-6 py-2 flex items-center gap-2 border-b border-[var(--hairline)]">
-          <div className="inline-flex rounded-md bg-white/[0.04] p-0.5">
-            {(
-              [
-                ["all", "All connected", counts.people + counts.orgs + counts.volunteers],
-                ["yours", "Your org", scopeCounts.yours],
-                ["shared", "Shared", scopeCounts.shared],
-                ["public", "Public", scopeCounts.public],
-              ] as const
-            ).map(([k, label, n]) => {
-              const active = scopeFilter === k;
-              return (
-                <button
-                  key={k}
-                  onClick={() => setScopeFilter(k as ScopeFilter)}
-                  className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11.5px] font-medium transition ${
-                    active ? "bg-white/10 text-white" : "text-white/55 hover:text-white/85"
-                  }`}
-                >
-                  {label}
-                  <span className={`font-mono text-[10px] ${active ? "text-[#89CFF0]" : "text-white/35"}`}>{n}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Toolbar: search + filters + view toggle */}
-        <div className="px-4 md:px-6 py-2.5 flex items-center gap-2 border-b border-[var(--hairline)] bg-[var(--background)]">
-          <div className="relative flex-1 max-w-md">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={2} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name, role, org, skill…"
-              className="w-full h-8 pl-9 pr-8 rounded-md bg-white/6 hover:bg-white/8 focus:bg-white/10 text-[13px] placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#89CFF0]/50 border-0 transition"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center"
-              >
-                <X size={11} />
-              </button>
-            )}
-          </div>
-          <div className="h-5 w-px bg-white/8 mx-1" />
-          <div className="relative">
-            <button
-              onClick={() => setOpenFilter(openFilter === "__panel" ? null : "__panel")}
-              className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] font-medium transition ${
-                activeFilterCount > 0 || openFilter === "__panel"
-                  ? "bg-white/10 text-white"
-                  : "text-white/65 hover:text-white hover:bg-white/6"
-              }`}
-            >
-              <SlidersHorizontal size={13} strokeWidth={2} />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="font-mono text-[10px] tabular-nums px-1 rounded bg-white/10">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-            {openFilter === "__panel" && (
-              <div className="absolute top-full right-0 mt-1 z-40 w-72 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] shadow-2xl p-3 space-y-3">
-                {filterDefs.map((f) => (
-                  <div key={f.key}>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{f.label}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {f.options.map((o) => {
-                        const on = filters[f.key] === o;
-                        return (
-                          <button
-                            key={o}
-                            onClick={() =>
-                              setFilters((prev) => {
-                                const n = { ...prev };
-                                if (on) delete n[f.key];
-                                else n[f.key] = o;
-                                return n;
-                              })
-                            }
-                            className={`h-6 px-2 rounded text-[11.5px] transition ${
-                              on
-                                ? "bg-[#89CFF0]/20 text-[#89CFF0]"
-                                : "bg-white/5 text-white/70 hover:bg-white/10"
-                            }`}
-                          >
-                            {o}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={() => setFilters({})}
-                    className="w-full h-7 rounded text-[12px] text-[#EF4E4B] hover:bg-white/5 border-t border-[var(--hairline)] pt-2"
-                  >
-                    Clear all filters
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1" />
-
-          {/* View toggle */}
-          <div className="hidden md:inline-flex rounded-md bg-white/[0.04] p-0.5">
-            <button
-              onClick={() => setView("table")}
-              className={`inline-flex items-center gap-1 h-7 px-2 rounded text-[11.5px] font-medium transition ${
-                view === "table" ? "bg-white/10 text-white" : "text-white/55 hover:text-white/85"
-              }`}
-              title="Table view"
-            >
-              <TableIcon size={12} /> Table
-            </button>
-            <button
-              onClick={() => setView("cards")}
-              className={`inline-flex items-center gap-1 h-7 px-2 rounded text-[11.5px] font-medium transition ${
-                view === "cards" ? "bg-white/10 text-white" : "text-white/55 hover:text-white/85"
-              }`}
-              title="Card view"
-            >
-              <LayoutGrid size={12} /> Cards
-            </button>
-          </div>
-
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/40 ml-2">
-            {rows.length} {rows.length === 1 ? "result" : "results"}
+      <PageHeader
+        title="Directory"
+        subtitle="Search people, organizations, requests, and resources across your records and the partner network."
+        actions={
+          <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-white/55">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
+            Network live · {CONNECTED_ORG_IDS.size} partners · {totalAll.toLocaleString()} records
           </span>
-        </div>
+        }
+      />
 
-        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-10">
-          {/* Mobile card list (always cards) */}
-          <div className="md:hidden space-y-2">
-            {rows.length === 0 ? (
-              <EmptyState query={query} />
-            ) : (
-              rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
-            )}
+      <div className="px-4 pt-4 pb-4 space-y-4">
+        {/* Search */}
+        <form onSubmit={submitSearch} className="relative">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/45 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search names, organizations, or needs (e.g. 'RV housing Georgia')"
+            className="w-full h-11 pl-10 pr-24 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] text-[13.5px] text-white placeholder:text-white/40 focus:outline-none focus:border-[#89CFF0]/50 transition"
+          />
+          <button
+            type="submit"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition"
+          >
+            Search
+          </button>
+        </form>
+
+        {/* Category grid */}
+        <section>
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Browse by category</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <CategoryTile
+              icon={<Users size={16} />}
+              accent="#89CFF0"
+              label="People"
+              blurb="Volunteers, staff, and emergency contacts."
+              counts={counts.people}
+              onClick={() => navigate({ to: "/directory", search: { type: "people" } })}
+            />
+            <CategoryTile
+              icon={<Building2 size={16} />}
+              accent="#89CFF0"
+              label="Organizations"
+              blurb="Partner agencies and connected networks."
+              counts={counts.orgs}
+              onClick={() => navigate({ to: "/directory", search: { type: "orgs" } })}
+            />
+            <CategoryTile
+              icon={<AlertTriangle size={16} />}
+              accent="#EF4E4B"
+              label="Requests"
+              blurb="Open needs from survivors and partners."
+              counts={counts.requests}
+              onClick={() => navigate({ to: "/cases" })}
+            />
+            <CategoryTile
+              icon={<Package size={16} />}
+              accent="#89CFF0"
+              label="Resources"
+              blurb="Housing, supplies, transport, and skilled crews."
+              counts={counts.resources}
+              onClick={() => navigate({ to: "/inventory" })}
+            />
           </div>
+        </section>
 
-          {/* Desktop: cards or table */}
-          {view === "cards" ? (
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-3">
-              {rows.length === 0 ? (
-                <div className="col-span-full"><EmptyState query={query} /></div>
-              ) : (
-                rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
-              )}
+        {/* Map CTA */}
+        <button
+          onClick={() => navigate({ to: "/map" })}
+          className="w-full rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 flex items-center justify-between hover:border-white/20 transition text-left"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#89CFF0]/15 text-[#89CFF0] shrink-0">
+              <MapPin size={16} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[13.5px] font-medium">See the network on the map</p>
+              <p className="text-[12px] text-white/55 mt-0.5">Pin requests, resources, and partner orgs geographically.</p>
             </div>
-          ) : (
-            <div className="hidden md:block rounded-2xl border border-[var(--hairline)] overflow-hidden bg-[var(--surface-1)]">
-              <table className="w-full text-[13px] t-cols">
-                <thead className="bg-white/[0.02]">
-                  <tr className="text-left">
-                    <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
-                    <Th label="Type" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[110px]" />
-                    <Th label="Role" sortKey="org" current={sortKey} dir={sortDir} onSort={onSort} />
-                    <Th label="County / Detail" sortKey="county" current={sortKey} dir={sortDir} onSort={onSort} />
-                    <Th label="Source" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[140px]" />
-                    <Th label="Score" sortKey="score" current={sortKey} dir={sortDir} onSort={onSort} className="w-[90px] text-right" align="right" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-16 text-center">
-                        <EmptyState query={query} />
-                      </td>
-                    </tr>
-                  )}
-                  {rows.map((r) => (
-                    <RowItem key={`${r.kind}-${r.id}`} row={r} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[12px] text-[#EF4E4B] font-medium shrink-0">
+            Open map <ArrowRight size={12} />
+          </span>
+        </button>
       </div>
     </CrmShell>
   );
 }
 
-function EmptyState({ query }: { query: string }) {
-  return (
-    <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] py-12 text-center">
-      <div className="w-12 h-12 mx-auto rounded-xl bg-white/5 flex items-center justify-center mb-3">
-        <Search size={18} className="text-white/30" />
-      </div>
-      <p className="font-medium text-[14px]">No results</p>
-      <p className="text-[12px] text-white/45 mt-1">
-        {query ? `Nothing matched "${query}".` : "Try adjusting your filters."}
-      </p>
-    </div>
-  );
-}
-
-function Th({
-  label, sortKey, current, dir, onSort, className = "", align = "left",
+function CategoryTile({
+  icon, accent, label, blurb, counts, onClick,
 }: {
-  label: string; sortKey: SortKey; current: SortKey; dir: "asc" | "desc";
-  onSort: (k: SortKey) => void; className?: string; align?: "left" | "right";
+  icon: React.ReactNode;
+  accent: string;
+  label: string;
+  blurb: string;
+  counts: Counts;
+  onClick: () => void;
 }) {
-  const active = current === sortKey;
-  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
-  return (
-    <th className={`px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] ${className}`}>
-      <button
-        onClick={() => onSort(sortKey)}
-        className={`inline-flex items-center gap-1 hover:text-white/80 transition ${active ? "text-white/80" : ""} ${align === "right" ? "flex-row-reverse w-full justify-start" : ""}`}
-      >
-        {label}
-        <Icon size={11} strokeWidth={2} className={active ? "text-[#89CFF0]" : "text-white/30"} />
-      </button>
-    </th>
-  );
-}
-
-function tierDot(score: number | undefined): string {
-  if (score === undefined) return "transparent";
-  if (score < 40) return "#EF4E4B";
-  if (score >= 80) return "#89CFF0";
-  return "rgba(245,235,214,0.55)";
-}
-
-function RowItem({ row }: { row: Row }) {
-  const navigate = useNavigate();
-  const onNav = () => navigate({ to: row.href, params: row.hrefParams as never });
-  const isPerson = row.kind === "person";
-  return (
-    <tr className="border-b border-[var(--hairline)] last:border-0 hover:bg-white/[0.03] transition">
-      <td className="px-4 py-2.5 cursor-pointer" onClick={onNav}>
-        <span className="font-medium text-white truncate">{row.name}</span>
-      </td>
-      <td className="px-4 py-2.5 cursor-pointer" onClick={onNav}>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-white/55">
-          {row.kind}
-        </span>
-      </td>
-      <td className="px-4 py-2.5 text-white/85">
-        {isPerson ? (
-          <EditableCell
-            value={row.role ?? ""}
-            editable={row.editable}
-            onCommit={(v) => updatePerson(row.id, "role", v, { kind: "user", label: "you" })}
-          />
-        ) : (
-          <span className="text-white/75 truncate">{row.subtitle}</span>
-        )}
-      </td>
-      <td className="px-4 py-2.5 text-white/70 text-[12.5px]">
-        {isPerson ? (
-          <div className="flex items-center gap-2">
-            <EditableCell
-              value={row.county ?? ""}
-              editable={row.editable}
-              onCommit={(v) => updatePerson(row.id, "county", v, { kind: "user", label: "you" })}
-              className="text-[12.5px]"
-            />
-            <span className="text-white/25">·</span>
-            <EditableSelect
-              value={row.housingStatus ?? ""}
-              editable={row.editable}
-              onCommit={(v) => updatePerson(row.id, "housingStatus", v, { kind: "user", label: "you" })}
-              options={HOUSING_OPTIONS}
-              className="text-[12px]"
-            />
-          </div>
-        ) : (
-          <span className="truncate">{row.meta}</span>
-        )}
-      </td>
-      <td className="px-4 py-2.5">
-        <StewardshipChip ownerOrgId={row.ownerOrgId} ownerOrgName={row.ownerOrgName} />
-      </td>
-      <td className="px-4 py-2.5 text-right font-mono tabular-nums cursor-pointer" onClick={onNav}>
-        {row.score !== undefined ? (
-          <span className="inline-flex items-center gap-1.5 text-white/85">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: tierDot(row.score) }} />
-            {Math.round(row.score)}
-          </span>
-        ) : row.badge ? (
-          <span className="text-[11px] text-white/45">{row.badge}</span>
-        ) : (
-          <span className="text-white/20">–</span>
-        )}
-      </td>
-    </tr>
-  );
-}
-
-function CardItem({ row }: { row: Row }) {
-  const navigate = useNavigate();
+  const pct = counts.total > 0 ? Math.round((counts.yours / counts.total) * 100) : 0;
   return (
     <button
-      onClick={() => navigate({ to: row.href, params: row.hrefParams as never })}
-      className="w-full text-left rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-white/[0.03] transition px-3.5 py-3 active:scale-[0.99]"
+      type="button"
+      onClick={onClick}
+      className="text-left rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] hover:border-white/20 p-4 transition group"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-[14px] text-white truncate">{row.name}</p>
-          <p className="text-[12px] text-white/55 truncate mt-0.5">
-            {row.subtitle}
-            {row.meta && <span className="text-white/35"> · {row.meta}</span>}
-          </p>
-          <div className="mt-2">
-            <StewardshipChip ownerOrgId={row.ownerOrgId} ownerOrgName={row.ownerOrgName} />
-          </div>
-        </div>
-        <div className="text-right shrink-0 flex flex-col items-end gap-1">
-          <span className="font-mono text-[9.5px] uppercase tracking-wider text-white/40">
-            {row.kind}
-          </span>
-          {row.score !== undefined ? (
-            <span className="inline-flex items-center gap-1.5 font-mono tabular-nums text-[15px] text-white/85">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: tierDot(row.score) }} />
-              {Math.round(row.score)}
-            </span>
-          ) : row.badge ? (
-            <span className="font-mono text-[10.5px] text-white/45">{row.badge}</span>
-          ) : null}
+      <div className="flex items-start justify-between mb-3">
+        <span
+          className="inline-flex items-center justify-center w-9 h-9 rounded-lg"
+          style={{ background: `${accent}26`, color: accent }}
+        >
+          {icon}
+        </span>
+        <div className="text-right">
+          <p className="text-[22px] font-semibold tabular-nums leading-none">{counts.total.toLocaleString()}</p>
+          <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45 mt-1">Total</p>
         </div>
       </div>
+      <p className="text-[14px] font-semibold">{label}</p>
+      <p className="text-[12px] text-white/60 mt-0.5 leading-snug">{blurb}</p>
+      <div className="mt-3 pt-3 border-t border-[var(--hairline)] space-y-1.5">
+        <div className="flex items-center justify-between font-mono text-[10.5px]">
+          <span className="text-white/45 uppercase tracking-wider">Yours</span>
+          <span className="text-white tabular-nums">{counts.yours.toLocaleString()}</span>
+        </div>
+        <div className="h-1 rounded-full bg-white/8 overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
+        </div>
+        <div className="flex items-center justify-between font-mono text-[10.5px]">
+          <span className="text-white/45 uppercase tracking-wider">Network</span>
+          <span className="tabular-nums" style={{ color: accent }}>{counts.network.toLocaleString()}</span>
+        </div>
+      </div>
+      <span className="mt-3 inline-flex items-center gap-1 text-[11.5px] font-medium text-[#EF4E4B] group-hover:gap-1.5 transition-all">
+        Browse {label.toLowerCase()} <ArrowRight size={11} />
+      </span>
     </button>
   );
 }

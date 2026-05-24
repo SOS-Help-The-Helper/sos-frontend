@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { PageHeader } from "@/components/crm/ManageTabs";
 import { Sparkline } from "@/components/crm/Sparkline";
-import { incidents, reports as reportsData, cases, orgs, bucketOf } from "@/lib/prototype-data";
+import { incidents, cases, orgs, bucketOf } from "@/lib/prototype-data";
 import { useAllDashboards } from "@/lib/dashboard-store";
 import { AlertTriangle, Radio, ChevronRight } from "lucide-react";
 
@@ -23,27 +23,27 @@ function CommandPage() {
     <CrmShell module="Command">
       <PageHeader
         title="Command"
-        subtitle="One dashboard per active disaster — pinned reports, designated lead, and live case counts in a single view."
+        subtitle="One dashboard per active disaster."
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
             <Radio size={12} /> Declare incident
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10 space-y-6">
+      <div className="px-4 pt-4 pb-4 space-y-4">
         {/* Fleet summary */}
-        <div className="grid grid-cols-3 gap-3">
-          <FleetTile label="Open cases" value={totalOpen} tone="#89CFF0" />
-          <FleetTile label="Critical / high" value={totalCritical} tone="#EF4E4B" />
-          <FleetTile label="Orgs engaged" value={`${orgsEngaged}/${orgs.length}`} tone="#F5EBD6" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <FleetTile label="Open cases" value={totalOpen} intent="neutral" />
+          <FleetTile label="Critical / high" value={totalCritical} intent={totalCritical > 0 ? "danger" : "neutral"} />
+          <FleetTile label="Orgs engaged" value={`${orgsEngaged}/${orgs.length}`} intent={orgsEngaged === orgs.length ? "success" : "neutral"} />
         </div>
 
         <div>
-          <div className="flex items-baseline gap-2 mb-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/55">Active incidents</p>
-            <span className="font-mono text-[10px] tabular-nums text-white/35">{incidents.length}</span>
+          <div className="flex items-baseline gap-2 mb-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/55">Active incidents · {incidents.length}</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+
             {incidents.map((i) => {
               const pinnedIds = pinnedMap[i.id] ?? [];
               const incidentCases = cases.slice(0, i.cases);
@@ -115,24 +115,24 @@ function CommandPage() {
           </div>
         </div>
 
-        <p className="font-mono text-[10px] uppercase tracking-wider text-white/35 text-center">
-          {reportsData.length} reports indexed across {incidents.length} incidents
-        </p>
       </div>
+
     </CrmShell>
   );
 }
 
-function FleetTile({ label, value, tone }: { label: string; value: string | number; tone: string }) {
+function FleetTile({ label, value, intent = "neutral" }: { label: string; value: string | number; intent?: "neutral" | "danger" | "success" }) {
+  const rail = intent === "danger" ? "#EF4E4B" : intent === "success" ? "#34D399" : "#89CFF0";
+  const textColor = intent === "danger" ? "#EF4E4B" : "var(--sos-navy)";
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] px-5 py-4 flex items-center justify-between">
       <div>
         <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{label}</p>
-        <p className="text-[28px] font-semibold tabular-nums mt-1 leading-none" style={{ color: tone }}>
+        <p className="text-[28px] font-semibold tabular-nums mt-1 leading-none" style={{ color: textColor }}>
           {value}
         </p>
       </div>
-      <div className="w-2 h-12 rounded-full" style={{ background: tone, opacity: 0.4 }} />
+      <div className="w-2 h-12 rounded-full" style={{ background: rail, opacity: 0.4 }} />
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function Donut({ slices, size = 140, thickness = 14, centerLabel, centerS
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.06)" strokeWidth={thickness} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="#E5E7EB" strokeWidth={thickness} fill="none" />
         {slices.map((s, i) => {
           if (s.value === 0) return null;
           const len = (s.value / total) * c;

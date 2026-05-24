@@ -1,62 +1,29 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  Users, LayoutGrid, Map, HeartHandshake, Package, Calendar, BarChart3, Radio,
-  Sparkles, Settings, ChevronsLeft, ChevronsRight, ChevronDown, Command, Truck,
-  MoreHorizontal, X,
-} from "lucide-react";
-import { useEffect, useState, type ReactNode, type ComponentType } from "react";
-import { Logomark } from "@/components/Logomark";
+import { useEffect, useState, type ReactNode } from "react";
 import { CommandPalette } from "@/components/CommandPalette";
-import { usePrefs, MODULE_META, type ModuleId } from "@/lib/prefs-store";
+import { TopNav, type TopNavItem } from "@/components/shell/TopNav";
+import { MODULE_META, usePrefs } from "@/lib/prefs-store";
 
-type IconType = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
-
-const MODULE_ICON: Record<ModuleId, IconType> = {
-  directory: Users,
-  cases: LayoutGrid,
-  map: Map,
-  transport: Truck,
-  inventory: Package,
-  volunteers: HeartHandshake,
-  calendar: Calendar,
-  reports: BarChart3,
-  command: Radio,
-};
-
-type NavItem = { to: string; icon: IconType; label: string; matchPrefix: string; id: ModuleId };
-type NavGroup = { id: "crm" | "ops" | "insights"; label: string; items: NavItem[] };
-
-function buildGroups(enabled: ModuleId[]): NavGroup[] {
-  const groupDefs: { id: NavGroup["id"]; label: string }[] = [
-    { id: "crm", label: "CRM" },
-    { id: "ops", label: "Ops" },
-    { id: "insights", label: "Insights" },
-  ];
-  return groupDefs
-    .map((g) => {
-      const items: NavItem[] = enabled
-        .filter((m) => MODULE_META[m].group === g.id)
-        .map((m) => ({
-          id: m,
-          to: MODULE_META[m].to,
-          matchPrefix: MODULE_META[m].to,
-          label: MODULE_META[m].label,
-          icon: MODULE_ICON[m],
-        }));
-      return { ...g, items };
-    })
-    .filter((g) => g.items.length > 0);
-}
-
-export function CrmShell({ children, module = "Directory" }: { children: ReactNode; module?: string }) {
-  const [expanded, setExpanded] = useState(true);
+/**
+ * Staff shell — HubSpot-style navy top nav + light SOS-brand body.
+ * - Top nav driven by `prefs.enabled`
+ * - ⌘K / `/` opens the CommandPalette
+ * - Body uses --surface-app (light gray) so pages render on the SOS palette
+ */
+export function CrmShell({
+  children,
+  module = "Directory",
+}: {
+  children: ReactNode;
+  module?: string;
+}) {
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ crm: true, ops: true, insights: true });
-  const path = useRouterState({ select: (s) => s.location.pathname });
   const prefs = usePrefs();
-  const groups = buildGroups(prefs.enabled);
-  const sidebarW = expanded ? 220 : 56;
+
+  const items: TopNavItem[] = prefs.enabled.map((m) => ({
+    to: MODULE_META[m].to,
+    label: MODULE_META[m].label,
+    matchPrefix: MODULE_META[m].to,
+  }));
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -72,262 +39,14 @@ export function CrmShell({ children, module = "Directory" }: { children: ReactNo
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
-      {/* Sidebar */}
-      <aside
-        className="hidden md:flex fixed left-0 top-0 bottom-0 flex-col border-r border-[var(--hairline)] bg-[var(--background)] z-40 transition-[width] duration-200"
-        style={{ width: sidebarW }}
-      >
-        <div className="h-14 flex items-center px-3 shrink-0 border-b border-[var(--hairline)]">
-          <Link to="/" className="flex items-center hover:opacity-90 transition">
-            <Logomark size={24} />
-          </Link>
-        </div>
-
-        {/* Agent launcher — primary, always visible */}
-        <div className="p-2 border-b border-[var(--hairline)]">
-          <button
-            onClick={() => setPaletteOpen(true)}
-            className="w-full flex items-center gap-2.5 h-9 rounded-lg px-2.5 bg-gradient-to-r from-[#EF4E4B]/15 to-[#89CFF0]/15 hover:from-[#EF4E4B]/22 hover:to-[#89CFF0]/22 transition group"
-            title={!expanded ? "Ask SOS" : undefined}
-          >
-            <Sparkles size={14} className="text-[#89CFF0] shrink-0" />
-            {expanded && (
-              <span className="flex-1 text-left text-[12px] font-medium text-white/85 group-hover:text-white">Ask SOS</span>
-            )}
-          </button>
-        </div>
-
-        <nav className="flex-1 px-2 pt-3 pb-2 overflow-y-auto scrollbar-hide">
-          {groups.map((g) => {
-            const open = openGroups[g.id];
-            const anyActive = g.items.some((it) => path.startsWith(it.matchPrefix));
-            return (
-              <div key={g.id} className="mb-3">
-                {expanded ? (
-                  <button
-                    onClick={() => setOpenGroups((s) => ({ ...s, [g.id]: !s[g.id] }))}
-                    className="w-full flex items-center justify-between px-2.5 py-1 text-white/40 hover:text-white/70 transition group"
-                  >
-                    <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] font-medium">{g.label}</span>
-                    <ChevronDown size={11} className={`transition-transform ${open ? "" : "-rotate-90"} ${anyActive ? "text-[#89CFF0]" : ""}`} />
-                  </button>
-                ) : (
-                  <div className="h-px bg-white/8 mx-2 mb-1.5" />
-                )}
-                {(open || !expanded) && (
-                  <div className="mt-0.5 space-y-px">
-                    {g.items.map((it) => {
-                      const active = path.startsWith(it.matchPrefix);
-                      return (
-                        <Link
-                          key={it.label}
-                          to={it.to}
-                          className={`group relative flex items-center gap-2.5 h-8 rounded-md px-2.5 text-[12.5px] font-medium border transition ${
-                            active
-                              ? "bg-white/8 text-white border-[#EF4E4B]/35"
-                              : "text-white/65 hover:text-white hover:bg-white/[0.04] border-[#EF4E4B]/12 hover:border-[#EF4E4B]/25"
-                          }`}
-                          title={!expanded ? it.label : undefined}
-                        >
-                          {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full bg-[#89CFF0]" />}
-                          <it.icon size={15} strokeWidth={1.75} className="shrink-0" />
-                          {expanded && <span className="flex-1 truncate whitespace-nowrap">{it.label}</span>}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-
-        <div className="border-t border-[var(--hairline)] p-2">
-          <Link
-            to="/prototypes"
-            className="flex items-center gap-2.5 h-8 rounded-md px-2.5 text-[11.5px] text-white/35 hover:text-white/70 hover:bg-white/[0.04] transition"
-            title={!expanded ? "Prototypes" : undefined}
-          >
-            <Command size={13} strokeWidth={1.75} />
-            {expanded && <span>Prototypes</span>}
-          </Link>
-          <Link
-            to="/settings"
-            className="flex items-center gap-2.5 h-8 rounded-md px-2.5 text-[12.5px] text-white/65 hover:text-white hover:bg-white/[0.04] transition"
-            title={!expanded ? "Settings" : undefined}
-          >
-            <Settings size={14} strokeWidth={1.75} />
-            {expanded && <span>Settings</span>}
-          </Link>
-          <div className="flex items-center gap-2.5 h-11 px-1.5 mt-1.5 pt-2 border-t border-white/5">
-            <div className="w-7 h-7 rounded-full bg-[#EF4E4B] flex items-center justify-center text-[11px] font-semibold shrink-0">M</div>
-            {expanded && (
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium truncate">Melissa Hart</p>
-                <p className="text-[10px] text-white/45 truncate">Mountain Area Aid</p>
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="flex items-center justify-center w-full h-6 rounded-md text-white/35 hover:text-white hover:bg-white/[0.04] transition"
-            title={expanded ? "Collapse" : "Expand"}
-          >
-            {expanded ? <ChevronsLeft size={13} /> : <ChevronsRight size={13} />}
-          </button>
-        </div>
-      </aside>
-
-      <div className="pb-20 md:pb-0 transition-[padding] duration-200" style={{ ["--sidebar-w" as string]: `${sidebarW}px` }}>
-        <div className="md:pl-[var(--sidebar-w)] transition-[padding] duration-200">
-          <div className="min-h-screen bg-[var(--surface-app)]">{children}</div>
-        </div>
-      </div>
-
-      <MobileBottomNav
-        pins={prefs.mobilePins}
-        enabled={prefs.enabled}
-        path={path}
+    <div style={{ background: "var(--surface-app)", color: "var(--foreground)" }}>
+      <TopNav
+        items={items}
         onOpenAgent={() => setPaletteOpen(true)}
-        onOpenMore={() => setMoreOpen(true)}
+        settingsTo="/settings"
       />
-
-      <MobileMoreSheet
-        open={moreOpen}
-        onClose={() => setMoreOpen(false)}
-        pins={prefs.mobilePins}
-        enabled={prefs.enabled}
-      />
-
+      <main>{children}</main>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} module={module} />
-    </div>
-  );
-}
-
-function MobileBottomNav({
-  pins, enabled, path, onOpenAgent, onOpenMore,
-}: {
-  pins: ModuleId[];
-  enabled: ModuleId[];
-  path: string;
-  onOpenAgent: () => void;
-  onOpenMore: () => void;
-}) {
-  const showMore = enabled.some((m) => !pins.includes(m));
-  // Layout: [pin1][pin2][SOS][pin3][pin4 or More]
-  const left = pins.slice(0, 2);
-  const rightCandidates = pins.slice(2, showMore ? 3 : 4);
-  const rightSlots: Array<{ kind: "pin"; id: ModuleId } | { kind: "more" } | { kind: "empty" }> = [];
-  rightCandidates.forEach((id) => rightSlots.push({ kind: "pin", id }));
-  if (showMore) rightSlots.push({ kind: "more" });
-  while (rightSlots.length < 2) rightSlots.push({ kind: "empty" });
-
-  return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--hairline)] flex justify-around pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-40">
-      {left.map((id) => <PinTab key={id} id={id} path={path} />)}
-      {Array.from({ length: 2 - left.length }).map((_, i) => <span key={`lp${i}`} className="w-14" />)}
-
-      <button onClick={onOpenAgent} className="flex flex-col items-center gap-1 px-3 py-1 transition text-white">
-        <span className="w-10 h-10 -mt-3 rounded-full bg-gradient-to-br from-[#EF4E4B] to-[#89CFF0] flex items-center justify-center shadow-lg shadow-[#EF4E4B]/30">
-          <Sparkles size={18} strokeWidth={2} />
-        </span>
-        <span className="font-mono text-[9px] uppercase tracking-wider font-medium">SOS</span>
-      </button>
-
-      {rightSlots.map((slot, i) => {
-        if (slot.kind === "pin") return <PinTab key={slot.id} id={slot.id} path={path} />;
-        if (slot.kind === "more") {
-          const moreActive = enabled.some((m) => !pins.includes(m) && path.startsWith(MODULE_META[m].to));
-          return (
-            <button
-              key="more"
-              onClick={onOpenMore}
-              className={`flex flex-col items-center gap-1 px-3 py-1 transition ${moreActive ? "text-[#89CFF0]" : "text-white/55"}`}
-            >
-              <MoreHorizontal size={20} strokeWidth={1.75} />
-              <span className="font-mono text-[9px] uppercase tracking-wider font-medium">More</span>
-            </button>
-          );
-        }
-        return <span key={`rp${i}`} className="w-14" />;
-      })}
-    </nav>
-  );
-}
-
-function PinTab({ id, path }: { id: ModuleId; path: string }) {
-  const meta = MODULE_META[id];
-  const Icon = MODULE_ICON[id];
-  const active = path.startsWith(meta.to);
-  return (
-    <Link
-      to={meta.to}
-      className={`flex flex-col items-center gap-1 px-3 py-1 transition ${active ? "text-[#89CFF0]" : "text-white/55"}`}
-    >
-      <Icon size={20} strokeWidth={1.75} />
-      <span className="font-mono text-[9px] uppercase tracking-wider font-medium">{meta.label}</span>
-    </Link>
-  );
-}
-
-function MobileMoreSheet({
-  open, onClose, pins, enabled,
-}: {
-  open: boolean;
-  onClose: () => void;
-  pins: ModuleId[];
-  enabled: ModuleId[];
-}) {
-  if (!open) return null;
-  const overflow = enabled.filter((m) => !pins.includes(m));
-  return (
-    <div className="md:hidden fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/70 animate-in fade-in" onClick={onClose} />
-      <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-[var(--background)] border-t border-[var(--hairline)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[14px] font-semibold">More</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/55 hover:text-white hover:bg-white/5">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {overflow.map((id) => {
-            const meta = MODULE_META[id];
-            const Icon = MODULE_ICON[id];
-            return (
-              <Link
-                key={id}
-                to={meta.to}
-                onClick={onClose}
-                className="flex items-center gap-3 p-3 rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)] transition"
-              >
-                <Icon size={18} strokeWidth={1.75} className="text-[#89CFF0]" />
-                <span className="text-[13px] font-medium">{meta.label}</span>
-              </Link>
-            );
-          })}
-          <Link
-            to="/settings"
-            onClick={onClose}
-            className="flex items-center gap-3 p-3 rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)] transition"
-          >
-            <Settings size={18} strokeWidth={1.75} className="text-white/55" />
-            <span className="text-[13px] font-medium">Settings</span>
-          </Link>
-          <Link
-            to="/prototypes"
-            onClick={onClose}
-            className="flex items-center gap-3 p-3 rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)] transition"
-          >
-            <Command size={18} strokeWidth={1.75} className="text-white/55" />
-            <span className="text-[13px] font-medium">Prototypes</span>
-          </Link>
-        </div>
-        <p className="mt-3 text-[11px] text-white/45 text-center">
-          Pin favorites to the bar in <Link to="/settings" onClick={onClose} className="text-[#89CFF0] underline">Settings</Link>.
-        </p>
-      </div>
     </div>
   );
 }

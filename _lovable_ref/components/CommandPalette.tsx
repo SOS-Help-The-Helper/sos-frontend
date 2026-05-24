@@ -292,7 +292,7 @@ function CaseListBlock({ query, close }: { query: string; close: () => void }) {
         {display.map((c) => {
           const org = orgs.find((o) => o.id === c.org);
           return (
-            <Link key={c.id} to="/cases/$id" params={{ id: c.umbrella ?? c.id }} onClick={close} className="row row-hover">
+            <Link key={c.id} to="/cases/$id" params={{ id: c.parentCaseId ?? c.id }} onClick={close} className="row row-hover">
               <span className="font-mono text-[10px] text-white/40 w-12 shrink-0">{c.id}</span>
               <span className="text-[12.5px] font-medium flex-1 truncate">{c.citizen}</span>
               <span className="t-meta hidden sm:inline">{c.county}</span>

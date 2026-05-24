@@ -20,7 +20,7 @@ export const Route = createFileRoute("/directory/resource/$id")({
     meta: [{ title: `${loaderData?.title ?? "Resource"} — SOS Connect` }],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Resource not found · <Link to="/inventory" className="text-[#89CFF0] underline ml-2">Back</Link>
     </div>
   ),
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/directory/resource/$id")({
 function ResourcePage() {
   const r = Route.useLoaderData();
   const statusColor =
-    r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#F5EBD6";
+    r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#89CFF0";
   const events = assetEvents.filter(e => e.resourceId === r.id);
 
   const tabs: DetailTab[] = [
@@ -65,7 +65,7 @@ function ResourcePage() {
                   const color =
                     e.eventType === "status_change" ? "#89CFF0" :
                     e.eventType === "location_move" ? "#34D399" :
-                    e.eventType === "condition_update" ? "#F5EBD6" :
+                    e.eventType === "condition_update" ? "#89CFF0" :
                     e.eventType === "assignment" ? "#EF4E4B" : "white";
                   return (
                     <li key={e.id} className="relative">
@@ -119,7 +119,7 @@ function ResourcePage() {
     <CrmShell module="Cases">
       <DetailTopBar backTo="/inventory" backLabel="Resources" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <div

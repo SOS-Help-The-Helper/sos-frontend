@@ -25,7 +25,7 @@ const ACTIVE_STATS = [
 
 function OrgSettings() {
   const trust = Math.round(TRUST_FACTORS.reduce((a, f) => a + f.earned, 0) / TRUST_FACTORS.length);
-  const trustColor = trust >= 85 ? "#34D399" : trust >= 70 ? "#89CFF0" : trust >= 50 ? "#F5EBD6" : "#EF4E4B";
+  const trustColor = trust >= 85 ? "#34D399" : trust >= 70 ? "#89CFF0" : trust >= 50 ? "#4A5462" : "#EF4E4B";
   const trustLabel = trust >= 85 ? "Trusted" : trust >= 70 ? "Reliable" : trust >= 50 ? "Building" : "New";
 
   return (

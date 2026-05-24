@@ -19,7 +19,7 @@ export const Route = createFileRoute("/directory/report/$id")({
     meta: [{ title: `${loaderData?.taxonomy ?? "Report"} — SOS Connect` }],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Report not found · <Link to="/reports" className="text-[#89CFF0] underline ml-2">Back</Link>
     </div>
   ),
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/directory/report/$id")({
 
 const SEV: Record<ReportDetail["severity"], string> = {
   Critical: "#EF4E4B",
-  Elevated: "#F5EBD6",
+  Elevated: "#89CFF0",
   Routine: "#89CFF0",
 };
 
@@ -38,7 +38,7 @@ function ReportPage() {
   const sev = SEV[r.severity as ReportDetail["severity"]];
 
   const timelineEntries: { label: string; date: string; color: string }[] = [
-    { label: "Reported", date: r.date, color: "#F5EBD6" },
+    { label: "Reported", date: r.date, color: "#89CFF0" },
     ...(r.verifiedBy ? [{ label: `Verified by ${r.verifiedBy}`, date: r.date, color: "#89CFF0" }] : []),
     ...(r.resolution ? [{ label: r.resolution, date: r.resolution, color: "#34D399" }] : []),
   ];
@@ -115,7 +115,7 @@ function ReportPage() {
     <CrmShell module="Cases">
       <DetailTopBar backTo="/reports" backLabel="Reports" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <div

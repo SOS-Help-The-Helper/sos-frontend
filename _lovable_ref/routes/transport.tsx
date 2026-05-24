@@ -5,6 +5,7 @@ import { transportAssignments, convoys, orgs, TRANSPORT_STATUS_LABEL, orgTranspo
 import { Truck, Plus, MapPin, Clock, AlertTriangle, ChevronDown, ChevronRight, Camera, ArrowRight, Map as MapIcon, List, ExternalLink } from "lucide-react";
 import { useMemo, useState, Fragment } from "react";
 import { toast } from "sonner";
+import { SideDrawer } from "@/components/crm/SideDrawer";
 
 export const Route = createFileRoute("/transport")({
   head: () => ({ meta: [{ title: "Transport — SOS Connect" }] }),
@@ -12,8 +13,8 @@ export const Route = createFileRoute("/transport")({
 });
 
 const STATUS_COLOR: Record<TransportStatus, string> = {
-  assigned: "#F5EBD6",
-  accepted: "#F5EBD6",
+  assigned: "#89CFF0",
+  accepted: "#89CFF0",
   en_route_pickup: "#89CFF0",
   at_pickup: "#89CFF0",
   hooked_up: "#89CFF0",
@@ -41,7 +42,7 @@ function TransportPage() {
     <CrmShell module="Transport">
       <PageHeader
         title="Transport"
-        subtitle="Coordinate every load on the road — from request match to driver verification, with convoys grouped for routing."
+        subtitle="Loads, drivers, and convoys."
         actions={
           <>
             <div className="flex items-center gap-0.5 rounded-lg bg-white/6 p-0.5">
@@ -58,12 +59,12 @@ function TransportPage() {
           </>
         }
       />
-      <div className="px-4 md:px-6 pt-5 md:pt-6 pb-10 space-y-6">
+      <div className="px-4 pt-4 pb-4 space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi label="Active" value={kpis.active} accent="#89CFF0" />
           <Kpi label="In transit" value={kpis.inTransit} accent="#89CFF0" />
           <Kpi label="Delivered today" value={kpis.delivered} accent="#34D399" />
-          <Kpi label="Avg delivery time" value={kpis.avg} accent="#F5EBD6" />
+          <Kpi label="Avg delivery time" value={kpis.avg} accent="#89CFF0" />
         </div>
 
         {view === "list" ? (
@@ -232,7 +233,7 @@ function Kpi({ label, value, accent }: { label: string; value: string | number; 
 }
 
 function PriorityPill({ p }: { p: "normal" | "urgent" | "critical" }) {
-  const c = p === "critical" ? "#EF4E4B" : p === "urgent" ? "#F5EBD6" : "#89CFF0";
+  const c = p === "critical" ? "#EF4E4B" : p === "urgent" ? "#EF4E4B" : "#89CFF0";
   return <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: c, background: `${c}1A` }}>{p}</span>;
 }
 
@@ -302,7 +303,7 @@ function MapView() {
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] aspect-[16/9] relative overflow-hidden">
       <svg viewBox="0 0 800 450" className="w-full h-full">
-        <rect width="800" height="450" fill="rgba(255,255,255,0.02)" />
+        <rect width="800" height="450" fill="#E5E7EB" />
         {transportAssignments.map((t, i) => {
           const x1 = 100 + (t.originLng + 85) * 8;
           const y1 = 350 - (t.originLat - 28) * 30;
@@ -331,9 +332,7 @@ function MapView() {
 
 function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] p-6 overflow-y-auto">
+    <SideDrawer onClose={onClose} className="p-6">
         <h2 className="text-[18px] font-semibold mb-1">New transport assignment</h2>
         <p className="text-[12px] text-white/55 mb-5">Assign a driver to move a resource.</p>
         <div className="space-y-4">
@@ -356,8 +355,7 @@ function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
           <button onClick={() => { toast.success("Assignment created (prototype)"); onClose(); }} className="flex-1 h-9 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12.5px] font-medium transition">Create</button>
           <button onClick={onClose} className="px-4 h-9 rounded-lg bg-white/6 text-[12.5px] font-medium hover:bg-white/12 transition">Cancel</button>
         </div>
-      </aside>
-    </div>
+      </SideDrawer>
   );
 }
 

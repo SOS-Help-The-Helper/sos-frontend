@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { Plus, ChevronDown } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { ManageTabs, PageHeader } from "@/components/crm/ManageTabs";
-import { CountChip } from "@/components/crm/Pills";
+import { PageHeader } from "@/components/crm/ManageTabs";
 import {
   cases as casesData,
   requests as requestsData,
@@ -12,9 +12,7 @@ import {
   BUCKETS,
   bucketOf,
   type RequestStatus,
-  type Bucket,
 } from "@/lib/prototype-data";
-import { Plus } from "lucide-react";
 
 export const Route = createFileRoute("/cases/")({
   head: () => ({ meta: [{ title: "Cases — SOS Connect" }] }),
@@ -22,9 +20,7 @@ export const Route = createFileRoute("/cases/")({
 });
 
 type TabKey = "cases" | "requests" | "resources" | "reports";
-
 type Column = { id: string; label: string; accent: string };
-
 type Card = {
   id: string;
   col: string;
@@ -39,88 +35,72 @@ type Card = {
   badge?: string;
 };
 
-// Stage definitions per tab
-const CASE_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
-
+const SOS_COLS: Column[] = [
+  { id: "active", label: "Active", accent: "#EF4E4B" },
+  { id: "resolved", label: "Resolved", accent: "#34D399" },
+  { id: "closed", label: "Closed", accent: "#6B7280" },
+];
+const REQUEST_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
 const RESOURCE_COLS: Column[] = [
   { id: "available", label: "Available", accent: "#34D399" },
-  { id: "matched", label: "Matched", accent: "#F5EBD6" },
-  { id: "deployed", label: "Deployed", accent: "#89CFF0" },
+  { id: "matched", label: "Matched", accent: "#89CFF0" },
+  { id: "deployed", label: "Deployed", accent: "#0F1E2B" },
 ];
-
 const REPORT_COLS: Column[] = [
   { id: "Critical", label: "Critical", accent: "#EF4E4B" },
-  { id: "Elevated", label: "Elevated", accent: "#F5EBD6" },
+  { id: "Elevated", label: "Elevated", accent: "#F59E0B" },
   { id: "Routine", label: "Routine", accent: "#89CFF0" },
   { id: "Resolved", label: "Resolved", accent: "#34D399" },
 ];
+
+function sosStatusOf(s: RequestStatus): "active" | "resolved" | "closed" {
+  if (s === "closed") return "closed";
+  if (s === "fulfilled") return "resolved";
+  return "active";
+}
 
 function buildCaseCards(): Card[] {
   return casesData.map((c) => {
     const org = orgs.find((o) => o.id === c.org);
     return {
-      id: c.id,
-      col: bucketOf(c.status),
-      title: c.citizen,
-      meta: `${c.county} · ${c.taxonomy[0]}`,
-      sub: `${c.daysOpen}d`,
-      to: { route: "/cases/$id", params: { id: c.umbrella ?? c.id } },
-      urgency: c.urgency,
-      status: c.status,
-      orgColor: org?.color,
-      orgName: org?.name,
+      id: c.id, col: sosStatusOf(c.status), title: c.citizen,
+      meta: `${c.county} · ${c.taxonomy[0]}`, sub: `${c.daysOpen}d`,
+      to: { route: "/cases/$id", params: { id: c.parentCaseId ?? c.id } },
+      urgency: c.urgency, status: c.status, orgColor: org?.color, orgName: org?.name,
       badge: c.matchCount > 0 ? `${c.matchCount}` : undefined,
     };
   });
 }
-
 function buildRequestCards(): Card[] {
   return requestsData.map((r) => {
     const c = casesData.find((x) => x.id === r.caseId);
     const org = c ? orgs.find((o) => o.id === c.org) : undefined;
     return {
-      id: r.id,
-      col: bucketOf(r.status),
-      title: r.personName,
-      meta: `${r.county} · ${r.taxonomy}`,
-      sub: `${r.daysOpen}d`,
+      id: r.id, col: bucketOf(r.status), title: r.personName,
+      meta: `${r.county} · ${r.taxonomy}`, sub: `${r.daysOpen}d`,
       to: { route: "/directory/request/$id", params: { id: r.id } },
-      urgency: r.urgency,
-      status: r.status,
-      orgColor: org?.color,
-      orgName: org?.name,
+      urgency: r.urgency, status: r.status, orgColor: org?.color, orgName: org?.name,
     };
   });
 }
-
 function buildResourceCards(): Card[] {
   return resourcesData.map((r) => ({
-    id: r.id,
-    col: r.status,
-    title: r.title,
-    meta: r.location,
-    sub: r.capacity,
+    id: r.id, col: r.status, title: r.title, meta: r.location, sub: r.capacity,
     to: { route: "/directory/resource/$id", params: { id: r.id } },
     orgColor: orgs.find((o) => o.id === r.org)?.color,
     orgName: orgs.find((o) => o.id === r.org)?.name,
   }));
 }
-
 function buildReportCards(): Card[] {
   return reportsData.map((r) => ({
-    id: r.id,
-    col: r.resolution ? "Resolved" : r.severity,
-    title: r.taxonomy,
-    meta: `${r.location}`,
-    sub: `by ${r.reporterName}`,
+    id: r.id, col: r.resolution ? "Resolved" : r.severity,
+    title: r.taxonomy, meta: r.location, sub: `by ${r.reporterName}`,
     to: { route: "/directory/report/$id", params: { id: r.id } },
   }));
 }
 
 function CasesPage() {
   const [tab, setTab] = useState<TabKey>("cases");
-
-  // Per-tab state so drag changes persist while switching tabs in-session
   const [caseCards, setCaseCards] = useState<Card[]>(() => buildCaseCards());
   const [requestCards, setRequestCards] = useState<Card[]>(() => buildRequestCards());
   const [resourceCards, setResourceCards] = useState<Card[]>(() => buildResourceCards());
@@ -128,27 +108,19 @@ function CasesPage() {
 
   const { cards, setCards, columns, label } = useMemo(() => {
     switch (tab) {
-      case "requests":
-        return { cards: requestCards, setCards: setRequestCards, columns: CASE_COLS, label: "request" };
-      case "resources":
-        return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource" };
-      case "reports":
-        return { cards: reportCards, setCards: setReportCards, columns: REPORT_COLS, label: "report" };
-      default:
-        return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case" };
+      case "requests": return { cards: requestCards, setCards: setRequestCards, columns: REQUEST_COLS, label: "request" };
+      case "resources": return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource" };
+      case "reports": return { cards: reportCards, setCards: setReportCards, columns: REPORT_COLS, label: "report" };
+      default: return { cards: caseCards, setCards: setCaseCards, columns: SOS_COLS, label: "case" };
     }
   }, [tab, caseCards, requestCards, resourceCards, reportCards]);
 
-  const totalOpen = cards.filter((c) => c.col !== "resolved" && c.col !== "Resolved").length;
-
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
-
   const onDrop = (colId: string) => {
     if (!dragId) return;
     setCards((prev) => prev.map((c) => (c.id === dragId ? { ...c, col: colId } : c)));
-    setDragId(null);
-    setDragOverCol(null);
+    setDragId(null); setDragOverCol(null);
   };
 
   const TABS: { id: TabKey; label: string; count: number }[] = [
@@ -160,99 +132,153 @@ function CasesPage() {
 
   return (
     <CrmShell module="Cases">
-      <ManageTabs />
+
       <PageHeader
+        eyebrow="Coordination"
         title="Cases"
-        subtitle="Track every household request from intake through delivery. Drag a card across the pipeline to move it to its next stage."
+        subtitle="Household requests, intake to delivery."
         actions={
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
-            <Plus size={12} /> New {label}
-          </button>
+          <>
+            <button className="sos-btn-secondary">
+              Actions <ChevronDown size={14} />
+            </button>
+            <button className="sos-btn-primary">
+              <Plus size={14} /> New {label}
+            </button>
+          </>
         }
       />
 
       {/* Tab strip */}
-      <div className="px-4 md:px-6 pt-4 flex items-center gap-1 border-b border-[var(--hairline)] overflow-x-auto scrollbar-hide">
-        {TABS.map((t) => {
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative h-9 px-3 inline-flex items-center gap-2 text-[12px] font-medium transition shrink-0 ${
-                active ? "text-white" : "text-white/55 hover:text-white/85"
-              }`}
-            >
-              {t.label}
-              <span className={`font-mono text-[10px] tabular-nums ${active ? "text-white/55" : "text-white/35"}`}>{t.count}</span>
-              {active && (
-                <span className="absolute left-2 right-2 -bottom-px h-px bg-[#EF4E4B]" />
-              )}
-            </button>
-          );
-        })}
+      <div className="bg-[var(--sos-white)] border-b border-[var(--sos-hairline)]">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex gap-1 overflow-x-auto scrollbar-hide">
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  position: "relative",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: active ? 700 : 600,
+                  color: active ? "var(--sos-navy)" : "var(--sos-muted)",
+                  whiteSpace: "nowrap",
+                }}
+                className="inline-flex items-center gap-2 min-h-11 px-3 md:px-4"
+              >
+                {t.label}
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    background: active ? "rgba(239,78,75,0.12)" : "var(--sos-card-gray)",
+                    color: active ? "var(--sos-coral)" : "var(--sos-muted)",
+                  }}
+                >
+                  {t.count}
+                </span>
+                {active && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 8,
+                      right: 8,
+                      bottom: -1,
+                      height: 3,
+                      background: "var(--sos-coral)",
+                      borderRadius: "3px 3px 0 0",
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Mobile: segmented stage selector + single-column list */}
-      <MobileStageList
-        cards={cards}
-        columns={columns}
-        tab={tab}
-        onMove={(id, colId) => setCards((prev) => prev.map((c) => (c.id === id ? { ...c, col: colId } : c)))}
-      />
 
-      {/* Desktop: kanban with drag */}
-      <div className="hidden md:block px-6 pt-6 pb-10">
+      {/* Kanban body */}
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-4 md:pt-6 pb-10 md:pb-12">
         <div
-          className="grid gap-3 overflow-x-auto snap-x md:snap-none"
-          style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(260px, 1fr))` }}
+          className="grid gap-3 md:gap-4 grid-cols-1 md:[grid-template-columns:repeat(var(--cols),minmax(280px,1fr))] md:overflow-x-auto"
+          style={{ ['--cols' as string]: String(columns.length) }}
         >
+
           {columns.map((col) => {
             const items = cards.filter((c) => c.col === col.id);
             const isOver = dragOverCol === col.id;
             return (
               <div
                 key={col.id}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (dragOverCol !== col.id) setDragOverCol(col.id);
-                }}
-                onDragLeave={() => {
-                  if (dragOverCol === col.id) setDragOverCol(null);
-                }}
+                onDragOver={(e) => { e.preventDefault(); if (dragOverCol !== col.id) setDragOverCol(col.id); }}
+                onDragLeave={() => { if (dragOverCol === col.id) setDragOverCol(null); }}
                 onDrop={() => onDrop(col.id)}
-                className={`snap-start rounded-2xl border p-3 transition ${
-                  isOver
-                    ? "bg-white/[0.06] border-white/20"
-                    : "bg-[var(--surface-1)] border-[var(--hairline)]"
-                }`}
+                style={{
+                  background: isOver ? "rgba(137,207,240,0.15)" : "var(--sos-card-gray)",
+                  border: `1px solid ${isOver ? "var(--sos-blue)" : "var(--sos-hairline)"}`,
+                  borderRadius: 12,
+                  padding: 12,
+                  transition: "all 160ms ease",
+                  minHeight: 200,
+                }}
               >
-                <div className="flex items-center justify-between px-1.5 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-white/75">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "4px 6px 12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: col.accent }} />
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                        color: "var(--sos-navy)",
+                      }}
+                    >
                       {col.label}
                     </span>
                   </div>
-                  <CountChip>{items.length}</CountChip>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--sos-muted)" }}>
+                    {items.length}
+                  </span>
                 </div>
 
-                <div className="space-y-2 min-h-[80px]">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {items.map((c) => (
-                    <DraggableCard
+                    <KanbanCard
                       key={c.id}
                       card={c}
-                      tab={tab}
                       onDragStart={() => setDragId(c.id)}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setDragOverCol(null);
-                      }}
+                      onDragEnd={() => { setDragId(null); setDragOverCol(null); }}
                       isDragging={dragId === c.id}
                     />
                   ))}
                   {items.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-white/8 py-6 text-center font-mono text-[10px] uppercase tracking-wider text-white/30">
+                    <div
+                      style={{
+                        borderRadius: 8,
+                        border: "1px dashed var(--sos-hairline)",
+                        padding: "24px 12px",
+                        textAlign: "center",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                        color: "var(--sos-muted)",
+                      }}
+                    >
                       Drop here
                     </div>
                   )}
@@ -264,166 +290,120 @@ function CasesPage() {
       </div>
     </CrmShell>
   );
+
 }
 
-function MobileStageList({
-  cards, columns, tab, onMove,
-}: {
-  cards: Card[];
-  columns: Column[];
-  tab: TabKey;
-  onMove: (id: string, colId: string) => void;
-}) {
-  const [stage, setStage] = useState<string>(columns[0]?.id ?? "");
-  // Reset stage if columns change (tab switch)
-  const validStage = columns.some((c) => c.id === stage) ? stage : columns[0]?.id ?? "";
-  if (validStage !== stage) setStage(validStage);
-  const items = cards.filter((c) => c.col === validStage);
-  const active = columns.find((c) => c.id === validStage);
-
-  return (
-    <div className="md:hidden px-4 pt-4 pb-8">
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-        {columns.map((col) => {
-          const count = cards.filter((c) => c.col === col.id).length;
-          const isActive = col.id === validStage;
-          return (
-            <button
-              key={col.id}
-              onClick={() => setStage(col.id)}
-              className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition border ${
-                isActive
-                  ? "bg-white/10 border-white/20 text-white"
-                  : "bg-transparent border-white/8 text-white/60"
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: col.accent }} />
-              {col.label}
-              <span className="font-mono text-[10px] opacity-70">{count}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mt-2 mb-2">
-        {active?.label} · {items.length}
-      </p>
-      <div className="space-y-2">
-        {items.map((c) => (
-          <MobileCard key={c.id} card={c} tab={tab} columns={columns} onMove={(colId) => onMove(c.id, colId)} />
-        ))}
-        {items.length === 0 && (
-          <div className="rounded-xl border border-dashed border-white/8 py-10 text-center font-mono text-[10px] uppercase tracking-wider text-white/30">
-            Nothing in {active?.label.toLowerCase()}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MobileCard({
-  card, tab, columns, onMove,
-}: { card: Card; tab: TabKey; columns: Column[]; onMove: (colId: string) => void }) {
-  const [menu, setMenu] = useState(false);
-  const urgencyTint =
-    card.urgency === "critical" ? "#EF4E4B" :
-    card.urgency === "high" ? "#F5EBD6" :
-    card.urgency === "medium" ? "#89CFF0" :
-    "rgba(245,235,214,0.45)";
-  const meta = [card.meta, card.sub, card.orgName].filter(Boolean).join(" · ");
-  return (
-    <div className="rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] relative overflow-hidden">
-      {card.urgency && (
-        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: urgencyTint }} />
-      )}
-      <Link
-        to={card.to.route as "/cases/$id"}
-        params={card.to.params as { id: string }}
-        className="block p-3 pl-4 pr-10"
-      >
-        <div className="flex items-center justify-between mb-0.5">
-          <p className="text-[14px] font-medium leading-tight truncate">{card.title}</p>
-          {card.badge && (
-            <span className="font-mono text-[10px] text-white/45 tabular-nums shrink-0 ml-2">{card.badge}</span>
-          )}
-        </div>
-        {meta && <p className="text-[12px] text-white/55 truncate">{meta}</p>}
-      </Link>
-      <button
-        onClick={(e) => { e.preventDefault(); setMenu(true); }}
-        className="absolute top-2 right-2 w-8 h-8 rounded-md hover:bg-white/5 flex items-center justify-center text-white/55"
-        aria-label="Move to…"
-      >
-        <span className="text-[18px] leading-none">⋯</span>
-      </button>
-      {menu && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setMenu(false)} />
-          <div className="absolute top-10 right-2 z-50 w-48 rounded-lg bg-[#1a1a1a] border border-white/12 shadow-xl p-1.5">
-            <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45 px-2 py-1.5">Move {tab.slice(0, -1)} to…</p>
-            {columns.map((col) => (
-              <button
-                key={col.id}
-                onClick={() => { onMove(col.id); setMenu(false); }}
-                className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-white/6 text-left transition"
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: col.accent }} />
-                <span className="text-[12.5px]">{col.label}</span>
-                {col.id === card.col && <span className="ml-auto font-mono text-[9.5px] text-white/45">current</span>}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function DraggableCard({
-  card,
-  onDragStart,
-  onDragEnd,
-  isDragging,
+function KanbanCard({
+  card, onDragStart, onDragEnd, isDragging,
 }: {
   card: Card;
-  tab: TabKey;
   onDragStart: () => void;
   onDragEnd: () => void;
   isDragging: boolean;
 }) {
-  const urgencyTint =
+  const urgencyColor =
     card.urgency === "critical" ? "#EF4E4B" :
-    card.urgency === "high" ? "#F5EBD6" :
+    card.urgency === "high" ? "#F59E0B" :
     card.urgency === "medium" ? "#89CFF0" :
-    "rgba(245,235,214,0.45)";
+    "var(--sos-hairline)";
   const meta = [card.meta, card.sub, card.orgName].filter(Boolean).join(" · ");
   return (
     <Link
       to={card.to.route as "/cases/$id"}
       params={card.to.params as { id: string }}
       draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart();
-      }}
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(); }}
       onDragEnd={onDragEnd}
-      onClick={(e) => {
-        if (isDragging) e.preventDefault();
+      onClick={(e) => { if (isDragging) e.preventDefault(); }}
+      style={{
+        position: "relative",
+        display: "block",
+        textDecoration: "none",
+        background: "var(--sos-white)",
+        borderRadius: 8,
+        padding: "12px 14px 12px 16px",
+        boxShadow: "0 1px 2px rgba(15,30,43,0.06), 0 4px 12px rgba(15,30,43,0.04)",
+        border: "1px solid var(--sos-hairline)",
+        color: "var(--sos-body)",
+        cursor: "grab",
+        opacity: isDragging ? 0.4 : 1,
+        overflow: "hidden",
+        transition: "box-shadow 120ms, border-color 120ms",
       }}
-      className={`relative block rounded-xl p-3 pl-4 bg-white/4 hover:bg-white/7 border border-transparent hover:border-white/8 transition cursor-grab active:cursor-grabbing overflow-hidden ${
-        isDragging ? "opacity-40" : ""
-      }`}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 4px 12px rgba(15,30,43,0.10), 0 12px 24px rgba(15,30,43,0.06)";
+        e.currentTarget.style.borderColor = "var(--sos-blue)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "0 1px 2px rgba(15,30,43,0.06), 0 4px 12px rgba(15,30,43,0.04)";
+        e.currentTarget.style.borderColor = "var(--sos-hairline)";
+      }}
     >
       {card.urgency && (
-        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: urgencyTint }} />
+        <span
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3,
+            background: urgencyColor,
+          }}
+        />
       )}
-      <div className="flex items-center justify-between gap-2 mb-0.5">
-        <p className="text-[13px] font-medium leading-tight truncate">{card.title}</p>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          marginBottom: 4,
+        }}
+      >
+        <p
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "var(--sos-navy)",
+            margin: 0,
+            lineHeight: 1.3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {card.title}
+        </p>
         {card.badge && (
-          <span className="font-mono text-[10px] text-white/45 tabular-nums shrink-0">{card.badge}</span>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "var(--sos-coral)",
+              background: "rgba(239,78,75,0.12)",
+              padding: "2px 6px",
+              borderRadius: 999,
+              flexShrink: 0,
+            }}
+          >
+            {card.badge}
+          </span>
         )}
       </div>
-      {meta && <p className="text-[11.5px] text-white/55 truncate">{meta}</p>}
+      {meta && (
+        <p
+          style={{
+            fontSize: 12,
+            color: "var(--sos-muted)",
+            margin: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {meta}
+        </p>
+      )}
     </Link>
   );
 }

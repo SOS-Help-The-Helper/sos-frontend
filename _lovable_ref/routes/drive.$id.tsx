@@ -29,12 +29,12 @@ export const Route = createFileRoute("/drive/$id")({
     ],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] text-white/70 p-6 text-center">
+    <div className="min-h-dvh flex items-center justify-center bg-[var(--background)] text-white/70 p-6 text-center">
       Trip not found.
     </div>
   ),
   errorComponent: ({ error }) => (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] text-white/70 p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-[var(--background)] text-white/70 p-6">
       {error.message}
     </div>
   ),
@@ -105,7 +105,7 @@ function DriverPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
+    <div className="min-h-dvh bg-[var(--background)] text-white">
       {/* Partner branding bar */}
       <div
         className="h-1.5 w-full"
@@ -191,7 +191,7 @@ function DriverPage() {
               {needsPhotoForNext && !photoCapturedForNext && (
                 <button
                   onClick={onPhoto}
-                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[#F5EBD6]/10 border border-[#F5EBD6]/30 text-[#F5EBD6] text-[14px] font-medium mb-2"
+                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-[#EF4E4B]/10 border border-[#EF4E4B]/30 text-[#EF4E4B] text-[14px] font-medium mb-2"
                 >
                   <Camera size={16} /> Take photo to continue
                 </button>

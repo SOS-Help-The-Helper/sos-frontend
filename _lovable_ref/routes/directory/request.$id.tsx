@@ -25,7 +25,7 @@ export const Route = createFileRoute("/directory/request/$id")({
     meta: [{ title: `${loaderData?.taxonomy ?? "Request"} — SOS Connect` }],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Request not found · <Link to="/cases" className="text-[#89CFF0] underline ml-2">Back</Link>
     </div>
   ),
@@ -41,15 +41,15 @@ function RequestPage() {
   const householdSize = r.household.adults + r.household.children;
   const urgencyTint =
     r.urgency === "critical" ? "#EF4E4B" :
-    r.urgency === "high" ? "#F5EBD6" :
+    r.urgency === "high" ? "#EF4E4B" :
     r.urgency === "medium" ? "#89CFF0" :
-    "rgba(245,235,214,0.55)";
+    "rgba(74,84,98,0.55)";
 
   return (
     <CrmShell module="Cases">
       <DetailTopBar backTo="/cases" backLabel="Cases" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
             <Link
@@ -166,7 +166,7 @@ function RequestTabs({
                             <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
                           </span>
                           <div className="flex items-center justify-between">
-                            <p className="text-[12.5px] font-medium" style={{ color: past || isCurrent ? "white" : "rgba(255,255,255,0.5)" }}>
+                            <p className="text-[12.5px] font-medium" style={{ color: past || isCurrent ? "var(--sos-navy)" : "#9CA3AF" }}>
                               {TRANSPORT_STATUS_LABEL[s]}
                               {hist?.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
                             </p>
@@ -192,7 +192,7 @@ function RequestTabs({
                             <Icon size={12} style={{ color }} />
                           </span>
                           <div className="flex items-center justify-between">
-                            <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
+                            <p className="text-[13px] font-medium" style={{ color: past ? "var(--sos-navy)" : "#6B7280" }}>
                               {s.label}
                             </p>
                             <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>

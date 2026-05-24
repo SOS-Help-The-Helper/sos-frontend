@@ -36,7 +36,7 @@ export const orgs = [
     name: "WNC Food Bank",
     counties: ["Buncombe", "Henderson", "Catawba", "Burke"] as County[],
     services: ["FOOD.PANTRY", "FOOD.HOT_MEAL"] as Taxonomy[],
-    color: "#F5EBD6",
+    color: "#89CFF0",
     people: 48,
     open: 4,
   },
@@ -77,7 +77,7 @@ export type Bucket = "needs_attention" | "active_work" | "delivering" | "resolve
 
 export const BUCKETS: { id: Bucket; label: string; accent: string; statuses: RequestStatus[] }[] = [
   { id: "needs_attention", label: "Needs Attention", accent: "#EF4E4B", statuses: ["active", "under_review"] },
-  { id: "active_work", label: "Active Work", accent: "#F5EBD6", statuses: ["matched"] },
+  { id: "active_work", label: "Active Work", accent: "#89CFF0", statuses: ["matched"] },
   { id: "delivering", label: "Delivering", accent: "#89CFF0", statuses: ["in_progress"] },
   { id: "resolved", label: "Resolved", accent: "#34D399", statuses: ["fulfilled", "closed"] },
 ];
@@ -105,19 +105,19 @@ export const cases: {
   org: string;
   opened: string;
   daysOpen: number;
-  umbrella: string | null;
+  parentCaseId: string | null;
   assignedTo: string | null;
   matchCount: number;
 }[] = [
-  { id: "C-1042", citizen: "Janet T.", county: "Buncombe", taxonomy: ["HOUSING.TEMPORARY"], status: "under_review", urgency: "critical", org: "emergency-rv", opened: "2h ago", daysOpen: 0, umbrella: null, assignedTo: "elena-cho", matchCount: 3 },
-  { id: "C-1043", citizen: "Maria Rodriguez", county: "Catawba", taxonomy: ["HOUSING.TEMPORARY"], status: "matched", urgency: "high", org: "emergency-rv", opened: "6d ago", daysOpen: 6, umbrella: "U-MARIA", assignedTo: "elena-cho", matchCount: 3 },
-  { id: "C-1041", citizen: "Marcus H.", county: "Madison", taxonomy: ["FOOD.PANTRY", "TRANSPORT"], status: "active", urgency: "medium", org: "blue-ridge", opened: "5h ago", daysOpen: 0, umbrella: "U-204", assignedTo: "derek-pope", matchCount: 2 },
-  { id: "C-1040", citizen: "Linda P.", county: "McDowell", taxonomy: ["CHILDCARE"], status: "active", urgency: "high", org: "mountain-area-aid", opened: "1d ago", daysOpen: 1, umbrella: "U-204", assignedTo: "alicia-ng", matchCount: 1 },
-  { id: "C-1039", citizen: "Marcus H.", county: "Madison", taxonomy: ["HOUSING.REPAIR"], status: "in_progress", urgency: "medium", org: "blue-ridge", opened: "1d ago", daysOpen: 1, umbrella: "U-204", assignedTo: "derek-pope", matchCount: 1 },
-  { id: "C-1038", citizen: "Rosa V.", county: "Henderson", taxonomy: ["FOOD.HOT_MEAL"], status: "in_progress", urgency: "low", org: "wnc-food", opened: "2d ago", daysOpen: 2, umbrella: null, assignedTo: "ben-okafor", matchCount: 1 },
-  { id: "C-1037", citizen: "Dale R.", county: "Burke", taxonomy: ["MEDICAL.SUPPLIES"], status: "fulfilled", urgency: "low", org: "mountain-area-aid", opened: "3d ago", daysOpen: 3, umbrella: null, assignedTo: "alicia-ng", matchCount: 1 },
-  { id: "C-1036", citizen: "Pat K.", county: "Burke", taxonomy: ["MENTAL_HEALTH"], status: "closed", urgency: "low", org: "mountain-area-aid", opened: "8d ago", daysOpen: 8, umbrella: null, assignedTo: "alicia-ng", matchCount: 1 },
-  { id: "C-1035", citizen: "Lou A.", county: "Buncombe", taxonomy: ["HOUSING.REPAIR"], status: "fulfilled", urgency: "medium", org: "blue-ridge", opened: "10d ago", daysOpen: 10, umbrella: null, assignedTo: "derek-pope", matchCount: 2 },
+  { id: "C-1042", citizen: "Janet T.", county: "Buncombe", taxonomy: ["HOUSING.TEMPORARY"], status: "under_review", urgency: "critical", org: "emergency-rv", opened: "2h ago", daysOpen: 0, parentCaseId: null, assignedTo: "elena-cho", matchCount: 3 },
+  { id: "C-1043", citizen: "Maria Rodriguez", county: "Catawba", taxonomy: ["HOUSING.TEMPORARY"], status: "matched", urgency: "high", org: "emergency-rv", opened: "6d ago", daysOpen: 6, parentCaseId: "U-MARIA", assignedTo: "elena-cho", matchCount: 3 },
+  { id: "C-1041", citizen: "Marcus H.", county: "Madison", taxonomy: ["FOOD.PANTRY", "TRANSPORT"], status: "active", urgency: "medium", org: "blue-ridge", opened: "5h ago", daysOpen: 0, parentCaseId: "U-204", assignedTo: "derek-pope", matchCount: 2 },
+  { id: "C-1040", citizen: "Linda P.", county: "McDowell", taxonomy: ["CHILDCARE"], status: "active", urgency: "high", org: "mountain-area-aid", opened: "1d ago", daysOpen: 1, parentCaseId: "U-204", assignedTo: "alicia-ng", matchCount: 1 },
+  { id: "C-1039", citizen: "Marcus H.", county: "Madison", taxonomy: ["HOUSING.REPAIR"], status: "in_progress", urgency: "medium", org: "blue-ridge", opened: "1d ago", daysOpen: 1, parentCaseId: "U-204", assignedTo: "derek-pope", matchCount: 1 },
+  { id: "C-1038", citizen: "Rosa V.", county: "Henderson", taxonomy: ["FOOD.HOT_MEAL"], status: "in_progress", urgency: "low", org: "wnc-food", opened: "2d ago", daysOpen: 2, parentCaseId: null, assignedTo: "ben-okafor", matchCount: 1 },
+  { id: "C-1037", citizen: "Dale R.", county: "Burke", taxonomy: ["MEDICAL.SUPPLIES"], status: "fulfilled", urgency: "low", org: "mountain-area-aid", opened: "3d ago", daysOpen: 3, parentCaseId: null, assignedTo: "alicia-ng", matchCount: 1 },
+  { id: "C-1036", citizen: "Pat K.", county: "Burke", taxonomy: ["MENTAL_HEALTH"], status: "closed", urgency: "low", org: "mountain-area-aid", opened: "8d ago", daysOpen: 8, parentCaseId: null, assignedTo: "alicia-ng", matchCount: 1 },
+  { id: "C-1035", citizen: "Lou A.", county: "Buncombe", taxonomy: ["HOUSING.REPAIR"], status: "fulfilled", urgency: "medium", org: "blue-ridge", opened: "10d ago", daysOpen: 10, parentCaseId: null, assignedTo: "derek-pope", matchCount: 2 },
 ];
 
 // ============================================================
@@ -421,7 +421,7 @@ export const deliveries: DeliveryDetail[] = [
   },
 ];
 
-export const umbrella = {
+export const defaultCase = {
   id: "U-204",
   status: "active" as "active" | "resolved" | "escalated",
   urgency: "high" as "critical" | "high" | "medium" | "low",
@@ -489,7 +489,7 @@ export const kpis = [
 // Citizen-facing programs (Match deck)
 export const programs = [
   { id: "P-1", org: "Emergency RV", taxonomy: "HOUSING.TEMPORARY" as Taxonomy, title: "Temporary RV housing", blurb: "Stay in an RV on safe ground while your home is repaired.", eligibility: "Displaced by flood/storm in Buncombe or Henderson", responseHrs: 24, color: "#89CFF0" },
-  { id: "P-2", org: "WNC Food Bank", taxonomy: "FOOD.PANTRY" as Taxonomy, title: "Family food box", blurb: "7-day food box, pickup or delivery within 50 miles.", eligibility: "Any WNC resident", responseHrs: 4, color: "#F5EBD6" },
+  { id: "P-2", org: "WNC Food Bank", taxonomy: "FOOD.PANTRY" as Taxonomy, title: "Family food box", blurb: "7-day food box, pickup or delivery within 50 miles.", eligibility: "Any WNC resident", responseHrs: 4, color: "#89CFF0" },
   { id: "P-3", org: "Mountain Area Aid", taxonomy: "CHILDCARE" as Taxonomy, title: "Drop-in childcare", blurb: "Free childcare while parents handle FEMA, repairs, or medical.", eligibility: "Kids 1–10, McDowell/Burke", responseHrs: 8, color: "#34D399" },
   { id: "P-4", org: "Blue Ridge Mutual Aid", taxonomy: "HOUSING.REPAIR" as Taxonomy, title: "Volunteer home repair", blurb: "Crew of 3–5 for muck-outs, drywall, roofing patches.", eligibility: "Income-qualified, 3 western counties", responseHrs: 72, color: "#EF4E4B" },
   { id: "P-5", org: "Mountain Area Aid", taxonomy: "MENTAL_HEALTH" as Taxonomy, title: "Crisis counseling", blurb: "Same-day phone or in-person session with a licensed counselor.", eligibility: "Open to all", responseHrs: 2, color: "#34D399" },
@@ -882,7 +882,7 @@ export const orgTransportConfig: Record<string, TransportConfig> = {
     enabled: true,
     statusPipeline: ["assigned", "accepted", "loaded", "in_transit", "delivered"],
     requirePhotosAt: ["delivered"],
-    branding: { name: "WNC Food Bank", color: "#F5EBD6" },
+    branding: { name: "WNC Food Bank", color: "#89CFF0" },
   },
 };
 
@@ -903,7 +903,7 @@ export const TRANSPORT_STATUS_LABEL: Record<TransportStatus, string> = {
 export function transportStatusColor(s: TransportStatus): string {
   if (s === "delivered" || s === "verified" || s === "completed") return "#34D399";
   if (s === "in_transit" || s === "at_staging") return "#89CFF0";
-  if (s === "loaded" || s === "hooked_up" || s === "at_pickup") return "#F5EBD6";
+  if (s === "loaded" || s === "hooked_up" || s === "at_pickup") return "#89CFF0";
   return "rgba(245,235,214,0.5)";
 }
 
@@ -934,4 +934,29 @@ export const inventoryDetailed: InventoryItem[] = [
   { id: "RES-RV-310", item: "ERV RV #310 — 2020 Forest River 32ft", type: "vehicle", facilityId: "FAC-OCALA", qty: 1, threshold: 0, org: "emergency-rv", condition: 5, status: "in_transit", lastEvent: "In transit since May 17" },
   { id: "RES-RV-415", item: "ERV RV #415 — 2018 Coachmen 24ft", type: "vehicle", facilityId: "FAC-OCALA", qty: 1, threshold: 0, org: "emergency-rv", condition: 4, status: "assigned", lastEvent: "Assigned to Owen Diaz May 18" },
   { id: "RES-CHAINSAW", item: "Chainsaw crew kit", type: "tool", facilityId: "FAC-BURNSVILLE", qty: 1, threshold: 0, org: "blue-ridge", condition: 4, status: "matched", lastEvent: "Session completed Oct 12" },
+];
+
+// ============================================================
+// Available resources (offered by orgs, not yet matched)
+// ============================================================
+
+export type AvailableResource = {
+  id: string;
+  title: string;
+  taxonomy: Taxonomy;
+  ownerName: string;
+  orgId?: string;
+  capacity: string;
+  location: string;
+  county: string;
+  available: string;
+  petFriendly?: boolean;
+  qty?: number;
+};
+
+export const availableResources: AvailableResource[] = [
+  { id: "RES-RV-312", title: "RV — 2021 Forest River 26ft", taxonomy: "HOUSING.TEMPORARY", ownerName: "Jim Walters", orgId: "emergency-rv", capacity: "Sleeps 4, pet-friendly, generator", location: "Asheville, NC", county: "Buncombe", available: "Ready now", petFriendly: true },
+  { id: "RES-FOOD-88", title: "Family food boxes (12)", taxonomy: "FOOD.PANTRY", ownerName: "WNC Food Bank", orgId: "wnc-food", capacity: "12 × 7-day boxes, pickup or delivery ≤50mi", location: "Hendersonville, NC", county: "Henderson", available: "Today", qty: 12 },
+  { id: "RES-CHILD-22", title: "Drop-in childcare slots (8)", taxonomy: "CHILDCARE", ownerName: "Mountain Area Aid", orgId: "mountain-area-aid", capacity: "Ages 1–10, weekdays 8a–4p", location: "Marion, NC", county: "McDowell", available: "This week", qty: 8 },
+  { id: "RES-CREW-7", title: "Repair crew (3 people, weekends)", taxonomy: "HOUSING.REPAIR", ownerName: "Blue Ridge Mutual Aid", orgId: "blue-ridge", capacity: "Muck-out, drywall, roof patches", location: "Mars Hill, NC", county: "Madison", available: "Sat–Sun" },
 ];

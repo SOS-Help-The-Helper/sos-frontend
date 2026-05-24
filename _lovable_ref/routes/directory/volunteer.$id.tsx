@@ -25,7 +25,7 @@ export const Route = createFileRoute("/directory/volunteer/$id")({
     ],
   }),
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center text-white/70">
+    <div className="min-h-dvh flex items-center justify-center text-white/70">
       Volunteer not found ·{" "}
       <Link to="/directory" className="text-[#89CFF0] underline ml-2">
         Back
@@ -76,7 +76,7 @@ function VolunteerPage() {
     <CrmShell module="Directory">
       <DetailTopBar backTo="/directory" backLabel="Directory" />
 
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
+      <main className="max-w-[960px] mx-auto px-4 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={<Avatar name={v.name} size={56} />}
           pills={<StatusPill tint={statusTint}>{v.status}</StatusPill>}

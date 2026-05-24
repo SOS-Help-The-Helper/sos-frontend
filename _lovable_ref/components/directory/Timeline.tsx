@@ -6,7 +6,7 @@ import type { HistoryEntry } from "@/lib/directory-data";
 const ICONS = {
   request: { I: Package, color: "#EF4E4B" },
   resource: { I: ShieldCheck, color: "#89CFF0" },
-  report: { I: FileText, color: "#F5EBD6" },
+  report: { I: FileText, color: "#89CFF0" },
   case: { I: Layers, color: "#89CFF0" },
 } as const;
 

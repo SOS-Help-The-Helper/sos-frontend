@@ -10,7 +10,7 @@ export const Route = createFileRoute("/c/manage")({
 
 function statusBadge(s: string) {
   if (s === "accepted") return "bg-[#89CFF0]/15 text-[#89CFF0]";
-  if (s === "scheduled") return "bg-[#F5EBD6]/15 text-[#F5EBD6]";
+  if (s === "scheduled") return "bg-[#89CFF0]/15 text-[#89CFF0]";
   if (s === "completed") return "bg-[#34D399]/15 text-[#34D399]";
   return "bg-white/8 text-white/55";
 }

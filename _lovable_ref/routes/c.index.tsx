@@ -35,7 +35,7 @@ function CitizenMap() {
           <svg viewBox="0 0 400 400" className="w-full h-full">
             <defs>
               <pattern id="cgrid" width="32" height="32" patternUnits="userSpaceOnUse">
-                <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#E5E7EB" strokeWidth="1" />
               </pattern>
             </defs>
             <rect width="400" height="400" fill="url(#cgrid)" />
@@ -44,11 +44,11 @@ function CitizenMap() {
             <circle cx="200" cy="200" r="40" fill="#89CFF0" opacity="0.12" />
             {/* Resource pins */}
             {[
-              { x: 140, y: 130, c: "#F5EBD6" },
+              { x: 140, y: 130, c: "#89CFF0" },
               { x: 280, y: 170, c: "#EF4E4B" },
               { x: 250, y: 280, c: "#34D399" },
               { x: 110, y: 260, c: "#89CFF0" },
-              { x: 320, y: 320, c: "#F5EBD6" },
+              { x: 320, y: 320, c: "#89CFF0" },
             ].map((p, i) => (
               <g key={i}>
                 <circle cx={p.x} cy={p.y} r="7" fill={p.c} stroke="#0F1E2B" strokeWidth="2" />

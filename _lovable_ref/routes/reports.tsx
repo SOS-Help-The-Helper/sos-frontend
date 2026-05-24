@@ -19,7 +19,7 @@ export const Route = createFileRoute("/reports")({
 
 const SEVERITY_TONE: Record<string, string> = {
   Critical: "#EF4E4B",
-  Elevated: "#F5EBD6",
+  Elevated: "#4A5462",
   Routine: "#89CFF0",
 };
 
@@ -48,7 +48,7 @@ function ReportsPage() {
       <ManageTabs />
       <PageHeader
         title="Reports"
-        subtitle="Field reports submitted by volunteers and partners. Open any card for detail, or pin it to an incident dashboard to coordinate response."
+        subtitle="Field reports from volunteers and partners."
         actions={
           <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
             <Download size={12} /> Export
@@ -56,7 +56,7 @@ function ReportsPage() {
         }
       />
 
-      <div className="px-4 md:px-6 pt-6 pb-10 space-y-5">
+      <div className="px-4 pt-4 pb-4 space-y-4">
         {/* Visual summary band */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5 flex items-center gap-5">
@@ -232,7 +232,7 @@ function ReportsPage() {
                     {picker && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setOpenPicker(null)} />
-                        <div className="absolute right-0 bottom-9 z-20 w-64 rounded-lg bg-[#1a1a1a] border border-white/12 shadow-xl p-1.5">
+                        <div className="absolute right-0 bottom-9 z-20 w-64 rounded-lg bg-white border border-[var(--sos-hairline)] shadow-xl p-1.5">
                           <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45 px-2 py-1.5">
                             Pin to incident
                           </p>
@@ -244,7 +244,7 @@ function ReportsPage() {
                                 onClick={() => toggle(i.id, r.id, isPinned)}
                                 className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-white/6 text-left transition"
                               >
-                                <span className={`w-1.5 h-1.5 rounded-full ${i.priority === "urgent" ? "bg-[#EF4E4B]" : "bg-[#F5EBD6]"}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${i.priority === "urgent" ? "bg-[#EF4E4B]" : "bg-[#89CFF0]"}`} />
                                 <span className="flex-1 min-w-0">
                                   <span className="block text-[12px] truncate">{i.name}</span>
                                   <span className="block font-mono text-[9.5px] text-white/45">{i.id} · {i.county}</span>
@@ -270,7 +270,7 @@ function ReportsPage() {
 function Row({ icon: Icon, children, tone }: { icon: typeof MapPin; children: React.ReactNode; tone?: string }) {
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <Icon size={11} className="shrink-0" style={{ color: tone ?? "rgba(255,255,255,0.4)" }} />
+      <Icon size={11} className="shrink-0" style={{ color: tone ?? "#9CA3AF" }} />
       <span className="truncate" style={tone ? { color: tone } : undefined}>{children}</span>
     </div>
   );

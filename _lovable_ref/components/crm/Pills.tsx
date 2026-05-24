@@ -4,9 +4,9 @@ import { STATUS_LABEL } from "@/lib/prototype-data";
 
 const URGENCY_COLOR: Record<Urgency, { fg: string; bg: string; pulse?: boolean }> = {
   critical: { fg: "#EF4E4B", bg: "rgba(239,78,75,0.14)", pulse: true },
-  high: { fg: "#F5EBD6", bg: "rgba(245,235,214,0.12)" },
+  high: { fg: "#EF4E4B", bg: "rgba(239,78,75,0.10)" },
   medium: { fg: "#89CFF0", bg: "rgba(137,207,240,0.12)" },
-  low: { fg: "rgba(245,235,214,0.55)", bg: "rgba(245,235,214,0.06)" },
+  low: { fg: "rgba(74,84,98,0.65)", bg: "rgba(74,84,98,0.08)" },
 };
 
 export function UrgencyBadge({ urgency }: { urgency: Urgency }) {

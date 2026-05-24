@@ -7,28 +7,33 @@ type Props = {
   size?: "sm" | "md";
 };
 
-const META: Record<Scope, { label: string; tint: string; Icon: typeof Lock }> = {
-  yours: { label: "Your org", tint: "#89CFF0", Icon: Building2 },
-  shared: { label: "Shared", tint: "#F5EBD6", Icon: Network },
-  public: { label: "Public", tint: "rgba(255,255,255,0.55)", Icon: Globe2 },
+const META: Record<Scope, { label: string; tint: string; Icon: typeof Lock; marker: string }> = {
+  yours:  { label: "Your org", tint: "#89CFF0",              Icon: Building2, marker: "●" },
+  shared: { label: "Shared",   tint: "#89CFF0",              Icon: Network,   marker: "○" },
+  public: { label: "Public",   tint: "#6B7280", Icon: Globe2,   marker: "◇" },
 };
 
 export function StewardshipChip({ ownerOrgId, ownerOrgName, size = "sm" }: Props) {
   const scope = scopeForOrg(ownerOrgId);
-  const { label, tint, Icon } = META[scope];
-  const text = scope === "shared" && ownerOrgName ? `Shared · ${ownerOrgName}` : label;
-  const px = size === "sm" ? "px-1.5 py-0.5 text-[9.5px]" : "px-2 py-1 text-[11px]";
+  const { label, tint } = META[scope];
+  const text = size === "md"
+    ? (scope === "shared" && ownerOrgName ? `Shared · ${ownerOrgName}` : label)
+    : label;
+  const px = size === "sm" ? "text-[10.5px]" : "px-2 py-1 text-[11px] rounded bg-white/[0.04]";
   return (
     <span
-      className={`inline-flex items-center gap-1 font-mono uppercase tracking-wider rounded ${px}`}
-      style={{ color: tint, background: `${tint}1a` }}
+      className={`inline-flex items-center gap-1.5 font-mono ${px}`}
+      style={{ color: tint }}
       title={ownerOrgName ? `Maintained by ${ownerOrgName}` : label}
     >
-      <Icon size={size === "sm" ? 10 : 12} />
+      <span aria-hidden className="text-[10px] leading-none" style={{ color: tint }}>
+        {META[scope].marker}
+      </span>
       {text}
     </span>
   );
 }
+
 
 export function StewardshipBand({
   ownerOrgId,

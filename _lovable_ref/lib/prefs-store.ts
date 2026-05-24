@@ -1,8 +1,13 @@
 import { useSyncExternalStore } from "react";
+import {
+  Briefcase, GitBranch, Map as MapIcon, Truck, Package, Users, Calendar,
+  BarChart3, Radio, Network as NetworkIcon, type LucideIcon,
+} from "lucide-react";
 
 export type ModuleId =
   | "directory"
   | "cases"
+  | "match"
   | "map"
   | "transport"
   | "inventory"
@@ -22,6 +27,7 @@ export type Prefs = {
 export const ALL_MODULES: ModuleId[] = [
   "directory",
   "cases",
+  "match",
   "map",
   "transport",
   "inventory",
@@ -31,30 +37,57 @@ export const ALL_MODULES: ModuleId[] = [
   "command",
 ];
 
-export const MODULE_META: Record<ModuleId, { label: string; to: string; group: "crm" | "ops" | "insights" }> = {
-  directory: { label: "Directory", to: "/directory", group: "crm" },
-  cases: { label: "Cases", to: "/cases", group: "crm" },
-  map: { label: "Map", to: "/map", group: "crm" },
-  transport: { label: "Transport", to: "/transport", group: "ops" },
-  inventory: { label: "Inventory", to: "/inventory", group: "ops" },
-  volunteers: { label: "Volunteers", to: "/volunteers", group: "ops" },
-  calendar: { label: "Calendar", to: "/calendar", group: "ops" },
-  reports: { label: "Reports", to: "/reports", group: "insights" },
-  command: { label: "Command", to: "/command", group: "insights" },
+export type ModuleMeta = {
+  label: string;
+  to: string;
+  group: "crm" | "ops" | "insights";
+  desc: string;
+  icon: LucideIcon;
+  /** background tint for the dropdown icon tile */
+  tint: string;
+  /** icon foreground color */
+  ink: string;
 };
+
+export const MODULE_META: Record<ModuleId, ModuleMeta> = {
+  directory:  { label: "Directory",  to: "/directory",  group: "crm",      desc: "People, orgs, requests & resources", icon: NetworkIcon, tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
+  cases:      { label: "Cases",      to: "/cases",      group: "crm",      desc: "Open requests & their workflow",     icon: Briefcase,   tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
+  match:      { label: "Match",      to: "/match",      group: "crm",      desc: "Route requests to the best org",     icon: GitBranch,   tint: "rgba(239,78,75,0.10)",   ink: "#EF4E4B" },
+  map:        { label: "Map",        to: "/map",        group: "crm",      desc: "Geographic operating picture",       icon: MapIcon,     tint: "#0F1E2B",                ink: "#FFFFFF" },
+  transport:  { label: "Transport",  to: "/transport",  group: "ops",      desc: "Driver assignments & convoys",       icon: Truck,       tint: "rgba(239,78,75,0.10)",   ink: "#EF4E4B" },
+  inventory:  { label: "Inventory",  to: "/inventory",  group: "ops",      desc: "Stock & tracked assets",             icon: Package,     tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
+  volunteers: { label: "Volunteers", to: "/volunteers", group: "ops",      desc: "Roster & availability",              icon: Users,       tint: "#0F1E2B",                ink: "#FFFFFF" },
+  calendar:   { label: "Calendar",   to: "/calendar",   group: "ops",      desc: "Shifts, call-ups & events",          icon: Calendar,    tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
+  reports:    { label: "Reports",    to: "/reports",    group: "insights", desc: "Field reports & analytics",          icon: BarChart3,   tint: "rgba(239,78,75,0.10)",   ink: "#EF4E4B" },
+  command:    { label: "Command",    to: "/command",    group: "insights", desc: "Active disaster dashboards",         icon: Radio,       tint: "#0F1E2B",                ink: "#FFFFFF" },
+};
+
+
+export type NavCategory = {
+  key: string;
+  label: string;
+  modules: ModuleId[];
+};
+
+/** Top-nav hover categories. Command stays a direct link. */
+export const NAV_CATEGORIES: NavCategory[] = [
+  { key: "respond", label: "Respond", modules: ["cases", "match", "map"] },
+  { key: "coordinate", label: "Coordinate", modules: ["calendar", "volunteers", "transport", "inventory"] },
+  { key: "network", label: "Network", modules: ["directory", "reports"] },
+];
 
 const STORAGE_KEY = "sos.prefs.v1";
 
 const defaultPrefs: Prefs = {
   orgType: "mid",
-  enabled: ["directory", "cases", "map", "calendar", "volunteers", "reports"],
-  mobilePins: ["cases", "map", "directory"],
+  enabled: ["command", "directory", "cases", "match", "map", "calendar", "inventory", "reports"],
+  mobilePins: ["command", "cases", "map", "directory"],
 };
 
 export function defaultPinsFor(orgType: OrgType, enabled: ModuleId[]): ModuleId[] {
   const want: Record<OrgType, ModuleId[]> = {
-    small: ["cases", "map", "calendar", "directory"],
-    mid: ["cases", "map", "directory", "calendar"],
+    small: ["command", "cases", "map", "directory"],
+    mid: ["command", "cases", "map", "directory"],
     large: ["command", "cases", "map", "reports"],
   };
   return want[orgType].filter((m) => enabled.includes(m)).slice(0, 4);
@@ -66,9 +99,12 @@ function load(): Prefs {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultPrefs;
     const parsed = JSON.parse(raw) as Partial<Prefs>;
+    const enabled = parsed.enabled ?? defaultPrefs.enabled;
+    // Always ensure Command is enabled by default.
+    const enabledWithCommand = enabled.includes("command") ? enabled : ["command", ...enabled];
     return {
       orgType: parsed.orgType ?? defaultPrefs.orgType,
-      enabled: parsed.enabled ?? defaultPrefs.enabled,
+      enabled: ALL_MODULES.filter((m) => enabledWithCommand.includes(m)),
       mobilePins: parsed.mobilePins ?? defaultPrefs.mobilePins,
     };
   } catch {

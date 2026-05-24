@@ -18,8 +18,8 @@ function SettingsLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (
     <CrmShell module="Settings">
-      <PageHeader title="Settings" subtitle="Manage your organization, the people on it, and how you show up across SOS Connect." />
-      <div className="px-4 md:px-6 border-b border-[var(--hairline)]">
+      <PageHeader title="Settings" subtitle="Org, people, and profile." />
+      <div className="px-4 border-b border-[var(--hairline)]">
         <nav className="flex gap-1 overflow-x-auto -mb-px">
           {TABS.map((t) => {
             const active = t.exact ? path === t.to : path.startsWith(t.to);
@@ -38,7 +38,7 @@ function SettingsLayout() {
           })}
         </nav>
       </div>
-      <div className="px-4 md:px-6 pt-6 pb-10 max-w-3xl">
+      <div className="px-4 pt-6 pb-10 max-w-3xl">
         <Outlet />
       </div>
     </CrmShell>

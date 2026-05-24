@@ -33,7 +33,7 @@ function Onboarding() {
   const [invites, setInvites] = useState("");
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white flex items-center justify-center px-5">
+    <div className="min-h-dvh bg-[var(--background)] text-white flex items-center justify-center px-5">
       <div className="max-w-lg w-full py-12">
         <div className="flex items-center gap-2.5 mb-8">
           <Logomark size={28} />
