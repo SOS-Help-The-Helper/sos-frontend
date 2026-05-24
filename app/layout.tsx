@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
 import { PortalConfigProviderWrapper } from "@/lib/portal-config-wrapper";
@@ -46,13 +47,15 @@ export default function RootLayout({
         <meta name="theme-color" content="#0F1E2B" />
       </head>
       <body style={{ background: 'var(--sos-light-gray, #ECEEF1)' }}>
-        <AuthProvider>
-          <ViewProvider>
-            <PortalConfigProviderWrapper>
-              {children}
-            </PortalConfigProviderWrapper>
-          </ViewProvider>
-        </AuthProvider>
+        <ClerkProvider>
+          <AuthProvider>
+            <ViewProvider>
+              <PortalConfigProviderWrapper>
+                {children}
+              </PortalConfigProviderWrapper>
+            </ViewProvider>
+          </AuthProvider>
+        </ClerkProvider>
         {/* HubSpot Tracking Code */}
         <Script
           id="hs-script-loader"
