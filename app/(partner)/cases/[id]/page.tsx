@@ -9,7 +9,8 @@ import {
   DetailTopBar, IdentityBand, DetailSection, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
-import { umbrella as defaultUmbrella, cases, orgs, matches, STATUS_LABEL, requests as requestDetails, type MatchCandidate } from "@/lib/prototype-data";
+import { STATUS_LABEL } from "@/lib/display-constants";
+import { umbrella as defaultUmbrella, cases, orgs, matches, requests as requestDetails, type MatchCandidate } from "@/lib/prototype-data";
 
 type UmbrellaShape = typeof defaultUmbrella;
 

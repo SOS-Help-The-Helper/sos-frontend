@@ -5,16 +5,13 @@ import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
 import { UrgencyBadge, SubStatusPill, CountChip } from "@/components/crm/pills";
+import { BUCKETS, bucketOf, type RequestStatus, type Bucket } from "@/lib/display-constants";
 import {
   cases as casesData,
   requests as requestsData,
   resources as resourcesData,
   reports as reportsData,
   orgs,
-  BUCKETS,
-  bucketOf,
-  type RequestStatus,
-  type Bucket,
 } from "@/lib/prototype-data";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";

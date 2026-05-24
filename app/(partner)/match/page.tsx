@@ -4,7 +4,8 @@
 import { useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { cases, orgs, bucketOf } from "@/lib/prototype-data";
+import { bucketOf } from "@/lib/display-constants";
+import { cases, orgs } from "@/lib/prototype-data";
 import { Check, X, ArrowRight, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";

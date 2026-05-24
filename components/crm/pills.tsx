@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { RequestStatus, Urgency } from "@/lib/prototype-data";
-import { STATUS_LABEL } from "@/lib/prototype-data";
+import type { RequestStatus, Urgency } from "@/lib/display-constants";
+import { STATUS_LABEL } from "@/lib/display-constants";
 
 const URGENCY_COLOR: Record<Urgency, { fg: string; bg: string; pulse?: boolean }> = {
   critical: { fg: "#EF4E4B", bg: "rgba(239,78,75,0.14)", pulse: true },
