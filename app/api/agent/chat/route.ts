@@ -1,5 +1,5 @@
 import { db } from '@/lib/api';
-import { auth } from '@clerk/nextjs/server';
+// Clerk removed — auth handled by custom auth-context
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
   try {
     let userId = 'admin-demo';
     try {
-      const authResult = await auth();
+      const authResult = null as any; // Clerk removed
       if (authResult?.userId) userId = authResult.userId;
     } catch {}
 
