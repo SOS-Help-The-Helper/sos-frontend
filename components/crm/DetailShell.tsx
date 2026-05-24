@@ -250,7 +250,14 @@ export function OverflowMenu({ actions }: { actions: OverflowAction[] }) {
         <MoreHorizontal size={14} />
       </button>
       {open && (
-        <div className="absolute top-full right-0 mt-1 z-40 w-52 rounded-lg bg-[#1a1a1a] border border-white/12 shadow-xl p-1.5">
+        <div
+          className="absolute top-full right-0 mt-1 z-40 w-52 rounded-lg p-1.5"
+          style={{
+            background: "var(--sos-white)",
+            border: "1px solid var(--sos-hairline)",
+            boxShadow: "0 12px 32px rgba(15,30,43,0.18)",
+          }}
+        >
           {actions.map((a, i) => {
             const Icon = a.icon;
             return (
@@ -263,10 +270,10 @@ export function OverflowMenu({ actions }: { actions: OverflowAction[] }) {
                 className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-left text-[12.5px] transition ${
                   a.danger
                     ? "text-[#EF4E4B] hover:bg-[#EF4E4B]/10"
-                    : "text-white/80 hover:bg-white/6 hover:text-white"
+                    : "text-[var(--sos-navy)] hover:bg-[var(--sos-card-gray)]"
                 }`}
               >
-                {Icon && <Icon size={13} className={a.danger ? "" : "text-white/45"} />}
+                {Icon && <Icon size={13} className={a.danger ? "" : "text-[var(--sos-muted)]"} />}
                 {a.label}
               </button>
             );
@@ -330,10 +337,10 @@ export function ActionBtn({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] font-medium transition ${
+      className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium transition ${
         primary
           ? "bg-[#EF4E4B] hover:bg-[#d94340] text-white"
-          : "bg-white/6 hover:bg-white/10 text-white/85"
+          : "bg-[var(--sos-white)] hover:bg-[var(--sos-card-gray)] text-[var(--sos-navy)] border border-[var(--sos-hairline)]"
       }`}
     >
       {Icon && <Icon size={12} strokeWidth={2} />}
