@@ -288,6 +288,7 @@ export default function CasesPage() {
     { id: "cases", label: "Cases", count: caseCards.length },
     { id: "requests", label: "Requests", count: requestCards.length },
     { id: "resources", label: "Resources", count: resourceCards.length },
+    { id: "reports", label: "Reports", count: reportCards.length },
   ];
 
   return (
