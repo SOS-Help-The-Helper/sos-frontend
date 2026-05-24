@@ -1,11 +1,10 @@
-/* ERV Impact Report Styles */
-/* Fonts loaded via <link> in page.tsx */
+/* ERV Impact Report Styles — SOS Brand */
 
 /* ─── Reset / Base ───────────────────────────────────────────── */
 .erv-page {
-  font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   color: #ffffff;
-  background: #111111;
+  background: #0F1E2B;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -13,33 +12,33 @@
 
 /* ─── Typography helpers ─────────────────────────────────────── */
 .erv-oswald {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
 }
 
 .erv-section-label {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #D4A843;
+  color: #EF4E4B;
   margin: 0 0 12px 0;
 }
 
 .erv-section-label--dark {
-  color: #1A1A1A;
+  color: #0F1E2B;
 }
 
 .erv-headline {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 26px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
   margin: 0 0 24px 0;
 }
 
 .erv-headline--white { color: #ffffff; }
-.erv-headline--dark  { color: #111111; }
+.erv-headline--dark  { color: #0F1E2B; }
 
 /* ─── Sections ───────────────────────────────────────────────── */
 .erv-section {
@@ -48,12 +47,12 @@
   margin: 0 auto;
 }
 
-.erv-bg-black    { background: #111111; }
-.erv-bg-offwhite { background: #F5F5F5; }
+.erv-bg-black    { background: #0F1E2B; }
+.erv-bg-offwhite { background: #F8F9FA; }
 
 /* ─── SECTION 1 — HERO ───────────────────────────────────────── */
 .erv-hero-wrap {
-  background: #111111;
+  background: #0F1E2B;
 }
 
 .erv-hero {
@@ -65,30 +64,36 @@
 .erv-topbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 40px;
 }
 
+.erv-logo {
+  height: 72px;
+  width: auto;
+  object-fit: contain;
+}
+
 .erv-wordmark {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 18px;
-  font-weight: 500;
-  color: #D4A843;
+  font-weight: 400;
+  color: #EF4E4B;
   letter-spacing: 0.04em;
 }
 
 .erv-hero-title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 400;
   text-transform: uppercase;
   color: #ffffff;
   margin: 0 0 8px 0;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .erv-hero-subtitle {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   font-weight: 300;
   color: #6B7280;
@@ -103,22 +108,22 @@
 }
 
 .erv-stat-card {
-  background: #1A1A1A;
-  border-left: 3px solid #D4A843;
+  background: #162536;
+  border-left: 3px solid #EF4E4B;
   padding: 20px 16px;
 }
 
 .erv-stat-number {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 48px;
-  font-weight: 700;
-  color: #D4A843;
+  font-weight: 400;
+  color: #89CFF0;
   line-height: 1;
   margin: 0 0 8px 0;
 }
 
 .erv-stat-label {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
   font-weight: 300;
   color: #ffffff;
@@ -136,32 +141,32 @@
 
 .erv-what-card {
   background: #ffffff;
-  border-left: 3px solid #D4A843;
+  border-left: 3px solid #EF4E4B;
   padding: 20px 16px;
   border-radius: 4px;
 }
 
 .erv-what-number {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 32px;
-  font-weight: 700;
-  color: #111111;
+  font-weight: 400;
+  color: #0F1E2B;
   line-height: 1;
   margin: 0 0 6px 0;
 }
 
 .erv-what-title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
-  font-weight: 600;
-  color: #111111;
+  font-weight: 700;
+  color: #0F1E2B;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 8px 0;
 }
 
 .erv-what-detail {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
   font-weight: 400;
   color: #6B7280;
@@ -174,27 +179,27 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
-  background: #2a2a2a;
-  border: 1px solid #2a2a2a;
+  background: #1a3044;
+  border: 1px solid #1a3044;
 }
 
 .erv-serve-block {
-  background: #1A1A1A;
+  background: #162536;
   padding: 28px 20px;
   text-align: center;
 }
 
 .erv-serve-number {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 40px;
-  font-weight: 700;
-  color: #D4A843;
+  font-weight: 400;
+  color: #89CFF0;
   line-height: 1;
   margin: 0 0 8px 0;
 }
 
 .erv-serve-label {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
   font-weight: 300;
   color: #6B7280;
@@ -220,9 +225,9 @@
 }
 
 .erv-fleet-seg--deployed   { background: #34D399; }
-.erv-fleet-seg--available  { background: #D4A843; }
+.erv-fleet-seg--available  { background: #89CFF0; }
 .erv-fleet-seg--unavailable{ background: #6B7280; }
-.erv-fleet-seg--pending    { background: #2e2e2e; border-right: 1px solid #444; }
+.erv-fleet-seg--pending    { background: #1a3044; border-right: 1px solid #2a4054; }
 
 .erv-fleet-legend {
   display: flex;
@@ -235,7 +240,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 12px;
   color: #6B7280;
 }
@@ -256,15 +261,15 @@
 
 .erv-fleet-breakdown {
   background: #ffffff;
-  border-left: 3px solid #D4A843;
+  border-left: 3px solid #EF4E4B;
   padding: 16px;
   border-radius: 4px;
 }
 
 .erv-fleet-breakdown-title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #6B7280;
@@ -279,16 +284,16 @@
 }
 
 .erv-fleet-breakdown-label {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
-  color: #111111;
+  color: #0F1E2B;
 }
 
 .erv-fleet-breakdown-value {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 18px;
-  font-weight: 700;
-  color: #111111;
+  font-weight: 400;
+  color: #0F1E2B;
 }
 
 /* ─── SECTION 5 — DEMAND OVER TIME ──────────────────────────── */
@@ -317,22 +322,23 @@
 
 .erv-bar {
   width: 100%;
-  background: #D4A843;
+  background: #89CFF0;
   border-radius: 2px 2px 0 0;
   min-height: 4px;
   position: relative;
 }
 
 .erv-bar-value {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 10px;
+  font-weight: 700;
   color: #6B7280;
   margin-bottom: 4px;
   text-align: center;
 }
 
 .erv-bar-label {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 9px;
   color: #6B7280;
   margin-top: 6px;
@@ -343,7 +349,7 @@
 
 /* ─── SECTION 6 — THE GAP ────────────────────────────────────── */
 .erv-gap-wrap {
-  background: #F5F5F5;
+  background: #F8F9FA;
 }
 
 .erv-gap-section {
@@ -368,9 +374,9 @@
 }
 
 .erv-gap-number {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 72px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
   margin: 0 0 8px 0;
 }
@@ -379,7 +385,7 @@
 .erv-gap-number--red   { color: #EF4444; }
 
 .erv-gap-sub {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: #6B7280;
@@ -388,7 +394,7 @@
 }
 
 .erv-gap-divider {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 40px;
   color: #d0d0d0;
   padding-bottom: 16px;
@@ -414,7 +420,7 @@
 }
 
 .erv-gap-text {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 16px;
   font-weight: 300;
   color: #6B7280;
@@ -438,9 +444,9 @@
 }
 
 .erv-geo-state {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
   width: 28px;
   flex-shrink: 0;
@@ -449,19 +455,19 @@
 .erv-geo-bar-track {
   flex: 1;
   height: 20px;
-  background: #1A1A1A;
+  background: #162536;
   border-radius: 2px;
   overflow: hidden;
 }
 
 .erv-geo-bar-fill {
   height: 100%;
-  background: #D4A843;
+  background: #89CFF0;
   border-radius: 2px;
 }
 
 .erv-geo-count {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
   color: #6B7280;
   width: 36px;
@@ -479,24 +485,24 @@
 
 .erv-helper-card {
   background: #ffffff;
-  border-left: 3px solid #D4A843;
+  border-left: 3px solid #EF4E4B;
   padding: 20px 16px;
   border-radius: 4px;
 }
 
 .erv-helper-number {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 40px;
-  font-weight: 700;
-  color: #111111;
+  font-weight: 400;
+  color: #0F1E2B;
   line-height: 1;
   margin: 0 0 6px 0;
 }
 
 .erv-helper-title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #6B7280;
@@ -504,7 +510,7 @@
 }
 
 .erv-helpers-footer {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   font-weight: 300;
   color: #6B7280;
@@ -514,8 +520,8 @@
 
 /* ─── FOOTER ─────────────────────────────────────────────────── */
 .erv-footer-wrap {
-  background: #111111;
-  border-top: 1px solid #2a2a2a;
+  background: #0F1E2B;
+  border-top: 1px solid #1a3044;
 }
 
 .erv-footer {
@@ -532,20 +538,20 @@
 .erv-footer-left { display: flex; flex-direction: column; gap: 2px; }
 
 .erv-footer-brand {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'DM Serif Display', serif;
   font-size: 16px;
-  font-weight: 500;
-  color: #D4A843;
+  font-weight: 400;
+  color: #EF4E4B;
 }
 
 .erv-footer-url {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 12px;
   color: #6B7280;
 }
 
 .erv-footer-center {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
   font-style: italic;
   font-weight: 300;
@@ -556,25 +562,26 @@
 .erv-footer-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 
 .erv-footer-powered {
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 11px;
-  color: #6B7280;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #89CFF0;
 }
 
 .erv-footer-sos-url {
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 10px;
-  color: #4B5563;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 11px;
+  color: #6B7280;
 }
 
 .erv-footer-data {
   max-width: 960px;
   margin: 0 auto;
   padding: 0 24px 20px;
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 10px;
   color: #4B5563;
-  border-top: 1px solid #1e1e1e;
+  border-top: 1px solid #1a3044;
   padding-top: 16px;
 }
 
@@ -634,7 +641,7 @@
 @media print {
   .erv-page {
     background: #ffffff;
-    color: #111111;
+    color: #0F1E2B;
   }
 
   .erv-bg-black,
@@ -642,7 +649,7 @@
   .erv-footer-wrap,
   .erv-gap-wrap {
     background: #f9f9f9 !important;
-    color: #111111 !important;
+    color: #0F1E2B !important;
   }
 
   .erv-hero-title,
@@ -651,13 +658,13 @@
   .erv-section-label,
   .erv-footer-center,
   .erv-stat-label {
-    color: #111111 !important;
+    color: #0F1E2B !important;
   }
 
   .erv-stat-card,
   .erv-serve-block {
     background: #eeeeee !important;
-    border-color: #D4A843 !important;
+    border-color: #EF4E4B !important;
   }
 
   .erv-geo-bar-track {

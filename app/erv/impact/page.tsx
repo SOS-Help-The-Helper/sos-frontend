@@ -81,7 +81,7 @@ export default function ERVImpactPage() {
                 Emergency RV — February 2025 through May 2026
               </p>
             </div>
-            <span className="erv-wordmark">EmergencyRV</span>
+            <img src="/erv-logo.png" alt="Emergency RV" className="erv-logo" />
           </div>
 
           <div className="erv-stats-grid">
