@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
+import { PageHeader } from "@/components/crm/manage-tabs";
 import { kpis as protoKpis, orgs, cases } from "@/lib/prototype-data";
 import { Download } from "lucide-react";
 import { api } from "@/lib/api";
@@ -88,7 +88,6 @@ export default function ReportsPage() {
 
   return (
     <CrmShell module="Reports">
-      <ManageTabs />
       <PageHeader
         title="Reports"
         subtitle="Field reports from volunteers and partners."

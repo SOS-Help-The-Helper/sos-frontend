@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
+import { PageHeader } from "@/components/crm/manage-tabs";
 import { events as seedEvents, orgs } from "@/lib/prototype-data";
 import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -107,7 +107,6 @@ export default function CalendarPage() {
 
   return (
     <CrmShell module="Calendar">
-      <ManageTabs />
       <PageHeader
         title="Calendar"
         subtitle="Shifts, call-ups, and events."

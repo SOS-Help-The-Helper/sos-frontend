@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
-import { ManageTabs, PageHeader } from "@/components/crm/manage-tabs";
+import { PageHeader } from "@/components/crm/manage-tabs";
 import { UrgencyBadge, SubStatusPill, CountChip } from "@/components/crm/pills";
 import { BUCKETS, bucketOf, type RequestStatus, type Bucket } from "@/lib/display-constants";
 import {
@@ -280,7 +280,6 @@ export default function CasesPage() {
 
   return (
     <CrmShell module="Cases">
-      <ManageTabs />
       <PageHeader
         title="Cases"
         subtitle={`${totalOpen} open · ${cards.length} total ${label}s · drag to change stage`}
