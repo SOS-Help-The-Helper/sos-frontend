@@ -103,7 +103,7 @@ export default function TransportPage() {
           </>
         }
       />
-      <div className="px-6 pt-6 pb-10 space-y-6">
+      <div className="px-4 pt-4 pb-4 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi label="Active" value={kpis.active} accent="#89CFF0" />
           <Kpi label="In transit" value={kpis.inTransit} accent="#89CFF0" />

@@ -74,7 +74,7 @@ export default function InventoryPage() {
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10 space-y-5">
+      <div className="px-4 pt-4 pb-4 space-y-5">
         {/* Facility selector strip */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           <FacilityChip

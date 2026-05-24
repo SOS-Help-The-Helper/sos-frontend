@@ -40,7 +40,7 @@ export type Bucket = "needs_attention" | "active_work" | "delivering" | "resolve
 
 export const BUCKETS: { id: Bucket; label: string; accent: string; statuses: RequestStatus[] }[] = [
   { id: "needs_attention", label: "Needs Attention", accent: "#EF4E4B", statuses: ["active", "under_review"] },
-  { id: "active_work", label: "Active Work", accent: "#F5EBD6", statuses: ["matched"] },
+  { id: "active_work", label: "Active Work", accent: "#89CFF0", statuses: ["matched"] },
   { id: "delivering", label: "Delivering", accent: "#89CFF0", statuses: ["in_progress"] },
   { id: "resolved", label: "Resolved", accent: "#34D399", statuses: ["fulfilled", "closed"] },
 ];

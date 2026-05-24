@@ -120,7 +120,7 @@ export default function CalendarPage() {
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10">
+      <div className="px-4 pt-4 pb-4">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/8">
             {days.map((d) => (

@@ -100,7 +100,7 @@ export default function IncidentDashboard() {
         {/* Incident KPI strip */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Tile label="Cases" value={displayCases} tone="#89CFF0" />
-          <Tile label="Orgs engaged" value={displayOrgs} tone="#F5EBD6" />
+          <Tile label="Orgs engaged" value={displayOrgs} tone="#89CFF0" />
           <Tile label="Reports pinned" value={pinnedIds.length} tone="#34D399" />
           <Tile
             label="Priority"

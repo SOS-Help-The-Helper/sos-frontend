@@ -40,13 +40,13 @@ const CASE_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, acce
 
 const RESOURCE_COLS: Column[] = [
   { id: "available", label: "Available", accent: "#34D399" },
-  { id: "matched", label: "Matched", accent: "#F5EBD6" },
+  { id: "matched", label: "Matched", accent: "#89CFF0" },
   { id: "deployed", label: "Deployed", accent: "#89CFF0" },
 ];
 
 const REPORT_COLS: Column[] = [
   { id: "Critical", label: "Critical", accent: "#EF4E4B" },
-  { id: "Elevated", label: "Elevated", accent: "#F5EBD6" },
+  { id: "Elevated", label: "Elevated", accent: "#89CFF0" },
   { id: "Routine", label: "Routine", accent: "#89CFF0" },
   { id: "Resolved", label: "Resolved", accent: "#34D399" },
 ];
@@ -313,7 +313,7 @@ export default function CasesPage() {
         })}
       </div>
 
-      <div className="px-6 pt-6 pb-10">
+      <div className="px-4 pt-4 pb-4">
         <div
           className="grid gap-3 overflow-x-auto snap-x md:snap-none"
           style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(260px, 1fr))` }}

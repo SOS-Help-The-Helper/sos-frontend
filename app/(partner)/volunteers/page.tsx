@@ -73,7 +73,7 @@ export default function VolunteersPage() {
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
+      <div className="px-4 pt-4 pb-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
         <div className="space-y-4">
           {/* Filters */}
           <div className="flex items-center gap-2 flex-wrap">

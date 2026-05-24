@@ -35,7 +35,7 @@ export default function CommandPage() {
           </button>
         }
       />
-      <div className="px-6 pt-6 pb-10">
+      <div className="px-4 pt-4 pb-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {incidents.map((i) => {
             const pinnedIds = pinnedMap[i.id] ?? [];

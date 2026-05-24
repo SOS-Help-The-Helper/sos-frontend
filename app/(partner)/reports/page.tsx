@@ -99,7 +99,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="px-6 pt-6 pb-10 space-y-4">
+      <div className="px-4 pt-4 pb-4 space-y-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
             <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">

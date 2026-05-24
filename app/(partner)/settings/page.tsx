@@ -86,7 +86,7 @@ export default function SettingsPage() {
   return (
     <CrmShell module="Settings">
       <PageHeader title="Settings" subtitle={org.name} />
-      <div className="px-6 pt-6 pb-10 max-w-3xl space-y-6">
+      <div className="px-4 pt-4 pb-4 max-w-3xl space-y-6">
         <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
           <h2 className="text-[15px] font-semibold mb-1">Org profile</h2>
           <p className="text-[12px] text-white/55 mb-4">Visible across SOS Connect.</p>
