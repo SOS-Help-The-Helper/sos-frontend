@@ -145,6 +145,9 @@ export const api = {
   crmCasesList: (orgId: string, filters?: { status?: string; urgency?: string; county?: string; assigned_to?: string; category?: string }) =>
     efCall("crm-cases", { action: "list", org_id: orgId, ...filters }),
 
+  crmSosesList: (filters?: { status?: string; limit?: number; offset?: number }) =>
+    efCall("crm-cases", { action: "list_soses", ...filters }),
+
   crmCasesDetail: (params: { person_id?: string; request_id?: string }) =>
     efCall("crm-cases", { action: "detail", ...params }),
 

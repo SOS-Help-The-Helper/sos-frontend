@@ -36,7 +36,14 @@ type Card = {
 };
 
 // Stage definitions per tab
-const CASE_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
+// Cases tab = SOS umbrellas (active / resolved / closed)
+const CASE_COLS: Column[] = [
+  { id: "active", label: "Active", accent: "#EF4E4B" },
+  { id: "resolved", label: "Resolved", accent: "#34D399" },
+  { id: "closed", label: "Closed", accent: "#9CA3AF" },
+];
+// Requests tab uses the full pipeline stages
+const REQUEST_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
 
 const RESOURCE_COLS: Column[] = [
   { id: "available", label: "Available", accent: "#34D399" },
@@ -192,21 +199,27 @@ export default function CasesPage() {
   const [resourceCards, setResourceCards] = useState<Card[]>(() => buildResourceCards());
   const [reportCards, setReportCards] = useState<Card[]>(() => buildReportCards());
 
-  // Fetch cases from EF
+  // Fetch cases (SOS umbrellas) from EF
   useEffect(() => {
-    
-    api.crmCasesList(orgId || "")
+    api.crmSosesList({ limit: 200 })
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
-          const cards = liveToCards(items);
+          const cards: Card[] = items.map((s: any) => ({
+            id: s.id,
+            col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
+            title: s.person_name || s.persons?.display_name || "Unknown",
+            meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
+            sub: s.days_open != null ? `${s.days_open}d` : undefined,
+            to: { route: "/cases/$id", params: { id: s.id } },
+          }));
           setLiveCases(cards);
           setCaseCards(cards);
         }
       })
       .catch(() => {})
       .finally(() => setLoadingCases(false));
-  }, [orgId]);
+  }, []);
 
   // Fetch requests from EF
   useEffect(() => {
@@ -243,7 +256,7 @@ export default function CasesPage() {
   const { cards, setCards, columns, label, loading } = useMemo(() => {
     switch (tab) {
       case "requests":
-        return { cards: requestCards, setCards: setRequestCards, columns: CASE_COLS, label: "request", loading: loadingRequests };
+        return { cards: requestCards, setCards: setRequestCards, columns: REQUEST_COLS, label: "request", loading: loadingRequests };
       case "resources":
         return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource", loading: loadingResources };
       case "reports":
@@ -275,7 +288,6 @@ export default function CasesPage() {
     { id: "cases", label: "Cases", count: caseCards.length },
     { id: "requests", label: "Requests", count: requestCards.length },
     { id: "resources", label: "Resources", count: resourceCards.length },
-    { id: "reports", label: "Reports", count: reportCards.length },
   ];
 
   return (
