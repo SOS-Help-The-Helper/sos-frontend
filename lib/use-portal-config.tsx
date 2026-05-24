@@ -25,16 +25,16 @@ export const ALL_MODULES: ModuleId[] = [
 ];
 
 export const MODULE_META: Record<ModuleId, { label: string; to: string; group: 'crm' | 'ops' | 'insights' }> = {
-  directory: { label: 'Directory', to: '/directory', group: 'crm' },
-  cases:     { label: 'Cases',     to: '/cases',     group: 'crm' },
-  match:     { label: 'Match',     to: '/match',     group: 'crm' },
-  map:       { label: 'Map',       to: '/map',       group: 'crm' },
-  transport: { label: 'Transport', to: '/transport',  group: 'ops' },
-  inventory: { label: 'Inventory', to: '/inventory',  group: 'ops' },
-  volunteers:{ label: 'Volunteers',to: '/volunteers', group: 'ops' },
-  calendar:  { label: 'Calendar',  to: '/calendar',   group: 'ops' },
-  reports:   { label: 'Reports',   to: '/reports',    group: 'insights' },
-  command:   { label: 'Command',   to: '/command',    group: 'insights' },
+  directory: { label: 'Directory', to: '/app/directory', group: 'crm' },
+  cases:     { label: 'Cases',     to: '/app/cases',     group: 'crm' },
+  match:     { label: 'Match',     to: '/app/match',     group: 'crm' },
+  map:       { label: 'Map',       to: '/app/map',       group: 'crm' },
+  transport: { label: 'Transport', to: '/app/transport',  group: 'ops' },
+  inventory: { label: 'Inventory', to: '/app/inventory',  group: 'ops' },
+  volunteers:{ label: 'Volunteers',to: '/app/volunteers', group: 'ops' },
+  calendar:  { label: 'Calendar',  to: '/app/calendar',   group: 'ops' },
+  reports:   { label: 'Reports',   to: '/app/reports',    group: 'insights' },
+  command:   { label: 'Command',   to: '/app/command',    group: 'insights' },
 };
 
 export interface MatchCardConfig {

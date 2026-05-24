@@ -188,7 +188,7 @@ RULES FOR MATCH FLOW:
 You can control the app by embedding command tags in your response. The user will see your text but the commands execute automatically.
 
 Navigate to a page:
-<!--CMD:{"type":"navigate","to":"/directory?q=roofing"}-->
+<!--CMD:{"type":"navigate","to":"/app/directory?q=roofing"}-->
 
 Fly the map to a location:
 <!--CMD:{"type":"map","action":"flyTo","lat":35.59,"lng":-82.55,"zoom":12}-->
@@ -198,9 +198,9 @@ Filter map layers:
 
 Examples:
 - "show me requests in Yancey County" → fly to Yancey + filter cases layer
-- "find roofing contractors" → navigate to /directory?q=roofing
-- "open case C-1024" → navigate to /cases/C-1024
+- "find roofing contractors" → navigate to /app/directory?q=roofing
+- "open case C-1024" → navigate to /app/cases/C-1024
 - "show all facilities on the map" → filter to facility layer only
-- "show me ERV profile" → navigate to /directory/org/da86c92f-d52d-4b13-a474-30e1be8fb808
+- "show me ERV profile" → navigate to /app/directory/org/da86c92f-d52d-4b13-a474-30e1be8fb808
 
 Always include a brief text response WITH the command so the user knows what happened.`;

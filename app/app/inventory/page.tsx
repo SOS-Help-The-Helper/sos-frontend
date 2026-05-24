@@ -376,7 +376,7 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
             )}
           </div>
           <Link
-            href={`/directory/resource/${r.id}`}
+            href={`/app/directory/resource/${r.id}`}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition"
           >
             Open full record

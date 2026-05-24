@@ -101,7 +101,7 @@ export default function RequestPage() {
           chips={
             <>
               <MetaChip icon={User}>
-                <Link href={`/directory/person/${r.personId ?? "#"}`} className="hover:text-white transition">
+                <Link href={`/app/directory/person/${r.personId ?? "#"}`} className="hover:text-white transition">
                   {r.personName}
                 </Link>
               </MetaChip>

@@ -120,7 +120,7 @@ function MembersTab({ org }: { org: Org }) {
       {org.members.map((m) => (
         <Link
           key={m.id}
-          href={`/directory/person/${m.id}`}
+          href={`/app/directory/person/${m.id}`}
           className="flex items-center gap-3 px-4 py-3 hover:bg-white/4 transition"
         >
           <Avatar name={m.name} size={32} />

@@ -471,7 +471,7 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
 
       {/* Back-to-coordinator link in corner */}
       <Link
-        href="/transport"
+        href="/app/transport"
         className="fixed top-3 right-3 z-20 font-mono text-[9px] uppercase tracking-wider text-white/40 hover:text-white/80 px-2 py-1 rounded bg-black/30 backdrop-blur"
       >
         coord view

@@ -77,7 +77,7 @@ export function NotificationProvider({ orgId, children }: { orgId: string | null
       showBrowserNotification(
         toast.title,
         toast.body,
-        notification.deep_link || `/matching?match=${notification.match_id}`
+        notification.deep_link || `/app/match?match=${notification.match_id}`
       );
     });
 

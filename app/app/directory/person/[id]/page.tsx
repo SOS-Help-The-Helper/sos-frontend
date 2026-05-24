@@ -85,7 +85,7 @@ export default function PersonPage() {
             <>
               <MetaChip>
                 <Link
-                  href={`/directory/org/${person.org.id}`}
+                  href={`/app/directory/org/${person.org.id}`}
                   className="hover:text-white transition"
                 >
                   {person.org.name}
@@ -265,7 +265,7 @@ function SkillsTab({ person }: { person: Person }) {
         </div>
       )}
       <Link
-        href={`/directory/org/${person.org.id}`}
+        href={`/app/directory/org/${person.org.id}`}
         className="flex items-center gap-3 px-4 py-3 hover:bg-white/4 transition"
       >
         <div className="w-9 h-9 rounded-lg bg-[#89CFF0]/12 text-[#89CFF0] flex items-center justify-center text-[13px] font-semibold">

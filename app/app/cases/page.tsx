@@ -67,7 +67,7 @@ function buildCaseCards(): Card[] {
       title: c.citizen,
       meta: `${c.county} · ${c.taxonomy[0]}`,
       sub: `${c.daysOpen}d`,
-      href: `/cases/${c.umbrella ?? c.id}`,
+      href: `/app/cases/${c.umbrella ?? c.id}`,
       urgency: c.urgency,
       status: c.status,
       orgColor: org?.color,
@@ -87,7 +87,7 @@ function buildRequestCards(): Card[] {
       title: r.personName,
       meta: `${r.county} · ${r.taxonomy}`,
       sub: `${r.daysOpen}d`,
-      href: `/directory/request/${r.id}`,
+      href: `/app/directory/request/${r.id}`,
       urgency: r.urgency,
       status: r.status,
       orgColor: org?.color,
@@ -103,7 +103,7 @@ function buildResourceCards(): Card[] {
     title: r.title,
     meta: r.location,
     sub: r.capacity,
-    href: `/directory/resource/${r.id}`,
+    href: `/app/directory/resource/${r.id}`,
     orgColor: orgs.find((o) => o.id === r.org)?.color,
     orgName: orgs.find((o) => o.id === r.org)?.name,
   }));
@@ -116,7 +116,7 @@ function buildReportCards(): Card[] {
     title: r.taxonomy,
     meta: `${r.location}`,
     sub: `by ${r.reporterName}`,
-    href: `/directory/report/${r.id}`,
+    href: `/app/directory/report/${r.id}`,
   }));
 }
 
@@ -128,7 +128,7 @@ function liveToCards(items: any[]): Card[] {
     title: c.display_name ?? c.person_name ?? c.citizen ?? c.id,
     meta: [c.county, c.category ?? c.taxonomy_code].filter(Boolean).join(" · "),
     sub: c.days_open != null ? `${c.days_open}d` : undefined,
-    href: `/cases/${c.umbrella_id ?? c.id}`,
+    href: `/app/cases/${c.umbrella_id ?? c.id}`,
     urgency: c.urgency,
     status: c.status,
   }));
@@ -142,7 +142,7 @@ function liveRequestsToCards(items: any[]): Card[] {
     title: r.display_name ?? r.person_name ?? r.id,
     meta: [r.city ?? r.locations?.city, r.category ?? r.taxonomy_code].filter(Boolean).join(" · "),
     sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
-    href: `/directory/request/${r.id}`,
+    href: `/app/directory/request/${r.id}`,
     urgency: r.urgency,
     status: r.status,
   }));
@@ -156,7 +156,7 @@ function liveResourcesToCards(items: any[]): Card[] {
     title: r.category ?? r.taxonomy_code ?? r.id,
     meta: r.locations?.city ?? r.city ?? undefined,
     sub: r.capacity_available != null ? `${r.capacity_available} avail` : undefined,
-    href: `/directory/resource/${r.id}`,
+    href: `/app/directory/resource/${r.id}`,
   }));
 }
 
@@ -211,7 +211,7 @@ export default function CasesPage() {
             title: s.person_name || s.persons?.display_name || "Unknown",
             meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
             sub: s.days_open != null ? `${s.days_open}d` : undefined,
-            to: { route: "/cases/$id", params: { id: s.id } },
+            to: { route: "/app/cases/$id", params: { id: s.id } },
           }));
           setLiveCases(cards);
           setCaseCards(cards);

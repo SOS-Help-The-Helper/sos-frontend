@@ -47,7 +47,7 @@ export default function CommandPage() {
             return (
               <Link
                 key={i.id}
-                href={`/command/${i.id}`}
+                href={`/app/command/${i.id}`}
                 className="group rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] hover:border-white/20 p-5 transition flex flex-col gap-4"
               >
                 <div className="flex items-start gap-3">

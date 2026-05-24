@@ -321,7 +321,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
               })}
             </div>
           )}
-          <Link href="/directory/volunteer" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition">
+          <Link href="/app/directory/volunteer" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition">
             Open full record
           </Link>
         </div>

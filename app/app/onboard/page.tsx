@@ -42,7 +42,7 @@ export default function OnboardPage() {
         name: orgName,
         contact_email: contactEmail,
       });
-      router.push('/cases');
+      router.push('/app/cases');
     } catch {
       toast.error('Failed to create org — please try again');
     } finally {

@@ -133,7 +133,7 @@ export default function IncidentDashboard() {
                 Pinned reports
               </p>
               <Link
-                href="/reports"
+                href="/app/reports"
                 className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-white/6 hover:bg-white/12 text-[11px] transition"
               >
                 <Plus size={11} /> Add from library
@@ -142,7 +142,7 @@ export default function IncidentDashboard() {
             {pinned.length === 0 ? (
               <div className="text-center py-10 text-white/40 text-[12.5px]">
                 No reports pinned. Open{" "}
-                <Link href="/reports" className="text-[#89CFF0] hover:underline">
+                <Link href="/app/reports" className="text-[#89CFF0] hover:underline">
                   Reports
                 </Link>{" "}
                 and click &ldquo;Add to dashboard&rdquo;.
@@ -166,7 +166,7 @@ export default function IncidentDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link
-                          href={`/directory/report/${r.id}`}
+                          href={`/app/directory/report/${r.id}`}
                           className="text-[12.5px] font-medium hover:text-[#89CFF0] transition truncate"
                         >
                           {r.taxonomy}

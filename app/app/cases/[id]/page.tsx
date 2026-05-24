@@ -90,7 +90,7 @@ function CaseNotFound() {
           <p className="text-white/45 text-sm">This case ID doesn&apos;t exist or you don&apos;t have access to it.</p>
         </div>
         <Link
-          href="/cases"
+          href="/app/cases"
           className="mt-2 px-4 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-sm text-white/70 hover:text-white transition-colors"
         >
           Back to Cases
@@ -370,7 +370,7 @@ function CaseTabs({
             return (
               <li key={c.id}>
                 <Link
-                  href={`/directory/request/${c.id}`}
+                  href={`/app/directory/request/${c.id}`}
                   className="flex items-center gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
                 >
                   <span className="font-mono text-[10.5px] text-white/45 w-12 shrink-0">{c.id}</span>
@@ -527,7 +527,7 @@ function TimelineTab({
           return (
             <li key={i} className={isLast ? "" : "border-b border-white/[0.04]"}>
               {linkedCase ? (
-                <Link href={`/directory/request/${linkedCase.id}`} className="block">
+                <Link href={`/app/directory/request/${linkedCase.id}`} className="block">
                   {inner}
                 </Link>
               ) : inner}

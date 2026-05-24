@@ -134,7 +134,7 @@ export default function ResourcePage() {
             <Sparkles size={12} className="text-[#89CFF0]" />
             <p className="text-[11.5px] text-white/55">Currently matched to</p>
           </div>
-          <Link href={`/cases/${(r as any).matchedTo?.caseId ?? "#"}`} className="text-[14px] font-medium text-[#89CFF0] hover:underline inline-flex items-center gap-2">
+          <Link href={`/app/cases/${(r as any).matchedTo?.caseId ?? "#"}`} className="text-[14px] font-medium text-[#89CFF0] hover:underline inline-flex items-center gap-2">
             <GitBranch size={13} /> {r.matchedTo.personName}
             <span className="font-mono text-[10.5px] text-white/45">{r.matchedTo.caseId}</span>
           </Link>
@@ -173,7 +173,7 @@ export default function ResourcePage() {
               <MetaChip icon={MapPin}>{r.location}</MetaChip>
               <MetaPopover>
                 <MetaChip icon={User}>
-                  <Link href={`/directory/person/${(r as any).ownerId ?? "#"}`} className="hover:text-white transition">
+                  <Link href={`/app/directory/person/${(r as any).ownerId ?? "#"}`} className="hover:text-white transition">
                     {r.ownerName}
                   </Link>
                   {r.org && <span className="text-white/40"> · {r.org}</span>}
