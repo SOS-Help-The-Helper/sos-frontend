@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.git/
+_archive/
+_lovable_ref/
+public/
+*.lock
+*.map
+bun.lock
