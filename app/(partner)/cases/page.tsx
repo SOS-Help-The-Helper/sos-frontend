@@ -194,8 +194,8 @@ export default function CasesPage() {
 
   // Fetch cases from EF
   useEffect(() => {
-    if (!orgId) { setLoadingCases(false); return; }
-    api.crmCasesList(orgId)
+    
+    api.crmCasesList(orgId || "")
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
@@ -210,8 +210,8 @@ export default function CasesPage() {
 
   // Fetch requests from EF
   useEffect(() => {
-    if (!orgId) { setLoadingRequests(false); return; }
-    api.crmRequestsList(orgId)
+    
+    api.crmRequestsList(orgId || "")
       .then((data: any) => {
         const items: any[] = data?.requests ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
@@ -226,8 +226,8 @@ export default function CasesPage() {
 
   // Fetch resources from EF
   useEffect(() => {
-    if (!orgId) { setLoadingResources(false); return; }
-    api.crmResourcesList(orgId)
+    
+    api.crmResourcesList(orgId || "")
       .then((data: any) => {
         const items: any[] = data?.resources ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {

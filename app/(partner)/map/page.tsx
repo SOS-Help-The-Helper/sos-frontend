@@ -70,7 +70,7 @@ function MapboxEmbed({ orgId }: { orgId: string }) {
 
       map.on("load", async () => {
         try {
-          const data = await api.crmMapFeatures(orgId);
+          const data = await api.crmMapFeatures(orgId || '');
           const features: any[] = (data as any)?.features ?? [];
 
           for (const layer of LAYERS) {
@@ -297,8 +297,8 @@ export default function MapPage() {
   const [layers, setLayers] = useState<LayeredFeatures | null>(null);
 
   useEffect(() => {
-    if (!orgId) return;
-    api.crmMapFeatures(orgId)
+    // admin: proceed without org filter
+    api.crmMapFeatures(orgId || '')
       .then((res: unknown) => {
         const data = res as { features?: MapFeature[] };
         const features = Array.isArray(data) ? (data as MapFeature[]) : (data?.features ?? []);

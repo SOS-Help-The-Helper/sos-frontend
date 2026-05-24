@@ -35,8 +35,8 @@ export default function InventoryPage() {
   const [resources, setResources] = useState<ResourceDetail[]>(prototypeResources);
 
   useEffect(() => {
-    if (!orgId) return;
-    api.crmFacilitiesList(orgId)
+    // admin: proceed without org filter
+    api.crmFacilitiesList(orgId || '')
       .then((data: unknown) => {
         const rows = (data as { facilities?: Facility[] })?.facilities;
         if (rows?.length) setFacilities(rows);

@@ -43,7 +43,7 @@ export default function VolunteersPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!orgId) return;
+    // admin: no org filter
     api.crmVolunteersAvailable(orgId)
       .then((res) => {
         const items = mapVolunteers(extractList(res, ["volunteers", "data", "results"]));

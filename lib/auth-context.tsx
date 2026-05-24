@@ -12,9 +12,9 @@ interface AuthContext {
   loading: boolean;
 }
 
-// Demo bypass: always admin, never loading
+// Demo bypass: admin mode sees all data (no org filter)
 const DEMO_CTX: AuthContext = {
-  orgId: 'da86c92f-d52d-4b13-a474-30e1be8fb808', // Emergency RV — hardcoded for demo
+  orgId: null, // null = admin view, no org filter → all data visible
   orgName: 'SOS Platform',
   orgType: 'admin',
   role: 'admin',

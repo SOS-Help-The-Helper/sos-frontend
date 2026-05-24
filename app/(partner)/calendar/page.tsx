@@ -43,8 +43,8 @@ export default function CalendarPage() {
   const selected = useMemo(() => items.find((s) => s.id === selectedId) ?? null, [items, selectedId]);
 
   useEffect(() => {
-    if (!orgId) return;
-    api.crmEventsList(orgId).then((res) => {
+    // admin: proceed without org filter
+    api.crmEventsList(orgId || '').then((res) => {
       const data = (res as { events?: unknown[] }).events;
       if (Array.isArray(data) && data.length > 0) {
         setItems(data as CalEvent[]);

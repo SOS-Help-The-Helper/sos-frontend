@@ -39,10 +39,10 @@ export default function MatchPage() {
   const activeCase = caseList.find((c) => c.id === activeId) ?? caseList[0];
 
   useEffect(() => {
-    if (!orgId) { setLoading(false); return; }
+    
     (async () => {
       try {
-        const res = await api.crmCasesList(orgId, { status: "active" }) as any;
+        const res = await api.crmCasesList(orgId || "", { status: "active" }) as any;
         const raw: unknown[] = res?.data ?? res?.cases ?? [];
         const mapped: CaseItem[] = raw.map((r: any) => ({
           id: r.request_id ?? r.id,

@@ -67,8 +67,8 @@ export default function ReportsPage() {
   const [taxList, setTaxList] = useState<TaxEntry[]>(protoTaxList);
 
   useEffect(() => {
-    if (!orgId) return;
-    api.crmImpactDashboard(orgId)
+    // admin: proceed without org filter
+    api.crmImpactDashboard(orgId || '')
       .then((res) => {
         const data = (res as Record<string, unknown>)?.data ?? res;
         const mappedKpis = mapDashboardToKpis(data);

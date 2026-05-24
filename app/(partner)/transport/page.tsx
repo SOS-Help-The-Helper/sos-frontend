@@ -61,10 +61,10 @@ export default function TransportPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
-    if (!orgId) return;
+    // admin: proceed without org filter
     (async () => {
       try {
-        const res = await api.transportList(orgId) as { data?: unknown[] } | unknown[];
+        const res = await api.transportList(orgId || '') as { data?: unknown[] } | unknown[];
         const rows = Array.isArray(res) ? res : (res as { data?: unknown[] }).data ?? [];
         if (rows.length > 0) {
           setAssignments(rows.map(r => mapApiToAssignment(r as Record<string, unknown>)));
