@@ -45,7 +45,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
         <meta name="theme-color" content="#0F1E2B" />
       </head>
-      <body style={{ background: '#0F1E2B' }}>
+      <body style={{ background: 'var(--sos-light-gray, #ECEEF1)' }}>
         <AuthProvider>
           <ViewProvider>
             <PortalConfigProviderWrapper>
