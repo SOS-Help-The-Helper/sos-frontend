@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
@@ -8,26 +9,79 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { reports, type ReportDetail } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
 import { MapPin, ShieldCheck, Camera, User, AlertTriangle, Calendar, Phone, Share2, Flag, XCircle } from "lucide-react";
 
-
-const SEV: Record<ReportDetail["severity"], string> = {
+const SEV_COLORS: Record<string, string> = {
+  critical: "#EF4E4B",
   Critical: "#EF4E4B",
+  elevated: "#F5EBD6",
   Elevated: "#F5EBD6",
+  routine: "#89CFF0",
   Routine: "#89CFF0",
 };
 
+interface ReportData {
+  id: string;
+  category?: string;
+  severity?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  status?: string;
+  verification_status?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
-  const r = reports.find((x: any) => x.id === id);
-  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Report not found</div></CrmShell>;
-  const sev = SEV[r.severity as ReportDetail["severity"]];
+  const [report, setReport] = useState<ReportData | null | undefined>(undefined);
+
+  useEffect(() => {
+    api.crmReportDetail(id)
+      .then((data: any) => {
+        const r = data?.report ?? data;
+        setReport(r?.id ? r : null);
+      })
+      .catch(() => setReport(null));
+  }, [id]);
+
+  if (report === undefined) {
+    return (
+      <CrmShell module="Cases">
+        <DetailTopBar backTo="/reports" backLabel="Reports" />
+        <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
+          <div className="h-20 rounded-xl bg-white/5" />
+          <div className="h-16 rounded-xl bg-white/5" />
+          <div className="h-48 rounded-xl bg-white/5" />
+        </main>
+      </CrmShell>
+    );
+  }
+
+  if (!report) return <CrmShell module="Cases"><DetailTopBar backTo="/reports" backLabel="Reports" /><div className="p-10 text-center text-white/50">Report not found</div></CrmShell>;
+
+  const r = {
+    id: report.id,
+    taxonomy: report.category || 'Report',
+    severity: report.severity || 'Routine',
+    location: report.description?.slice(0, 50) || 'Unknown location',
+    reporterName: 'Reporter',
+    reporterId: '',
+    date: report.created_at ? new Date(report.created_at).toLocaleDateString() : '',
+    disaster: '',
+    verifiedBy: report.verification_status === 'verified' ? 'System' : null,
+    resolution: report.status === 'resolved' ? 'Resolved' : null,
+    corroborators: 0,
+  };
+
+  const sev = SEV_COLORS[r.severity] || "#89CFF0";
 
   const timelineEntries: { label: string; date: string; color: string }[] = [
     { label: "Reported", date: r.date, color: "#F5EBD6" },
     ...(r.verifiedBy ? [{ label: `Verified by ${r.verifiedBy}`, date: r.date, color: "#89CFF0" }] : []),
-    ...(r.resolution ? [{ label: r.resolution, date: r.resolution, color: "#34D399" }] : []),
+    ...(r.resolution ? [{ label: r.resolution, date: r.date, color: "#34D399" }] : []),
   ];
 
   const tabs: DetailTab[] = [
@@ -49,9 +103,6 @@ export default function ReportPage() {
                   Unverified
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-black/40 text-white/70 text-[11px] backdrop-blur-sm">
-                +{r.corroborators} corroborating
-              </span>
             </div>
           </div>
           <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
@@ -87,14 +138,7 @@ export default function ReportPage() {
     {
       key: "files",
       label: "Files",
-      count: r.corroborators,
-      content: r.corroborators > 0 ? (
-        <p className="text-[13px] text-white/75">
-          {r.corroborators} corroborating report{r.corroborators === 1 ? "" : "s"} from nearby reporters.
-        </p>
-      ) : (
-        <EmptyTab label="No files or corroborating reports." />
-      ),
+      content: <EmptyTab label="No files or corroborating reports." />,
     },
   ];
 
@@ -122,14 +166,8 @@ export default function ReportPage() {
             <>
               <MetaChip icon={MapPin}>{r.location}</MetaChip>
               <MetaPopover>
-                <MetaChip icon={User}>
-                  <Link href={`/directory/person/${r.reporterId}`} className="hover:text-white transition">
-                    {r.reporterName}
-                  </Link>
-                </MetaChip>
                 <MetaChip icon={Calendar}>{r.date}</MetaChip>
                 <span className="font-mono text-[10px] text-white/40">{r.id}</span>
-                <span className="font-mono text-[10px] text-white/40">{r.disaster}</span>
               </MetaPopover>
             </>
           }
@@ -149,8 +187,8 @@ export default function ReportPage() {
 
         <AiSummary
           id={r.id}
-          tldr={`${r.severity} ${r.taxonomy.toLowerCase()} at ${r.location} · ${r.verifiedBy ? "verified" : "unverified"} · +${r.corroborators}.`}
-          summary={`${r.severity} ${r.taxonomy} report filed by ${r.reporterName} at ${r.location} during ${r.disaster} on ${r.date}. ${r.verifiedBy ? `Verified by ${r.verifiedBy} with ${r.corroborators} corroborating report${r.corroborators === 1 ? "" : "s"}.` : `Unverified, ${r.corroborators} corroborating report${r.corroborators === 1 ? "" : "s"}.`} ${r.resolution ?? "Currently open and awaiting resolution."}`}
+          tldr={`${r.severity} ${r.taxonomy.toLowerCase()} · ${r.verifiedBy ? "verified" : "unverified"}.`}
+          summary={`${r.severity} ${r.taxonomy} report at ${r.location}${r.date ? ` on ${r.date}` : ''}. ${r.verifiedBy ? `Verified by ${r.verifiedBy}.` : `Unverified.`} ${r.resolution ?? "Currently open and awaiting resolution."}`}
         />
 
         <DetailTabs tabs={tabs} defaultKey="activity" />

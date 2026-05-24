@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Clock, Phone, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
@@ -10,19 +11,56 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { volunteers } from "@/lib/prototype-data";
+import { api } from "@/lib/api";
 
-type Volunteer = (typeof volunteers)[number];
-
+interface PersonData {
+  id: string;
+  display_name: string;
+  sos_score?: number;
+  impact_score?: number;
+  community_score?: number;
+  readiness_score?: number;
+  created_at?: string;
+  [key: string]: unknown;
+}
 
 export default function VolunteerPage() {
   const { id } = useParams<{ id: string }>();
-  const v = volunteers.find((x: any) => x.id === id);
-  if (!v) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Volunteer not found</div></CrmShell>;
-  const statusTint =
-    v.status === "active" ? "#34D399" :
-    v.status === "new" ? "#89CFF0" :
-    "rgba(245,235,214,0.55)";
+  const [person, setPerson] = useState<PersonData | null | undefined>(undefined);
+
+  useEffect(() => {
+    api.crmGetPerson(id)
+      .then((data: any) => {
+        const p = data?.person ?? data;
+        setPerson(p?.id ? p : null);
+      })
+      .catch(() => setPerson(null));
+  }, [id]);
+
+  if (person === undefined) {
+    return (
+      <CrmShell module="Directory">
+        <DetailTopBar backTo="/directory" backLabel="Directory" />
+        <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
+          <div className="h-20 rounded-xl bg-white/5" />
+          <div className="h-16 rounded-xl bg-white/5" />
+          <div className="h-48 rounded-xl bg-white/5" />
+        </main>
+      </CrmShell>
+    );
+  }
+
+  if (!person) return <CrmShell module="Directory"><DetailTopBar backTo="/directory" backLabel="Directory" /><div className="p-10 text-center text-white/50">Volunteer not found</div></CrmShell>;
+
+  const v = {
+    id: person.id,
+    name: person.display_name || 'Unknown',
+    status: 'active' as const,
+    hours: person.impact_score || 0,
+    skills: [] as string[],
+  };
+
+  const statusTint = "#34D399";
 
   const tabs: DetailTab[] = [
     {
@@ -40,7 +78,7 @@ export default function VolunteerPage() {
       label: "Skills",
       count: v.skills.length,
       content: v.skills.length === 0 ? (
-        <EmptyTab label="No skills listed." />
+        <EmptyTab label="No skills listed yet. Skills will populate from credential records." />
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {v.skills.map((s: string) => (

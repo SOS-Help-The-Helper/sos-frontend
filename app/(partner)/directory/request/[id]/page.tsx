@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
@@ -8,23 +9,71 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { STATUS_LABEL } from "@/lib/prototype-data";
-import { requests, matches, deliveries, cases, transportAssignments, orgTransportConfig, TRANSPORT_STATUS_LABEL, type ReqDetail, type MatchCandidate } from "@/lib/prototype-data";
+import { STATUS_LABEL, TRANSPORT_STATUS_LABEL, type TransportStatus } from "@/lib/display-constants";
+import { api } from "@/lib/api";
 import {
   MapPin, Calendar, User, Check, X, Camera, Truck, Package,
   ShieldCheck, Phone, MessageSquare, Sparkles,
   Users, GitBranch, ExternalLink, Flag, XCircle, Share2,
 } from "lucide-react";
 
-
+// Local types — shape mirrors the crm-cases detail EF response
+interface Note { system: boolean; ts: string; who: string; msg: string; }
+interface Household { adults: number; children: number; pets?: number; }
+interface MatchBreakdown { category: number; distance: number; urgency: number; capacity: number; trust: number; }
+interface MatchCandidate { id: string; title: string; blurb: string; score: number; approved: boolean; breakdown: MatchBreakdown; rationale: string; }
+interface DeliveryStep { key: string; label: string; timestamp: string; location?: string; }
+interface StatusHistoryEntry { status: string; timestamp: string; photo?: boolean; }
+interface TransportAssignment { id: string; org: string; resourceId: string; status: TransportStatus; statusHistory: StatusHistoryEntry[]; statusPipeline?: string[]; }
+interface Delivery { id: string; origin: string; destination: string; resourceId: string; current: string; steps: DeliveryStep[]; }
+interface RelatedCase { id: string; citizen: string; taxonomy: string[]; status: string; }
+interface ReqDetail {
+  id: string; caseId: string; personId?: string; personName: string;
+  taxonomy: string; county: string; urgency: string; status: string;
+  household: Household; daysOpen: number; airs?: string; ocha?: string;
+  disaster?: string; assignedTo: string; matchIds: string[];
+  deliveryId?: string; notes: Note[];
+  candidates?: MatchCandidate[];
+  delivery?: Delivery;
+  transportAssignment?: TransportAssignment;
+  relatedCases?: RelatedCase[];
+}
 
 export default function RequestPage() {
   const { id } = useParams<{ id: string }>();
-  const r = requests.find((x: any) => x.caseId === id || x.id === id);
-  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Request not found</div></CrmShell>;
-  const cands: MatchCandidate[] = r.matchIds.map((id: string) => matches[id]).filter(Boolean);
-  const delivery = r.deliveryId ? deliveries.find((d) => d.id === r.deliveryId) : null;
-  const initials = r.personName.split(" ").map((s: string) => s[0]).join("");
+  const [r, setR] = useState<ReqDetail | null | undefined>(undefined);
+
+  useEffect(() => {
+    api.crmCasesDetail({ request_id: id })
+      .then((data: ReqDetail | null) => setR(data ?? null))
+      .catch(() => setR(null));
+  }, [id]);
+
+  if (r === undefined) {
+    return (
+      <CrmShell module="Cases">
+        <DetailTopBar backTo="/cases" backLabel="Cases" />
+        <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
+          <div className="h-20 rounded-xl bg-white/5" />
+          <div className="h-16 rounded-xl bg-white/5" />
+          <div className="h-48 rounded-xl bg-white/5" />
+        </main>
+      </CrmShell>
+    );
+  }
+
+  if (!r) {
+    return (
+      <CrmShell module="Cases">
+        <DetailTopBar backTo="/cases" backLabel="Cases" />
+        <div className="p-10 text-center text-white/50">Request not found</div>
+      </CrmShell>
+    );
+  }
+
+  const cands: MatchCandidate[] = r.candidates ?? [];
+  const delivery = r.delivery ?? null;
+  const initials = r.personName.split(" ").map((s) => s[0]).join("");
   const householdSize = r.household.adults + r.household.children;
   const urgencyTint =
     r.urgency === "critical" ? "#EF4E4B" :
@@ -41,7 +90,6 @@ export default function RequestPage() {
           avatar={
             <Link
               href="#"
-             
               className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
               title={`View ${r.personName}`}
             >
@@ -53,7 +101,7 @@ export default function RequestPage() {
           chips={
             <>
               <MetaChip icon={User}>
-                <Link href={`/directory/person/${(r as any).personId ?? "#"}`} className="hover:text-white transition">
+                <Link href={`/directory/person/${r.personId ?? "#"}`} className="hover:text-white transition">
                   {r.personName}
                 </Link>
               </MetaChip>
@@ -89,7 +137,7 @@ export default function RequestPage() {
         <AiSummary
           id={`${r.id} · ${r.caseId}`}
           tldr={`${r.urgency} ${r.taxonomy.toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
-          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
+          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
 
         <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
@@ -103,100 +151,95 @@ function RequestTabs({
 }: {
   r: ReqDetail;
   cands: MatchCandidate[];
-  delivery: ReturnType<typeof deliveries.find>;
+  delivery?: Delivery;
 }) {
-  const parentCase = cases.find((c) => c.id === r.caseId);
-  const relatedCases = cases.filter((c) => c.citizen.toLowerCase().includes(r.personName.split(" ")[0].toLowerCase()) && c.id !== r.caseId);
+  const relatedCases = r.relatedCases ?? [];
+  const ta = delivery ? r.transportAssignment ?? null : null;
+  const pipeline = ta?.statusPipeline ?? [];
+  const currentIdx = ta ? pipeline.indexOf(ta.status) : -1;
 
   const tabs: DetailTab[] = [
     {
       key: "activity",
       label: "Activity",
-      count: r.notes.length + (delivery ? delivery.steps.length : 0),
+      count: r.notes.length + (delivery ? (delivery.steps?.length ?? 0) : 0),
       content: (
         <div className="space-y-5">
-          {delivery && (() => {
-            const ta = transportAssignments.find(t => t.resourceId === delivery.resourceId);
-            const cfg = ta ? orgTransportConfig[ta.org] : null;
-            const pipeline = cfg?.statusPipeline ?? [];
-            const currentIdx = ta ? pipeline.indexOf(ta.status) : -1;
-            return (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
-                    Delivery · {delivery.origin} → {delivery.destination}
-                    {ta && <span className="ml-2 text-white/35">· {ta.id}</span>}
-                  </p>
-                  {ta && (
-                    <Link
-                      href="#"
-                     
-                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
-                    >
-                      <ExternalLink size={10} /> Driver page
-                    </Link>
-                  )}
-                </div>
-                {ta && pipeline.length > 0 ? (
-                  <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-6">
-                    {pipeline.map((s, i) => {
-                      const past = i < currentIdx;
-                      const isCurrent = i === currentIdx;
-                      const color = past || isCurrent ? "#34D399" : "rgba(245,235,214,0.35)";
-                      const hist = ta.statusHistory.find(h => h.status === s);
-                      return (
-                        <li key={s} className="relative">
-                          <span
-                            className={`absolute -left-[30px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
-                            style={{ background: past || isCurrent ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                          </span>
-                          <div className="flex items-center justify-between">
-                            <p className="text-[12.5px] font-medium" style={{ color: past || isCurrent ? "white" : "rgba(255,255,255,0.5)" }}>
-                              {TRANSPORT_STATUS_LABEL[s]}
-                              {hist?.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
-                            </p>
-                            <span className="font-mono text-[10px] text-white/40">{hist?.timestamp ?? ""}</span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                ) : (
-                  <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
-                    {delivery.steps.map((s, i) => {
-                      const past = delivery.steps.findIndex((x) => x.key === delivery.current) >= i;
-                      const isCurrent = s.key === delivery.current;
-                      const Icon = s.key === "picked_up" || s.key === "delivered" ? Camera : s.key === "in_transit" ? Truck : s.key === "confirmed" ? ShieldCheck : Package;
-                      const color = past ? "#34D399" : "rgba(245,235,214,0.35)";
-                      return (
-                        <li key={s.key} className="relative">
-                          <span
-                            className={`absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
-                            style={{ background: past ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
-                          >
-                            <Icon size={12} style={{ color }} />
-                          </span>
-                          <div className="flex items-center justify-between">
-                            <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
-                              {s.label}
-                            </p>
-                            <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>
-                          </div>
-                          {s.location && <p className="font-mono text-[10px] text-white/45 mt-0.5">{s.location}</p>}
-                        </li>
-                      );
-                    })}
-                  </ol>
+          {delivery && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
+                  Delivery · {delivery.origin} → {delivery.destination}
+                  {ta && <span className="ml-2 text-white/35">· {ta.id}</span>}
+                </p>
+                {ta && (
+                  <Link
+                    href="#"
+                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
+                  >
+                    <ExternalLink size={10} /> Driver page
+                  </Link>
                 )}
               </div>
-            );
-          })()}
+              {ta && pipeline.length > 0 ? (
+                <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-6">
+                  {pipeline.map((s, i) => {
+                    const past = i < currentIdx;
+                    const isCurrent = i === currentIdx;
+                    const color = past || isCurrent ? "#34D399" : "rgba(245,235,214,0.35)";
+                    const hist = ta.statusHistory.find((h) => h.status === s);
+                    return (
+                      <li key={s} className="relative">
+                        <span
+                          className={`absolute -left-[30px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
+                          style={{ background: past || isCurrent ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                        </span>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[12.5px] font-medium" style={{ color: past || isCurrent ? "white" : "rgba(255,255,255,0.5)" }}>
+                            {TRANSPORT_STATUS_LABEL[s as TransportStatus] ?? s}
+                            {hist?.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
+                          </p>
+                          <span className="font-mono text-[10px] text-white/40">{hist?.timestamp ?? ""}</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
+                  {delivery.steps.map((s, i) => {
+                    const past = delivery.steps.findIndex((x) => x.key === delivery.current) >= i;
+                    const isCurrent = s.key === delivery.current;
+                    const Icon = s.key === "picked_up" || s.key === "delivered" ? Camera : s.key === "in_transit" ? Truck : s.key === "confirmed" ? ShieldCheck : Package;
+                    const color = past ? "#34D399" : "rgba(245,235,214,0.35)";
+                    return (
+                      <li key={s.key} className="relative">
+                        <span
+                          className={`absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
+                          style={{ background: past ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
+                        >
+                          <Icon size={12} style={{ color }} />
+                        </span>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
+                            {s.label}
+                          </p>
+                          <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>
+                        </div>
+                        {s.location && <p className="font-mono text-[10px] text-white/45 mt-0.5">{s.location}</p>}
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </div>
+          )}
           <div>
             <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Activity</p>
             <div className="divide-y divide-[var(--hairline)]">
-              {r.notes.map((n: ReqDetail["notes"][number], i: number) => (
+              {r.notes.map((n, i) => (
                 <div key={i} className="py-3">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${n.system ? "bg-white/6 text-white/55" : "bg-[#89CFF0]/12 text-[#89CFF0]"}`}>
@@ -221,13 +264,12 @@ function RequestTabs({
     {
       key: "files",
       label: "Files",
-      content: (parentCase || relatedCases.length > 0) ? (
+      content: relatedCases.length > 0 ? (
         <ul className="space-y-1">
-          {[parentCase, ...relatedCases].filter(Boolean).map((c) => c && (
+          {relatedCases.map((c) => (
             <li key={c.id}>
               <Link
                 href="#"
-               
                 className="flex items-center gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
               >
                 <GitBranch size={13} className="text-white/40" />
@@ -252,7 +294,7 @@ function RequestTabs({
 function MatchesList({ cands }: { cands: MatchCandidate[] }) {
   return (
     <div className="space-y-3">
-      {cands.map((c: MatchCandidate) => (
+      {cands.map((c) => (
         <div
           key={c.id}
           className={`rounded-xl border p-4 ${c.approved ? "bg-[#89CFF0]/8 border-[#89CFF0]/30" : "bg-[var(--surface-app)] border-[var(--hairline)]"}`}
@@ -298,8 +340,6 @@ function MatchesList({ cands }: { cands: MatchCandidate[] }) {
     </div>
   );
 }
-
-
 
 function Bar({ label, v, max }: { label: string; v: number; max: number }) {
   return (

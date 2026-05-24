@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
@@ -8,18 +9,67 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { resources, assetEvents, type ResourceDetail } from "@/lib/prototype-data";
-type HistEntry = ResourceDetail["history"][number];
+import { api } from "@/lib/api";
 import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
 
+// Types matching the crmResourceDetail EF response
+interface HistEntry { event: string; date: string; }
+interface MatchedTo { personName: string; caseId: string; }
+interface AssetEvent { id: string; resourceId: string; eventType: string; fromStatus?: string; toStatus?: string; fromLocation?: string; toLocation?: string; notes?: string; performedBy: string; timestamp: string; }
+interface ResourceData {
+  id: string; title?: string; description?: string; taxonomy_code?: string; status: string;
+  location_text?: string; city?: string; state?: string; county?: string;
+  capacity_available?: number; capacity_total?: number;
+  org_id?: string; person_id?: string;
+  persons?: { display_name: string; phone?: string } | null;
+  locations?: { street_address?: string; city?: string; state?: string } | null;
+  [key: string]: unknown;
+}
 
 export default function ResourcePage() {
   const { id } = useParams<{ id: string }>();
-  const r = resources.find((x: any) => x.id === id);
-  if (!r) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Resource not found</div></CrmShell>;
+  const [data, setData] = useState<{ resource: ResourceData; matches: any[] } | null | undefined>(undefined);
+
+  useEffect(() => {
+    api.crmResourceDetail(id)
+      .then((res: any) => setData(res?.resource ? res : null))
+      .catch(() => setData(null));
+  }, [id]);
+
+  if (data === undefined) {
+    return (
+      <CrmShell module="Directory">
+        <DetailTopBar backTo="/inventory" backLabel="Resources" />
+        <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
+          <div className="h-20 rounded-xl bg-white/5" />
+          <div className="h-16 rounded-xl bg-white/5" />
+          <div className="h-48 rounded-xl bg-white/5" />
+        </main>
+      </CrmShell>
+    );
+  }
+
+  if (!data || !data.resource) {
+    return <CrmShell module="Directory"><DetailTopBar backTo="/inventory" backLabel="Resources" /><div className="p-10 text-center text-white/50">Resource not found</div></CrmShell>;
+  }
+
+  // Map API response to display-friendly shape
+  const res = data.resource;
+  const r = {
+    id: res.id,
+    title: res.title || res.description || res.taxonomy_code || 'Resource',
+    taxonomy: res.taxonomy_code || 'Unknown',
+    status: res.status,
+    location: res.location_text || [res.city, res.state].filter(Boolean).join(', ') || res.locations?.city || 'Unknown',
+    ownerName: res.persons?.display_name || 'Unknown',
+    org: res.org_id || null,
+    capacity: res.capacity_available != null ? `${res.capacity_available}${res.capacity_total ? `/${res.capacity_total}` : ''} units` : '—',
+    matchedTo: data.matches?.length > 0 ? { personName: data.matches[0].request_person_id || 'Matched', caseId: data.matches[0].id } as MatchedTo : null,
+    history: [] as HistEntry[],
+  };
+  const events: AssetEvent[] = [];
   const statusColor =
     r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#F5EBD6";
-  const events = assetEvents.filter(e => e.resourceId === r.id);
 
   const tabs: DetailTab[] = [
     {
