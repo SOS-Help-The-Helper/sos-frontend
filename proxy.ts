@@ -25,6 +25,7 @@ const PUBLIC_PATHS = new Set([
 const PUBLIC_PREFIXES = [
   '/c/',           // citizen portal subpages
   '/app/',         // partner portal
+  '/erv/',         // ERV public pages (impact report, etc.)
   '/drive/',       // driver delivery pages
   '/cases/',       // partner: cases
   '/directory/',   // partner: directory + detail pages (person, org, etc)
