@@ -6,13 +6,6 @@ import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 import { UrgencyBadge, SubStatusPill, CountChip } from "@/components/crm/pills";
 import { BUCKETS, bucketOf, type RequestStatus, type Bucket } from "@/lib/display-constants";
-import {
-  cases as casesData,
-  requests as requestsData,
-  resources as resourcesData,
-  reports as reportsData,
-  orgs,
-} from "@/lib/prototype-data";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { Plus, Link2, AlertTriangle } from "lucide-react";
@@ -57,68 +50,6 @@ const REPORT_COLS: Column[] = [
   { id: "Routine", label: "Routine", accent: "#89CFF0" },
   { id: "Resolved", label: "Resolved", accent: "#34D399" },
 ];
-
-function buildCaseCards(): Card[] {
-  return casesData.map((c) => {
-    const org = orgs.find((o) => o.id === c.org);
-    return {
-      id: c.id,
-      col: bucketOf(c.status),
-      title: c.citizen,
-      meta: `${c.county} · ${c.taxonomy[0]}`,
-      sub: `${c.daysOpen}d`,
-      href: `/app/cases/${c.umbrella ?? c.id}`,
-      urgency: c.urgency,
-      status: c.status,
-      orgColor: org?.color,
-      orgName: org?.name,
-      badge: c.matchCount > 0 ? `${c.matchCount}` : undefined,
-    };
-  });
-}
-
-function buildRequestCards(): Card[] {
-  return requestsData.map((r) => {
-    const c = casesData.find((x) => x.id === r.caseId);
-    const org = c ? orgs.find((o) => o.id === c.org) : undefined;
-    return {
-      id: r.id,
-      col: bucketOf(r.status),
-      title: r.personName,
-      meta: `${r.county} · ${r.taxonomy}`,
-      sub: `${r.daysOpen}d`,
-      href: `/app/directory/request/${r.id}`,
-      urgency: r.urgency,
-      status: r.status,
-      orgColor: org?.color,
-      orgName: org?.name,
-    };
-  });
-}
-
-function buildResourceCards(): Card[] {
-  return resourcesData.map((r) => ({
-    id: r.id,
-    col: r.status,
-    title: r.title,
-    meta: r.location,
-    sub: r.capacity,
-    href: `/app/directory/resource/${r.id}`,
-    orgColor: orgs.find((o) => o.id === r.org)?.color,
-    orgName: orgs.find((o) => o.id === r.org)?.name,
-  }));
-}
-
-function buildReportCards(): Card[] {
-  return reportsData.map((r) => ({
-    id: r.id,
-    col: r.resolution ? "Resolved" : r.severity,
-    title: r.taxonomy,
-    meta: `${r.location}`,
-    sub: `by ${r.reporterName}`,
-    href: `/app/directory/report/${r.id}`,
-  }));
-}
 
 // Map live API cases to Card shape
 function liveToCards(items: any[]): Card[] {
@@ -193,11 +124,11 @@ export default function CasesPage() {
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingResources, setLoadingResources] = useState(true);
 
-  // Per-tab kanban state (initialized from prototype, overwritten by live data)
-  const [caseCards, setCaseCards] = useState<Card[]>(() => buildCaseCards());
-  const [requestCards, setRequestCards] = useState<Card[]>(() => buildRequestCards());
-  const [resourceCards, setResourceCards] = useState<Card[]>(() => buildResourceCards());
-  const [reportCards, setReportCards] = useState<Card[]>(() => buildReportCards());
+  // Per-tab kanban state (populated by EF calls)
+  const [caseCards, setCaseCards] = useState<Card[]>([]);
+  const [requestCards, setRequestCards] = useState<Card[]>([]);
+  const [resourceCards, setResourceCards] = useState<Card[]>([]);
+  const [reportCards, setReportCards] = useState<Card[]>([]);
 
   // Fetch cases (SOS umbrellas) from EF
   useEffect(() => {

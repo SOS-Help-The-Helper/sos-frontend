@@ -12,13 +12,20 @@ import { CommandPalette } from '@/components/command-palette';
 import { api } from '@/lib/api';
 import { useAuthContext } from '@/lib/auth-context';
 import {
-  transportAssignments,
-  orgTransportConfig,
-  convoys,
   TRANSPORT_STATUS_LABEL,
-  type TransportAssignment,
   type TransportStatus,
-} from '@/lib/prototype-data';
+} from '@/lib/display-constants';
+const transportAssignments: TransportAssignment[] = [];
+type TransportAssignment = {
+  id: string; org: string; resourceId: string; status: string;
+  origin: string; destination: string; driverName: string;
+  driverPhone?: string; estimatedArrival?: string;
+  statusHistory?: { status: string; timestamp: string; photo?: boolean }[];
+  statusPipeline?: string[];
+  convoy_id?: string;
+};
+const orgTransportConfig: Record<string, any> = {};
+const convoys: any[] = [];
 
 const PRIVACY_REVEAL_AFTER: TransportStatus[] = ['at_pickup', 'hooked_up', 'loaded', 'in_transit', 'at_staging', 'delivered', 'verified', 'completed'];
 

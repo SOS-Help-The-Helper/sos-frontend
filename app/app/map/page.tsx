@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { orgs, cases } from "@/lib/prototype-data";
+const cases: any[] = [];
 import { Filter, Plus, Calendar } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";

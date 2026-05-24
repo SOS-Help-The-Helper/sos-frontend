@@ -6,15 +6,19 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import {
-  facilities as prototypeFacilities,
-  inventory as prototypeInventory,
-  orgs,
-  resources as prototypeResources,
-  assetEvents,
-  type Facility,
-  type ResourceDetail,
-} from "@/lib/prototype-data";
+type Facility = {
+  id: string; name: string; type: string; org: string; address: string;
+  capacity: number; currentCount: number; status: string;
+};
+type ResourceDetail = {
+  id: string; title: string; taxonomy: string; status: string; location: string;
+  ownerName: string; ownerId?: string; org?: string; capacity: string;
+  matchedTo?: { personName: string; caseId: string } | null;
+  history: { event: string; date: string }[];
+  petFriendly?: boolean; available?: string; county?: string; qty?: number;
+};
+const assetEvents: any[] = [];
+const orgs: Array<{ id: string; name?: string; color?: string }> = [];
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { AlertTriangle, Plus, Warehouse, Truck, Package, MapPin, X, ArrowRightLeft, ChevronRight, Star } from "lucide-react";
@@ -30,9 +34,9 @@ export default function InventoryPage() {
   const { orgId } = useAuthContext();
   const [facilityId, setFacilityId] = useState<string | "all">("all");
   const [drawerId, setDrawerId] = useState<string | null>(null);
-  const [facilities, setFacilities] = useState<Facility[]>(prototypeFacilities);
-  const [inventory, setInventory] = useState(prototypeInventory);
-  const [resources, setResources] = useState<ResourceDetail[]>(prototypeResources);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [inventory, setInventory] = useState<Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>>([]);
+  const [resources, setResources] = useState<ResourceDetail[]>([]);
 
   useEffect(() => {
     // admin: proceed without org filter

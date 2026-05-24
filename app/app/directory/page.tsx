@@ -2,10 +2,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Upload, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, Table as TableIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm-shell";
-import { orgs } from "@/lib/directory-data";
-import { volunteers as protoVolunteers } from "@/lib/prototype-data";
+import { orgs as mockOrgs } from "@/lib/directory-data";
 import {
   usePeople,
   scopeForOrg,
@@ -15,6 +14,8 @@ import {
   CONNECTED_ORG_IDS,
   type Scope,
 } from "@/lib/directory-store";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 import { StewardshipChip } from "@/components/directory/StewardshipChip";
 import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
 
@@ -54,12 +55,13 @@ type Row = {
 type SortKey = "name" | "type" | "org" | "county" | "score";
 
 function orgName(id: string): string {
-  return orgs.find((o) => o.id === id)?.name ?? id;
+  return mockOrgs.find((o) => o.id === id)?.name ?? id;
 }
 
 export default function DirectoryPage() {
   const searchParams = useSearchParams();
   const search = Object.fromEntries(searchParams);
+  const { orgId } = useAuthContext();
   const people = usePeople();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>(search.type ?? "all");
@@ -70,19 +72,69 @@ export default function DirectoryPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [view, setView] = useState<ViewMode>("table");
 
+  // Real EF data
+  const [efPersons, setEfPersons] = useState<Row[]>([]);
+  const [efOrgs, setEfOrgs] = useState<Row[]>([]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmBrowsePersons(orgId, { limit: 100 })
+      .then((res: any) => {
+        const items: any[] = res?.persons ?? res?.people ?? (Array.isArray(res) ? res : []);
+        if (items.length > 0) {
+          setEfPersons(items.map((p: any) => ({
+            kind: "person" as const,
+            id: String(p.id ?? p.person_id ?? ""),
+            name: String(p.display_name ?? p.name ?? ""),
+            subtitle: String(p.role ?? p.relationship ?? ""),
+            meta: [p.org_name ?? "", p.city ?? p.county ?? ""].filter(Boolean).join(" · "),
+            score: p.sos_score ?? undefined,
+            ownerOrgId: orgId,
+            ownerOrgName: "ERV",
+            scope: "yours" as Scope,
+            editable: false,
+            href: `/app/directory/person/${p.id ?? p.person_id}`,
+            role: p.role ?? "",
+            county: p.city ?? p.county ?? "",
+            housingStatus: p.housing_status ?? "",
+          })));
+        }
+      })
+      .catch(() => {});
+  }, [orgId]);
+
+  useEffect(() => {
+    api.crmBrowseOrgs({ limit: 100 })
+      .then((res: any) => {
+        const items: any[] = res?.orgs ?? res?.organizations ?? (Array.isArray(res) ? res : []);
+        if (items.length > 0) {
+          setEfOrgs(items.map((o: any) => ({
+            kind: "org" as const,
+            id: String(o.id ?? o.org_id ?? ""),
+            name: String(o.name ?? ""),
+            subtitle: String(o.type ?? o.org_type ?? ""),
+            meta: `${o.member_count ?? 0} members`,
+            badge: o.active_cases != null ? `${o.active_cases} active` : undefined,
+            ownerOrgId: String(o.id ?? ""),
+            ownerOrgName: String(o.name ?? ""),
+            scope: "shared" as Scope,
+            editable: false,
+            href: `/app/directory/org/${o.id ?? o.org_id}`,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const q = query.trim().toLowerCase();
 
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
-    if (type === "all" || type === "people") {
-      for (const p of people) {
-        if (q && !p.name.toLowerCase().includes(q) && !p.org.name.toLowerCase().includes(q) && !p.role.toLowerCase().includes(q) && !p.skills.some((s) => s.name.toLowerCase().includes(q))) continue;
-        if (filters.county && p.county !== filters.county) continue;
-        if (filters.skill && !p.skills.some((s) => s.name.includes(filters.skill))) continue;
-        if (filters.credential && !p.credentials.some((c) => c.type === filters.credential)) continue;
-        const scope = scopeForOrg(p.org.id);
-        out.push({
-          kind: "person",
+    // Use EF persons if available, otherwise fall back to mock store
+    const personSource: Row[] = efPersons.length > 0
+      ? efPersons
+      : people.map((p) => ({
+          kind: "person" as const,
           id: p.id,
           name: p.name,
           subtitle: p.role,
@@ -90,22 +142,27 @@ export default function DirectoryPage() {
           score: p.sosScore,
           ownerOrgId: p.org.id,
           ownerOrgName: p.org.name,
-          scope,
+          scope: scopeForOrg(p.org.id),
           editable: canEdit(p.org.id),
           href: `/app/directory/person/${p.id}`,
           role: p.role,
           county: p.county,
           housingStatus: p.housingStatus,
-        });
+        }));
+
+    if (type === "all" || type === "people") {
+      for (const p of personSource) {
+        if (q && !p.name.toLowerCase().includes(q) && !p.subtitle.toLowerCase().includes(q)) continue;
+        if (filters.county && p.county && p.county !== filters.county) continue;
+        out.push(p);
       }
     }
-    if (type === "all" || type === "orgs") {
-      for (const o of orgs) {
-        if (q && !o.name.toLowerCase().includes(q) && !o.type.toLowerCase().includes(q)) continue;
-        if (filters.county && !o.counties.includes(filters.county)) continue;
-        const scope = scopeForOrg(o.id);
-        out.push({
-          kind: "org",
+
+    // Use EF orgs if available, otherwise fall back to mock directory data
+    const orgSource: Row[] = efOrgs.length > 0
+      ? efOrgs
+      : mockOrgs.map((o) => ({
+          kind: "org" as const,
           id: o.id,
           name: o.name,
           subtitle: o.type,
@@ -113,32 +170,21 @@ export default function DirectoryPage() {
           badge: `${o.activeCases} active`,
           ownerOrgId: o.id,
           ownerOrgName: o.name,
-          scope,
+          scope: scopeForOrg(o.id),
           editable: canEdit(o.id),
           href: `/app/directory/org/${o.id}`,
-        });
+        }));
+
+    if (type === "all" || type === "orgs") {
+      for (const o of orgSource) {
+        if (q && !o.name.toLowerCase().includes(q) && !o.subtitle.toLowerCase().includes(q)) continue;
+        if (filters.county && !o.meta.includes(filters.county)) continue;
+        out.push(o);
       }
     }
+    // Volunteers tab: EF data or empty (no prototype)
     if (type === "all" || type === "volunteers") {
-      for (const v of protoVolunteers) {
-        if (q && !v.name.toLowerCase().includes(q) && !v.skills.some((s) => s.toLowerCase().includes(q))) continue;
-        if (filters.skill && !v.skills.some((s) => s.includes(filters.skill))) continue;
-        // Volunteers in mock data are not tied to a specific org — treat as your-org for demo.
-        const ownerOrgId = CURRENT_ORG_ID;
-        out.push({
-          kind: "volunteer",
-          id: v.id,
-          name: v.name,
-          subtitle: v.skills.join(", "),
-          meta: `${v.hours}h · ${v.status}`,
-          score: Math.min(99, 30 + v.hours / 2),
-          ownerOrgId,
-          ownerOrgName: orgName(ownerOrgId),
-          scope: "yours",
-          editable: true,
-          href: `/app/directory/volunteer/${v.id}`,
-        });
-      }
+      // No volunteer EF yet — show empty; future: wire crmVolunteersAvailable
     }
 
     const scoped = scopeFilter === "all" ? out : out.filter((r) => r.scope === scopeFilter);
@@ -161,18 +207,19 @@ export default function DirectoryPage() {
 
   const activeFilterCount = Object.keys(filters).length;
   const counts = useMemo(() => ({
-    people: people.length,
-    orgs: orgs.length,
-    volunteers: protoVolunteers.length,
-  }), [people.length]);
+    people: efPersons.length > 0 ? efPersons.length : people.length,
+    orgs: efOrgs.length > 0 ? efOrgs.length : mockOrgs.length,
+    volunteers: 0,
+  }), [efPersons.length, efOrgs.length, people.length]);
 
   const scopeCounts = useMemo(() => {
     const c = { yours: 0, shared: 0, public: 0 };
-    for (const p of people) c[scopeForOrg(p.org.id)]++;
-    for (const o of orgs) c[scopeForOrg(o.id)]++;
-    c.yours += protoVolunteers.length;
+    const pSrc = efPersons.length > 0 ? efPersons : people.map((p) => ({ scope: scopeForOrg(p.org.id) }));
+    for (const p of pSrc) c[p.scope as "yours" | "shared" | "public"]++;
+    const oSrc = efOrgs.length > 0 ? efOrgs : mockOrgs.map((o) => ({ scope: scopeForOrg(o.id) }));
+    for (const o of oSrc) c[o.scope as "yours" | "shared" | "public"]++;
     return c;
-  }, [people]);
+  }, [efPersons, efOrgs, people]);
 
   const onSort = (k: SortKey) => {
     if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");

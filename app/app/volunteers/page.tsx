@@ -4,7 +4,16 @@ import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { volunteers as protoVolunteers, volunteerDetails, orgs, type VolunteerDetail } from "@/lib/prototype-data";
+type VolunteerDetail = {
+  id: string; name: string; org: string; phone: string; skills: string[];
+  hours: number; status: string; rating: number; completedMissions: number;
+  towCapacity?: { maxWeight: number; hitchTypes: string[] };
+  availability: { day: string; slots: string[] }[];
+  deployments: { date: string; hours: number; role: string; mission: string }[];
+  credentials: { name: string; type: string; verified: boolean; expires?: string }[];
+};
+const volunteerDetails: VolunteerDetail[] = [];
+const orgs: { id: string; name: string; color: string }[] = [];
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { Plus, ShieldCheck, Search, X, Star, Truck, CheckCircle2, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
@@ -37,7 +46,7 @@ function mapVolunteers(data: unknown[]): VolunteerRow[] {
 
 export default function VolunteersPage() {
   const { orgId } = useAuthContext();
-  const [volunteers, setVolunteers] = useState(protoVolunteers);
+  const [volunteers, setVolunteers] = useState<typeof volunteerDetails[number][]>([]);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);

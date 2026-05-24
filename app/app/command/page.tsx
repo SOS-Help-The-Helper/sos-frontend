@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { incidents as prototypeIncidents, type Incident, reports as reportsData } from "@/lib/prototype-data";
+type Incident = {
+  id: string; name: string; county: string; status: string; priority: string;
+  cases: number; capacity: number; casesHistory: number[];
+};
+const reportsData: any[] = [];
 import { useAllDashboards } from "@/lib/dashboard-store";
 import { AlertTriangle, Radio, ChevronRight, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function CommandPage() {
   const pinnedMap = useAllDashboards();
-  const [incidents, setIncidents] = useState<Incident[]>(prototypeIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
 
   useEffect(() => {
     api.crmCommandIncidents()

@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { events as seedEvents, orgs } from "@/lib/prototype-data";
+// orgs not needed — calendar uses orgId from auth context
+const orgs: Array<{ id: string; color?: string }> = [];
 import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -35,7 +36,7 @@ const days = [
 
 export default function CalendarPage() {
   const { orgId } = useAuthContext();
-  const [items, setItems] = useState<CalEvent[]>(seedEvents as CalEvent[]);
+  const [items, setItems] = useState<CalEvent[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefillDate, setPrefillDate] = useState<string | null>(null);

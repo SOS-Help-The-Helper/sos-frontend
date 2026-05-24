@@ -12,14 +12,14 @@ interface AuthContext {
   loading: boolean;
 }
 
-// Demo bypass: admin mode sees all data (no org filter)
+// Demo bypass: default to ERV org so all pages load real ERV data
 const DEMO_CTX: AuthContext = {
-  orgId: null, // null = admin view, no org filter → all data visible
-  orgName: 'SOS Platform',
-  orgType: 'admin',
+  orgId: '9ad0f2ad-7789-47a8-bfba-0ae3382c86cc', // ERV org — real data
+  orgName: 'ERV',
+  orgType: 'partner',
   role: 'admin',
   isAdmin: true,
-  isPartner: false,
+  isPartner: true,
   loading: false,
 };
 

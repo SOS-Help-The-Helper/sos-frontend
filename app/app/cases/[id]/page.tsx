@@ -10,47 +10,31 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
 } from "@/components/crm/detail-shell";
 import { STATUS_LABEL } from "@/lib/display-constants";
-import { umbrella as defaultUmbrella, cases, orgs, matches, requests as requestDetails, type MatchCandidate } from "@/lib/prototype-data";
+type MatchCandidate = {
+  id: string; title: string; blurb: string; score: number; approved: boolean;
+  breakdown: { category: number; distance: number; urgency: number; capacity: number; trust: number };
+  rationale: string;
+};
 
-type UmbrellaShape = typeof defaultUmbrella;
+// Default empty umbrella shape for loading state
+const EMPTY_UMBRELLA = {
+  id: "",
+  status: "active" as "active" | "resolved" | "closed",
+  urgency: "medium" as "critical" | "high" | "medium" | "low",
+  citizen: { id: "", name: "", phone: "", county: "", household: 1, notes: "" },
+  filedAt: "",
+  children: [] as string[],
+  requests: [] as { tag: string; state: "active" | "in_progress" | "unmet" | "resolved"; caseId: string | null }[],
+  needs: [] as { tag: string; state: "active" | "in_progress" | "unmet" | "resolved" }[],
+  timeline: [] as { t: string; date: string; who: string; actor: string; kind: string; msg: string; caseId: string | null }[],
+};
 
-function resolveView(id: string): UmbrellaShape {
-  if (id === defaultUmbrella.id) return defaultUmbrella;
-  const c = cases.find((x) => x.id === id || x.umbrella === id);
-  if (!c) return defaultUmbrella;
+type UmbrellaShape = typeof EMPTY_UMBRELLA;
 
-  const siblings = cases.filter((x) => x.citizen === c.citizen && x.county === c.county);
-  const req = requestDetails.find((r: any) => r.caseId === c.id);
-  const household = (req as any)?.household ?? { adults: 1, children: 0, pets: 0 };
-  const householdSize = household.adults + household.children;
-  const phone = `(828) 555-0${(100 + (c.id.charCodeAt(2) % 90)).toString()}`;
-  const orgName = orgs.find((o) => o.id === c.org)?.name ?? "Org";
-
-  return {
-    id: id.startsWith("U-") ? id : `U-${c.id.slice(2)}`,
-    status: (c.status === "closed" || c.status === "fulfilled" ? "resolved" : "active") as UmbrellaShape["status"],
-    urgency: c.urgency as UmbrellaShape["urgency"],
-    citizen: {
-      id: c.citizen.toLowerCase().replace(/[^a-z]+/g, "-"),
-      name: c.citizen,
-      phone,
-      county: c.county,
-      household: householdSize,
-      notes: `Open ${c.taxonomy.join(" + ").toLowerCase()} need in ${c.county} County.`,
-    },
-    filedAt: c.opened,
-    children: siblings.map((s) => s.id),
-    requests: siblings.map((s) => ({
-      tag: s.taxonomy[0],
-      state: (s.status === "in_progress" ? "in_progress" : s.status === "fulfilled" || s.status === "closed" ? "in_progress" : "active") as "active" | "in_progress" | "unmet",
-      caseId: s.id as string | null,
-    })),
-    timeline: [
-      { t: c.opened, date: c.opened, who: "System", actor: c.org, kind: "filed" as const, msg: `Request filed — ${c.taxonomy.join(", ")}`, caseId: c.id as string | null },
-      { t: c.opened, date: c.opened, who: orgName, actor: c.org, kind: "routed" as const, msg: `Routed to ${orgName}`, caseId: c.id as string | null },
-    ],
-  } as unknown as UmbrellaShape;
-}
+// placeholder — real data loaded via EF
+const cases: any[] = [];
+const orgs: any[] = [];
+const matches: Record<string, any> = {};
 import { UrgencyBadge } from "@/components/crm/pills";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -163,12 +147,8 @@ export default function UmbrellaView() {
   const isUmbrella = id.startsWith("U-");
   const { orgId } = useAuthContext();
 
-  const [umbrellaData, setUmbrellaData] = useState(() => resolveView(id ?? ""));
-  const [childCasesData, setChildCasesData] = useState<typeof cases>(() =>
-    isUmbrella
-      ? cases.filter((c) => resolveView(id ?? "").children.includes(c.id))
-      : cases.filter((c) => c.id === id)
-  );
+  const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
+  const [childCasesData, setChildCasesData] = useState<any[]>([]);
   const [liveMatches, setLiveMatches] = useState<MatchCandidate[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

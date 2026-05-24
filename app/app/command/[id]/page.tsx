@@ -5,7 +5,14 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { DetailTopBar } from "@/components/crm/detail-shell";
-import { incidents, reports as reportsData, cases, orgs, kpis } from "@/lib/prototype-data";
+type Incident = {
+  id: string; name: string; county: string; status: string; priority: string;
+  cases: number; capacity: number; casesHistory: number[];
+};
+const reportsData: any[] = [];
+const cases: any[] = [];
+const orgs: any[] = [];
+const kpis: Array<{ label: string; value: string | number; delta: string }> = [];
 import { useDashboard, unpinReport } from "@/lib/dashboard-store";
 import { api } from "@/lib/api";
 import { AlertTriangle, FileText, X, Plus, MapPin, Calendar, User } from "lucide-react";
@@ -21,7 +28,17 @@ const SEVERITY_TONE: Record<string, string> = {
 export default function IncidentDashboard() {
   const params = useParams();
   const id = params.id as string;
-  const incident = incidents.find((i) => i.id === id);
+  const [incident, setIncident] = useState<Incident | null>(null);
+
+  useEffect(() => {
+    api.crmCommandIncidents()
+      .then((res: any) => {
+        const list = res?.incidents ?? [];
+        const found = list.find((i: Incident) => i.id === id);
+        if (found) setIncident(found);
+      })
+      .catch(() => {});
+  }, [id]);
   const pinnedIds = useDashboard(id);
 
   const [efStats, setEfStats] = useState<{
