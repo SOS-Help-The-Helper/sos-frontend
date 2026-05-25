@@ -250,6 +250,8 @@ export const api = {
     efCall("crm-command", { action: "incident_summary", disaster_id: disasterId }),
 
   // Person/Org detail
+  crmGetOrg: (orgId: string) =>
+    efCall("crm-directory", { action: "get_org", org_id: orgId }),
   crmGetPerson: (personId: string) =>
     efCall("crm-directory", { action: "get_person", person_id: personId }),
   crmUpdatePerson: (personId: string, field: string, value: string) =>

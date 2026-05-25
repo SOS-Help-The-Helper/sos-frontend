@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2, Users } from "lucide-react";
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
 import { AiSummary } from "@/components/crm/AiSummary";
@@ -10,9 +11,8 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { orgs, type Org } from "@/lib/directory-data";
-import { Timeline } from "@/components/directory/Timeline";
-
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
 const CAP_COLORS: Record<string, string> = {
   Housing: "#89CFF0", Food: "#F5EBD6", Medical: "#EF4E4B",
@@ -21,28 +21,60 @@ const CAP_COLORS: Record<string, string> = {
 
 export default function OrgPage() {
   const { id } = useParams<{ id: string }>();
-  const org = orgs.find((o) => o.id === id);
-  if (!org) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Organization not found</div></CrmShell>;
-  const trustPct = Math.round(org.trust * 100);
+  const { orgId } = useAuthContext();
+  const [org, setOrg] = useState<any>(null);
+  const [stats, setStats] = useState<any>({});
+  const [members, setMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    api.crmBrowseOrgs().then((res: any) => {
+      const found = (res?.organizations ?? []).find((o: any) => o.id === id);
+      if (found) setOrg(found);
+    }).catch(() => {});
+    api.crmOrgStats(id as string).then((res: any) => setStats(res ?? {})).catch(() => {});
+    api.crmOrgMembers(id as string).then((res: any) => setMembers(res?.members ?? [])).catch(() => {});
+  }, [id]);
+
+  if (!org) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Loading organization...</div></CrmShell>;
+  const orgName = org.name ?? org.org_name ?? "Unknown Org";
+  const orgType = org.type ?? org.org_type ?? "partner";
+  const location = org.location ?? org.city ?? org.state ?? "";
+  const email = org.email ?? org.contact_email ?? "";
+  const phone = org.phone ?? org.contact_phone ?? "";
+  const website = org.website ?? "";
+  const capabilities = org.capabilities ?? org.services ?? [];
+  const counties = org.counties ?? [];
+  const memberCount = members.length || org.member_count || 0;
+  const trustPct = org.trust ? Math.round(org.trust * 100) : 75;
   const trustTint = trustPct >= 85 ? "#34D399" : trustPct >= 65 ? "#89CFF0" : "#F5EBD6";
 
   const tabs: DetailTab[] = [
     {
-      key: "activity",
-      label: "Activity",
-      count: org.history.length,
-      content: <Timeline entries={org.history} />,
-    },
-    {
       key: "members",
       label: "Members",
-      count: org.members.length,
-      content: <MembersTab org={org} />,
+      count: memberCount,
+      content: <MembersTab members={members} />,
     },
     {
-      key: "files",
-      label: "Files",
-      content: <CoverageTab org={org} />,
+      key: "stats",
+      label: "Stats",
+      content: (
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "Active", value: stats.active_cases ?? 0 },
+              { label: "Fulfilled", value: stats.fulfilled ?? 0 },
+              { label: "Matches", value: stats.total_matches ?? 0 },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                <p className="text-[20px] font-semibold tabular-nums">{s.value}</p>
+                <p className="font-mono text-[10px] text-white/45 mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
     },
   ];
 
@@ -57,18 +89,18 @@ export default function OrgPage() {
               {org.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
             </div>
           }
-          pills={<StatusPill tint={trustTint}>{org.type}</StatusPill>}
-          title={org.name}
+          pills={<StatusPill tint={trustTint}>{orgType}</StatusPill>}
+          title={orgName}
           chips={
             <>
-              <MetaChip icon={MapPin}>{org.location}</MetaChip>
+              {location && <MetaChip icon={MapPin}>{location}</MetaChip>}
               <MetaPopover>
-                <MetaChip icon={Mail}>{org.email}</MetaChip>
-                <MetaChip icon={Phone}>{org.phone}</MetaChip>
-                <MetaChip icon={Globe}>{org.website}</MetaChip>
-                <MetaChip icon={Building2}>
-                  {org.capabilities.join(", ")}
-                </MetaChip>
+                {email && <MetaChip icon={Mail}>{email}</MetaChip>}
+                {phone && <MetaChip icon={Phone}>{phone}</MetaChip>}
+                {website && <MetaChip icon={Globe}>{website}</MetaChip>}
+                {capabilities.length > 0 && <MetaChip icon={Building2}>
+                  {capabilities.join(", ")}
+                </MetaChip>}
                 <span className="font-mono text-[10px] text-white/40">{org.id}</span>
               </MetaPopover>
             </>
@@ -90,22 +122,23 @@ export default function OrgPage() {
         <HeroLine
           primary={
             <>
-              <span className="font-semibold tabular-nums">{org.stats.active}</span>
+              <span className="font-semibold tabular-nums">{stats.active_cases ?? 0}</span>
               <span className="text-white/55"> active · </span>
-              <span className="font-semibold tabular-nums">{org.stats.fulfilled}</span>
+              <span className="font-semibold tabular-nums">{stats.fulfilled ?? 0}</span>
               <span className="text-white/55"> fulfilled · </span>
-              <span className="text-white/70">avg {org.stats.avgResponse}</span>
+              <span className="font-semibold tabular-nums">{stats.total_matches ?? 0}</span>
+              <span className="text-white/55"> matches</span>
             </>
           }
-          meta={`${trustPct}% trust · ${org.memberCount} members`}
+          meta={`${trustPct}% trust · ${memberCount} members`}
           progress={trustPct}
           accent={trustTint}
         />
 
         <AiSummary
           id={org.id}
-          tldr={`${org.type} · ${org.memberCount} members · ${org.stats.active} active cases.`}
-          summary={`${org.name} is a ${org.type.toLowerCase()} based in ${org.location}, with ${org.memberCount} members serving ${org.counties.length} counties (${org.counties.join(", ")}). Trust score ${trustPct}%. Capabilities: ${org.capabilities.join(", ")}. Currently handling ${org.stats.active} active cases with ${org.stats.fulfilled} fulfilled and avg response of ${org.stats.avgResponse}.`}
+          tldr={`${orgType} · ${memberCount} members · ${stats.active_cases ?? 0} active cases.`}
+          summary={`${orgName} is a ${orgType.toLowerCase()} based in ${location || "WNC"}, with ${memberCount} members. Trust score ${trustPct}%. ${capabilities.length > 0 ? `Capabilities: ${capabilities.join(", ")}.` : ""} Currently handling ${stats.active_cases ?? 0} active cases with ${stats.fulfilled ?? 0} fulfilled.`}
         />
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
@@ -114,18 +147,19 @@ export default function OrgPage() {
   );
 }
 
-function MembersTab({ org }: { org: Org }) {
+function MembersTab({ members }: { members: any[] }) {
+  if (members.length === 0) return <EmptyTab label="No members found." />;
   return (
     <div className="-m-1 rounded-xl bg-[var(--surface-app)] border border-[var(--hairline)] overflow-hidden divide-y divide-[var(--hairline)]">
-      {org.members.map((m) => (
+      {members.map((m: any) => (
         <Link
-          key={m.id}
-          href={`/app/directory/person/${m.id}`}
+          key={m.id || m.person_id}
+          href={`/app/directory/person/${m.person_id || m.id}`}
           className="flex items-center gap-3 px-4 py-3 hover:bg-white/4 transition"
         >
-          <Avatar name={m.name} size={32} />
-          <span className="flex-1 text-[13.5px] font-medium">{m.name}</span>
-          <span className="text-[11.5px] text-white/45 mr-1">{m.role}</span>
+          <Avatar name={m.display_name || m.name || "?"} size={32} />
+          <span className="flex-1 text-[13.5px] font-medium">{m.display_name || m.name || "Unknown"}</span>
+          <span className="text-[11.5px] text-white/45 mr-1">{m.role || "Member"}</span>
           <ChevronRight size={14} className="text-white/25" />
         </Link>
       ))}
@@ -133,12 +167,12 @@ function MembersTab({ org }: { org: Org }) {
   );
 }
 
-function CoverageTab({ org }: { org: Org }) {
-  if (org.counties.length === 0) return <EmptyTab label="No coverage data." />;
+function CoverageTab({ capabilities, counties }: { capabilities: string[]; counties: string[] }) {
+  if (counties.length === 0 && capabilities.length === 0) return <EmptyTab label="No coverage data." />;
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1.5">
-        {org.capabilities.map((c) => {
+        {capabilities.map((c) => {
           const color = CAP_COLORS[c] ?? "#89CFF0";
           return (
             <span
@@ -152,7 +186,7 @@ function CoverageTab({ org }: { org: Org }) {
         })}
       </div>
       <div className="rounded-xl bg-[var(--surface-app)] border border-[var(--hairline)] overflow-hidden divide-y divide-[var(--hairline)]">
-        {org.counties.map((c) => (
+        {counties.map((c) => (
           <div key={c} className="flex items-center justify-between px-4 py-2.5">
             <span className="flex items-center gap-2 text-[13px]">
               <MapPin size={13} className="text-[#89CFF0]" /> {c} County

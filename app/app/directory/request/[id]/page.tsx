@@ -37,6 +37,11 @@ interface ReqDetail {
   delivery?: Delivery;
   transportAssignment?: TransportAssignment;
   relatedCases?: RelatedCase[];
+  // location & household flags
+  latitude?: number; longitude?: number;
+  household_size?: number;
+  has_children?: boolean; has_elderly?: boolean;
+  has_disabled?: boolean; has_pets?: boolean;
 }
 
 export default function RequestPage() {
@@ -106,6 +111,27 @@ export default function RequestPage() {
                 </Link>
               </MetaChip>
               <MetaChip icon={MapPin}>{r.county} County</MetaChip>
+              {(r.household_size != null || r.has_children || r.has_elderly || r.has_disabled || r.has_pets) && (
+                <span className="inline-flex items-center gap-1">
+                  {r.household_size != null && (
+                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70">
+                      <Users size={9} /> {r.household_size}
+                    </span>
+                  )}
+                  {r.has_children && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Children">👶</span>
+                  )}
+                  {r.has_elderly && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Elderly">👴</span>
+                  )}
+                  {r.has_disabled && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Disabled">♿</span>
+                  )}
+                  {r.has_pets && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Pets">🐾</span>
+                  )}
+                </span>
+              )}
               <MetaPopover>
                 <MetaChip icon={Users}>
                   {r.household.adults}a · {r.household.children}c
@@ -139,6 +165,30 @@ export default function RequestPage() {
           tldr={`${r.urgency} ${r.taxonomy.toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
           summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
+
+        {/* Status section */}
+        <div className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center gap-3">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 shrink-0">Status</p>
+          <StatusPill tint={urgencyTint}>
+            {STATUS_LABEL[r.status as keyof typeof STATUS_LABEL] ?? r.status}
+          </StatusPill>
+          <span className="text-[11px] text-white/40 capitalize">{r.urgency} priority · open {r.daysOpen}d</span>
+        </div>
+
+        {/* Static location map */}
+        {r.latitude != null && r.longitude != null && (
+          <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 px-3 pt-3 pb-2">Location</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+ef4e4b(${r.longitude},${r.latitude})/${r.longitude},${r.latitude},12,0/300x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+              alt={`Location map for ${r.county} County`}
+              className="w-full h-[200px] object-cover"
+              width={300}
+              height={200}
+            />
+          </div>
+        )}
 
         <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
       </main>

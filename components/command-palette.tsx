@@ -78,7 +78,7 @@ export function CommandPalette({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, module }),
       });
       if (!res.ok) throw new Error("API error");
       // Parse AI SDK stream: text chunks on lines prefixed with 0:"..."

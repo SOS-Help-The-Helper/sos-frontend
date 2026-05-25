@@ -7,7 +7,7 @@ import { AiSummary } from "@/components/crm/AiSummary";
 import {
   DetailTopBar, IdentityBand, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
-  StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
+  StatusPill, MetaPopover, OverflowMenu, HeroLine, HeroPanel, ActionBtn,
 } from "@/components/crm/DetailShell";
 import { api } from "@/lib/api";
 import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
@@ -20,6 +20,7 @@ interface ResourceData {
   id: string; title?: string; description?: string; taxonomy_code?: string; status: string;
   location_text?: string; city?: string; state?: string; county?: string;
   capacity_available?: number; capacity_total?: number;
+  lat?: number; lng?: number; latitude?: number; longitude?: number;
   org_id?: string; person_id?: string;
   persons?: { display_name: string; phone?: string } | null;
   locations?: { street_address?: string; city?: string; state?: string } | null;
@@ -55,6 +56,8 @@ export default function ResourcePage() {
 
   // Map API response to display-friendly shape
   const res = data.resource;
+  const resLat = res.lat ?? res.latitude;
+  const resLng = res.lng ?? res.longitude;
   const r = {
     id: res.id,
     title: res.title || res.description || res.taxonomy_code || 'Resource',
@@ -64,10 +67,17 @@ export default function ResourcePage() {
     ownerName: res.persons?.display_name || 'Unknown',
     org: res.org_id || null,
     capacity: res.capacity_available != null ? `${res.capacity_available}${res.capacity_total ? `/${res.capacity_total}` : ''} units` : '—',
+    capacityAvailable: res.capacity_available ?? null,
+    capacityTotal: res.capacity_total ?? null,
     matchedTo: data.matches?.length > 0 ? { personName: data.matches[0].request_person_id || 'Matched', caseId: data.matches[0].id } as MatchedTo : null,
     history: [] as HistEntry[],
   };
   const events: AssetEvent[] = [];
+  const matches: any[] = data.matches ?? [];
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const staticMapUrl = (resLat != null && resLng != null && mapboxToken)
+    ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l+EF4E4B(${resLng},${resLat})/${resLng},${resLat},13,0/400x200@2x?access_token=${mapboxToken}`
+    : null;
   const statusColor =
     r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#F5EBD6";
 
@@ -75,25 +85,27 @@ export default function ResourcePage() {
     {
       key: "activity",
       label: "Activity",
-      count: r.history.length + events.length,
+      count: r.history.length + events.length + matches.length,
       content: (
         <div className="space-y-6">
-          <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
-            {r.history.map((h: HistEntry, i: number) => (
-              <li key={i} className="relative">
-                <span
-                  className="absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)]"
-                  style={{ background: "rgba(137,207,240,0.18)" }}
-                >
-                  <Package size={12} style={{ color: "#89CFF0" }} />
-                </span>
-                <div className="flex items-center justify-between">
-                  <p className="text-[13px] font-medium text-white/90">{h.event}</p>
-                  <span className="text-[10.5px] text-white/40" title={h.date}>{h.date}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
+          {r.history.length > 0 && (
+            <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
+              {r.history.map((h: HistEntry, i: number) => (
+                <li key={i} className="relative">
+                  <span
+                    className="absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)]"
+                    style={{ background: "rgba(137,207,240,0.18)" }}
+                  >
+                    <Package size={12} style={{ color: "#89CFF0" }} />
+                  </span>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[13px] font-medium text-white/90">{h.event}</p>
+                    <span className="text-[10.5px] text-white/40" title={h.date}>{h.date}</span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
           {events.length > 0 && (
             <div>
               <p className="text-[11.5px] text-white/45 mb-2">Asset events</p>
@@ -120,6 +132,39 @@ export default function ResourcePage() {
                 })}
               </ol>
             </div>
+          )}
+          {matches.length > 0 && (
+            <div>
+              <p className="text-[11.5px] text-white/45 mb-2">Recent matches</p>
+              <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-5">
+                {matches.map((m: any) => {
+                  const matchStatus: string = m.status ?? 'matched';
+                  const dotColor = matchStatus === 'committed' ? '#34D399' : matchStatus === 'declined' ? '#EF4E4B' : '#89CFF0';
+                  const personName: string = m.request_person_id || m.person_name || 'Unknown';
+                  const matchDate: string = m.created_at ? new Date(m.created_at).toLocaleDateString() : '';
+                  return (
+                    <li key={m.id} className="relative">
+                      <span className="absolute -left-[28px] top-0.5 w-4 h-4 rounded-full ring-4 ring-[var(--surface-1)]" style={{ background: `${dotColor}33` }}>
+                        <span className="absolute inset-1 rounded-full" style={{ background: dotColor }} />
+                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <Link href={`/app/cases/${m.id}`} className="text-[12.5px] text-[#89CFF0] hover:underline inline-flex items-center gap-1.5">
+                          <GitBranch size={11} />
+                          {personName}
+                        </Link>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border capitalize" style={{ borderColor: `${dotColor}44`, color: dotColor, background: `${dotColor}11` }}>
+                          {matchStatus}
+                        </span>
+                      </div>
+                      {matchDate && <p className="text-[10.5px] text-white/40 mt-0.5">{matchDate}</p>}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+          {r.history.length === 0 && events.length === 0 && matches.length === 0 && (
+            <p className="text-[13px] text-white/40 text-center py-4">No activity recorded.</p>
           )}
         </div>
       ),
@@ -218,6 +263,47 @@ export default function ResourcePage() {
           tldr={tldr}
           summary={`${r.title} owned by ${r.ownerName}${r.org ? ` (${r.org})` : ""}, currently ${r.status}${r.matchedTo ? ` and matched to ${r.matchedTo.personName} on ${r.matchedTo.caseId}` : ""}. Staged at ${r.location}. Capacity: ${r.capacity}. ${r.history.length} events in deployment history.`}
         />
+
+        {r.capacityTotal != null && r.capacityAvailable != null && (
+          <HeroPanel>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] uppercase tracking-widest text-white/45 font-mono">Capacity</span>
+              <span className="text-[12px] font-medium text-white/80">
+                {r.capacityAvailable} <span className="text-white/40">/ {r.capacityTotal}</span>
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(100, (r.capacityAvailable / r.capacityTotal) * 100)}%`,
+                  background: r.capacityAvailable / r.capacityTotal > 0.5 ? '#34D399' : r.capacityAvailable / r.capacityTotal > 0.2 ? '#F5C842' : '#EF4E4B',
+                }}
+              />
+            </div>
+            <p className="text-[10.5px] text-white/35 mt-1.5">
+              {Math.round((r.capacityAvailable / r.capacityTotal) * 100)}% available
+            </p>
+          </HeroPanel>
+        )}
+
+        {staticMapUrl && (
+          <HeroPanel padded={false}>
+            <div className="relative overflow-hidden rounded-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={staticMapUrl}
+                alt={`Map showing location of ${r.title}`}
+                className="w-full object-cover"
+                style={{ height: 180 }}
+              />
+              <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
+                <MapPin size={10} className="text-[#EF4E4B]" />
+                <span className="text-[10px] text-white/80">{r.location}</span>
+              </div>
+            </div>
+          </HeroPanel>
+        )}
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>
