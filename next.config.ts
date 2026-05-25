@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
         source: '/what-is-sos',
         destination: '/what-is-sos.html',
       },
+      {
+        source: '/case-studies/garden-grove-hazmat',
+        destination: '/case-studies/garden-grove-hazmat.html',
+      },
     ];
   },
 };

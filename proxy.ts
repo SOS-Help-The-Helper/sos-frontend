@@ -26,6 +26,7 @@ const PUBLIC_PREFIXES = [
   '/c/',           // citizen portal subpages
   '/app/',         // partner portal
   '/erv/',         // ERV public pages (impact report, etc.)
+  '/case-studies/', // Public case studies
   '/drive/',       // driver delivery pages
   '/cases/',       // partner: cases
   '/directory/',   // partner: directory + detail pages (person, org, etc)
