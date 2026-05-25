@@ -142,7 +142,7 @@ export default function CasesPage() {
             title: s.person_name || s.persons?.display_name || "Unknown",
             meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
             sub: s.days_open != null ? `${s.days_open}d` : undefined,
-            to: { route: "/app/cases/$id", params: { id: s.id } },
+            href: `/app/cases/${s.id}`,
           }));
           setLiveCases(cards);
           setCaseCards(cards);
