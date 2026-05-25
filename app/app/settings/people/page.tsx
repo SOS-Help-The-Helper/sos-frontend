@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, MoreHorizontal, Search, UserPlus, X } from "lucide-react";
+import { Mail, Search, UserPlus, X } from "lucide-react";
 import { Avatar } from "@/components/directory/Avatar";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -19,6 +19,7 @@ type Member = {
 };
 
 const ROLES: Role[] = ["Owner", "Admin", "Coordinator", "Volunteer"];
+const INVITE_ROLES: Role[] = ["Admin", "Coordinator", "Volunteer"];
 
 const ROLE_TINT: Record<Role, string> = {
   Owner: "#EF4E4B",
@@ -110,12 +111,46 @@ export default function PeopleSettings() {
             </p>
           </div>
           <button
-            onClick={() => setInviteOpen(true)}
+            onClick={() => setInviteOpen((v) => !v)}
             className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition"
           >
-            <UserPlus size={13} /> Invite
+            <UserPlus size={13} /> Invite member
           </button>
         </div>
+
+        {inviteOpen && (
+          <div className="mb-4 rounded-xl border border-[var(--hairline)] bg-white/[0.03] p-4 space-y-3">
+            <p className="text-[12px] font-semibold text-white/70">Invite a new member</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="colleague@org.org"
+                  className="w-full h-9 pl-9 pr-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                />
+              </div>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as Role)}
+                className="h-9 px-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] text-white focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+              >
+                {INVITE_ROLES.map((r) => (
+                  <option key={r} value={r} style={{ background: "#0F1E2B" }}>{r}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleInvite}
+                disabled={inviting || !inviteEmail}
+                className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition disabled:opacity-50 shrink-0"
+              >
+                {inviting ? "Sending…" : "Invite"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="relative mb-3">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
@@ -190,66 +225,6 @@ export default function PeopleSettings() {
         </div>
       </section>
 
-      {inviteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-[#0F1E2B] border border-[var(--hairline)] p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold">Invite member</h3>
-              <button
-                onClick={() => setInviteOpen(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-white/45 hover:text-white hover:bg-white/5 transition"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Email</p>
-                <div className="relative">
-                  <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="colleague@org.org"
-                    className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Role</p>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as Role)}
-                  className="w-full h-10 px-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] text-white focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r} style={{ background: "#0F1E2B" }}>{r}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                onClick={() => setInviteOpen(false)}
-                className="h-9 px-4 rounded-lg text-[13px] text-white/65 hover:text-white transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleInvite}
-                disabled={inviting || !inviteEmail}
-                className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition disabled:opacity-50"
-              >
-                {inviting ? "Sending…" : "Send invite"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

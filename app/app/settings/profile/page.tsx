@@ -41,9 +41,9 @@ export default function MyProfile() {
   const score = READINESS.earned + COMMUNITY.earned + IMPACT.earned;
   const tier = tierFor(score);
 
-  const [name, setName] = useState("Melissa Hart");
-  const [email, setEmail] = useState("melissa@mountainareaaid.org");
-  const [phone, setPhone] = useState("(828) 555-0188");
+  const [name, setName] = useState("Demo User");
+  const [email, setEmail] = useState("demo@sos.org");
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
