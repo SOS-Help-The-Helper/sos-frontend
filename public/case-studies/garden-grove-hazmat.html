@@ -610,17 +610,582 @@ section { padding: 80px 0; }
       </div>
     </div>
 
-    <!-- Remaining problems follow the same pattern — abbreviated for template -->
+    <!-- PS3 -->
     <div class="problem">
       <div class="problem-header">
-        <p class="problem-number">Problem Statements 3–13</p>
-        <h3>Continued in Full Document</h3>
+        <p class="problem-number">Problem Statement 3</p>
+        <h3>The Emergency Operations Center Had No Public-Facing Information Portal</h3>
       </div>
       <div class="problem-body">
-        <div class="problem-section problem-section--what">
-          <p class="problem-text" style="color: #666; font-style: italic;">The full document contains 13 problem statements covering: EOC with no public portal, fragmented shelter information, resource propagation failures, lead agency with no web presence, invisible community resources, AFN population failures, inaccessible formats, contradictory official information, absent timestamps, hotline-website mismatches, unrecoverable after-action data, and no dedicated PIO.</p>
-          <p class="problem-text" style="margin-top: 12px;"><strong>Each follows the same three-part structure: What happened → What the standard says → The gap.</strong></p>
-        </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">The OC Emergency Operations Center (EOC) issued 7 numbered press releases over 42 hours. These releases contained critical information: shelter openings, capacity updates, and RV parking availability. The EOC has no website, no portal, and no public-facing URL. Press releases were distributed via PDF email to an unknown distribution list. Individual cities decided whether to post them.</p>
+        <ul class="evidence-list">
+          <li>Buena Park was the only city to post all 7 EOC press releases (as PDFs on their evacuation page)</li>
+          <li>Westminster posted #7 (RV parking) on Facebook only — not on their website</li>
+          <li>Garden Grove (incident city) posted zero EOC press releases</li>
+          <li>Anaheim posted zero EOC press releases</li>
+          <li>Stanton posted zero EOC press releases</li>
+          <li>ocgov.com (the county's own website) posted zero EOC press releases — their newsroom's latest item was the FY 2026-27 budget (May 20)</li>
+          <li>The county's emergency page (ocgov.com/about-county/emergency) contained only generic preparedness information</li>
+          <li>Westminster School District attempted to create an EOC press release section on their website — content panels didn't render</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §2.2.1:</strong> "The ECC shall have pre-planned notification plans in place to keep employees and the community apprised on effects to operations"<br>
+        <strong>APCO 1.121.1-2022, §2.2.1.1:</strong> "ECCs shall have the PIOs contact information readily available"<br>
+        <strong>APCO 1.121.1-2022, §2.2.1.2:</strong> "ECCs should make the PIO aware of incident as soon as possible and verify that they have necessary information from center"<br>
+        <strong>NIMS:</strong> The Emergency Operations Center is responsible for "gathering, verifying, coordinating, and disseminating information" — dissemination to the public is a core function</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard requires pre-planned notification to keep the community informed. The EOC produced information (7 press releases) but had no mechanism to disseminate it to the public. The county's own website had no incident content. Distribution depended on whether individual city webmasters chose to post PDFs. A school district was more proactive than the county government in attempting to publish EOC communications.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS4 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 4</p>
+        <h3>Shelter Information Was Fragmented and Non-Cumulative</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Each EOC press release announced only the newest shelter. No release ever provided a cumulative list of all active shelters with current capacity status. Pet policies were inconsistent — mentioned in some releases, absent from others. Citizens reading any single press release had no way to know how many shelters existed, which were full, or which accepted animals.</p>
+        <ul class="evidence-list">
+          <li>Press Release #1 (Freedom Hall) — animals co-located ✓</li>
+          <li>Press Release #2 (Kennedy HS) — animals co-located ✓</li>
+          <li>Press Release #3 (Oceanview HS) — no mention of animals</li>
+          <li>Press Release #4 — no new shelter, donation policy only</li>
+          <li>Press Release #5 (Golden West College) — no mention of animals</li>
+          <li>Press Release #6 (Los Amigos HS) — animals co-located ✓</li>
+          <li>Freedom Hall filled within ~3 hours of opening (night 1)</li>
+          <li>4 of 6 shelters hit capacity within the first 36 hours</li>
+          <li>Citizens reported driving to full shelters because capacity status was unavailable</li>
+          <li>Mike D Noble (Facebook): Freedom Hall is "overflowing," people sleeping in cars</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §1.1.3.1.3:</strong> "Coordinate with agency representatives or PIOs to keep the public informed"<br>
+        <strong>APCO 1.121.1-2022, §4.1.4.9:</strong> "The ECC should keep the public informed of delays or changes in services"<br>
+        <strong>NIMS:</strong> Information dissemination should be "timely, accurate, and consistent" — consistency requires cumulative, not incremental, status updates</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard requires the public be kept informed. Incremental-only press releases (each announcing one new shelter with no context about existing shelters) fail the accuracy and consistency tests. A citizen receiving Press Release #5 would have no idea #1 was at capacity, #2 existed, or which shelters accepted pets. The information was technically published but functionally inaccessible.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS5 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 5</p>
+        <h3>Critical Resource Information Did Not Propagate Across Channels</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">EOC Press Release #7 announced RV parking at the OC Fairgrounds (100 spaces, operational at 3:00 PM May 24). Ten hours later, this information appeared on exactly two surfaces: Buena Park's website and Westminster's Facebook page. It was absent from every other official source, including the incident city (Garden Grove), the lead agency's social media (OCFA), the county website, the state website, and the Governor's Linktree.</p>
+        <ul class="evidence-list">
+          <li>EOC Press Release #7 published at 1330 hrs May 24</li>
+          <li>Garden Grove (ggcity.org/emergency) — no RV info as of 2250 hrs (10 hours later)</li>
+          <li>Anaheim — no RV info</li>
+          <li>Stanton — no RV info</li>
+          <li>OCFA X/Twitter — no RV info in 20 posts analyzed</li>
+          <li>ocsheriff.gov — no RV info</li>
+          <li>Gov.ca.gov — nothing</li>
+          <li>Cal OES — nothing</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §2.2.1:</strong> Pre-planned notification to keep community apprised<br>
+        <strong>APCO 1.121.1-2022, §4.1.4.9:</strong> Keep the public informed of changes in services<br>
+        <strong>FEMA IPAWS:</strong> Designed specifically to solve the problem of alerts reaching the public through "all kinds of networks" — not one network, not two, but all<br>
+        <strong>NIMS JIS:</strong> "Provides the mechanism to organize, integrate, and coordinate information to ensure timely, accurate, accessible, and consistent messaging across multiple jurisdictions"</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">NIMS Joint Information System exists specifically to ensure consistent messaging across jurisdictions. IPAWS exists specifically to push alerts across all networks. Despite these frameworks, critical resource information was published once (as a PDF email) and then surfaced on 2 of 10+ relevant platforms over a 10-hour window. The information dissemination chain is manual, optional, and jurisdiction-dependent.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS6 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 6</p>
+        <h3>The Lead Agency Had No Web Presence for the Incident</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">OCFA (Orange County Fire Authority) was the Unified Command lead agency. Their website (ocfa.org) contained a single hotline banner. All operational updates were published on X/Twitter only. Every other agency — cities, county, state — either referenced OCFA's X feed or had citizens search for it independently.</p>
+        <ul class="evidence-list">
+          <li>ocfa.org: Hotline banner with (714) 628-7085 — no other incident content</li>
+          <li>OCFA X/Twitter: 20 posts from May 22–24 with operational updates, zone changes, press conference announcements</li>
+          <li>City of Cypress official Mailchimp: "follow the Orange County Fire Authority at x.com/OCFireAuthority" — delegating all information to a social media platform</li>
+          <li>City of Westminster: Directed citizens to X.com/OCFireAuthority for "the most current emergency updates"</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §4.1.4.8:</strong> "Identify an alternate means or process for the public making reports and non-emergency calls for service during disruptions (e.g., online reporting systems)"<br>
+        <strong>APCO 1.121.1-2022, §1.1.3.1.4:</strong> "The ECC should plan with applicable public infrastructure agencies to see if it is possible to have a hotline to refer callers to"<br>
+        <strong>NIMS:</strong> Incident Command is responsible for ensuring public information reaches affected populations through accessible channels</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard contemplates alternate means of public communication, including online systems. The lead agency for a 40,000-person evacuation had no web-based information system — only a social media feed on a single platform. Cities and the state directed citizens to that single platform. Citizens without X/Twitter accounts, or who don't use social media, had no path to the lead agency's information except calling a phone hotline.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS7 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 7</p>
+        <h3>Community-Organized Resources Were Invisible to Official Channels</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">The Garden Grove Elks Lodge #1952 operated as an active shelter providing exactly the resources citizens were requesting: pet-friendly space, RV parking, food (via World Central Kitchen), and supplies from a multi-lodge mutual aid network. The Mayor of Garden Grove and a City Council member were physically present. Yet the city's own hotline and the county hotline were unaware of this shelter.</p>
+        <ul class="evidence-list">
+          <li>Elks Lodge documented on Facebook by GG Chamber of Commerce and multiple community members</li>
+          <li>5 Elks Lodges coordinating (Garden Grove, Newport-Harbor, Santa Ana, Orange, Norwalk)</li>
+          <li>World Central Kitchen serving food on site</li>
+          <li>Mayor Stephanie Klopfenstein physically present at the Lodge</li>
+          <li>Garden Grove hotline (714-741-5444): Spokesperson didn't know why the Elks Lodge wasn't listed; said it "may not make the official list" because it's not Red Cross managed</li>
+          <li>OC County hotline (714-628-7085): "Not aware" of the Elks Lodge. Asked where it was located.</li>
+          <li>OC Animal Care (Tustin) accepted pets but required self-transport with vaccination records — a separate resource channel</li>
+          <li>Juli Farris (Facebook): Called hotlines about senior aunt's cats. Response: "there's nothing in place"</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §1.3.3:</strong> "The ECC should continue forming or strengthening partnerships with private-sector organizations for response efforts"<br>
+        <strong>APCO 1.121.1-2022, §2.3.2:</strong> Same — partnerships with private-sector organizations<br>
+        <strong>NIMS:</strong> Resource management includes tracking all available resources, including those from non-governmental organizations and the private sector</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard calls for partnerships with private-sector organizations. NIMS resource management requires tracking all available resources. A community shelter with elected officials physically present, a national disaster food organization serving meals, and a multi-lodge mutual aid network was invisible to both the city and county hotlines. The information gatekeep (Red Cross management status) excluded community-organized resources from official lists regardless of their operational capacity.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS8 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 8</p>
+        <h3>Access and Functional Needs (AFN) Populations Had No Resource Matching</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Citizens with specific medical needs — oxygen machines requiring electricity, refrigerated medications, mobility limitations — were directed to congregate shelters with no provision for these needs. No system existed to match specific needs to specific resources.</p>
+        <ul class="evidence-list">
+          <li>JM Nellis (Facebook): Husband needs an oxygen machine. Medications need refrigeration. Requested hotel vouchers. Described shelters as "barrack environment."</li>
+          <li>FEMA Daily Ops Briefing (May 24): 11 nursing homes in the evacuation zone. 1 hospital relocating.</li>
+          <li>No official source listed which shelters had electrical outlets, medical equipment, or refrigeration</li>
+          <li>No official source provided AFN-specific routing or matching</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §1.1.3.1.3:</strong> Keep the public informed — this includes information accessible to populations with functional needs<br>
+        <strong>NIMS:</strong> Specifically requires consideration of "individuals with access and functional needs" in all emergency planning and response<br>
+        <strong>ADA:</strong> Emergency services must be accessible to people with disabilities; information dissemination must be available in accessible formats</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard requires the public be informed; NIMS requires AFN consideration; ADA requires accessible services. During this incident, there was no mechanism to connect a citizen's specific functional need (oxygen, refrigeration, mobility) to a specific resource that could meet that need. Congregate shelters were the only option presented. Citizens with AFN needs knew exactly what they needed but had no pathway to find it.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS9 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 9</p>
+        <h3>Emergency Information Was Delivered via Inaccessible Formats</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Multiple agencies used live video streams (Facebook Watch, X/Twitter Live) as their primary information delivery channel. Live video is not searchable, not persistent, not translatable, not screen-reader compatible, and not referenceable. Westminster has a large Vietnamese-speaking population; only their press release was translated — not the live video updates.</p>
+        <ul class="evidence-list">
+          <li>OCFA: Primary updates via X live video + posts</li>
+          <li>Multiple cities: Directed citizens to Facebook Watch press conferences</li>
+          <li>Cal OES: Broken Linktree link for 14+ hours (double-nested URL from Twitter cross-posting: https://t.co/https://linktr.ee/cagovernor)</li>
+          <li>Westminster: Published trilingual press release (English/Vietnamese/Spanish) — but live video updates were English-only</li>
+          <li>No transcripts or captions provided for any live video</li>
+          <li>Citizen Jenn Badger reported the broken Cal OES link; citizen Janey Robson provided the workaround</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO ANS 1.108.1-2018:</strong> Minimum operational standards for TTY/TDD — ADA requires equal access to emergency services for people with disabilities<br>
+        <strong>APCO 1.121.1-2022, §4.1.4.8:</strong> "Identify an alternate means or process for the public"<br>
+        <strong>ADA Title II:</strong> State and local governments must ensure effective communication with individuals with disabilities, including providing appropriate auxiliary aids and services<br>
+        <strong>FEMA IPAWS:</strong> Alerts distributed through multiple channels to ensure reach — Wireless Emergency Alerts, Emergency Alert System, NOAA Weather Radio<br>
+        <strong>Executive Order 13166:</strong> Requires federal agencies and recipients of federal financial assistance to provide meaningful access to Limited English Proficient (LEP) persons</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">Standards require accessible, multi-channel, multilingual emergency information. The primary channels used (live video, social media) are inaccessible to deaf/hard-of-hearing citizens (no captions), blind/low-vision citizens (not screen-readable), LEP populations (not translated), and citizens without social media accounts. A broken state-level link went uncorrected for 14 hours during an active chemical emergency.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS9b -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 9b</p>
+        <h3>Official Information Directly Contradicted Ground Truth</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Official public guidance told citizens NOT to bring donations to shelters. Simultaneously, shelter managers on the ground were asking citizens to bring specific items. Both communications were happening on the same day, from the same incident.</p>
+        <ul class="evidence-list">
+          <li>EOC Press Release #4 (May 23, 4:30 PM PT): "The American Red Cross kindly reminds neighbors that its local shelter is fully self-sustained and does not accept outside donations... the team gently asks that community members refrain from bringing items to the shelter facilities."</li>
+          <li>David Pan (@davidpanforCA, field report from Savanna High School, May 24, 9:54 AM PT): "The shelter manager indicated that they have a need for blankets and towels... Please bring blankets &amp; towels to: Savanna High School, 301 N. Gilbert St., Anaheim, CA."</li>
+        </ul>
+      </div>
+
+      <div class="quote-block">
+        <p>"The shelter manager indicated that they have a need for blankets and towels... Please bring blankets &amp; towels to: Savanna High School, 301 N. Gilbert St., Anaheim, CA."</p>
+        <cite>David Pan (@davidpanforCA), May 24 — same day EOC Press Release #4 said "do not bring donations"</cite>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §2.2.1:</strong> "ECCs should make the PIO aware of incident as soon as possible and verify that they have necessary information from center"<br>
+        <strong>NIMS JIS:</strong> "Ensures coordinated release of information" — coordination prevents the public from receiving contradictory guidance from the same incident</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard requires coordinated information. The EOC's public guidance and the shelter's operational reality were uncoordinated. No feedback loop existed between shelter managers and the public information layer. The EOC published a blanket "no donations" policy without real-time ground truth about actual shelter needs. A citizen who had read the EOC press release would have been told not to bring anything. A citizen at the shelter would have been told the opposite. Both pieces of information were simultaneously "official." One was from the coordination layer (EOC); one was from the operational reality on the ground (shelter manager). Neither was wrong — but they couldn't both be right.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS10 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 10</p>
+        <h3>Information Update Timestamps Were Absent or Inconsistent</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Citizens could not determine when the information they were viewing was last updated. Static map images had no timestamp. City websites showed update times inconsistently. Shelter capacity status changed hourly but was published as static text with no refresh indicator.</p>
+        <ul class="evidence-list">
+          <li>Garden Grove's emergency page showed updates timestamped to 5/23 at 3:00 PM — but the page was still being referenced as current on 5/24</li>
+          <li>OC Sheriff's evacuation map page: no timestamp on the interactive map</li>
+          <li>Static image maps shared on social media: no creation date, no validity period</li>
+          <li>EOC press releases were individually timestamped but not aggregated — a citizen finding Press Release #3 had no indication that #4–#7 existed</li>
+          <li>Stanton's page showed chronological updates with timestamps — the only city to show zone boundary evolution over time</li>
+          <li>Cal HHS (@Cal_HHS, 05-24 21:46 UTC): Posted care center graphic stamped "Updated as of 11:00 AM 5/24/2026." The post went out at 2:46 PM PT — the graphic was already 3 hours 46 minutes old. Care centers closed at 8:00 PM. Citizens who saw this post after 8:00 PM were directed to facilities that had already closed. No expiration indicator appeared on the post or the graphic.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §4.1.4.9:</strong> "Keep the public informed of delays or changes in services"<br>
+        <strong>NIMS:</strong> Situational awareness requires current, verified information with known currency<br>
+        <strong>CAP (Common Alerting Protocol):</strong> Every alert message includes <code>&lt;sent&gt;</code> timestamp and <code>&lt;expires&gt;</code> fields — built-in temporal validity is a foundational design element</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">CAP was designed with mandatory temporal fields because the creators understood that emergency information without timestamps is dangerous. Citizens acted on information of unknown age. A map viewed at 10 PM Saturday may have been accurate at 2 PM Friday. No mechanism existed to indicate "this is current as of X" or "this information expires at Y." The Cal HHS incident is the clearest example: citizens were directed to care centers that had already closed because the information had no expiration indicator.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS11 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 11</p>
+        <h3>Hotline Information Did Not Match Published Information</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Direct phone calls to official hotlines produced different information than what was published on websites and social media. In some cases, hotline operators had information that was unpublished. In other cases, hotline operators were unaware of published information.</p>
+        <ul class="evidence-list">
+          <li>OC County Hotline (714-628-7085): Provided intel that Los Amigos HS accepts RVs — this information appeared in no public-facing source</li>
+          <li>OC County Hotline: Was "not aware" of the Elks Lodge shelter despite it being documented on Facebook with elected officials present</li>
+          <li>Garden Grove Hotline (714-741-5444): Spokesperson didn't know why the Elks Lodge wasn't on the official list</li>
+          <li>Juli Farris (Facebook): Called emergency hotlines about pet evacuation. Response: "there's nothing in place" — while OC Animal Care, the Elks Lodge, and multiple shelters were accepting animals</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §2.2.1:</strong> Pre-planned notification to keep the community apprised<br>
+        <strong>APCO 1.121.1-2022, §4.1.4.3:</strong> "Create dashboards, visualization tools, and other platforms that support shared situational awareness" — the standard envisions a shared information picture<br>
+        <strong>NIMS JIS:</strong> "Ensures coordinated release of information about an incident"</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard requires shared situational awareness and coordinated information release. During this incident, hotline operators, websites, social media, and EOC press releases each contained information the others did not. There was no shared information layer. A citizen calling the hotline got different answers than a citizen reading the website, who got different answers than a citizen on Facebook. The information was not wrong — it was fragmented across channels with no reconciliation.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS12 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 12</p>
+        <h3>After-Action Data Will Be Unrecoverable</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Critical incident data — shelter capacity over time, citizen information-seeking patterns, resource utilization rates, zone expansion timeline, hotline call volume — was not systematically captured. Post-incident analysis, grant applications, and policy improvements will rely on manual reconstruction from social media posts, press releases, and anecdotal reports.</p>
+        <ul class="evidence-list">
+          <li>Shelter capacity status changed hourly but was recorded only in free-text Watch Duty posts and scattered social media updates</li>
+          <li>Zone expansion timeline reconstructable only from Stanton's chronological page and OCFA X/Twitter posts</li>
+          <li>Citizen information-seeking behavior (what people searched for, when, where) was not captured</li>
+          <li>Hotline call data (volume, topics, unresolved queries) will exist only in internal agency records, if at all</li>
+          <li>Community resource contributions (Elks Lodge, WCK, pet networks) were documented only in Facebook posts that will age off feeds</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §1.3.4:</strong> "Brainstorm what went well, what could be improved on, and what needs were realized during the disaster to better pre-plan for the next natural disaster (i.e., after-action report)"<br>
+        <strong>APCO 1.121.1-2022, §2.3.1:</strong> "The ECC shall complete an after-action report with a full review of how the incident was managed"<br>
+        <strong>APCO 1.121.1-2022, §4.2.1.4:</strong> "The ECC shall complete after-action reports with a full review"<br>
+        <strong>APCO 1.121.1-2022, §4.1.3.4:</strong> "The ECC shall annually review and analyze historical data to adjust mutual aid agreements"</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">The standard mandates after-action reports and historical data analysis. These requirements presume data was captured. When information flows through social media posts, PDF email chains, live video streams, and phone calls — with no structured data capture — the after-action report becomes a retrospective narrative rather than a data-driven analysis. The standard exists; the data infrastructure to fulfill it does not.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- PS13 -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 13</p>
+        <h3>No Dedicated Public Information Officer and No Structured Press Conference Cadence</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened</p>
+        <p class="problem-text">Citizens and evacuees observed that no dedicated PIO was identifiable, and press conferences were infrequent with information gaps of 12–14 hours between updates. This was documented not just by frustrated citizens but by someone with apparent emergency management literacy who identified the structural failure specifically.</p>
+        <ul class="evidence-list">
+          <li>Laura G (@LaurasMiscMovie, 05-25 00:24 UTC — Day 3, 8:24 PM PT): "The lack of a dedicated PIO, including no press conferences, and blowing off evacuees with zero info for 12-14 hours at a time in some cases, strikes me as really odd. For evacuee 'buy-in' they should be looping us in way more IMHO."</li>
+          <li>This observation was made on Day 3 — 72+ hours into the incident. The lack of PIO structure was sustained throughout the incident, not an early gap.</li>
+          <li>Every other communication failure documented in this report (map illegibility, fragmented shelters, invisible resources, contradictory guidance) flows downstream from the absence of a coordinated public information function.</li>
+        </ul>
+      </div>
+
+      <div class="quote-block">
+        <p>"The lack of a dedicated PIO, including no press conferences, and blowing off evacuees with zero info for 12-14 hours at a time in some cases, strikes me as really odd. For evacuee 'buy-in' they should be looping us in way more IMHO."</p>
+        <cite>Laura G (@LaurasMiscMovie) — Day 3 of the incident, 72+ hours in</cite>
+      </div>
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
+        <p class="problem-text"><strong>APCO 1.121.1-2022, §2.2.1.1:</strong> "ECCs shall have the PIOs contact information readily available"<br>
+        <strong>APCO 1.121.1-2022, §2.2.1.2:</strong> "ECCs should make the PIO aware of incident as soon as possible and verify that they have necessary information from center"<br>
+        <strong>APCO 1.121.1-2022, §3.2.3.2.1:</strong> "The ECC should appoint a PIO for the ECC, if not covered by one already"<br>
+        <strong>NIMS:</strong> The Joint Information System requires a lead PIO to coordinate all public messaging; press conferences are the primary structured public communication channel under NIMS</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text">APCO and NIMS both require a designated PIO with regular communication to the public. A 40,000-person evacuation covering 6 jurisdictions, 14+ days, with an active explosion risk — this is the scenario these requirements were written for. Citizens documented 12–14 hour information blackouts on Day 3. The standard requires the opposite: a pre-planned PIO structure with frequent, coordinated updates.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- Standards Cross-Reference Summary -->
+    <div style="margin-top: 60px; padding-top: 40px; border-top: 2px solid rgba(0,0,0,0.08);">
+      <span class="label">Standards Cross-Reference</span>
+      <h2>Summary: Standards vs. Incident</h2>
+      <p class="overview-text">Every failure documented above maps to a specific published standard. The table below cross-references all 13 problem statements against APCO, NIMS, CAP, ADA, and Executive Order requirements.</p>
+
+      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="standards-table">
+          <thead>
+            <tr>
+              <th>Standard</th>
+              <th>Section</th>
+              <th>Requirement</th>
+              <th>GG Incident Failure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§1.1.3.1.3</td>
+              <td>Coordinate with PIOs to keep public informed</td>
+              <td>Maps were illegible; information fragmented across 7+ sources</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§1.1.3.2</td>
+              <td>Interoperability agreements with surrounding agencies</td>
+              <td>6 jurisdictions published independently with no coordination</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§2.2.1</td>
+              <td>Pre-planned notification to keep community apprised</td>
+              <td>EOC had no public-facing portal; county website had zero incident content</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§2.2.1.2</td>
+              <td>Make PIO aware with necessary information</td>
+              <td>Hotline operators lacked information published on social media and vice versa</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§4.1.3.1</td>
+              <td>Written interoperability agreements and MOUs</td>
+              <td>No evidence of public information coordination MOUs between jurisdictions</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§4.1.4.3</td>
+              <td>Dashboards/visualization tools for shared situational awareness</td>
+              <td>No shared information tool existed; each agency maintained separate partial picture</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§4.1.4.8</td>
+              <td>Alternate means for public reporting during disruptions</td>
+              <td>Lead agency (OCFA) had only X/Twitter — no web-based alternative</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§4.1.4.9</td>
+              <td>Keep public informed of delays or changes</td>
+              <td>Information updates were un-timestamped, non-cumulative, and channel-dependent</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§1.3.3, §2.3.2</td>
+              <td>Partnerships with private-sector organizations</td>
+              <td>Community shelter (Elks Lodge) invisible to both city and county hotlines</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§2.3.1, §4.2.1.4</td>
+              <td>After-action reports with full review</td>
+              <td>Data infrastructure to support structured AAR does not exist</td>
+            </tr>
+            <tr>
+              <td>APCO 1.121.1-2022</td>
+              <td>§2.2.1.1, §2.2.1.2, §3.2.3.2.1</td>
+              <td>Designated PIO with regular public updates</td>
+              <td>No dedicated PIO; 12–14 hour information blackouts on Day 3</td>
+            </tr>
+            <tr>
+              <td>APCO 1.108.1-2018</td>
+              <td>Full standard</td>
+              <td>TTY/TDD equal access to emergency services</td>
+              <td>Primary channels (live video, social media) inaccessible to disabled populations</td>
+            </tr>
+            <tr>
+              <td>NIMS/ICS</td>
+              <td>JIS/JIC</td>
+              <td>Coordinated, consistent public information</td>
+              <td>6+ jurisdictions published independently; no Joint Information System evident</td>
+            </tr>
+            <tr>
+              <td>NIMS</td>
+              <td>Resource Mgmt</td>
+              <td>Track all available resources including NGOs</td>
+              <td>Community resources (Elks Lodge, WCK) untracked by official system</td>
+            </tr>
+            <tr>
+              <td>NIMS</td>
+              <td>AFN</td>
+              <td>Consider individuals with access and functional needs</td>
+              <td>No AFN-specific information, routing, or resource matching</td>
+            </tr>
+            <tr>
+              <td>NIMS JIS</td>
+              <td>Full</td>
+              <td>Coordinated information prevents contradictory guidance</td>
+              <td>EOC PR#4 "no donations" contradicted by shelter manager requesting blankets same day</td>
+            </tr>
+            <tr>
+              <td>FEMA IPAWS/CAP</td>
+              <td>Core design</td>
+              <td>Interoperable alerting across all networks</td>
+              <td>Alert information confined to individual social media accounts and PDF emails</td>
+            </tr>
+            <tr>
+              <td>CAP v1.2</td>
+              <td>&lt;sent&gt;, &lt;expires&gt;</td>
+              <td>Temporal validity on every alert</td>
+              <td>Maps and status updates had no timestamps or expiration indicators</td>
+            </tr>
+            <tr>
+              <td>CAP v1.2</td>
+              <td>&lt;expires&gt;</td>
+              <td>Information expires when no longer valid</td>
+              <td>Cal HHS care center graphic posted 3h 46m stale; cited 8PM close to citizens reaching it after 8PM</td>
+            </tr>
+            <tr>
+              <td>ADA Title II</td>
+              <td>Full</td>
+              <td>Effective communication with individuals with disabilities</td>
+              <td>Live video: no captions, no screen-reader support, no ASL</td>
+            </tr>
+            <tr>
+              <td>EO 13166</td>
+              <td>Full</td>
+              <td>Meaningful access for LEP persons</td>
+              <td>Live video English-only despite large Vietnamese-speaking population</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -634,40 +1199,530 @@ section { padding: 80px 0; }
   <p>FEMA's own standards for public communication during a CBRN incident, applied to FEMA's own incident response</p>
 </div>
 
-<!-- ═══ FEMA SCORECARD ═════════════════════════════════════════ -->
+<!-- ═══ FEMA CONTEXT + SCORECARD ══════════════════════════════ -->
 <section class="bg-white">
   <div class="container">
+
+    <div class="purpose-note" style="margin-bottom: 32px;">
+      <strong>Context:</strong> FEMA's KPF 2.2 states: <em>"During a biological incident, effective response and recovery is directly linked to compliance with public health guidance regarding personal protective measures and public perception of access to health and medical interventions. Therefore, public communications must synthesize complex medical and health information to promote public understanding of and compliance with such guidance."</em><br><br>
+      Substitute "biological" for "chemical" and "methyl methacrylate" for "biological agent" — every principle applies to Garden Grove. FEMA's own framework, applied to FEMA's own incident response, reveals systemic failures.
+    </div>
+
     <div class="score-card">
       <div class="score-number">0 / 14</div>
       <p class="score-label">FEMA KPF 2.2 principles fully met</p>
       <p class="score-detail">2 partially met · 12 failed · 0 of 7 message context dimensions fully met</p>
     </div>
 
-    <table class="standards-table">
-      <thead>
-        <tr>
-          <th>FEMA Principle</th>
-          <th>Met?</th>
-          <th>Evidence</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Provide actionable guidance</td><td class="fail">❌</td><td>No PPE guidance, no exposure protocols beyond "leave"</td></tr>
-        <tr><td>Anticipate public questions</td><td class="fail">❌</td><td>Pets, AFN, hotels, RV, re-entry — unanswered proactively</td></tr>
-        <tr><td>Monitor mis/disinformation</td><td class="fail">❌</td><td>Cal OES broken link uncorrected 14+ hrs</td></tr>
-        <tr><td>Two-way communication</td><td class="fail">❌</td><td>All channels one-way; hotlines unaware of community resources</td></tr>
-        <tr><td>Coordinate with stakeholders</td><td class="fail">❌</td><td>6 jurisdictions published independently; no JIS/JIC evident</td></tr>
-        <tr><td>Specific</td><td class="partial">⚠️</td><td>Chemical identified but no health guidance published</td></tr>
-        <tr><td>Consistent</td><td class="fail">❌</td><td>Different info on every platform and jurisdiction</td></tr>
-        <tr><td>Certain</td><td class="fail">❌</td><td>Zone boundaries unreadable; told citizens to self-assess</td></tr>
-        <tr><td>Clear</td><td class="partial">⚠️</td><td>Technical terms without plain-language explanation</td></tr>
-        <tr><td>Accurate</td><td class="fail">❌</td><td>Incremental-only releases omitted cumulative info</td></tr>
-        <tr><td>Accessible</td><td class="fail">❌</td><td>No captions, no ASL, no multilingual real-time updates</td></tr>
-        <tr><td>7 message context dimensions</td><td class="fail">❌</td><td>0 of 7 fully met, 3 partial, 4 failed</td></tr>
-        <tr><td>Pre-identified delivery systems</td><td class="fail">❌</td><td>Lead agency defaulted to single social media platform</td></tr>
-        <tr><td>Hard-to-reach populations</td><td class="fail">❌</td><td>No mechanism beyond phone hotline</td></tr>
-      </tbody>
-    </table>
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+      <table class="standards-table">
+        <thead>
+          <tr>
+            <th>FEMA Principle</th>
+            <th>Met?</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Provide actionable guidance</td><td class="fail">❌ No</td><td>No PPE guidance, no exposure protocols, no protective behavior instructions beyond "leave"</td></tr>
+          <tr><td>Anticipate public questions</td><td class="fail">❌ No</td><td>Predictable questions (pets, AFN, hotels, RV, re-entry) went unanswered proactively</td></tr>
+          <tr><td>Monitor mis/disinformation</td><td class="fail">❌ No</td><td>Cal OES broken link uncorrected 14+ hrs; OC Sheriff page showing wrong zone data</td></tr>
+          <tr><td>Two-way communication</td><td class="fail">❌ No</td><td>All channels one-way; no citizen input mechanism; hotlines unaware of community resources</td></tr>
+          <tr><td>Coordinate with stakeholders</td><td class="fail">❌ No</td><td>6 jurisdictions published independently; no JIS/JIC evident</td></tr>
+          <tr><td>Specific</td><td class="partial">⚠️ Partial</td><td>Chemical identified but no health guidance published</td></tr>
+          <tr><td>Consistent</td><td class="fail">❌ No</td><td>Different information on every platform and jurisdiction</td></tr>
+          <tr><td>Certain</td><td class="fail">❌ No</td><td>Zone boundaries unreadable; Westminster told citizens to self-assess</td></tr>
+          <tr><td>Clear</td><td class="partial">⚠️ Partial</td><td>Technical terms used without plain-language explanation</td></tr>
+          <tr><td>Accurate</td><td class="fail">❌ No</td><td>Incremental-only releases omitted critical cumulative information</td></tr>
+          <tr><td>Accessible</td><td class="fail">❌ No</td><td>No captions, no ASL, no multilingual real-time updates (except Westminster press release)</td></tr>
+          <tr><td>Message context: 7 dimensions</td><td class="fail">❌ 0/7 fully met</td><td>0 of 7 fully met, 3 partial, 4 completely failed</td></tr>
+          <tr><td>Pre-identified delivery systems</td><td class="fail">❌ No</td><td>Lead agency defaulted to single social media platform; no cross-jurisdiction system</td></tr>
+          <tr><td>Hard-to-reach populations</td><td class="fail">❌ No</td><td>No mechanism beyond phone hotline</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size: 13px; color: #888; margin-top: 12px; line-height: 1.6;"><strong>Result: 0 of 14 principles fully met. 2 partially met. 12 failed.</strong></p>
+  </div>
+</section>
+
+<!-- ═══ FEMA PRINCIPLES — FULL ANALYSIS ══════════════════════ -->
+<section class="bg-light">
+  <div class="container">
+    <span class="label">Full Analysis</span>
+    <h2>Each Principle — Verbatim Evidence</h2>
+    <p class="overview-text">The following cards document each of the 14 FEMA KPF 2.2 principles with the full evidence from the Garden Grove incident.</p>
+
+    <!-- FEMA 1: Provide Actionable Guidance -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2 — Principle 1</p>
+        <h3>Provide Actionable Guidance</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Provide actionable guidance to the public, healthcare workers, and first responders/receivers on safe work practices, PPE, and steps the public should take to protect itself."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>No agency published actionable guidance for citizens in or near the evacuation zone. "Leave the area immediately" was the extent of it.</li>
+          <li>No PPE guidance was provided (e.g., should citizens near the zone boundary wear masks? close windows? what kind?).</li>
+          <li>No guidance on what to do if exposed — despite methyl methacrylate being a documented skin and respiratory irritant.</li>
+          <li>Citizens self-researched wind direction on X/Twitter to determine personal risk because no official source provided this information.</li>
+          <li>The "actionable" steps available to citizens: check a static image map, call a hotline, or watch a Facebook Live stream. None of these are actionable in the FEMA sense — they're information-seeking tasks, not protective measures.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> No actionable protective measures were published. Citizens received "leave" but no guidance on PPE, exposure protocols, shelter-in-place vs. evacuation thresholds, or what to do if already exposed.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 2: Anticipate Public Questions -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2 — Principle 2</p>
+        <h3>Anticipate Public Questions</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Anticipate and address the questions, concerns, and differing perspectives of the public, business owners, elected officials, and health officials when communicating public health risks and risk prevention measures."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <p class="problem-text">Citizens' actual questions (documented from social media):</p>
+        <ul class="evidence-list">
+          <li>"Am I in the zone?" — Unanswerable from static image maps. Stanton issued a correction. Westminster told border residents to "self-evacuate if feeling unsafe."</li>
+          <li>"Where can I take my pets?" — Hotline response: "there's nothing in place." Three pet resources existed, none connected.</li>
+          <li>"My husband needs an oxygen machine. Where do we go?" — No AFN-specific guidance anywhere.</li>
+          <li>"Is there RV parking?" — Not published for 10+ hours after EOC created the resource.</li>
+          <li>"Where can I get a hotel room?" — Only Garden Grove's page had hotel info. No other jurisdiction published it.</li>
+          <li>"When can I go home?" — No re-entry timeline published by any agency at any point.</li>
+        </ul>
+        <p class="problem-text" style="margin-top: 12px;">These are predictable, anticipatable questions. FEMA's own framework says to anticipate them. None were proactively addressed.</p>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> Every major citizen question was predictable and unanswered. Pets, AFN populations, re-entry timelines, RV accommodations, and hotel vouchers are standard evacuation questions that could have been pre-staged. None were.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 3: Monitor Mis/Disinformation -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2 — Principle 3</p>
+        <h3>Monitor Mis- and Disinformation</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Anticipate and actively monitor mis- and disinformation in mass media and on social media platforms."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Cal OES posted a broken Linktree link on Facebook that was unfixable for 14+ hours. Citizens posted corrections in the comments — essentially citizens correcting the state agency.</li>
+          <li>OC Sheriff's "resources-before-disaster" page showed pre-planned generic evacuation zones, not the active hazmat zones. Citizens following this link believed they were seeing the real evacuation boundary.</li>
+          <li>No evidence of any agency monitoring or correcting citizen-generated information on Facebook or X.</li>
+          <li>Citizens created their own custom Google Maps, coached each other on cross-referencing official maps with Google Maps, and shared hotel/resource information in comment threads. Some of this was accurate; none of it was verified by official channels.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> A broken state-agency link went undetected and uncorrected for 14+ hours during an active chemical emergency. Citizens corrected the state. An OC Sheriff page showed the wrong zone data. No monitoring of citizen-generated information occurred.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 4: Two-Way Communication -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2 — Principle 4</p>
+        <h3>Two-Way Communication</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Maintain empathetic and validating two-way communication between decision makers and the public."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>All official communication was one-way: agencies posted, citizens read (or tried to).</li>
+          <li>The only two-way channel was hotline phone calls — and hotline operators provided different information than what was published online.</li>
+          <li>Citizens asked questions in Facebook comment threads. Some cities (Westminster) responded to some comments. Most went unanswered.</li>
+          <li>No mechanism existed for citizens to report their needs, ask questions, or provide ground-truth information back to agencies.</li>
+          <li>The Elks Lodge was operating as a shelter with the Mayor physically present — but the city and county hotlines were unaware of it. The information flowed only outward, never inward.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> All channels were one-way. No inbound mechanism existed. The consequence is documented: the Mayor was present at an active shelter, and the city hotline didn't know it existed. Ground truth from citizens never reached the information layer.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 5: Coordinate Messaging -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2 — Principle 5</p>
+        <h3>Coordinate Messaging with Stakeholders</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Coordinate associated messaging for all the above with stakeholder organizations involved."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>6 jurisdictions published independently with no coordination.</li>
+          <li>EOC produced 7 press releases that most jurisdictions never posted.</li>
+          <li>The lead agency (OCFA) communicated only via X/Twitter.</li>
+          <li>The county website had zero incident content.</li>
+          <li>The Governor's Linktree linked to 5 city websites that each linked back to the same generic county page.</li>
+          <li>There was no evidence of a Joint Information System (JIS) or Joint Information Center (JIC) producing coordinated public messaging, despite NIMS requiring both under Unified Command.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> No coordination was evident between any of the 6+ publishing entities. NIMS requires a Joint Information System under Unified Command. No JIS or JIC was in evidence.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 6: Specific -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Specific</p>
+        <h3>Messages Must Be Specific</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Provide the public with clear information to understand the risk (e.g., confirmed vs. suspected identity of the biological agent) and how to follow specific public health guidance."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>The chemical was eventually identified as methyl methacrylate in press conferences.</li>
+          <li>However, no official website provided: what MMA is, what symptoms to watch for, what to do if exposed, what distance is safe, or whether the air quality in a specific location was safe.</li>
+          <li>OCFA's X posts mentioned the chemical name. No other source provided health-specific guidance tied to the chemical identity.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="partial" style="font-weight:700; color:#D4A843;">⚠️ Partially met.</span> The chemical was named in press conferences. But naming the chemical without providing health guidance fails the specificity requirement. "Methyl methacrylate" is not actionable public information without context about what it means for citizens at various distances.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 7: Consistent -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Consistent</p>
+        <h3>Messages Must Be Consistent</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Messages should not contain contradictory information, and messaging should be consistent across all communication channels available to the public. Message coordination between public health and emergency management officials as well as other stakeholder organizations should occur prior to information dissemination to the public."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Hotline operators had different information than websites.</li>
+          <li>Each city published different shelter lists, different resource lists, and different update timelines.</li>
+          <li>EOC press releases were available on Buena Park's website but nowhere else — a citizen checking Anaheim's page got a fundamentally different picture than one checking Buena Park's.</li>
+          <li>No pre-dissemination coordination was evident. Each jurisdiction published when and what it chose.</li>
+          <li>EOC PR#4 said "do not bring donations." A shelter manager that same day asked for blankets and towels. Both were simultaneously "official."</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> Messaging was inconsistent across every dimension: across jurisdictions, across channels, across time. The donations contradiction (PS9b) is a specific, documented case of simultaneous contradictory official guidance. No pre-dissemination coordination was in evidence.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 8: Certain -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Certain</p>
+        <h3>Messages Must Be Certain</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"State what is known and unknown in certain terms (i.e., location of origin of dispersal, etc.). Do not guess or speculate."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Zone boundaries were published as static images too low-resolution to read street names. Citizens couldn't determine with certainty whether they were inside or outside the zone.</li>
+          <li>Westminster admitted zone borders required a "literal line drawn" and told border residents to "self-evacuate if feeling unsafe" — the opposite of certainty.</li>
+          <li>No agency published what was unknown (e.g., "We do not yet know when re-entry will be possible").</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> The most fundamental certainty question — "Am I in the zone?" — was unanswerable from official information. Westminster explicitly delegated the certainty determination to individual citizens ("self-evacuate if feeling unsafe"). No agency published what it didn't know.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 9: Clear -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Clear</p>
+        <h3>Messages Must Be Clear</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Use common words that can easily be understood and avoid technical terms."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Chemical press conferences used technical terms (methyl methacrylate, exothermic reaction, inhibitor) without plain-language explanations.</li>
+          <li>Evacuation zone boundaries were described in street names that only locals would recognize — no neighborhood names, no landmarks, no map context.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="partial" style="font-weight:700; color:#D4A843;">⚠️ Partially met.</span> Some plain-language communication did occur, but technical terms were used without explanation in public-facing channels. The chemical identification ("methyl methacrylate") was not translated into plain language for citizens who needed to understand what exposure risk meant for their families.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 10: Accurate -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Accurate</p>
+        <h3>Messages Must Be Accurate</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Do not overstate or understate the facts or omit important information."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Each EOC press release omitted all previously published shelter information. Release #5 mentions only Golden West College — the existence, capacity, or status of the 4 prior shelters is not mentioned. Critical information was omitted through incremental-only publishing.</li>
+          <li>Pet policies were mentioned in some shelter releases, absent from others — creating a false impression that unlisted shelters don't accept pets, when the actual policy was simply unstated.</li>
+          <li>Cal HHS posted care center information with an "Updated as of 11:00 AM" timestamp at 2:46 PM — already 3h 46m stale. Citizens who saw this post after 8:00 PM were directed to closed facilities.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> Omission of prior shelter information in each new release violated the accuracy standard by creating an incomplete picture. Pet policy omissions created false impressions about shelter capabilities. Stale information published without expiration indicators directed citizens to closed facilities.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 11: Accessible -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Quality: Accessible</p>
+        <h3>Messages Must Be Accessible</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Craft messages with consideration for people with disabilities (e.g., vision- or hearing-impaired populations) and for non-English speaking individuals."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>Primary communication channel (live video) had no captions, no ASL interpretation, no screen-reader compatibility.</li>
+          <li>Westminster published a trilingual press release (English/Vietnamese/Spanish) — the only jurisdiction to do so. All video updates were English-only.</li>
+          <li>Static image maps were inaccessible to vision-impaired citizens.</li>
+          <li>No TTY/TDD information was published alongside any hotline number.</li>
+          <li>The large Vietnamese-speaking population in Westminster had no access to real-time updates in their language.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> The primary communication channel (live video) was inaccessible to deaf, hard-of-hearing, vision-impaired, and LEP populations. One city published a trilingual press release — but the live video and real-time updates were English-only throughout. ADA Title II and EO 13166 require more.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 12: 7 Message Context Dimensions -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.1 — Message Context</p>
+        <h3>Seven Message Context Dimensions</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">FEMA requires messages include context on 7 specific dimensions: Specific hazard, Location, Timeframe, Source of warning, Magnitude, Likelihood, and Protective behavior.</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 16px 0;">
+          <table class="standards-table">
+            <thead>
+              <tr>
+                <th>FEMA Dimension</th>
+                <th>FEMA Description</th>
+                <th>Garden Grove Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Specific hazard</strong></td>
+                <td>What is the hazard? What are potential risks?</td>
+                <td><span class="partial">⚠️ Partial</span> — MMA identified in press conferences. No citizen-facing health guidance published on any website.</td>
+              </tr>
+              <tr>
+                <td><strong>Location</strong></td>
+                <td>Where will effects occur? Described so those without local knowledge can understand?</td>
+                <td><span class="fail">❌ Failed</span> — Static image maps illegible at street level. No neighborhood names. No "Am I in the zone?" tool except Garden Grove's (one city only).</td>
+              </tr>
+              <tr>
+                <td><strong>Timeframe</strong></td>
+                <td>When will effects present? How long will they last?</td>
+                <td><span class="fail">❌ Failed</span> — No timeline published by any agency. No estimate of re-entry. FEMA daily brief mentioned 14-day planning horizon, but this was not shared publicly.</td>
+              </tr>
+              <tr>
+                <td><strong>Source of warning</strong></td>
+                <td>Who is issuing? Is it credible?</td>
+                <td><span class="partial">⚠️ Partial</span> — OCFA identified as lead agency. But OCFA had no web presence, only X/Twitter. Citizens without X had no path to the source.</td>
+              </tr>
+              <tr>
+                <td><strong>Magnitude</strong></td>
+                <td>Expected effects? How bad could it get?</td>
+                <td><span class="fail">❌ Failed</span> — FEMA daily brief described potential "catastrophic rupture → exothermic blast." Citizens were told "risk of explosion" with no description of what that meant for them at various distances.</td>
+              </tr>
+              <tr>
+                <td><strong>Likelihood</strong></td>
+                <td>Probability of occurrence?</td>
+                <td><span class="fail">❌ Failed</span> — No probability information communicated publicly. Tank at 90° trigger temperature was discussed in press conferences but not translated to public risk language.</td>
+              </tr>
+              <tr>
+                <td><strong>Protective behavior</strong></td>
+                <td>What should people do? Where should evacuees go? What should they bring?</td>
+                <td><span class="partial">⚠️ Partial</span> — "Leave the area" was communicated. Where to go was fragmented across 7+ sources. What to bring was mentioned inconsistently.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ 0 of 7 fully met. 3 partially met. 4 completely failed.</span> Location, timeframe, magnitude, and likelihood — four of the seven dimensions — were completely absent from public communication. The two "partial" categories (specific hazard and source of warning) failed on the depth and accessibility requirements. Protective behavior was the only dimension with even partial credit, and it failed on the "where to go" sub-requirement.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 13: Pre-Identified Delivery Systems -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.2 — Public Information Delivery</p>
+        <h3>Pre-Identified Communication Systems</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"Before an incident, jurisdictions and agencies should identify communication systems for public messaging for use in providing clear, factual, and timely public health and safety guidance. In general, dissemination channels should be agile and immediate and able to handle frequent updates as information changes and becomes available."</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>No pre-identified communication system was evident for cross-jurisdiction public messaging.</li>
+          <li>The lead agency (OCFA) defaulted to X/Twitter — a platform that requires an account and is inaccessible to portions of the public.</li>
+          <li>EOC press releases were distributed via PDF email with no automated publishing mechanism.</li>
+          <li>Information update frequency varied wildly by jurisdiction — from Stanton's chronological log to Cypress's zero updates.</li>
+          <li>"Agile and immediate" was not achieved — RV parking info took 10+ hours to propagate from EOC to even two public-facing sources.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> FEMA's framework requires pre-planned, cross-jurisdiction communication systems. What existed instead: a PDF email chain, a social media account, and individual city webmasters manually deciding what to post. Information that should have propagated in minutes took 10+ hours to reach two sources. No pre-planned system was in evidence.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- FEMA 14: Hard-to-Reach Populations -->
+    <div class="problem">
+      <div class="problem-header">
+        <p class="problem-number">FEMA KPF 2.2.2 — Hard-to-Reach Populations</p>
+        <h3>Reaching Populations Without Standard Access</h3>
+      </div>
+      <div class="problem-body">
+
+      <div class="problem-section problem-section--standard">
+        <p class="problem-section-label problem-section-label--standard">What FEMA Says</p>
+        <p class="problem-text">"How will you contact hard-to-reach populations that are considered 'high risk'... if the agent is contagious?" While MMA is not contagious, the principle applies: how do you contact hard-to-reach populations in a chemical evacuation?</p>
+      </div>
+
+      <div class="problem-section problem-section--what">
+        <p class="problem-section-label problem-section-label--what">What Happened in Garden Grove</p>
+        <ul class="evidence-list">
+          <li>11 nursing homes were in the evacuation zone (per FEMA daily ops briefing, May 24). 1 hospital was relocating.</li>
+          <li>Citizens without smartphones, without social media accounts, without English fluency, or without internet access had no path to critical information other than a phone hotline — which provided different information than what was available online.</li>
+          <li>JM Nellis described the shelter situation for someone needing an oxygen machine and refrigerated medications — no mechanism existed to route them to appropriate resources.</li>
+          <li>Juli Farris called hotlines about a senior aunt's cats. Response: "there's nothing in place."</li>
+          <li>No outbound contact mechanism for hard-to-reach populations was evident — elderly, mobility-limited, non-English-speaking, and unhoused individuals were all dependent on finding official information independently.</li>
+        </ul>
+      </div>
+
+      <div class="problem-section problem-section--gap">
+        <p class="problem-section-label problem-section-label--gap">The Gap</p>
+        <p class="problem-text"><span class="fail" style="font-weight:700; color:#EF4E4B;">❌ Failed.</span> The only mechanism for hard-to-reach populations was the phone hotline — which itself had incomplete information. No outbound contact mechanism for residents who couldn't independently access digital channels was in evidence. 11 nursing homes in the evacuation zone required coordinated institutional communication; no evidence of this coordination was public-facing.</p>
+      </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -676,9 +1731,24 @@ section { padding: 80px 0; }
   <div class="container">
     <span class="label">Why This Matters</span>
     <h2>FEMA's Own Standards vs. FEMA's Own Incident</h2>
-    <p class="overview-text">This is not an obscure standard. This is FEMA's own published framework for how to communicate with the public during a CBRN incident — the exact category of event occurring in Garden Grove.</p>
-    <p class="overview-text">The Garden Grove incident, while activating a FEMA Region 9 response, triggering a Governor's emergency declaration, involving an EPA on-scene coordinator, and prompting IMAAC plume modeling, <strong>failed to meet FEMA's own public communication standards on 12 of 14 dimensions.</strong></p>
-    <p class="overview-text">The failures are systemic: no cross-jurisdiction information system, no pre-identified public messaging infrastructure, no mechanism for aggregating resources across agencies, and no way for citizens to receive consistent, accessible, cumulative information regardless of which jurisdiction they happen to live in.</p>
+
+    <p class="overview-text">This is not an obscure standard. This is FEMA's own published framework for how to communicate with the public during a CBRN incident — the exact category of event occurring in Garden Grove. The document is available on FEMA.gov. It represents the federal government's own recommendations.</p>
+
+    <p class="overview-text">The Garden Grove incident — which activated a FEMA Region 9 response, triggered a Governor's emergency declaration, involved an EPA on-scene coordinator, and prompted IMAAC plume modeling — <strong>failed to meet FEMA's own public communication standards on 12 of 14 dimensions.</strong></p>
+
+    <p class="overview-text">The failures are not individual. They are systemic: no cross-jurisdiction information system, no pre-identified public messaging infrastructure, no mechanism for aggregating resources across agencies, and no way for citizens to receive consistent, accessible, cumulative information regardless of which jurisdiction they happen to live in.</p>
+
+    <div class="how-to-read" style="margin-top: 32px;">
+      <h3>The Pattern</h3>
+      <ol>
+        <li><strong>Coordination failure:</strong> 6 jurisdictions, 1 county, 1 state, 1 federal region — no shared information layer. Each published independently.</li>
+        <li><strong>Infrastructure failure:</strong> No pre-planned cross-jurisdiction communication system. The lead agency had no web presence. The EOC had no public portal.</li>
+        <li><strong>Accessibility failure:</strong> Primary channels inaccessible to disabled, LEP, and non-social-media populations. One jurisdiction published trilingual; the rest did not.</li>
+        <li><strong>Feedback failure:</strong> All channels one-way. Community resources invisible. Ground truth never reached the information layer.</li>
+        <li><strong>Temporal failure:</strong> Information without timestamps, without expiration, without currency indicators. Citizens acted on information of unknown age.</li>
+      </ol>
+    </div>
+
   </div>
 </section>
 

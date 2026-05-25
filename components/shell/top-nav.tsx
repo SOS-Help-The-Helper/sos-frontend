@@ -46,12 +46,11 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
   const path = usePathname();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const enabledSet = new Set(enabledModules);
   const isEnabled = (m: ModuleId) => enabledSet.has(m);
-  const getLabel = (m: ModuleId) => labels[m] || MODULE_VISUAL[m]?.desc?.split(",")[0] || m;
+  const getLabel = (m: ModuleId) => labels[m] || m.charAt(0).toUpperCase() + m.slice(1);
 
   function openWithDelay(key: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -63,6 +62,16 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
   }
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   const initials = userName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase() || "U";
 
@@ -93,10 +102,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
           {NAV_CATEGORIES.map((cat) => {
             const mods = cat.modules.filter(isEnabled);
             if (mods.length === 0) return null;
-            const active = mods.some((m) => path.startsWith(`/app/${m}`));
-            const catActive = mods.some((m) => {
-              return path.startsWith(`/app/${m}`);
-            });
+            const catActive = mods.some((m) => path.startsWith(`/app/${m}`));
             const open = openCat === cat.key;
             return (
               <div key={cat.key} style={{ position: "relative" }} onMouseEnter={() => openWithDelay(cat.key)} onMouseLeave={closeWithDelay}>
@@ -170,12 +176,24 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
             <button style={iconBtn} aria-label="Notifications" className="inline-flex">
               <Bell size={16} />
             </button>
-            <div style={{ marginLeft: 6, alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 999, background: "rgba(255,255,255,0.06)" }} className="hidden sm:inline-flex">
+            {/* Mobile: bare avatar circle */}
+            <span
+              className="md:hidden inline-flex"
+              style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--sos-coral)", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0 }}
+            >
+              {initials}
+            </span>
+            {/* Desktop: full avatar pill */}
+            <div
+              style={{ marginLeft: 6, alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 999, background: "rgba(255,255,255,0.06)" }}
+              className="hidden md:inline-flex"
+            >
               <span style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--sos-coral)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
                 {initials}
               </span>
               <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.6)" }} />
             </div>
+            {/* Hamburger — mobile only */}
             <button className="md:hidden inline-flex" style={iconBtn} aria-label="Menu" onClick={() => setMobileOpen(true)}>
               <Menu size={18} />
             </button>
@@ -183,51 +201,125 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
         </div>
       </div>
 
-      {/* Mobile nav sheet */}
-      {mobileOpen && (
-        <div className="md:hidden" style={{ position: "fixed", inset: 0, zIndex: 60 }}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(15,30,43,0.55)" }} onClick={() => setMobileOpen(false)} />
-          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(320px, 86vw)", background: "var(--sos-navy)", padding: 16, display: "flex", flexDirection: "column", gap: 4, color: "#fff", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: 18 }}>SOS</span>
-              <button onClick={() => setMobileOpen(false)} style={iconBtn} aria-label="Close menu"><X size={18} /></button>
+      {/* Mobile nav — full-screen overlay with slide-in animation */}
+      {/* Always rendered (not conditional) so the CSS transition can play */}
+      <div
+        className="md:hidden"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 60,
+          pointerEvents: mobileOpen ? "auto" : "none",
+        }}
+      >
+        {/* Backdrop */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(15,30,43,0.6)",
+            opacity: mobileOpen ? 1 : 0,
+            transition: "opacity 250ms ease",
+          }}
+          onClick={() => setMobileOpen(false)}
+        />
+
+        {/* Slide-in panel */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            background: "var(--sos-navy)",
+            display: "flex",
+            flexDirection: "column",
+            color: "#fff",
+            overflowY: "auto",
+            transform: mobileOpen ? "translateX(0)" : "translateX(100%)",
+            transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          {/* Header row */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 16px", height: 56, flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logomark.svg" alt="SOS" width={22} height={22} />
+              <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, color: "#fff" }}>SOS</span>
             </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--sos-coral)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
+                {initials}
+              </span>
+              <button onClick={() => setMobileOpen(false)} style={{ ...iconBtn, display: "inline-flex" }} aria-label="Close menu">
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Nav content — all categories expanded */}
+          <div style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 24 }}>
             {NAV_CATEGORIES.map((cat) => {
               const mods = cat.modules.filter(isEnabled);
               if (mods.length === 0) return null;
-              const expanded = mobileExpanded === cat.key;
-              const catActive = mods.some((m) => path.startsWith(`/app/${m}`));
               return (
                 <div key={cat.key}>
-                  <button
-                    onClick={() => setMobileExpanded(expanded ? null : cat.key)}
-                    style={{ ...mobileLinkStyle(catActive && !expanded), width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "transparent", border: "none", cursor: "pointer" }}
-                  >
+                  {/* Category label */}
+                  <div style={{ padding: "0 8px 8px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     {cat.label}
-                    <ChevronDown size={14} style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
-                  </button>
-                  {expanded && (
-                    <div style={{ paddingLeft: 12, marginTop: 2, marginBottom: 4 }}>
-                      {mods.map((m) => {
-                        const itemActive = path.startsWith(`/app/${m}`);
-                        const label = labels[m] || m.charAt(0).toUpperCase() + m.slice(1);
-                        return (
-                          <Link key={m} href={`/app/${m}`} onClick={() => setMobileOpen(false)} style={{ ...mobileLinkStyle(itemActive), padding: "10px 14px", fontSize: 13.5 }}>
-                            {label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
+                  </div>
+                  {/* Module links */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {mods.map((m) => {
+                      const vis = MODULE_VISUAL[m];
+                      const Icon = vis.icon;
+                      const itemActive = path.startsWith(`/app/${m}`);
+                      const label = getLabel(m);
+                      return (
+                        <Link
+                          key={m}
+                          href={`/app/${m}`}
+                          onClick={() => setMobileOpen(false)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "10px 8px", borderRadius: 8, textDecoration: "none",
+                            color: itemActive ? "#fff" : "rgba(255,255,255,0.75)",
+                            background: itemActive ? "rgba(255,255,255,0.08)" : "transparent",
+                            borderLeft: itemActive ? "3px solid var(--sos-coral)" : "3px solid transparent",
+                            transition: "background 120ms",
+                          }}
+                        >
+                          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 6, background: vis.tint, color: itemActive ? "inherit" : vis.ink, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                            <Icon size={16} strokeWidth={2} />
+                          </span>
+                          <span style={{ fontSize: 15, fontWeight: 600 }}>{label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
-            <Link href={settingsTo} onClick={() => setMobileOpen(false)} style={mobileLinkStyle(path.startsWith("/app/settings"))}>
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: "12px 12px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+            <Link
+              href={settingsTo}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: "block", padding: "10px 8px", borderRadius: 8, textDecoration: "none",
+                fontSize: 14, fontWeight: 600,
+                color: path.startsWith("/app/settings") ? "#fff" : "rgba(255,255,255,0.6)",
+                background: path.startsWith("/app/settings") ? "rgba(255,255,255,0.08)" : "transparent",
+              }}
+            >
               Settings
             </Link>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
@@ -237,11 +329,3 @@ const iconBtn: React.CSSProperties = {
   background: "transparent", border: "none", alignItems: "center", justifyContent: "center",
   color: "rgba(255,255,255,0.8)", cursor: "pointer",
 };
-
-const mobileLinkStyle = (active: boolean): React.CSSProperties => ({
-  display: "block", padding: "12px 14px", fontSize: 14, fontWeight: 600,
-  color: active ? "#fff" : "rgba(255,255,255,0.7)",
-  background: active ? "rgba(255,255,255,0.08)" : "transparent",
-  borderRadius: 8, textDecoration: "none",
-  borderLeft: active ? "3px solid var(--sos-coral)" : "3px solid transparent",
-});
