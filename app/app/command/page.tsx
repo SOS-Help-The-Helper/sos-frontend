@@ -9,12 +9,12 @@ type Incident = {
   cases: number; capacity: number; casesHistory: number[];
 };
 const reportsData: any[] = [];
-import { useAllDashboards } from "@/lib/dashboard-store";
+import { getPinnedReports } from "@/lib/dashboard-store";
 import { AlertTriangle, Radio, ChevronRight, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function CommandPage() {
-  const pinnedMap = useAllDashboards();
+  const pinnedMap: Record<string, string[]> = {};
   const [incidents, setIncidents] = useState<Incident[]>([]);
 
   useEffect(() => {

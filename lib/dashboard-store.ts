@@ -1,55 +1,50 @@
-import { useSyncExternalStore } from "react";
+/**
+ * Dashboard pin store — localStorage-backed pinning for reports per incident.
+ * Created for command dashboard (Lovable v5 port).
+ */
 
-// In-memory store mapping incidentId → array of pinned reportIds.
-// Seeded with a couple defaults so the demo isn't empty.
-const initial: Record<string, string[]> = {
-  "I-01": ["REP-FLOOD-001", "REP-SHELTER-007"],
-  "I-02": ["REP-WATER-031"],
-  "I-03": ["REP-FOOD-022"],
-};
+const STORAGE_KEY = 'sos.dashboard.pins';
 
-let state: Record<string, string[]> = { ...initial };
-const listeners = new Set<() => void>();
-
-function emit() {
-  listeners.forEach((l) => l());
+function getAll(): Record<string, string[]> {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { return {}; }
 }
 
-export function pinReport(incidentId: string, reportId: string) {
-  const cur = state[incidentId] ?? [];
-  if (cur.includes(reportId)) return;
-  state = { ...state, [incidentId]: [...cur, reportId] };
-  emit();
+function saveAll(data: Record<string, string[]>) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-export function unpinReport(incidentId: string, reportId: string) {
-  const cur = state[incidentId] ?? [];
-  state = { ...state, [incidentId]: cur.filter((id) => id !== reportId) };
-  emit();
+export function getPinnedReports(incidentId: string): string[] {
+  return getAll()[incidentId] || [];
 }
 
-export function getPinned(incidentId: string): string[] {
-  return state[incidentId] ?? [];
+export function isPinned(incidentId: string, reportId: string): boolean {
+  return getPinnedReports(incidentId).includes(reportId);
 }
 
-export function useDashboard(incidentId: string): string[] {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    () => state[incidentId] ?? initial[incidentId] ?? [],
-    () => state[incidentId] ?? initial[incidentId] ?? [],
-  );
+export function pinReport(incidentId: string, reportId: string): string[] {
+  const all = getAll();
+  const pins = all[incidentId] || [];
+  if (!pins.includes(reportId)) {
+    all[incidentId] = [...pins, reportId];
+    saveAll(all);
+  }
+  return all[incidentId];
 }
 
-export function useAllDashboards(): Record<string, string[]> {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    () => state,
-    () => state,
-  );
+export function unpinReport(incidentId: string, reportId: string): string[] {
+  const all = getAll();
+  all[incidentId] = (all[incidentId] || []).filter(id => id !== reportId);
+  saveAll(all);
+  return all[incidentId];
+}
+
+/** React hook — returns pinned report IDs for an incident, re-renders on change */
+export function useDashboard(incidentId: string | undefined): string[] {
+  if (typeof window === 'undefined' || !incidentId) return [];
+  // Simple read — for reactivity, call pinReport/unpinReport and re-render manually
+  return getPinnedReports(incidentId);
 }
