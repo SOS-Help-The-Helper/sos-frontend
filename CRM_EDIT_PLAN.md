@@ -102,16 +102,62 @@
 | crm-directory | create_person, delete_person, create_resource, update_resource, delete_resource, create_org, update_org | 2 hrs |
 | crm-settings | update_org_info, invite_member, remove_member, change_role | 1.5 hrs |
 | volunteer-mgmt | assign_volunteer, update_volunteer_status (new EF) | 1 hr |
-| Total | | ~7.5 hrs |
+| crm-chat | list_messages, send_message, message_stats + chat_analytics view | 4 hrs |
+| Total | | ~11.5 hrs |
+
+### Chunk K: Chat-on-Record — Persistent, Entity-Linked Conversations
+**Why:** Every CRM needs chat threads tied to records. Currently CommandPalette chat is ephemeral — no persistence, no entity linking, no analytics.
+
+**DB tables (already exist):**
+- `messages` — chat threads on any entity (match, request, resource, report, sos, sitrep). Has: entity_type, entity_id, person_id, org_id, content, created_at, role (user/agent/system)
+- `notes` — internal staff notes (separate from citizen-facing messages)
+- `chat_sessions` — citizen chat persistence (already works for citizen portal)
+
+**Backend:**
+1. New EF action: `crm-chat` — read/write messages scoped by entity_type + entity_id + org_id
+   - `list_messages(entity_type, entity_id, org_id)` → paginated thread
+   - `send_message(entity_type, entity_id, org_id, person_id, content, role)` → insert + return
+   - `message_stats(org_id, date_range)` → aggregate counts by entity_type, response times, volume trends
+2. Update `/api/chat` to accept `entityType` + `entityId` params, store conversation turns in `messages` table
+3. Add `chat_analytics` view (or materialized view) for reporting:
+   - Messages per org per day/week
+   - Avg response time (first message → first reply)
+   - Chat volume by entity type (cases vs requests vs resources)
+   - Active threads (messages in last 7d)
+   - Person engagement score (messages sent, topics discussed)
+
+**Frontend:**
+1. ChatPanel component — slide-out or inline chat on detail pages
+   - Loads history from `messages` where entity_type + entity_id match
+   - Real-time input + send → stores via `crm-chat` EF
+   - Shows agent (AI) and human messages with distinct styling
+   - Thread is linked to: person_id (who chatted), org_id (which org context), entity_id (which record)
+2. Wire ChatPanel into: case detail, request detail, resource detail, person detail, org detail
+3. CommandPalette persistence: store Cmd+K conversations linked to current page entity
+4. Chat analytics dashboard (in Reports page):
+   - Volume over time chart
+   - Response time distribution
+   - Top chatted records
+   - Chat-to-resolution correlation
+
+**Analytics capability:**
+- Every message stored with: person_id, org_id, entity_type, entity_id, timestamp, role
+- Can query: "Show me all chats about housing requests in Buncombe County last month"
+- Can query: "Which orgs respond fastest to citizen messages?"
+- Can query: "What are the most common topics across all chats?" (via AI summarization)
+- Feed into SIGNAL intelligence extraction (nightly)
+
+**Effort:** ~4 hrs backend (EF + view), ~4 hrs frontend (ChatPanel + wiring to 5 pages + analytics)
 
 ## Priority Order
 1. **Chunk E** (Settings save) — users expect this to work, smallest effort
 2. **Chunk A** (Cases CRUD) — core CRM function
-3. **Chunk B** (Person CRUD) — second most used
-4. **Chunk C** (Request CRUD) — tied to cases
-5. **Chunk F** (Match flow) — partially done
-6. **Chunk H** (Calendar) — APIs exist, just wire UI
-7. **Chunk D** (Resource + Org) — less frequent edits
-8. **Chunk G** (Transport) — ERV-specific
-9. **Chunk I** (Inventory) — APIs exist
-10. **Chunk J** (Volunteers) — needs new EF
+3. **Chunk K** (Chat-on-record) — ties conversations to people + orgs + records, enables analytics
+4. **Chunk B** (Person CRUD) — second most used
+5. **Chunk C** (Request CRUD) — tied to cases
+6. **Chunk F** (Match flow) — partially done
+7. **Chunk H** (Calendar) — APIs exist, just wire UI
+8. **Chunk D** (Resource + Org) — less frequent edits
+9. **Chunk G** (Transport) — ERV-specific
+10. **Chunk I** (Inventory) — APIs exist
+11. **Chunk J** (Volunteers) — needs new EF
