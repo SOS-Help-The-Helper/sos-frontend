@@ -300,20 +300,74 @@ section { padding: 80px 0; }
 .case-footer a { color: #89CFF0; text-decoration: none; }
 .case-footer a:hover { text-decoration: underline; }
 
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  h1 { font-size: 32px; }
-  h2 { font-size: 26px; }
-  .case-hero { min-height: auto; }
+/* ── Responsive — Tablet ── */
+@media (max-width: 768px) {
+  .container { padding: 0 24px; }
+  section { padding: 60px 0; }
+  h1 { font-size: 34px; }
+  h2 { font-size: 28px; }
+  .case-hero { padding: 0 24px; }
   .case-hero-inner { padding: 80px 0 60px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  .stat-number { font-size: 36px; }
+  .stats-bar { padding: 32px 24px; }
+  .stats-grid { gap: 16px; }
+  .stat-number { font-size: 40px; }
   .case-hero .meta { gap: 20px; }
-  section { padding: 56px 0; }
-  .score-card { padding: 28px; }
-  .score-card .score-number { font-size: 56px; }
-  .standards-table { font-size: 11px; }
-  .standards-table th, .standards-table td { padding: 8px 10px; }
+  .problem h3 { font-size: 20px; }
+  .score-card { padding: 32px; }
+  .score-card .score-number { font-size: 60px; }
+}
+
+/* ── Responsive — Mobile ── */
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+  h1 { font-size: 28px; line-height: 1.15; }
+  h2 { font-size: 24px; }
+  .case-hero { min-height: auto; padding: 0 20px; }
+  .case-hero-inner { padding: 72px 0 48px; }
+  .case-hero .logomark { height: 32px; margin-bottom: 24px; }
+  .case-hero .case-label { font-size: 10px; margin-bottom: 12px; }
+  .case-hero .meta { gap: 16px; flex-direction: column; }
+  .case-hero .meta-item { flex-direction: row; gap: 8px; align-items: baseline; }
+  
+  .stats-bar { padding: 28px 20px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat-number { font-size: 28px; }
+  .stat-desc { font-size: 10px; }
+  
+  .case-nav { padding: 0 20px; }
+  .case-nav-inner { gap: 16px; padding: 12px 0; }
+  .case-nav a { font-size: 11px; }
+  .case-nav .nav-logo { height: 14px; }
+  
+  .container { padding: 0 20px; }
+  section { padding: 48px 0; }
+  
+  .label { font-size: 10px; letter-spacing: 0.2em; }
+  .overview-text { font-size: 15px; }
+  .problem { padding: 36px 0; }
+  .problem-number { font-size: 12px; }
+  .problem h3 { font-size: 18px; }
+  .problem-text { font-size: 14px; }
+  .evidence-list li { font-size: 13px; }
+  .quote-block { padding: 10px 16px; margin: 12px 0; }
+  .quote-block p { font-size: 13px; }
+  .quote-block cite { font-size: 11px; }
+  
+  .part-divider { padding: 40px 20px; }
+  .part-divider p { font-size: 13px; }
+  
+  .score-card { padding: 24px; margin: 24px 0; border-radius: 12px; }
+  .score-card .score-number { font-size: 48px; }
+  .score-card .score-label { font-size: 12px; }
+  .score-card .score-detail { font-size: 11px; }
+  
+  .standards-table { font-size: 11px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .standards-table th, .standards-table td { padding: 8px 10px; min-width: 80px; }
+  .standards-table th:first-child, .standards-table td:first-child { min-width: 120px; }
+  
+  .case-footer { padding: 32px 20px; }
+  .case-footer-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .case-footer .footer-text { text-align: left; }
 }
 
 /* ── Print ── */
@@ -337,7 +391,7 @@ section { padding: 80px 0; }
     <img src="/logomark-red-sos.svg" alt="SOS" class="logomark">
     <p class="case-label">Case Study</p>
     <h1>Garden Grove Hazmat Incident — Information Failure Analysis</h1>
-    <p class="subtitle">13 documented information failures measured against APCO, NIMS, FEMA, and ADA standards. 0 of 14 FEMA communication principles fully met.</p>
+
     <div class="meta">
       <div class="meta-item">
         <span class="meta-label">Incident</span>
@@ -368,19 +422,19 @@ section { padding: 80px 0; }
   <div class="stats-grid">
     <div class="stat-item">
       <div class="stat-number">40K</div>
-      <div class="stat-desc">Mandatory evacuees</div>
+      <div class="stat-desc">evacuees</div>
     </div>
     <div class="stat-item">
       <div class="stat-number">6</div>
-      <div class="stat-desc">Jurisdictions, zero coordination</div>
+      <div class="stat-desc">jurisdictions</div>
     </div>
     <div class="stat-item">
       <div class="stat-number">13</div>
-      <div class="stat-desc">Information failures documented</div>
+      <div class="stat-desc">failures</div>
     </div>
     <div class="stat-item">
       <div class="stat-number">0/14</div>
-      <div class="stat-desc">FEMA principles fully met</div>
+      <div class="stat-desc">FEMA met</div>
     </div>
   </div>
 </div>
