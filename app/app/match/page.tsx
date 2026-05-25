@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
-import { Check, X, ArrowRight, Sparkles } from "lucide-react";
+import { Check, X, ArrowRight, Sparkles, Clock, Users, Filter } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { toast } from "sonner";
+
+type Mode = "requests" | "resources";
+
+function slaHoursLeft(createdAt: string, urgency: string): number {
+  const target = urgency === "critical" ? 24 : urgency === "high" ? 48 : urgency === "medium" ? 96 : 168;
+  const hoursOpen = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  return Math.max(0, Math.round(target - hoursOpen));
+}
 
 type CaseItem = {
   id: string;
@@ -31,12 +39,23 @@ const CANDIDATE_COLORS = ["#89CFF0", "#EF4E4B", "#F5EBD6", "#34D399"];
 
 export default function MatchPage() {
   const { orgId } = useAuthContext();
+  const [mode, setMode] = useState<Mode>("requests");
   const [caseList, setCaseList] = useState<CaseItem[]>([]);
   const [activeId, setActive] = useState<string>("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countyFilter, setCountyFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<"urgency" | "age">("urgency");
 
-  const activeCase = caseList.find((c) => c.id === activeId) ?? caseList[0];
+  const counties = useMemo(() => Array.from(new Set(caseList.map(c => c.county).filter(Boolean))), [caseList]);
+
+  const filteredCases = useMemo(() => {
+    let list = countyFilter === "all" ? caseList : caseList.filter(c => c.county === countyFilter);
+    if (sortKey === "age") list = [...list].sort((a, b) => new Date(a.opened).getTime() - new Date(b.opened).getTime());
+    return list;
+  }, [caseList, countyFilter, sortKey]);
+
+  const activeCase = filteredCases.find((c) => c.id === activeId) ?? filteredCases[0];
 
   useEffect(() => {
     
