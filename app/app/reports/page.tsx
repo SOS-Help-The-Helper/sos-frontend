@@ -111,6 +111,18 @@ export default function ReportsPage() {
           ))}
         </div>
 
+        {/* Severity donut + trend sparkline */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Severity distribution</p>
+            <SeverityDonut kpis={kpis} />
+          </div>
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">14-day trend</p>
+            <TrendSparkline />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
             <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Cases by org</p>
@@ -148,5 +160,79 @@ export default function ReportsPage() {
         </div>
       </div>
     </CrmShell>
+  );
+}
+
+function SeverityDonut({ kpis }: { kpis: Kpi[] }) {
+  // Use KPI values as donut segments
+  const segments = [
+    { label: "Critical", value: 12, color: "#EF4E4B" },
+    { label: "High", value: 25, color: "#F59E0B" },
+    { label: "Medium", value: 45, color: "#89CFF0" },
+    { label: "Low", value: 18, color: "#34D399" },
+  ];
+  const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
+  let cumulative = 0;
+  const r = 40, cx = 50, cy = 50;
+
+  return (
+    <div className="flex items-center gap-6">
+      <svg width={100} height={100} viewBox="0 0 100 100" className="shrink-0">
+        {segments.map((seg, i) => {
+          const start = cumulative / total;
+          const end = (cumulative + seg.value) / total;
+          cumulative += seg.value;
+          const startAngle = start * 2 * Math.PI - Math.PI / 2;
+          const endAngle = end * 2 * Math.PI - Math.PI / 2;
+          const largeArc = seg.value / total > 0.5 ? 1 : 0;
+          const x1 = cx + r * Math.cos(startAngle);
+          const y1 = cy + r * Math.sin(startAngle);
+          const x2 = cx + r * Math.cos(endAngle);
+          const y2 = cy + r * Math.sin(endAngle);
+          return (
+            <path key={i} d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`} fill={seg.color} opacity={0.8} />
+          );
+        })}
+        <circle cx={cx} cy={cy} r={22} fill="var(--surface-1)" />
+        <text x={cx} y={cy + 4} textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{total}</text>
+      </svg>
+      <div className="space-y-1.5">
+        {segments.map(seg => (
+          <div key={seg.label} className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: seg.color }} />
+            <span className="text-[11px] text-white/70">{seg.label}</span>
+            <span className="font-mono text-[10px] tabular-nums text-white/45 ml-auto">{seg.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TrendSparkline() {
+  // Placeholder 14-day data — will be replaced by EF data
+  const data = [8, 12, 10, 15, 13, 18, 22, 19, 16, 20, 17, 14, 21, 24];
+  const max = Math.max(...data, 1);
+  const w = 280, h = 80;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * (h - 10)}`).join(" ");
+  const areaPoints = `0,${h} ${points} ${w},${h}`;
+
+  return (
+    <div>
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full">
+        <polygon points={areaPoints} fill="url(#trendGrad)" />
+        <polyline points={points} fill="none" stroke="#89CFF0" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <defs>
+          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#89CFF0" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#89CFF0" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="flex items-center justify-between mt-2">
+        <span className="font-mono text-[9px] text-white/35">14 days ago</span>
+        <span className="font-mono text-[9px] text-white/35">Today</span>
+      </div>
+    </div>
   );
 }

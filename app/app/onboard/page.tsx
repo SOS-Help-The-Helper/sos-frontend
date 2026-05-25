@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SosLogo } from '@/components/onboarding/SosLogo';
-import { Check, ArrowRight, Users, LayoutGrid, Map, Calendar, Package, HeartHandshake, BarChart3 } from 'lucide-react';
+import { Check, ArrowRight, Users, LayoutGrid, Map, Calendar, Package, HeartHandshake, BarChart3, Truck, Radio } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -21,6 +21,8 @@ const allModules = [
   { id: 'inventory', label: 'Inventory', icon: Package },
   { id: 'volunteers', label: 'Volunteers', icon: HeartHandshake },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'transport', label: 'Transport', icon: Truck },
+  { id: 'command', label: 'Command', icon: Radio },
 ];
 
 export default function OnboardPage() {
