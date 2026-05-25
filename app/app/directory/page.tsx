@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Upload, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Search, Upload, X, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, Table as TableIcon, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import { useMemo, useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { orgs as mockOrgs } from "@/lib/directory-data";
@@ -72,6 +73,32 @@ export default function DirectoryPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [view, setView] = useState<ViewMode>("table");
 
+  // Add person form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState<"Survivor" | "Volunteer" | "Staff">("Survivor");
+  const [addLoading, setAddLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  async function handleAddPerson(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addName.trim()) return;
+    setAddLoading(true);
+    try {
+      await api.efCall("partner-write", { person_name: addName.trim(), phone: addPhone.trim(), email: addEmail.trim(), org_id: orgId, records: [] });
+      toast.success("Person added");
+      setShowAddForm(false);
+      setAddName(""); setAddPhone(""); setAddEmail(""); setAddRole("Survivor");
+      setRefreshKey((k) => k + 1);
+    } catch {
+      toast.error("Failed to add person");
+    } finally {
+      setAddLoading(false);
+    }
+  }
+
   // Real EF data
   const [efPersons, setEfPersons] = useState<Row[]>([]);
   const [efOrgs, setEfOrgs] = useState<Row[]>([]);
@@ -101,7 +128,7 @@ export default function DirectoryPage() {
         }
       })
       .catch(() => {});
-  }, [orgId]);
+  }, [orgId, refreshKey]);
 
   useEffect(() => {
     api.crmBrowseOrgs({ limit: 100 })
@@ -237,13 +264,24 @@ export default function DirectoryPage() {
               Your CRM and the shared network in one place. Records your org owns are editable inline; records from connected orgs ({CONNECTED_ORG_IDS.size}) are read-only.
             </p>
           </div>
-          <Link
-            href="/app/directory/import"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-white/8 hover:bg-white/12 text-[12px] font-medium transition shrink-0"
-          >
-            <Upload size={13} strokeWidth={2} />
-            <span className="hidden sm:inline">Import</span>
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowAddForm((v) => !v)}
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12px] font-medium transition ${
+                showAddForm ? "bg-[#89CFF0]/20 text-[#89CFF0]" : "bg-white/8 hover:bg-white/12"
+              }`}
+            >
+              <UserPlus size={13} strokeWidth={2} />
+              <span className="hidden sm:inline">Add person</span>
+            </button>
+            <Link
+              href="/app/directory/import"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-white/8 hover:bg-white/12 text-[12px] font-medium transition"
+            >
+              <Upload size={13} strokeWidth={2} />
+              <span className="hidden sm:inline">Import</span>
+            </Link>
+          </div>
         </header>
 
         {/* Type tabs */}
@@ -408,6 +446,73 @@ export default function DirectoryPage() {
         </div>
 
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-10">
+          {/* Add person inline form */}
+          {showAddForm && (
+            <form onSubmit={handleAddPerson} className="mb-4 rounded-xl border border-[#89CFF0]/30 bg-[#89CFF0]/5 p-4 space-y-3">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-[#89CFF0]/80">New person</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-white/50 mb-1">Name <span className="text-[#EF4E4B]">*</span></label>
+                  <input
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    placeholder="Full name"
+                    required
+                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-white/50 mb-1">Phone</label>
+                  <input
+                    value={addPhone}
+                    onChange={(e) => setAddPhone(e.target.value)}
+                    placeholder="(555) 555-5555"
+                    type="tel"
+                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-white/50 mb-1">Email</label>
+                  <input
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    type="email"
+                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-white/50 mb-1">Role</label>
+                  <select
+                    value={addRole}
+                    onChange={(e) => setAddRole(e.target.value as typeof addRole)}
+                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition appearance-none"
+                  >
+                    <option value="Survivor">Survivor</option>
+                    <option value="Volunteer">Volunteer</option>
+                    <option value="Staff">Staff</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={addLoading || !addName.trim()}
+                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-white text-[12px] font-medium transition"
+                >
+                  {addLoading ? "Adding…" : "Add person"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="inline-flex items-center h-8 px-3 rounded-md text-[12px] text-white/60 hover:text-white hover:bg-white/6 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
           {/* Mobile card list (always cards) */}
           <div className="md:hidden space-y-2">
             {rows.length === 0 ? (

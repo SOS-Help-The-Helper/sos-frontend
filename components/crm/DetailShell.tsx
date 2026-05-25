@@ -82,7 +82,7 @@ export function IdentityBand({
 }: {
   avatar?: ReactNode;
   eyebrow?: ReactNode;
-  title: string;
+  title: ReactNode;
   pills?: ReactNode;
   chips?: ReactNode;
   actions?: ReactNode;

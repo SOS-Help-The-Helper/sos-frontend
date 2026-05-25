@@ -12,7 +12,8 @@ import {
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { ChatPanel } from "@/components/chat/chat-panel";
-import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle, Pencil, Check, X as XIcon } from "lucide-react";
 
 // Types matching the crmResourceDetail EF response
 interface HistEntry { event: string; date: string; }
@@ -34,12 +35,46 @@ export default function ResourcePage() {
   const { orgId } = useAuthContext();
   const [data, setData] = useState<{ resource: ResourceData; matches: any[] } | null | undefined>(undefined);
   const [chatOpen, setChatOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editCapacity, setEditCapacity] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   useEffect(() => {
     api.crmResourceDetail(id)
       .then((res: any) => setData(res?.resource ? res : null))
       .catch(() => setData(null));
   }, [id]);
+
+  useEffect(() => {
+    if (data?.resource) {
+      setEditCapacity(String(data.resource.capacity_available ?? ''));
+      setEditStatus(data.resource.status ?? '');
+      setEditCategory(data.resource.taxonomy_code ?? '');
+    }
+  }, [data]);
+
+  async function saveResource() {
+    setSaving(true);
+    try {
+      await (api as any).efCall('partner-update', {
+        action: 'update_resource',
+        resource_id: id,
+        ...(editCapacity !== '' ? { capacity_available: Number(editCapacity) } : {}),
+        status: editStatus,
+        category: editCategory,
+      });
+      toast.success('Resource updated');
+      setEditMode(false);
+      const res: any = await api.crmResourceDetail(id);
+      if (res?.resource) setData(res);
+    } catch {
+      toast.error('Failed to update resource');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (data === undefined) {
     return (
@@ -235,6 +270,7 @@ export default function ResourcePage() {
           }
           actions={
             <>
+              <ActionBtn icon={editMode ? XIcon : Pencil} label={editMode ? "Cancel" : "Edit"} onClick={() => setEditMode(v => !v)} />
               <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
               <OverflowMenu
                 actions={[
@@ -246,6 +282,61 @@ export default function ResourcePage() {
             </>
           }
         />
+
+        {editMode && (
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+            <p className="text-[11px] uppercase tracking-widest text-white/45 font-mono mb-1">Edit Resource</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] text-white/50">Capacity Available</label>
+                <input
+                  type="number"
+                  value={editCapacity}
+                  onChange={e => setEditCapacity(e.target.value)}
+                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] text-white/50">Status</label>
+                <select
+                  value={editStatus}
+                  onChange={e => setEditStatus(e.target.value)}
+                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white outline-none focus:border-[#89CFF0]/60"
+                >
+                  {['available','reserved','fulfilled','unavailable'].map(s => (
+                    <option key={s} value={s} className="bg-[#0F1E2B]">{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] text-white/50">Category</label>
+                <input
+                  type="text"
+                  value={editCategory}
+                  onChange={e => setEditCategory(e.target.value)}
+                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
+                  placeholder="taxonomy code"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={() => setEditMode(false)}
+                className="px-3 py-1.5 rounded-lg text-[12px] text-white/60 border border-white/10 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveResource}
+                disabled={saving}
+                className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#EF4E4B] text-white hover:bg-[#d94441] transition disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Check size={12} /> {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <HeroLine
           primary={

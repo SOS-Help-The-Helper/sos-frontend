@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2, Users, MessageSquare } from "lucide-react";
+import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2, Users, MessageSquare, Pencil, Check, X as XIcon } from "lucide-react";
+import { toast } from "sonner";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
 import { AiSummary } from "@/components/crm/AiSummary";
@@ -26,6 +28,15 @@ export default function OrgPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [stats, setStats] = useState<any>({});
   const [members, setMembers] = useState<any[]>([]);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSaving, setInviteSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -36,6 +47,44 @@ export default function OrgPage() {
     api.crmOrgStats(id as string).then((res: any) => setStats(res ?? {})).catch(() => {});
     api.crmOrgMembers(id as string).then((res: any) => setMembers(res?.members ?? [])).catch(() => {});
   }, [id]);
+
+  useEffect(() => {
+    if (org) {
+      setEditName(org.name ?? org.org_name ?? '');
+      setEditEmail(org.email ?? org.contact_email ?? '');
+      setEditPhone(org.phone ?? org.contact_phone ?? '');
+      setEditWebsite(org.website ?? '');
+    }
+  }, [org]);
+
+  async function saveOrg() {
+    setSaving(true);
+    try {
+      await (api as any).efCall('crm-directory', { action: 'update_org', org_id: id, name: editName, email: editEmail, phone: editPhone, website: editWebsite });
+      toast.success('Organization updated');
+      setEditMode(false);
+    } catch {
+      toast.error('Failed to update organization');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function inviteMember() {
+    if (!inviteEmail.trim()) return;
+    setInviteSaving(true);
+    try {
+      await (api as any).efCall('crm-directory', { action: 'invite_member', org_id: id, email: inviteEmail, role: 'Volunteer' });
+      toast.success('Member invited');
+      setInviteOpen(false);
+      setInviteEmail('');
+      api.crmOrgMembers(id as string).then((res: any) => setMembers(res?.members ?? [])).catch(() => {});
+    } catch {
+      toast.error('Failed to invite member');
+    } finally {
+      setInviteSaving(false);
+    }
+  }
 
   if (!org) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Loading organization...</div></CrmShell>;
   const orgName = org.name ?? org.org_name ?? "Unknown Org";
@@ -108,9 +157,9 @@ export default function OrgPage() {
           }
           actions={
             <>
-              <ActionBtn icon={Mail} label="Email" />
+              <ActionBtn icon={editMode ? XIcon : Pencil} label={editMode ? "Cancel" : "Edit"} onClick={() => setEditMode(v => !v)} />
               <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
-              <ActionBtn icon={Plus} label="Invite member" primary />
+              <ActionBtn icon={Plus} label="Invite" primary onClick={() => setInviteOpen(v => !v)} />
               <OverflowMenu
                 actions={[
                   { label: "Share", icon: Share2 },
@@ -142,6 +191,59 @@ export default function OrgPage() {
           tldr={`${orgType} · ${memberCount} members · ${stats.active_cases ?? 0} active cases.`}
           summary={`${orgName} is a ${orgType.toLowerCase()} based in ${location || "WNC"}, with ${memberCount} members. Trust score ${trustPct}%. ${capabilities.length > 0 ? `Capabilities: ${capabilities.join(", ")}.` : ""} Currently handling ${stats.active_cases ?? 0} active cases with ${stats.fulfilled ?? 0} fulfilled.`}
         />
+
+        {editMode && (
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+            <p className="text-[11px] uppercase tracking-widest text-white/45 font-mono mb-1">Edit Organization</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: 'Name', value: editName, set: setEditName, placeholder: 'Organization name' },
+                { label: 'Email', value: editEmail, set: setEditEmail, placeholder: 'contact@org.org' },
+                { label: 'Phone', value: editPhone, set: setEditPhone, placeholder: '+1 555 000 0000' },
+                { label: 'Website', value: editWebsite, set: setEditWebsite, placeholder: 'https://...' },
+              ].map(f => (
+                <div key={f.label} className="flex flex-col gap-1">
+                  <label className="text-[11px] text-white/50">{f.label}</label>
+                  <input
+                    type="text"
+                    value={f.value}
+                    onChange={e => f.set(e.target.value)}
+                    placeholder={f.placeholder}
+                    className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => setEditMode(false)} className="px-3 py-1.5 rounded-lg text-[12px] text-white/60 border border-white/10 hover:bg-white/5 transition">Cancel</button>
+              <button onClick={saveOrg} disabled={saving} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#EF4E4B] text-white hover:bg-[#d94441] transition disabled:opacity-50 flex items-center gap-1.5">
+                <Check size={12} /> {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {inviteOpen && (
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+            <p className="text-[11px] uppercase tracking-widest text-white/45 font-mono mb-1">Invite Member</p>
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-white/50">Email address</label>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="volunteer@org.org"
+                className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => { setInviteOpen(false); setInviteEmail(''); }} className="px-3 py-1.5 rounded-lg text-[12px] text-white/60 border border-white/10 hover:bg-white/5 transition">Cancel</button>
+              <button onClick={inviteMember} disabled={inviteSaving || !inviteEmail.trim()} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#EF4E4B] text-white hover:bg-[#d94441] transition disabled:opacity-50 flex items-center gap-1.5">
+                <Plus size={12} /> {inviteSaving ? 'Inviting…' : 'Send invite'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>

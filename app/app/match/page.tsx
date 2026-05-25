@@ -46,11 +46,17 @@ const DECLINE_REASONS = ["Out of area", "At capacity", "Not a fit", "Other"];
 function CandidateCard({
   candidate,
   activeCase,
+  confirming,
+  onStartConfirm,
+  onCancelConfirm,
   onAccept,
   onReject,
 }: {
   candidate: Candidate;
   activeCase: CaseItem;
+  confirming: boolean;
+  onStartConfirm: () => void;
+  onCancelConfirm: () => void;
   onAccept: () => void;
   onReject: (reason: string) => void;
 }) {
@@ -76,6 +82,7 @@ function CandidateCard({
 
   function handleAccept() {
     setState("accepted");
+    onCancelConfirm();
     onAccept();
   }
 
@@ -143,7 +150,7 @@ function CandidateCard({
               <X size={13} /> Decline
             </button>
             <button
-              onClick={handleAccept}
+              onClick={onStartConfirm}
               className="h-9 px-3 rounded-lg bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[12px] font-medium transition inline-flex items-center gap-1.5"
             >
               <Check size={13} /> Accept
@@ -188,6 +195,27 @@ function CandidateCard({
           ))}
         </div>
       )}
+
+      {/* Match confirmation */}
+      {confirming && state === "idle" && (
+        <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3 flex-wrap">
+          <span className="text-[12px] text-white/70 flex-1">Confirm match?</span>
+          <div className="flex gap-1.5 shrink-0">
+            <button
+              onClick={onCancelConfirm}
+              className="h-7 px-2.5 rounded-md bg-white/8 hover:bg-white/15 text-white/70 text-[11px] transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAccept}
+              className="h-7 px-2.5 rounded-md bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[11px] font-medium transition"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -202,6 +230,7 @@ export default function MatchPage() {
   const [activeId, setActive] = useState<string>("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [countyFilter, setCountyFilter] = useState("all");
   const [sortKey, setSortKey] = useState<"urgency" | "age">("urgency");
 
@@ -303,7 +332,7 @@ export default function MatchPage() {
   async function handleAccept(candidateId: string) {
     try {
       await api.crmCaseAction("approve_match", { match_id: candidateId, request_id: activeId });
-      toast.success("Match approved");
+      toast.success("Match committed");
     } catch {
       toast.error("Failed to approve match");
     }
@@ -581,6 +610,9 @@ export default function MatchPage() {
                     key={candidate.id}
                     candidate={candidate}
                     activeCase={activeCase}
+                    confirming={confirmingId === candidate.id}
+                    onStartConfirm={() => setConfirmingId(candidate.id)}
+                    onCancelConfirm={() => setConfirmingId(null)}
                     onAccept={() => handleAccept(candidate.id)}
                     onReject={(reason) => handleReject(candidate.id, reason)}
                   />

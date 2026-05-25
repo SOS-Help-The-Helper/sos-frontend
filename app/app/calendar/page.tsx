@@ -37,11 +37,11 @@ const days = [
 export default function CalendarPage() {
   const { orgId } = useAuthContext();
   const [items, setItems] = useState<CalEvent[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefillDate, setPrefillDate] = useState<string | null>(null);
 
-  const selected = useMemo(() => items.find((s) => s.id === selectedId) ?? null, [items, selectedId]);
+  const editingEvent = useMemo(() => items.find((s) => s.id === editingId) ?? null, [items, editingId]);
 
   useEffect(() => {
     // admin: proceed without org filter
@@ -88,7 +88,6 @@ export default function CalendarPage() {
 
   async function removeEvent(id: string) {
     setItems((prev) => prev.filter((s) => s.id !== id));
-    setSelectedId(null);
     toast.success("Removed");
     try {
       await api.crmEventsDelete(id);
@@ -144,7 +143,7 @@ export default function CalendarPage() {
                     return (
                       <button
                         key={s.id}
-                        onClick={() => setSelectedId(s.id)}
+                        onClick={() => setEditingId(editingId === s.id ? null : s.id)}
                         className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
                         style={{ borderColor: org?.color }}
                       >
@@ -173,18 +172,27 @@ export default function CalendarPage() {
               );
             })}
           </div>
+          {editingId && editingEvent && (
+            <div className="border-t border-white/8 px-4 py-4">
+              <InlineEventEdit
+                key={editingId}
+                event={editingEvent}
+                onClose={() => setEditingId(null)}
+                onSave={async (patch) => {
+                  await updateEvent(editingId, patch);
+                  toast.success("Event updated");
+                  setEditingId(null);
+                }}
+                onDelete={async () => {
+                  await removeEvent(editingId);
+                  setEditingId(null);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {selected && (
-        <EventDrawer
-          key={selected.id}
-          event={selected}
-          onClose={() => setSelectedId(null)}
-          onRemove={() => removeEvent(selected.id)}
-          onUpdate={(patch) => updateEvent(selected.id, patch)}
-        />
-      )}
       {newOpen && (
         <EventFormDrawer
           mode="new"
@@ -431,6 +439,83 @@ function EventFormDrawer({
           </div>
         </div>
       </aside>
+    </div>
+  );
+}
+
+function InlineEventEdit({
+  event,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  event: CalEvent;
+  onClose: () => void;
+  onSave: (patch: { title: string; date: string; time: string }) => Promise<void>;
+  onDelete: () => Promise<void>;
+}) {
+  const [title, setTitle] = useState(event.title);
+  const [date, setDate] = useState(event.date);
+  const [time, setTime] = useState(event.time);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!title.trim()) { toast.error("Title is required"); return; }
+    setSaving(true);
+    await onSave({ title: title.trim(), date, time });
+    setSaving(false);
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete "${event.title}"?`)) return;
+    await onDelete();
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Edit event</p>
+        <button onClick={onClose} className="p-1 hover:bg-white/8 rounded"><X size={12} /></button>
+      </div>
+      <div className="grid grid-cols-1 gap-2">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+          className="w-full h-8 rounded-md bg-white/6 border border-white/8 focus:border-[#89CFF0] focus:outline-none px-3 text-[12.5px]"
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full h-8 rounded-md bg-white/6 border border-white/8 px-2 text-[12.5px] focus:outline-none focus:border-[#89CFF0]"
+          >
+            {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.date}</option>)}
+          </select>
+          <input
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            placeholder="9a–1p"
+            className="w-full h-8 rounded-md bg-white/6 border border-white/8 focus:border-[#89CFF0] focus:outline-none px-3 text-[12.5px]"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12px] font-medium transition"
+        >
+          <Check size={11} /> {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          onClick={handleDelete}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B]/15 hover:bg-[#EF4E4B]/25 text-[#EF4E4B] text-[12px] font-medium transition"
+        >
+          <Trash2 size={11} /> Delete
+        </button>
+        <button onClick={onClose} className="h-8 px-3 rounded-lg bg-white/6 hover:bg-white/12 text-[12px] transition">Cancel</button>
+      </div>
     </div>
   );
 }

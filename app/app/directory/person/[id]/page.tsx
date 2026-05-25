@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus, MessageSquare } from "lucide-react";
-// // toast disabled
+import { useParams, useRouter } from "next/navigation";
+import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus, MessageSquare, Pencil, Check, X as XIcon, Archive } from "lucide-react";
+import { toast } from "sonner";
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
 import { AiSummary } from "@/components/crm/AiSummary";
@@ -57,6 +57,11 @@ export default function PersonPage() {
   const { orgId } = useAuthContext();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api.crmGetPerson(id)
@@ -67,6 +72,32 @@ export default function PersonPage() {
   const seed = people.find((p) => p.id === id);
   if (!seed) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Person not found</div></CrmShell>;
   const person = usePerson(seed.id) ?? seed;
+
+  function openEdit() {
+    setEditName(person.name);
+    setEditPhone(person.phoneMask ?? "");
+    setEditEmail(person.email ?? "");
+    setEditMode(true);
+  }
+
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      await api.crmUpdatePerson(id, "display_name", editName);
+      await api.crmUpdatePerson(id, "phone", editPhone);
+      await api.crmUpdatePerson(id, "email", editEmail);
+      toast.success("Person updated");
+      setEditMode(false);
+    } catch {
+      toast.error("Failed to save changes");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function cancelEdit() {
+    setEditMode(false);
+  }
   const editable = canEdit(person.org.id);
 
   const apiPerson = apiData?.person;
@@ -188,6 +219,7 @@ export default function PersonPage() {
               <ActionBtn icon={Phone} label="Call" />
               <ActionBtn icon={Mail} label="Email" />
               <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
+              <ActionBtn icon={Pencil} label="Edit" onClick={openEdit} />
               <OverflowMenu
                 actions={[
                   { label: "Locate", icon: MapPin },
@@ -197,6 +229,49 @@ export default function PersonPage() {
             </>
           }
         />
+
+        {editMode && (
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+            <p className="text-[11px] font-mono uppercase tracking-wider text-white/45">Edit Person</p>
+            <div className="space-y-2">
+              <input
+                className="w-full bg-white/8 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                placeholder="Name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <input
+                className="w-full bg-white/8 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                placeholder="Phone"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+              />
+              <input
+                className="w-full bg-white/8 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+                placeholder="Email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={saveEdit}
+                disabled={saving}
+                className="flex-1 h-9 rounded-lg bg-[#EF4E4B] hover:bg-[#EF4E4B]/80 disabled:opacity-50 text-white text-[13px] font-medium inline-flex items-center justify-center gap-1.5 transition"
+              >
+                <Check size={13} /> {saving ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={saving}
+                className="h-9 px-4 rounded-lg bg-white/8 hover:bg-white/12 disabled:opacity-50 text-white/70 text-[13px] font-medium inline-flex items-center justify-center gap-1.5 transition"
+              >
+                <XIcon size={13} /> Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         <StewardshipBand
           ownerOrgId={person.org.id}
