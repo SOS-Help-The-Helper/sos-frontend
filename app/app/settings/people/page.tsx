@@ -1,10 +1,11 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Mail, MoreHorizontal, Search, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/directory/Avatar";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
-
-type Role = "Owner" | "Admin" | "Coordinator" | "Volunteer";
+type Role = "Owner" | "Admin" | "Coordinator" | "Volunteer" | string;
 type Status = "Active" | "Invited";
 
 type Member = {
@@ -16,15 +17,6 @@ type Member = {
   lastActive: string;
 };
 
-const MEMBERS: Member[] = [
-  { id: "u1", name: "Melissa Hart", email: "melissa@mountainareaaid.org", role: "Owner", status: "Active", lastActive: "now" },
-  { id: "u2", name: "Diego Alvarez", email: "diego@mountainareaaid.org", role: "Admin", status: "Active", lastActive: "2h ago" },
-  { id: "u3", name: "Priya Shah", email: "priya@mountainareaaid.org", role: "Coordinator", status: "Active", lastActive: "yesterday" },
-  { id: "u4", name: "Jordan Lee", email: "jordan@mountainareaaid.org", role: "Coordinator", status: "Active", lastActive: "3d ago" },
-  { id: "u5", name: "Sam Okafor", email: "sam@mountainareaaid.org", role: "Volunteer", status: "Active", lastActive: "1w ago" },
-  { id: "u6", name: "Riley Chen", email: "riley.chen@gmail.com", role: "Volunteer", status: "Invited", lastActive: "—" },
-];
-
 const ROLE_TINT: Record<Role, string> = {
   Owner: "#EF4E4B",
   Admin: "#F5EBD6",
@@ -33,6 +25,25 @@ const ROLE_TINT: Record<Role, string> = {
 };
 
 export default function PeopleSettings() {
+  const { orgId } = useAuthContext();
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.crmOrgMembers(orgId).then((res: any) => {
+      const list = res?.members ?? [];
+      setMembers(list.map((m: any) => ({
+        id: m.id ?? m.person_id ?? "",
+        name: m.display_name ?? m.name ?? "Unknown",
+        email: m.email ?? "",
+        role: m.role ?? "Volunteer",
+        status: "Active" as Status,
+        lastActive: "—",
+      })));
+    }).catch(() => {});
+  }, [orgId]);
+
+  const MEMBERS = members;
   const active = MEMBERS.filter((m) => m.status === "Active").length;
   const invited = MEMBERS.filter((m) => m.status === "Invited").length;
 

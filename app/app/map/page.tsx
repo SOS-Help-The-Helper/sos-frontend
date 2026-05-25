@@ -373,13 +373,24 @@ export default function MapPage() {
               { label: "Facilities", color: "#4ADE80", count: layers?.facilities?.length ?? 0 },
               { label: "Events", color: "#A855F7", count: layers?.events?.length ?? 0 },
             ].map((l) => (
-              <div key={l.label} className="flex items-center justify-between">
+              <label key={l.label} className="flex items-center justify-between cursor-pointer group">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.color, boxShadow: `0 0 6px ${l.color}60` }} />
-                  <span className="text-[13px] text-white/70">{l.label}</span>
+                  <input type="checkbox" defaultChecked className="sr-only peer" onChange={(e) => {
+                    const map = (document.querySelector('.mapboxgl-canvas')?.closest('.mapboxgl-map') as any)?.__map;
+                    if (!map) return;
+                    const layerKey = l.label.toLowerCase().replace(/s$/, '');
+                    const visibility = e.target.checked ? 'visible' : 'none';
+                    [`${layerKey}-clusters`, `${layerKey}-cluster-glow`, `${layerKey}-unclustered`].forEach(id => {
+                      try { map.setLayoutProperty(id, 'visibility', visibility); } catch {}
+                    });
+                  }} />
+                  <span className="w-4 h-4 rounded border border-white/20 flex items-center justify-center peer-checked:bg-white/15 peer-checked:border-white/40 transition">
+                    <span className="w-2 h-2 rounded-full peer-checked:opacity-100" style={{ background: l.color }} />
+                  </span>
+                  <span className="text-[13px] text-white/70 group-hover:text-white/90 transition">{l.label}</span>
                 </div>
                 <span className="font-mono text-[12px] text-white/45">{l.count.toLocaleString()}</span>
-              </div>
+              </label>
             ))}
           </div>
 

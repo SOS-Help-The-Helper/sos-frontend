@@ -1,27 +1,38 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Building2, Globe, Mail, MapPin, Phone, Upload } from "lucide-react";
 import { ScoreRing, FactorBar, ScoreCard, type Factor } from "@/components/crm/Scoring";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
 
-
-const TRUST_FACTORS: Factor[] = [
-  { key: "fulfillment", label: "Fulfillment rate", earned: 92, max: 100 },
-  { key: "response", label: "Response speed", earned: 78, max: 100 },
-  { key: "satisfaction", label: "Citizen satisfaction", earned: 88, max: 100 },
-  { key: "capacity", label: "Capacity reliability", earned: 81, max: 100 },
-];
-
-const SERVICES = ["Shelter", "Transport", "Hot meals", "Supply distribution", "Wellness checks"];
-
-const ACTIVE_STATS = [
-  { label: "Open cases", value: "14" },
-  { label: "Resources deployed", value: "32" },
-  { label: "Volunteers", value: "47" },
-  { label: "Avg match time", value: "2.4h" },
+const FALLBACK_TRUST: Factor[] = [
+  { key: "fulfillment", label: "Fulfillment rate", earned: 0, max: 100 },
+  { key: "response", label: "Response speed", earned: 0, max: 100 },
+  { key: "satisfaction", label: "Citizen satisfaction", earned: 0, max: 100 },
+  { key: "capacity", label: "Capacity reliability", earned: 0, max: 100 },
 ];
 
 export default function OrgSettings() {
-  const trust = Math.round(TRUST_FACTORS.reduce((a, f) => a + f.earned, 0) / TRUST_FACTORS.length);
+  const { orgId, orgName } = useAuthContext();
+  const [orgData, setOrgData] = useState<Record<string, any> | null>(null);
+  const [stats, setStats] = useState<{ active_cases: number; fulfilled: number; total_matches: number } | null>(null);
+
+  useEffect(() => {
+    if (!orgId) return;
+    api.getPortalConfig(orgId).then((res: any) => setOrgData(res?.config ?? res)).catch(() => {});
+    api.crmOrgStats(orgId).then((res: any) => setStats(res)).catch(() => {});
+  }, [orgId]);
+
+  const TRUST_FACTORS: Factor[] = orgData?.trust_factors ?? FALLBACK_TRUST;
+  const SERVICES: string[] = orgData?.services ?? orgData?.capabilities ?? [];
+  const ACTIVE_STATS = [
+    { label: "Open cases", value: String(stats?.active_cases ?? "—") },
+    { label: "Fulfilled", value: String(stats?.fulfilled ?? "—") },
+    { label: "Total matches", value: String(stats?.total_matches ?? "—") },
+    { label: "Org name", value: orgData?.name ?? orgName ?? "—" },
+  ];
+
+  const trust = TRUST_FACTORS.length > 0 ? Math.round(TRUST_FACTORS.reduce((a, f) => a + f.earned, 0) / TRUST_FACTORS.length) : 0;
   const trustColor = trust >= 85 ? "#34D399" : trust >= 70 ? "#89CFF0" : trust >= 50 ? "#F5EBD6" : "#EF4E4B";
   const trustLabel = trust >= 85 ? "Trusted" : trust >= 70 ? "Reliable" : trust >= 50 ? "Building" : "New";
 
