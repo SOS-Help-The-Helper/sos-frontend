@@ -42,7 +42,7 @@ export interface TopNavProps {
   userName?: string;
 }
 
-export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/settings", userName = "U" }: TopNavProps) {
+export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app/settings", userName = "U" }: TopNavProps) {
   const path = usePathname();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -78,7 +78,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
       <div style={{ height: 56, padding: "0 16px", display: "flex", alignItems: "center", gap: 16 }}>
         {/* Logo → Command */}
         <Link
-          href="/command"
+          href="/app/command"
           style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", textDecoration: "none", flexShrink: 0, flex: "1 1 0", minWidth: 0 }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -93,10 +93,9 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
           {NAV_CATEGORIES.map((cat) => {
             const mods = cat.modules.filter(isEnabled);
             if (mods.length === 0) return null;
-            const active = mods.some((m) => path.startsWith(`/${m === "match" ? "match" : MODULE_VISUAL[m] ? m : m}`));
+            const active = mods.some((m) => path.startsWith(`/app/${m}`));
             const catActive = mods.some((m) => {
-              const to = `/${m}`;
-              return path.startsWith(to);
+              return path.startsWith(`/app/${m}`);
             });
             const open = openCat === cat.key;
             return (
@@ -129,12 +128,12 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
                       {mods.map((m) => {
                         const vis = MODULE_VISUAL[m];
                         const Icon = vis.icon;
-                        const itemActive = path.startsWith(`/${m}`);
+                        const itemActive = path.startsWith(`/app/${m}`);
                         const label = labels[m] || m.charAt(0).toUpperCase() + m.slice(1);
                         return (
                           <Link
                             key={m}
-                            href={`/${m}`}
+                            href={`/app/${m}`}
                             onClick={() => setOpenCat(null)}
                             style={{
                               display: "flex", alignItems: "flex-start", gap: 14, padding: 12, borderRadius: 2,
@@ -197,7 +196,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
               const mods = cat.modules.filter(isEnabled);
               if (mods.length === 0) return null;
               const expanded = mobileExpanded === cat.key;
-              const catActive = mods.some((m) => path.startsWith(`/${m}`));
+              const catActive = mods.some((m) => path.startsWith(`/app/${m}`));
               return (
                 <div key={cat.key}>
                   <button
@@ -210,10 +209,10 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
                   {expanded && (
                     <div style={{ paddingLeft: 12, marginTop: 2, marginBottom: 4 }}>
                       {mods.map((m) => {
-                        const itemActive = path.startsWith(`/${m}`);
+                        const itemActive = path.startsWith(`/app/${m}`);
                         const label = labels[m] || m.charAt(0).toUpperCase() + m.slice(1);
                         return (
-                          <Link key={m} href={`/${m}`} onClick={() => setMobileOpen(false)} style={{ ...mobileLinkStyle(itemActive), padding: "10px 14px", fontSize: 13.5 }}>
+                          <Link key={m} href={`/app/${m}`} onClick={() => setMobileOpen(false)} style={{ ...mobileLinkStyle(itemActive), padding: "10px 14px", fontSize: 13.5 }}>
                             {label}
                           </Link>
                         );
@@ -223,7 +222,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/set
                 </div>
               );
             })}
-            <Link href={settingsTo} onClick={() => setMobileOpen(false)} style={mobileLinkStyle(path.startsWith("/settings"))}>
+            <Link href={settingsTo} onClick={() => setMobileOpen(false)} style={mobileLinkStyle(path.startsWith("/app/settings"))}>
               Settings
             </Link>
           </div>

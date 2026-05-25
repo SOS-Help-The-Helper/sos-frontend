@@ -41,7 +41,7 @@ export function CrmShell({
         enabledModules={config.modules}
         labels={config.labels}
         onOpenAgent={() => setPaletteOpen(true)}
-        settingsTo="/settings"
+        settingsTo="/app/settings"
       />
       <main>{children}</main>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} module={module} />
