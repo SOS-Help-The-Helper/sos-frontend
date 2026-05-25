@@ -1,0 +1,226 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { CrmShell } from "@/components/crm/CrmShell";
+import {
+  DetailTopBar, IdentityBand, MetaChip,
+  DetailTabs, EmptyTab, type DetailTab,
+  StatusPill, MetaPopover, OverflowMenu, ActionBtn,
+  HeroBlock, DetailLayout, ContextCard, ContextRow,
+  DetailNotFound, DetailError,
+} from "@/components/crm/DetailShell";
+import { resources, assetEvents, matches, type ResourceDetail } from "@/lib/prototype-data";
+import { MatchChainView } from "@/components/match/MatchChainView";
+type HistEntry = ResourceDetail["history"][number];
+import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
+
+export const Route = createFileRoute("/directory/resource/$id")({
+  loader: ({ params }): ResourceDetail => {
+    const r = resources.find((x) => x.id === params.id);
+    if (!r) throw notFound();
+    return r;
+  },
+  head: ({ loaderData }) => ({
+    meta: [{ title: `${loaderData?.title ?? "Resource"} — SOS Connect` }],
+  }),
+  notFoundComponent: () => (
+    <DetailNotFound module="Cases" backTo="/inventory" backLabel="Resources" entity="Resource" />
+  ),
+  errorComponent: ({ error }) => (
+    <DetailError module="Cases" backTo="/inventory" backLabel="Resources" message={error.message} />
+  ),
+  component: ResourcePage,
+});
+
+function ResourcePage() {
+  const r = Route.useLoaderData();
+  const statusColor =
+    r.status === "deployed" ? "#34D399" : r.status === "matched" ? "#89CFF0" : "#89CFF0";
+  const events = assetEvents.filter(e => e.resourceId === r.id);
+
+  const tabs: DetailTab[] = [
+    {
+      key: "activity",
+      label: "Activity",
+      count: r.history.length + events.length,
+      content: (
+        <div className="space-y-6">
+          <ol className="relative ml-2 space-y-4 border-l border-[var(--hairline)] pl-6">
+            {r.history.map((h: HistEntry, i: number) => (
+              <li key={i} className="relative">
+                <span
+                  className="absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)]"
+                  style={{ background: "rgba(137,207,240,0.18)" }}
+                >
+                  <Package size={12} style={{ color: "#89CFF0" }} />
+                </span>
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-medium text-white/90">{h.event}</p>
+                  <span className="text-[10.5px] text-white/40" title={h.date}>{h.date}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {events.length > 0 && (
+            <div>
+              <p className="text-[11.5px] text-white/45 mb-2">Asset events</p>
+              <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-5">
+                {events.map((e) => {
+                  const color =
+                    e.eventType === "status_change" ? "#89CFF0" :
+                    e.eventType === "location_move" ? "#34D399" :
+                    e.eventType === "condition_update" ? "#89CFF0" :
+                    e.eventType === "assignment" ? "#EF4E4B" : "white";
+                  return (
+                    <li key={e.id} className="relative">
+                      <span className="absolute -left-[28px] top-0.5 w-4 h-4 rounded-full ring-4 ring-[var(--surface-1)]" style={{ background: `${color}33` }}>
+                        <span className="absolute inset-1 rounded-full" style={{ background: color }} />
+                      </span>
+                      <p className="text-[12.5px] text-white/85 flex items-center gap-1.5 flex-wrap">
+                        {e.fromStatus && e.toStatus && (<><span>{e.fromStatus}</span><ArrowRight size={10} className="text-white/35" /><span>{e.toStatus}</span></>)}
+                        {e.fromLocation && e.toLocation && (<><span>{e.fromLocation}</span><ArrowRight size={10} className="text-white/35" /><span>{e.toLocation}</span></>)}
+                        {!e.fromStatus && !e.fromLocation && e.notes}
+                      </p>
+                      <p className="text-[10.5px] text-white/40 mt-0.5">{e.performedBy} · {e.timestamp}</p>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "matches",
+      label: "Matches",
+      count: r.matchedTo ? 1 : 0,
+      content: (() => {
+        // Find a chain-enabled match for this RV resource
+        const chainMatch = r.id === "RES-RV-247"
+          ? matches["M-RV-247"]
+          : Object.values(matches).find((m) => m.rv && m.title.includes(r.title.split("—")[0]?.trim() ?? ""));
+        if (chainMatch && chainMatch.survivor && chainMatch.rv) {
+          return <MatchChainView match={chainMatch} />;
+        }
+        return r.matchedTo ? (
+          <div className="rounded-xl border border-[#89CFF0]/30 bg-[#89CFF0]/8 p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles size={12} className="text-[#89CFF0]" />
+              <p className="text-[11.5px] text-white/55">Currently matched to</p>
+            </div>
+            <Link to="/cases/$id" params={{ id: r.matchedTo.caseId }} className="text-[14px] font-medium text-[#89CFF0] hover:underline inline-flex items-center gap-2">
+              <GitBranch size={13} /> {r.matchedTo.personName}
+              <span className="font-mono text-[10.5px] text-white/45">{r.matchedTo.caseId}</span>
+            </Link>
+          </div>
+        ) : (
+          <EmptyTab label="No active matches. Available for deployment." />
+        );
+      })(),
+    },
+    { key: "files", label: "Files", content: <EmptyTab label="No files or reports attached." /> },
+  ];
+
+  return (
+    <CrmShell module="Cases">
+      <DetailTopBar
+        backTo="/inventory"
+        backLabel="Resources"
+        crumbs={[{ label: "Resources", to: "/inventory" }, { label: r.title }]}
+      />
+
+      <main className="max-w-[1240px] mx-auto px-4 py-5 md:py-7 space-y-4">
+        <IdentityBand
+          avatar={
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ background: `${statusColor}22`, color: statusColor }}
+            >
+              <Package size={22} />
+            </div>
+          }
+          pills={<StatusPill tint={statusColor}>{r.status}</StatusPill>}
+          title={r.title}
+          chips={
+            <>
+              <MetaChip icon={MapPin}>{r.location}</MetaChip>
+              <MetaPopover>
+                <MetaChip icon={User}>
+                  <Link to="/directory/person/$id" params={{ id: r.ownerId }} className="hover:text-white transition">
+                    {r.ownerName}
+                  </Link>
+                  {r.org && <span className="text-white/40"> · {r.org}</span>}
+                </MetaChip>
+                <MetaChip icon={Calendar}>{r.capacity}</MetaChip>
+                <span className="font-mono text-[10px] text-white/40">{r.id}</span>
+                <span className="font-mono text-[10px] text-white/40">{r.taxonomy}</span>
+              </MetaPopover>
+            </>
+          }
+          actions={
+            <>
+              <ActionBtn icon={MessageSquare} label="Contact owner" />
+              <OverflowMenu
+                actions={[
+                  { label: "Share", icon: Share2 },
+                  { label: "Flag issue", icon: Flag, danger: true },
+                  { label: "Retire resource", icon: XCircle, danger: true },
+                ]}
+              />
+            </>
+          }
+        />
+
+        <DetailLayout
+          main={
+            <>
+              <HeroBlock
+                label="Resource"
+                value={r.capacity.split(" ")[0]}
+                unit={r.capacity.split(" ").slice(1).join(" ") || r.taxonomy}
+                accent={statusColor}
+                hint={
+                  r.matchedTo
+                    ? `Matched to ${r.matchedTo.personName} on ${r.matchedTo.caseId}`
+                    : `Available for deployment from ${r.location}`
+                }
+                secondary={[
+                  { label: "Status", value: <span className="capitalize">{r.status}</span> },
+                  { label: "Events", value: r.history.length + events.length },
+                  { label: "Type", value: <span className="font-mono text-[12px]">{r.taxonomy}</span> },
+                ]}
+              />
+              <DetailTabs tabs={tabs} defaultKey="activity" />
+            </>
+          }
+          rail={
+            <>
+              <ContextCard title="Owner">
+                <ContextRow label="Name" value={r.ownerName} />
+                {r.org && <ContextRow label="Org" value={r.org} />}
+                <ContextRow label="Location" value={r.location} />
+              </ContextCard>
+              <ContextCard title="At a glance">
+                <ContextRow label="Status" value={<span className="capitalize">{r.status}</span>} />
+                <ContextRow label="Capacity" value={r.capacity} />
+                <ContextRow label="Category" value={<span className="font-mono text-[11px]">{r.taxonomy}</span>} />
+                <ContextRow label="ID" value={<span className="font-mono text-[10.5px] text-white/55">{r.id}</span>} />
+              </ContextCard>
+              {r.matchedTo && (
+                <ContextCard title="Matched to">
+                  <Link
+                    to="/cases/$id"
+                    params={{ id: r.matchedTo.caseId }}
+                    className="block text-[13px] text-[#89CFF0] hover:underline"
+                  >
+                    {r.matchedTo.personName}
+                  </Link>
+                  <p className="font-mono text-[10.5px] text-white/45 mt-0.5">{r.matchedTo.caseId}</p>
+                </ContextCard>
+              )}
+            </>
+          }
+        />
+      </main>
+    </CrmShell>
+  );
+}
