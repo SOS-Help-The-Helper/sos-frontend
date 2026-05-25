@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus } from "lucide-react";
@@ -17,16 +18,60 @@ import { Timeline } from "@/components/directory/Timeline";
 import { StewardshipBand } from "@/components/directory/StewardshipChip";
 import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
 import { usePerson, canEdit, updatePerson } from "@/lib/directory-store";
+import { api } from "@/lib/api";
+
+interface LinkedRequest {
+  id: string;
+  status?: string;
+  created_at?: string;
+  household_size?: number;
+  has_children?: boolean;
+  has_elderly?: boolean;
+  has_disabled?: boolean;
+  has_pets?: boolean;
+  [key: string]: unknown;
+}
+
+interface ApiPersonData {
+  id: string;
+  lat?: number;
+  lng?: number;
+  latitude?: number;
+  longitude?: number;
+  [key: string]: unknown;
+}
+
+interface ApiResponse {
+  person?: ApiPersonData;
+  requests?: LinkedRequest[];
+  [key: string]: unknown;
+}
 
 
 const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
+  const [apiData, setApiData] = useState<ApiResponse | null>(null);
+
+  useEffect(() => {
+    api.crmGetPerson(id)
+      .then((data: unknown) => setApiData(data as ApiResponse))
+      .catch(() => setApiData(null));
+  }, [id]);
+
   const seed = people.find((p) => p.id === id);
   if (!seed) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Person not found</div></CrmShell>;
   const person = usePerson(seed.id) ?? seed;
   const editable = canEdit(person.org.id);
+
+  const apiPerson = apiData?.person;
+  const linkedRequests: LinkedRequest[] = apiData?.requests ?? [];
+  const householdRequest = linkedRequests.find(
+    (r) => r.household_size != null || r.has_children || r.has_elderly || r.has_disabled || r.has_pets
+  );
+  const personLat = apiPerson?.lat ?? apiPerson?.latitude;
+  const personLng = apiPerson?.lng ?? apiPerson?.longitude;
   const housingTint =
     person.housingStatus === "Stable" ? "#34D399" :
     person.housingStatus === "Displaced" ? "#F5EBD6" :
@@ -39,6 +84,12 @@ export default function PersonPage() {
       label: "Activity",
       count: person.history.length,
       content: <Timeline entries={person.history} />,
+    },
+    {
+      key: "requests",
+      label: "Requests",
+      count: linkedRequests.length || undefined,
+      content: <RequestsTab requests={linkedRequests} />,
     },
     {
       key: "credentials",
@@ -147,6 +198,42 @@ export default function PersonPage() {
           ownerOrgName={person.org.name}
           onRequestChange={() => (() => {})()}
         />
+
+        {householdRequest && (
+          <div className="flex flex-wrap gap-2 px-1">
+            {householdRequest.household_size != null && (
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">
+                <Users size={11} className="text-white/50" />
+                {householdRequest.household_size} members
+              </span>
+            )}
+            {householdRequest.has_children && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">👶 Children</span>
+            )}
+            {householdRequest.has_elderly && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">👴 Elderly</span>
+            )}
+            {householdRequest.has_disabled && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">♿ Disabled</span>
+            )}
+            {householdRequest.has_pets && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70">🐾 Pets</span>
+            )}
+          </div>
+        )}
+
+        {personLat != null && personLng != null && (
+          <div className="rounded-xl overflow-hidden border border-white/10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+ef4e4b(${personLng},${personLat})/${personLng},${personLat},12,0/300x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+              alt="Person location"
+              className="w-full h-[160px] object-cover"
+              width={600}
+              height={320}
+            />
+          </div>
+        )}
 
         <HeroLine
           primary={
@@ -277,6 +364,27 @@ function SkillsTab({ person }: { person: Person }) {
         </div>
         <ChevronRight size={14} className="text-white/25" />
       </Link>
+    </ListGroup>
+  );
+}
+
+function RequestsTab({ requests }: { requests: LinkedRequest[] }) {
+  if (requests.length === 0) return <EmptyTab label="No linked requests." />;
+  return (
+    <ListGroup>
+      {requests.map((r) => (
+        <div key={r.id} className="px-4 py-3.5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium capitalize">{r.status ?? "Unknown"}</p>
+            {r.created_at && (
+              <p className="text-[11.5px] text-white/45 mt-0.5">
+                {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+            )}
+          </div>
+          <span className="font-mono text-[10px] text-white/30 truncate max-w-[120px]">{r.id}</span>
+        </div>
+      ))}
     </ListGroup>
   );
 }
