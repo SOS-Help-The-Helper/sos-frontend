@@ -4,6 +4,11 @@ import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
+import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
+import { toast } from "sonner";
+import { Plus, ShieldCheck, Search, X, Star, Truck, CheckCircle2, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
+
 type VolunteerDetail = {
   id: string; name: string; org: string; phone: string; skills: string[];
   hours: number; status: string; rating: number; completedMissions: number;
@@ -14,9 +19,8 @@ type VolunteerDetail = {
 };
 const volunteerDetails: VolunteerDetail[] = [];
 const orgs: { id: string; name: string; color: string }[] = [];
-import { api } from "@/lib/api";
-import { useAuthContext } from "@/lib/auth-context";
-import { Plus, ShieldCheck, Search, X, Star, Truck, CheckCircle2, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
+
+const protoVolunteers = [] as { id: string; name: string; skills: string[]; hours: number; status: string }[];
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -50,16 +54,70 @@ export default function VolunteersPage() {
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addSkills, setAddSkills] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
 
-  useEffect(() => {
-    // admin: no org filter
+  function refreshVolunteers() {
     api.crmVolunteersAvailable(orgId)
       .then((res) => {
         const items = mapVolunteers(extractList(res, ["volunteers", "data", "results"]));
         if (items.length > 0) setVolunteers(items);
       })
       .catch(() => {});
+  }
+
+  useEffect(() => {
+    refreshVolunteers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
+
+  async function handleAddVolunteer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addName.trim()) return;
+    setAddBusy(true);
+    try {
+      await api.efCall('partner-write', {
+        person_name: addName.trim(),
+        email: addEmail.trim(),
+        phone: addPhone.trim(),
+        org_id: orgId,
+        records: [{ type: 'resource', taxonomy_code: 'volunteer', notes: addSkills.trim() }],
+      });
+      toast.success(`${addName.trim()} added as volunteer`);
+      setShowAddForm(false);
+      setAddName(""); setAddEmail(""); setAddPhone(""); setAddSkills("");
+      refreshVolunteers();
+    } catch {
+      toast.error("Failed to add volunteer");
+    } finally {
+      setAddBusy(false);
+    }
+  }
+
+  async function handleStatusChange(volId: string, newStatus: string) {
+    try {
+      await api.efCall('crm-directory', { action: 'update_person', person_id: volId, field: 'status', value: newStatus });
+      toast.success("Status updated");
+      refreshVolunteers();
+    } catch {
+      toast.error("Failed to update status");
+    }
+  }
+
+  async function handleAssign(volId: string) {
+    const inputId = window.prompt("Case/Event ID to assign to:");
+    if (!inputId?.trim()) return;
+    try {
+      await api.efCall('crm-cases', { action: 'assign_case', sos_id: inputId.trim(), person_id: volId });
+      toast.success("Assigned");
+    } catch {
+      toast.error("Failed to assign");
+    }
+  }
 
   const active = volunteers.filter(v => v.status === "active").length;
   const assigned = volunteerDetails.filter(v => v.status === "assigned").length;
@@ -77,11 +135,58 @@ export default function VolunteersPage() {
         title="Volunteers"
         subtitle={`${active} active · ${assigned} on assignment`}
         actions={
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
+          <button
+            onClick={() => setShowAddForm(v => !v)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition"
+          >
             <Plus size={12} /> Add volunteer
           </button>
         }
       />
+
+      {showAddForm && (
+        <form onSubmit={handleAddVolunteer} className="mx-4 mt-3 rounded-xl bg-white/5 border border-white/10 p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Name *</label>
+            <input
+              value={addName} onChange={e => setAddName(e.target.value)}
+              placeholder="Jane Smith"
+              className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px] focus:outline-none focus:border-white/30"
+            />
+          </div>
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Email</label>
+            <input
+              type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
+              placeholder="jane@example.com"
+              className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px] focus:outline-none focus:border-white/30"
+            />
+          </div>
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Phone</label>
+            <input
+              type="tel" value={addPhone} onChange={e => setAddPhone(e.target.value)}
+              placeholder="+1 555 000 0000"
+              className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px] focus:outline-none focus:border-white/30"
+            />
+          </div>
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Skills (comma separated)</label>
+            <input
+              value={addSkills} onChange={e => setAddSkills(e.target.value)}
+              placeholder="First aid, Driving, Spanish"
+              className="w-full h-9 rounded-md bg-white/6 border border-white/10 px-2.5 text-[12.5px] focus:outline-none focus:border-white/30"
+            />
+          </div>
+          <div className="sm:col-span-2 flex items-center gap-2 justify-end">
+            <button type="button" onClick={() => setShowAddForm(false)} className="h-8 px-3 rounded-lg bg-white/6 hover:bg-white/12 text-[12px] transition">Cancel</button>
+            <button type="submit" disabled={addBusy || !addName.trim()} className="h-8 px-4 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12px] font-medium transition">
+              {addBusy ? "Saving…" : "Add volunteer"}
+            </button>
+          </div>
+        </form>
+      )}
+
       <div className="px-4 pt-4 pb-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
         <div className="space-y-4">
           {/* Filters */}
@@ -106,44 +211,66 @@ export default function VolunteersPage() {
               const detail = volunteerDetails.find(d => d.id === v.id);
               const org = detail ? orgs.find(o => o.id === detail.org) : null;
               return (
-                <button
+                <div
                   key={v.id}
-                  onClick={() => setDrawerId(v.id)}
-                  className="text-left rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 p-4 transition"
+                  className="rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 p-4 transition"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-[12.5px] font-semibold shrink-0" style={{ background: `${org?.color ?? "#89CFF0"}22`, color: org?.color ?? "#89CFF0" }}>
-                      {v.name.split(" ").map((s: string) => s[0]).join("")}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-medium text-[13.5px] truncate">{v.name}</p>
-                        {detail?.credentials.some(c => c.verified) && <ShieldCheck size={11} className="text-[#34D399] shrink-0" />}
+                  <button
+                    onClick={() => setDrawerId(v.id)}
+                    className="text-left w-full"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-[12.5px] font-semibold shrink-0" style={{ background: `${org?.color ?? "#89CFF0"}22`, color: org?.color ?? "#89CFF0" }}>
+                        {v.name.split(" ").map((s: string) => s[0]).join("")}
                       </div>
-                      <p className="font-mono text-[10px] text-white/45">{v.id} · <span style={{ color: org?.color }}>{org?.name ?? "—"}</span></p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {v.skills.slice(0, 3).map((s: string) => (
-                          <span key={s} className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-white/6 text-white/65">{s}</span>
-                        ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium text-[13.5px] truncate">{v.name}</p>
+                          {detail?.credentials.some(c => c.verified) && <ShieldCheck size={11} className="text-[#34D399] shrink-0" />}
+                        </div>
+                        <p className="font-mono text-[10px] text-white/45">{v.id} · <span style={{ color: org?.color }}>{org?.name ?? "—"}</span></p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {v.skills.slice(0, 3).map((s: string) => (
+                            <span key={s} className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-white/6 text-white/65">{s}</span>
+                          ))}
+                        </div>
+                        {detail?.towCapacity && (
+                          <div className="flex items-center gap-1 mt-2 text-[10.5px] text-white/55">
+                            <Truck size={10} /> {detail.towCapacity.maxWeight.toLocaleString()} lbs · {detail.towCapacity.hitchTypes.join(", ").replace(/_/g, " ")}
+                          </div>
+                        )}
                       </div>
-                      {detail?.towCapacity && (
-                        <div className="flex items-center gap-1 mt-2 text-[10.5px] text-white/55">
-                          <Truck size={10} /> {detail.towCapacity.maxWeight.toLocaleString()} lbs · {detail.towCapacity.hitchTypes.join(", ").replace(/_/g, " ")}
-                        </div>
-                      )}
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-[15px] tabular-nums text-white/85">{v.hours}<span className="text-[10px] text-white/40">h</span></p>
+                        {detail && (
+                          <div className="flex items-center gap-0.5 justify-end mt-0.5">
+                            <Star size={9} className="fill-[#F5EBD6] text-[#F5EBD6]" />
+                            <span className="font-mono text-[10px] text-white/65">{detail.rating}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-mono text-[10px] text-white/45 uppercase">{v.status}</p>
-                      <p className="font-mono text-[15px] tabular-nums text-white/85 mt-1">{v.hours}<span className="text-[10px] text-white/40">h</span></p>
-                      {detail && (
-                        <div className="flex items-center gap-0.5 justify-end mt-0.5">
-                          <Star size={9} className="fill-[#F5EBD6] text-[#F5EBD6]" />
-                          <span className="font-mono text-[10px] text-white/65">{detail.rating}</span>
-                        </div>
-                      )}
-                    </div>
+                  </button>
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/8">
+                    <select
+                      value={v.status}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => handleStatusChange(v.id, e.target.value)}
+                      className="flex-1 h-7 rounded-md bg-white/6 border border-white/10 px-2 text-[11px] focus:outline-none focus:border-white/30"
+                    >
+                      <option value="available">Available</option>
+                      <option value="assigned">Assigned</option>
+                      <option value="on_break">On break</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                    <button
+                      onClick={() => handleAssign(v.id)}
+                      className="h-7 px-3 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
+                    >
+                      Assign
+                    </button>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

@@ -6,6 +6,7 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
+import { toast } from "sonner";
 type Facility = {
   id: string; name: string; type: string; org: string; address: string;
   capacity: number; currentCount: number; status: string;
@@ -21,7 +22,12 @@ const assetEvents: any[] = [];
 const orgs: Array<{ id: string; name?: string; color?: string }> = [];
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { AlertTriangle, Plus, Warehouse, Truck, Package, MapPin, X, ArrowRightLeft, ChevronRight, Star } from "lucide-react";
+import { AlertTriangle, Plus, Warehouse, Truck, Package, MapPin, X, ArrowRightLeft, ChevronRight, Star, ChevronDown } from "lucide-react";
+
+const CONDITION_OPTIONS = ["new", "good", "fair", "poor"] as const;
+type Condition = typeof CONDITION_OPTIONS[number];
+const CONDITION_RATING: Record<Condition, number> = { new: 4, good: 3, fair: 2, poor: 1 };
+const CATEGORY_OPTIONS = ["food", "water", "medical", "supplies", "equipment"] as const;
 
 const TYPE_ICON: Record<Facility["type"], React.ElementType> = {
   staging_lot: Truck,
@@ -37,6 +43,67 @@ export default function InventoryPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [inventory, setInventory] = useState<Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>>([]);
   const [resources, setResources] = useState<ResourceDetail[]>([]);
+
+  // Add-item form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addCategory, setAddCategory] = useState<typeof CATEGORY_OPTIONS[number]>("food");
+  const [addQty, setAddQty] = useState(1);
+  const [addCondition, setAddCondition] = useState<Condition>("good");
+  const [addFacilityId, setAddFacilityId] = useState("");
+  const [addSubmitting, setAddSubmitting] = useState(false);
+
+  // Move-popover state: itemId → boolean
+  const [moveOpenId, setMoveOpenId] = useState<string | null>(null);
+
+  async function handleAddSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addName.trim()) return;
+    setAddSubmitting(true);
+    try {
+      await api.writeInventory({
+        name: addName.trim(),
+        category: addCategory,
+        quantity: addQty,
+        condition: addCondition,
+        facility_id: addFacilityId || undefined,
+        org_id: orgId,
+      });
+      toast("Item added");
+      setShowAddForm(false);
+      setAddName(""); setAddQty(1); setAddCondition("good"); setAddFacilityId("");
+      // refresh
+      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+      if (data?.inventory?.length) setInventory(data.inventory);
+      if (data?.resources?.length) setResources(data.resources);
+    } catch {
+      toast.error("Failed to add item");
+    } finally {
+      setAddSubmitting(false);
+    }
+  }
+
+  async function handleConditionChange(itemId: string, condition: Condition) {
+    try {
+      await api.inventoryUpdateCondition(itemId, CONDITION_RATING[condition]);
+      toast(`Condition updated to ${condition}`);
+    } catch {
+      toast.error("Failed to update condition");
+    }
+  }
+
+  async function handleMove(itemId: string, targetFacilityId: string) {
+    setMoveOpenId(null);
+    try {
+      await api.inventoryMoveToFacility(itemId, targetFacilityId);
+      const fac = facilities.find(f => f.id === targetFacilityId);
+      toast(`Moved to ${fac?.name ?? "facility"}`);
+      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+      if (data?.inventory?.length) setInventory(data.inventory);
+    } catch {
+      toast.error("Failed to move item");
+    }
+  }
 
   useEffect(() => {
     // admin: proceed without org filter
@@ -73,11 +140,81 @@ export default function InventoryPage() {
         title="Inventory"
         subtitle={`${facilities.length} facilities · ${inventory.length} items tracked · ${lowStock.length} low-stock`}
         actions={
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
+          <button
+            onClick={() => setShowAddForm(v => !v)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition"
+          >
             <Plus size={12} /> Add item
           </button>
         }
       />
+
+      {showAddForm && (
+        <form
+          onSubmit={handleAddSubmit}
+          className="mx-4 mt-3 rounded-xl bg-[var(--surface-1)] border border-[#89CFF0]/40 p-4 space-y-3"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">New item</p>
+          <input
+            required
+            placeholder="Item name"
+            value={addName}
+            onChange={e => setAddName(e.target.value)}
+            className="w-full h-9 bg-white/6 border border-white/10 rounded-lg px-3 text-[13px] placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]/60"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={addCategory}
+              onChange={e => setAddCategory(e.target.value as typeof CATEGORY_OPTIONS[number])}
+              className="h-9 bg-white/6 border border-white/10 rounded-lg px-3 text-[13px] focus:outline-none focus:border-[#89CFF0]/60"
+            >
+              {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input
+              type="number"
+              min={0}
+              value={addQty}
+              onChange={e => setAddQty(Number(e.target.value))}
+              placeholder="Quantity"
+              className="h-9 bg-white/6 border border-white/10 rounded-lg px-3 text-[13px] placeholder:text-white/30 focus:outline-none focus:border-[#89CFF0]/60"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={addCondition}
+              onChange={e => setAddCondition(e.target.value as Condition)}
+              className="h-9 bg-white/6 border border-white/10 rounded-lg px-3 text-[13px] focus:outline-none focus:border-[#89CFF0]/60"
+            >
+              {CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select
+              value={addFacilityId}
+              onChange={e => setAddFacilityId(e.target.value)}
+              className="h-9 bg-white/6 border border-white/10 rounded-lg px-3 text-[13px] focus:outline-none focus:border-[#89CFF0]/60"
+            >
+              <option value="">No facility</option>
+              {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => setShowAddForm(false)}
+              className="h-8 px-3 rounded-lg bg-white/6 hover:bg-white/10 text-[12px] transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={addSubmitting}
+              className="h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12px] font-medium transition"
+            >
+              {addSubmitting ? "Adding…" : "Add item"}
+            </button>
+          </div>
+        </form>
+      )}
+
       <div className="px-4 pt-4 pb-4 space-y-5">
         {/* Facility selector strip */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -192,6 +329,8 @@ export default function InventoryPage() {
                   <th className="px-4 py-3 font-normal">Location</th>
                   <th className="px-4 py-3 font-normal text-right">Qty</th>
                   <th className="px-4 py-3 font-normal text-right">Threshold</th>
+                  <th className="px-4 py-3 font-normal">Condition</th>
+                  <th className="px-4 py-3 font-normal">Move</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,6 +349,42 @@ export default function InventoryPage() {
                       <td className="px-4 py-3 text-white/65 text-[12px]">{it.location}</td>
                       <td className={`px-4 py-3 font-mono text-right tabular-nums ${low ? "text-[#F5EBD6]" : "text-white/80"}`}>{it.qty}</td>
                       <td className="px-4 py-3 font-mono text-right tabular-nums text-white/40">{it.threshold}</td>
+                      <td className="px-4 py-3">
+                        <select
+                          defaultValue="good"
+                          onChange={e => handleConditionChange(it.id, e.target.value as Condition)}
+                          onClick={e => e.stopPropagation()}
+                          className="h-7 bg-white/6 border border-white/10 rounded-md px-2 text-[11px] focus:outline-none focus:border-[#89CFF0]/60"
+                        >
+                          {CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="relative inline-block">
+                          <button
+                            onClick={e => { e.stopPropagation(); setMoveOpenId(moveOpenId === it.id ? null : it.id); }}
+                            className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-white/6 hover:bg-white/12 text-[11px] transition"
+                          >
+                            <ArrowRightLeft size={11} /> Move <ChevronDown size={10} />
+                          </button>
+                          {moveOpenId === it.id && (
+                            <div className="absolute left-0 top-full mt-1 z-20 min-w-[160px] rounded-xl bg-[#1a2e3f] border border-white/10 shadow-xl overflow-hidden">
+                              {facilities.map(f => (
+                                <button
+                                  key={f.id}
+                                  onClick={() => handleMove(it.id, f.id)}
+                                  className="w-full text-left px-3 py-2 text-[12px] hover:bg-white/8 transition"
+                                >
+                                  {f.name}
+                                </button>
+                              ))}
+                              {facilities.length === 0 && (
+                                <p className="px-3 py-2 text-[12px] text-white/45">No facilities</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}

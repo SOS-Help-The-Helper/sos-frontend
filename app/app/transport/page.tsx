@@ -11,7 +11,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { TRANSPORT_STATUS_LABEL, transportStatusColor, type TransportStatus } from "@/lib/display-constants";
 import {
   Truck, Plus, Clock, AlertTriangle, ChevronDown, Camera,
-  ArrowRight, Map as MapIcon, List, ExternalLink,
+  ArrowRight, Map as MapIcon, List, ExternalLink, X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,6 +37,16 @@ type Assignment = {
   currentLat?: number; currentLng?: number;
 };
 
+const NEW_FORM_STATUSES = [
+  { value: "pending", label: "Pending" },
+  { value: "dispatched", label: "Dispatched" },
+  { value: "in_transit", label: "In Transit" },
+  { value: "delivered", label: "Delivered" },
+  { value: "completed", label: "Completed" },
+];
+
+const ALL_STATUSES = Object.entries(TRANSPORT_STATUS_LABEL).map(([value, label]) => ({ value, label }));
+
 function extractList(res: unknown): Assignment[] {
   if (!res || typeof res !== 'object') return [];
   const d = res as Record<string, unknown>;
@@ -44,12 +54,24 @@ function extractList(res: unknown): Assignment[] {
   return Array.isArray(arr) ? arr : [];
 }
 
+const emptyForm = { driverName: "", origin: "", destination: "", status: "pending" };
+
 export default function TransportPage() {
   const { orgId } = useAuthContext();
   const [view, setView] = useState<"list" | "map">("list");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+
+  function refresh() {
+    if (!orgId) return;
+    api.transportList(orgId)
+      .then((res: unknown) => setAssignments(extractList(res)))
+      .catch(() => {});
+  }
 
   useEffect(() => {
     if (!orgId) return;
@@ -58,6 +80,56 @@ export default function TransportPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [orgId]);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.driverName.trim() || !form.origin.trim() || !form.destination.trim()) {
+      toast.error("All fields are required");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.transportCreate({
+        driver_name: form.driverName.trim(),
+        origin: form.origin.trim(),
+        destination: form.destination.trim(),
+        status: form.status,
+        org_id: orgId,
+      });
+      toast.success("Assignment created");
+      setForm(emptyForm);
+      setShowNewForm(false);
+      refresh();
+    } catch {
+      toast.error("Failed to create assignment");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleStatusChange(assignmentId: string, newStatus: string) {
+    try {
+      await api.transportUpdateStatus(assignmentId, newStatus);
+      toast.success("Status updated");
+      setAssignments(prev =>
+        prev.map(a => a.id === assignmentId ? { ...a, status: newStatus as TransportStatus } : a)
+      );
+    } catch {
+      toast.error("Failed to update status");
+    }
+  }
+
+  async function handleReportIssue(assignmentId: string) {
+    const description = window.prompt("Describe the issue:");
+    if (!description?.trim()) return;
+    try {
+      await api.transportReportIssue(assignmentId, "general", description.trim());
+      toast.success("Issue reported");
+      refresh();
+    } catch {
+      toast.error("Failed to report issue");
+    }
+  }
 
   const kpis = useMemo(() => {
     const active = assignments.filter(t => t.status !== "completed" && t.status !== "verified").length;
@@ -81,12 +153,77 @@ export default function TransportPage() {
                 <MapIcon size={11} /> Map
               </button>
             </div>
-            <button onClick={() => toast.info("New assignment form coming soon")} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
-              <Plus size={12} /> New assignment
+            <button
+              onClick={() => setShowNewForm(v => !v)}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition"
+            >
+              {showNewForm ? <X size={12} /> : <Plus size={12} />}
+              {showNewForm ? "Cancel" : "New assignment"}
             </button>
           </>
         }
       />
+
+      {/* Inline new assignment form */}
+      {showNewForm && (
+        <form onSubmit={handleCreate} className="mx-4 mt-3 mb-1 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 space-y-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">New assignment</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Driver name</label>
+              <input
+                type="text"
+                value={form.driverName}
+                onChange={e => setForm(f => ({ ...f, driverName: e.target.value }))}
+                placeholder="John Smith"
+                className="w-full h-8 rounded-lg bg-white/8 border border-white/10 px-3 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Status</label>
+              <select
+                value={form.status}
+                onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                className="w-full h-8 rounded-lg bg-white/8 border border-white/10 px-3 text-[13px] text-white focus:outline-none focus:border-white/25"
+              >
+                {NEW_FORM_STATUSES.map(s => (
+                  <option key={s.value} value={s.value} className="bg-[#0F1E2B]">{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Origin</label>
+              <input
+                type="text"
+                value={form.origin}
+                onChange={e => setForm(f => ({ ...f, origin: e.target.value }))}
+                placeholder="Ocala, FL"
+                className="w-full h-8 rounded-lg bg-white/8 border border-white/10 px-3 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Destination</label>
+              <input
+                type="text"
+                value={form.destination}
+                onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
+                placeholder="Atlanta, GA"
+                className="w-full h-8 rounded-lg bg-white/8 border border-white/10 px-3 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/25"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12px] font-medium transition"
+            >
+              {submitting ? "Creating…" : "Create assignment"}
+            </button>
+          </div>
+        </form>
+      )}
+
       <div className="px-4 pt-4 pb-4 space-y-4">
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -138,6 +275,24 @@ export default function TransportPage() {
                           <span className="truncate">{t.destination}</span>
                         </div>
                       </button>
+                      {/* Row actions */}
+                      <div className="border-t border-white/5 px-3.5 py-2 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                        <select
+                          value={t.status}
+                          onChange={e => handleStatusChange(t.id, e.target.value)}
+                          className="flex-1 h-7 rounded-lg bg-white/8 border border-white/10 px-2 text-[12px] text-white focus:outline-none focus:border-white/25"
+                        >
+                          {ALL_STATUSES.map(s => (
+                            <option key={s.value} value={s.value} className="bg-[#0F1E2B]">{s.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleReportIssue(t.id)}
+                          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg bg-[#EF4E4B]/12 hover:bg-[#EF4E4B]/22 text-[#EF4E4B] text-[11.5px] font-medium transition"
+                        >
+                          <AlertTriangle size={11} /> Report
+                        </button>
+                      </div>
                       {isOpen && (
                         <div className="border-t border-white/5 bg-white/[0.02] px-3.5 py-3">
                           <ExpandedRow t={t} />
@@ -159,6 +314,7 @@ export default function TransportPage() {
                       <th className="px-4 py-3 font-normal">Route</th>
                       <th className="px-4 py-3 font-normal">ETA</th>
                       <th className="px-4 py-3 font-normal">Priority</th>
+                      <th className="px-4 py-3 font-normal">Actions</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
@@ -167,29 +323,44 @@ export default function TransportPage() {
                       const isOpen = expanded === t.id;
                       return (
                         <Fragment key={t.id}>
-                          <tr onClick={() => setExpanded(isOpen ? null : t.id)} className="border-t border-white/5 hover:bg-white/4 transition cursor-pointer">
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: transportStatusColor(t.status) }} />
-                                <span className="text-[12px] text-white/85">{TRANSPORT_STATUS_LABEL[t.status] ?? t.status}</span>
-                              </div>
+                          <tr className="border-t border-white/5 hover:bg-white/4 transition">
+                            <td className="px-4 py-3" onClick={() => setExpanded(isOpen ? null : t.id)}>
+                              <select
+                                value={t.status}
+                                onChange={e => handleStatusChange(t.id, e.target.value)}
+                                onClick={e => e.stopPropagation()}
+                                className="h-7 rounded-lg bg-white/8 border border-white/10 px-2 text-[12px] text-white focus:outline-none focus:border-white/25 cursor-pointer"
+                              >
+                                {ALL_STATUSES.map(s => (
+                                  <option key={s.value} value={s.value} className="bg-[#0F1E2B]">{s.label}</option>
+                                ))}
+                              </select>
                             </td>
-                            <td className="px-4 py-3 font-medium">{t.driverName}</td>
-                            <td className="px-4 py-3 text-white/65 text-[12px]">{t.resourceSummary ?? t.resourceId}</td>
-                            <td className="px-4 py-3 text-white/65 text-[12px]">
+                            <td className="px-4 py-3 font-medium cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>{t.driverName}</td>
+                            <td className="px-4 py-3 text-white/65 text-[12px] cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>{t.resourceSummary ?? t.resourceId}</td>
+                            <td className="px-4 py-3 text-white/65 text-[12px] cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>
                               <span className="inline-flex items-center gap-1.5">
                                 {t.origin} <ArrowRight size={10} className="text-white/35" /> {t.destination}
                               </span>
                             </td>
-                            <td className="px-4 py-3 font-mono text-[11px] text-white/65">{t.estimatedArrival ?? "—"}</td>
-                            <td className="px-4 py-3">{t.priority && <PriorityPill p={t.priority} />}</td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-4 py-3 font-mono text-[11px] text-white/65 cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>{t.estimatedArrival ?? "—"}</td>
+                            <td className="px-4 py-3 cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>{t.priority && <PriorityPill p={t.priority} />}</td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => handleReportIssue(t.id)}
+                                title="Report issue"
+                                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg bg-[#EF4E4B]/12 hover:bg-[#EF4E4B]/22 text-[#EF4E4B] text-[11.5px] font-medium transition"
+                              >
+                                <AlertTriangle size={11} /> Report issue
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 text-right cursor-pointer" onClick={() => setExpanded(isOpen ? null : t.id)}>
                               <ChevronDown size={14} className={`text-white/40 inline transition-transform ${isOpen ? "rotate-180" : ""}`} />
                             </td>
                           </tr>
                           {isOpen && (
                             <tr className="border-t border-white/5 bg-white/[0.02]">
-                              <td colSpan={7} className="px-4 py-4">
+                              <td colSpan={8} className="px-4 py-4">
                                 <ExpandedRow t={t} />
                               </td>
                             </tr>
