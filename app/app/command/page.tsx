@@ -39,7 +39,17 @@ export default function CommandPage() {
           </button>
         }
       />
-      <div className="px-4 pt-4 pb-4">
+      <div className="px-4 pt-4 pb-4 space-y-4">
+        {/* Fleet summary KPIs */}
+        {incidents.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <FleetKpi label="Open cases" value={incidents.reduce((s, i) => s + (i.cases ?? 0), 0)} tone="#89CFF0" />
+            <FleetKpi label="Critical / high" value={incidents.filter(i => i.priority === "urgent").length} tone="#EF4E4B" />
+            <FleetKpi label="Incidents" value={incidents.length} tone="#89CFF0" />
+            <FleetKpi label="Capacity" value={`${Math.round(incidents.reduce((s, i) => s + (i.cases / Math.max(i.capacity, 1)), 0) / incidents.length * 100)}%`} tone="#34D399" />
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {incidents.map((i) => {
             const pinnedIds = pinnedMap[i.id] ?? [];
@@ -79,8 +89,29 @@ export default function CommandPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <Stat label="Cases" value={i.cases} />
                   <Stat label="Reports" value={pinnedIds.length} />
-                  <Stat label="Lead" value={i.lead.split(" ")[0]} small />
+                  <Stat label="Lead" value={(i.lead ?? "").split(" ")[0] || "—"} small />
                 </div>
+
+                {/* Capacity bar */}
+                {i.capacity > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-mono text-[9px] text-white/40">Capacity</span>
+                      <span className="font-mono text-[9px] tabular-nums text-white/55">{i.cases}/{i.capacity}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, (i.cases / i.capacity) * 100)}%`, background: i.cases / i.capacity > 0.8 ? "#EF4E4B" : "#89CFF0" }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Mini sparkline */}
+                {i.casesHistory && i.casesHistory.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[9px] text-white/35">14d trend</span>
+                    <MiniSparkline data={i.casesHistory} color="#89CFF0" />
+                  </div>
+                )}
 
                 <div className="pt-3 border-t border-white/8 min-h-[60px]">
                   <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/40 mb-2">
@@ -118,25 +149,31 @@ export default function CommandPage() {
   );
 }
 
-function Stat({
-  label,
-  value,
-  small,
-}: {
-  label: string;
-  value: string | number;
-  small?: boolean;
-}) {
+function Stat({ label, value, small }: { label: string; value: string | number; small?: boolean }) {
   return (
     <div className="rounded-lg bg-white/4 px-3 py-2">
       <p className="font-mono text-[9px] uppercase tracking-wider text-white/45">{label}</p>
-      <p
-        className={`${
-          small ? "text-[13px]" : "text-[18px]"
-        } font-semibold tabular-nums mt-0.5 truncate`}
-      >
-        {value}
-      </p>
+      <p className={`${small ? "text-[13px]" : "text-[18px]"} font-semibold tabular-nums mt-0.5 truncate`}>{value}</p>
     </div>
+  );
+}
+
+function FleetKpi({ label, value, tone }: { label: string; value: string | number; tone: string }) {
+  return (
+    <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4">
+      <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45">{label}</p>
+      <p className="text-[26px] font-semibold tabular-nums mt-1" style={{ color: tone }}>{value}</p>
+    </div>
+  );
+}
+
+function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+  const max = Math.max(...data, 1);
+  const w = 60, h = 16;
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(" ");
+  return (
+    <svg width={w} height={h} className="shrink-0">
+      <polyline points={points} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+    </svg>
   );
 }
