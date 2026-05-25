@@ -52,7 +52,7 @@ export default function ImportPageContent() {
       <div className="min-h-screen text-white">
         <header className="sticky top-0 z-30 glass border-b border-[var(--hairline)]">
           <div className="max-w-[800px] mx-auto px-5 md:px-10 h-12 flex items-center">
-            <Link to="/directory" className="inline-flex items-center gap-1 text-[15px] text-[#89CFF0] -ml-1.5">
+            <Link href="/directory" className="inline-flex items-center gap-1 text-[15px] text-[#89CFF0] -ml-1.5">
               <ChevronLeft size={20} />
               <span>Directory</span>
             </Link>
@@ -141,7 +141,7 @@ export default function ImportPageContent() {
                   </div>
 
                   <div className="mt-6 flex items-center justify-between gap-3">
-                    <Link to="/directory" className="text-[14px] text-white/55 hover:text-white">Cancel</Link>
+                    <Link href="/directory" className="text-[14px] text-white/55 hover:text-white">Cancel</Link>
                     <button
                       onClick={startImport}
                       className="flex-1 sm:flex-none px-6 h-11 rounded-full bg-[#EF4E4B] text-white font-medium hover:bg-[#d94340] transition text-[14px]"
@@ -186,7 +186,7 @@ export default function ImportPageContent() {
                     )}
                   </div>
                   <div className="mt-6 flex flex-col sm:flex-row gap-2">
-                    <Link to="/directory" className="px-5 h-11 rounded-full bg-[#89CFF0] text-[#0F1E2B] font-medium hover:bg-[#9bd5f2] inline-flex items-center justify-center text-[14px]">
+                    <Link href="/directory" className="px-5 h-11 rounded-full bg-[#89CFF0] text-[#0F1E2B] font-medium hover:bg-[#9bd5f2] inline-flex items-center justify-center text-[14px]">
                       View directory
                     </Link>
                     <button onClick={() => { setStage("upload"); setFile(null); setProgress(0); }} className="px-5 h-11 rounded-full bg-white/8 text-white hover:bg-white/12 text-[14px] font-medium">

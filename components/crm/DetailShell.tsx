@@ -62,7 +62,7 @@ export function DetailTopBar({ backTo, backLabel }: { backTo: string; backLabel:
     <header className="sticky top-0 z-30 glass border-b border-[var(--hairline)]">
       <div className="max-w-[960px] mx-auto px-4 md:px-6 h-12 flex items-center">
         <Link
-          to={backTo}
+          href={backTo}
           className="inline-flex items-center gap-1 text-[13px] text-white/60 hover:text-white transition"
         >
           <ChevronLeft size={16} /> {backLabel}
