@@ -149,10 +149,49 @@ section { padding: 80px 0; }
 
 /* ── Overview ── */
 .overview-text {
-  font-size: 17px; font-weight: 300; color: #444; line-height: 1.9;
-  margin-bottom: 28px;
+  font-size: 16px; font-weight: 300; color: #444; line-height: 1.85;
+  margin-bottom: 24px;
 }
 .overview-text strong { font-weight: 700; color: #0F1E2B; }
+
+.overview-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.overview-card h4 {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.overview-card--part1 h4 { color: #0F1E2B; }
+.overview-card--part2 h4 { color: #89CFF0; }
+.overview-card p { font-size: 15px; color: #444; line-height: 1.75; }
+
+.how-to-read {
+  background: #0F1E2B;
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-top: 32px;
+}
+.how-to-read h3 { color: #fff; font-size: 15px; margin-bottom: 16px; }
+.how-to-read ol { padding-left: 20px; margin: 0; }
+.how-to-read li {
+  font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.9;
+}
+.how-to-read li strong { color: #fff; font-weight: 600; }
+
+.purpose-note {
+  background: rgba(137,207,240,0.08);
+  border-left: 3px solid #89CFF0;
+  border-radius: 0 8px 8px 0;
+  padding: 16px 24px;
+  margin-top: 24px;
+  font-size: 14px; color: #555; line-height: 1.7;
+}
+.purpose-note strong { color: #0F1E2B; }
 
 /* ── Problem Statements ── */
 .problem {
@@ -302,6 +341,7 @@ section { padding: 80px 0; }
 
 /* ── Responsive — Tablet ── */
 @media (max-width: 768px) {
+  .overview-card { padding: 24px; }
   .container { padding: 0 24px; }
   section { padding: 60px 0; }
   h1 { font-size: 34px; }
@@ -318,6 +358,9 @@ section { padding: 80px 0; }
 }
 
 /* ── Responsive — Mobile ── */
+@media (max-width: 640px) {
+  [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
 @media (max-width: 480px) {
   body { font-size: 14px; }
   h1 { font-size: 28px; line-height: 1.15; }
@@ -344,7 +387,9 @@ section { padding: 80px 0; }
   
   .label { font-size: 10px; letter-spacing: 0.2em; }
   .overview-text { font-size: 15px; }
-  .problem { padding: 36px 0; }
+  .problem { margin-bottom: 20px; }
+  .problem-header { padding: 20px 20px 16px; }
+  .problem-section { padding: 20px; }
   .problem-number { font-size: 12px; }
   .problem h3 { font-size: 18px; }
   .problem-text { font-size: 14px; }
@@ -447,22 +492,35 @@ section { padding: 80px 0; }
 </nav>
 
 <!-- ═══ OVERVIEW ═══════════════════════════════════════════════ -->
-<section class="bg-white" id="overview">
+<section class="bg-light" id="overview">
   <div class="container">
     <span class="label">Overview</span>
     <h2>What This Document Is</h2>
     <p class="overview-text">This document catalogs the information failures observed during the Garden Grove hazmat incident and measures them against two frameworks:</p>
-    <p class="overview-text"><strong>Part 1 — APCO / NIMS / ADA Standards</strong><br>Measures the incident against APCO ANS 1.121.1-2022, NIMS/ICS Joint Information System requirements, FEMA IPAWS/CAP, ADA Title II, and Executive Order 13166 (LEP access). Documents 13 specific failure modes with evidence.</p>
-    <p class="overview-text"><strong>Part 2 — FEMA Key Planning Factors (Bio KPF 2.2)</strong><br>Measures the incident against FEMA's Key Planning Factors for a Biological Incident, KPF 2.2: Communications for an Informed Public. While written for biological incidents, the public communication principles are universal. Documents 14 FEMA principles — 0 of 14 fully met.</p>
-    <p class="overview-text" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #f0f0f0;"><strong>Purpose:</strong> Standards evaluation only. This document does not recommend solutions, propose features, or reference any specific technology platform. It documents what went wrong and measures it against published emergency communications standards.</p>
 
-    <h3 style="margin-top: 40px; margin-bottom: 12px;">How to Read This Document</h3>
-    <p class="overview-text">Each problem statement follows the same format:</p>
-    <ol style="padding-left: 24px; font-size: 15px; color: #444; line-height: 2;">
-      <li><strong>What happened</strong> — the specific information failure, with evidence</li>
-      <li><strong>What the standard says</strong> — the applicable APCO, FEMA, NENA, or NIMS requirement</li>
-      <li><strong>The gap</strong> — how the observed failure deviates from the standard</li>
-    </ol>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="overview-card overview-card--part1">
+        <h4>Part 1 — APCO / NIMS / ADA</h4>
+        <p>Measures the incident against APCO ANS 1.121.1-2022, NIMS/ICS Joint Information System requirements, FEMA IPAWS/CAP, ADA Title II, and Executive Order 13166 (LEP access). Documents 13 specific failure modes with evidence.</p>
+      </div>
+      <div class="overview-card overview-card--part2">
+        <h4>Part 2 — FEMA Bio KPF 2.2</h4>
+        <p>Measures the incident against FEMA's Key Planning Factors for a Biological Incident, KPF 2.2: Communications for an Informed Public. While written for biological incidents, the public communication principles are universal. 0 of 14 fully met.</p>
+      </div>
+    </div>
+
+    <div class="purpose-note">
+      <strong>Purpose:</strong> Standards evaluation only. This document does not recommend solutions, propose features, or reference any specific technology platform. It documents what went wrong and measures it against published emergency communications standards.
+    </div>
+
+    <div class="how-to-read">
+      <h3>How to Read This Document</h3>
+      <ol>
+        <li><strong>What happened</strong> — the specific information failure, with evidence</li>
+        <li><strong>What the standard says</strong> — the applicable APCO, FEMA, NENA, or NIMS requirement</li>
+        <li><strong>The gap</strong> — how the observed failure deviates from the standard</li>
+      </ol>
+    </div>
   </div>
 </section>
 
@@ -474,15 +532,18 @@ section { padding: 80px 0; }
 </div>
 
 <!-- ═══ PROBLEM STATEMENTS ═════════════════════════════════════ -->
-<section class="bg-white">
+<section class="bg-light">
   <div class="container">
 
     <!-- PS1 -->
     <div class="problem">
-      <p class="problem-number">Problem Statement 1</p>
-      <h3>Evacuation Maps Were Illegible at Street Level</h3>
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 1</p>
+        <h3>Evacuation Maps Were Illegible at Street Level</h3>
+      </div>
+      <div class="problem-body">
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--what">
         <p class="problem-section-label problem-section-label--what">What Happened</p>
         <p class="problem-text">Seven documented citizen complaints that evacuation zone maps posted by agencies were unreadable at street level. Maps were shared as static PNG/JPEG images on social media — no zoom, no interactivity, no street-level detail. Citizens could not determine whether their specific address was inside or outside the evacuation zone.</p>
         <ul class="evidence-list">
@@ -499,25 +560,29 @@ section { padding: 80px 0; }
         <cite>E. Locke (@SandSteelCotton, Day 3 — 72+ hours into the incident)</cite>
       </div>
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--standard">
         <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
         <p class="problem-text"><strong>APCO 1.121.1-2022, §1.1.3.1.3:</strong> "Coordinate with agency representatives or PIOs to keep the public informed"<br>
         <strong>APCO 1.121.1-2022, §4.1.4.3:</strong> ECCs "should create dashboards, visualization tools, and other platforms that support shared situational awareness"<br>
         <strong>FEMA IPAWS:</strong> Alerts must include "a description of the affected area" with sufficient geographic specificity for citizens to determine personal risk</p>
       </div>
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--gap">
         <p class="problem-section-label problem-section-label--gap">The Gap</p>
         <p class="problem-text">The standard requires public information sufficient for citizens to act. Maps shared during this incident required citizens to develop their own workarounds (cross-referencing on Google Maps) to answer the basic question: "Am I in the zone?" Two cities officially acknowledged their maps were inadequate. Map illegibility was not a first-24-hour problem — it continued across the entire incident.</p>
+      </div>
       </div>
     </div>
 
     <!-- PS2 -->
     <div class="problem">
-      <p class="problem-number">Problem Statement 2</p>
-      <h3>No Single Source of Truth Existed Across 6 Jurisdictions</h3>
+      <div class="problem-header">
+        <p class="problem-number">Problem Statement 2</p>
+        <h3>No Single Source of Truth Existed Across 6 Jurisdictions</h3>
+      </div>
+      <div class="problem-body">
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--what">
         <p class="problem-section-label problem-section-label--what">What Happened</p>
         <p class="problem-text">Six jurisdictions (Garden Grove, Westminster, Stanton, Cypress, Anaheim, Buena Park) plus the county, state agencies, and the lead agency (OCFA) all published information independently. No single source aggregated evacuation zones, shelter locations, road closures, and resources across jurisdictions.</p>
         <ul class="evidence-list">
@@ -531,25 +596,32 @@ section { padding: 80px 0; }
         </ul>
       </div>
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--standard">
         <p class="problem-section-label problem-section-label--standard">What the Standard Says</p>
         <p class="problem-text"><strong>APCO 1.121.1-2022, §2.1.3.5.2:</strong> "ECCs shall have interoperability agreements with surrounding agencies"<br>
         <strong>NIMS/ICS:</strong> Unified Command requires coordinated public information through a Joint Information Center (JIC) or Joint Information System (JIS)<br>
         <strong>FEMA IPAWS/CAP:</strong> Designed to provide "a simple but general format for exchanging all-hazard emergency alerts" — interoperability is the foundational premise</p>
       </div>
 
-      <div class="problem-section">
+      <div class="problem-section problem-section--gap">
         <p class="problem-section-label problem-section-label--gap">The Gap</p>
         <p class="problem-text">Despite APCO, NIMS, and CAP all requiring cross-agency coordination, six jurisdictions published independently with no cross-reference, no aggregation, and no coordination. A citizen in the evacuation zone would need to check 7+ websites and social media accounts to assemble a complete picture.</p>
+      </div>
       </div>
     </div>
 
     <!-- Remaining problems follow the same pattern — abbreviated for template -->
     <div class="problem">
-      <p class="problem-number">Problem Statements 3–13</p>
-      <h3>Continued in full document</h3>
-      <p class="problem-text" style="color: #999; font-style: italic;">The full document contains 13 problem statements covering: EOC with no public portal, fragmented shelter information, resource propagation failures, lead agency with no web presence, invisible community resources, AFN population failures, inaccessible formats, contradictory official information, absent timestamps, hotline-website mismatches, unrecoverable after-action data, and no dedicated PIO.</p>
-      <p class="problem-text" style="margin-top: 16px;"><strong>Each follows the same three-part structure: What happened → What the standard says → The gap.</strong></p>
+      <div class="problem-header">
+        <p class="problem-number">Problem Statements 3–13</p>
+        <h3>Continued in Full Document</h3>
+      </div>
+      <div class="problem-body">
+        <div class="problem-section problem-section--what">
+          <p class="problem-text" style="color: #666; font-style: italic;">The full document contains 13 problem statements covering: EOC with no public portal, fragmented shelter information, resource propagation failures, lead agency with no web presence, invisible community resources, AFN population failures, inaccessible formats, contradictory official information, absent timestamps, hotline-website mismatches, unrecoverable after-action data, and no dedicated PIO.</p>
+          <p class="problem-text" style="margin-top: 12px;"><strong>Each follows the same three-part structure: What happened → What the standard says → The gap.</strong></p>
+        </div>
+      </div>
     </div>
 
   </div>
