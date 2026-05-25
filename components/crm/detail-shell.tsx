@@ -171,3 +171,32 @@ export function MetaChip({ icon: Icon, children }: { icon?: LucideIcon; children
     </span>
   );
 }
+
+export function ContextCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-[var(--hairline)]">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-white/45">{title}</span>
+      </div>
+      <div className="px-4 py-3 space-y-2">{children}</div>
+    </section>
+  );
+}
+
+export function ContextRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 text-[12px]">
+      <span className="text-white/45 shrink-0">{label}</span>
+      <span className="text-white/85 text-right">{value}</span>
+    </div>
+  );
+}
+
+export function DetailLayout({ main, rail }: { main: ReactNode; rail: ReactNode }) {
+  return (
+    <div className="flex gap-5 items-start">
+      <div className="min-w-0 flex-1 space-y-4">{main}</div>
+      <div className="hidden lg:flex flex-col gap-3 w-64 shrink-0">{rail}</div>
+    </div>
+  );
+}

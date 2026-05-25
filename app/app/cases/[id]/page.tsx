@@ -8,6 +8,7 @@ import { AiSummary } from "@/components/crm/ai-summary";
 import {
   DetailTopBar, IdentityBand, DetailSection, MetaChip,
   DetailTabs, EmptyTab, type DetailTab,
+  ContextCard, ContextRow, DetailLayout,
 } from "@/components/crm/detail-shell";
 import { STATUS_LABEL } from "@/lib/display-constants";
 type MatchCandidate = {
@@ -42,7 +43,7 @@ import {
   Phone, MessageSquare, MapPin, Users, Plus, AlertTriangle,
   CheckCircle2, FileText, Send, MoreHorizontal, Inbox, Route as RouteIcon,
   HandHelping, Calendar, Truck, StickyNote, ChevronRight, ExternalLink,
-  Shield, Sparkles,
+  Shield, Sparkles, X, Package,
 } from "lucide-react";
 
 const KIND_META: Record<string, { icon: typeof Inbox; tint: string }> = {
@@ -52,6 +53,8 @@ const KIND_META: Record<string, { icon: typeof Inbox; tint: string }> = {
   scheduled: { icon: Calendar,     tint: "#89CFF0" },
   delivered: { icon: Truck,        tint: "#34D399" },
   note:      { icon: StickyNote,   tint: "rgba(245,235,214,0.6)" },
+  matched:   { icon: Sparkles,     tint: "#89CFF0" },
+  fulfilled: { icon: CheckCircle2, tint: "#34D399" },
 };
 
 const NEED_STATE: Record<string, { label: string; fg: string; bg: string }> = {
@@ -154,6 +157,7 @@ export default function UmbrellaView() {
   const [notFound, setNotFound] = useState(false);
   const [note, setNote] = useState("");
   const [postingNote, setPostingNote] = useState(false);
+  const [caseNotes, setCaseNotes] = useState<Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>>([]);
 
   useEffect(() => {
     const efParams = isUmbrella ? { person_id: id } : { request_id: id };
@@ -212,6 +216,14 @@ export default function UmbrellaView() {
       .finally(() => setLoading(false));
   }, [id, isUmbrella]);
 
+  useEffect(() => {
+    api.crmGetCaseNotes(id)
+      .then((data: any) => {
+        if (data?.notes && Array.isArray(data.notes)) setCaseNotes(data.notes);
+      })
+      .catch(() => {});
+  }, [id]);
+
   const handlePostNote = useCallback(async () => {
     const text = note.trim();
     if (!text) return;
@@ -241,7 +253,7 @@ export default function UmbrellaView() {
     <CrmShell module="Cases">
       <DetailTopBar backTo="/cases" backLabel="Cases" />
 
-      <main className="max-w-[960px] mx-auto px-6 py-7 space-y-5">
+      <main className="max-w-[1240px] mx-auto px-6 py-7 space-y-5">
         <IdentityBand
           avatar={
             <div className="w-14 h-14 rounded-2xl bg-[#EF4E4B]/15 text-[#EF4E4B] flex items-center justify-center text-[18px] font-semibold">
@@ -286,20 +298,56 @@ export default function UmbrellaView() {
           <Kpi label="Days open" value={3} />
         </div>
 
-        <AiSummary
-          id={umbrellaData.id}
-          summary={`Umbrella case for ${umbrellaData.citizen.name} (household of ${umbrellaData.citizen.household}, ${umbrellaData.citizen.county} County) filed ${umbrellaData.filedAt}. ${childCasesData.length} child case${childCasesData.length === 1 ? "" : "s"} spanning ${umbrellaData.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrellaData.needs.find((n) => n.state === "unmet") ? `; ${umbrellaData.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrellaData.citizen.notes}`}
-        />
-
-        <CaseTabs
-          note={note}
-          setNote={setNote}
-          childCases={childCasesData}
-          umbrellaData={umbrellaData}
-          liveMatches={liveMatches}
-          onPostNote={handlePostNote}
-          postingNote={postingNote}
-          orgId={orgId}
+        <DetailLayout
+          main={
+            <>
+              <AiSummary
+                id={umbrellaData.id}
+                summary={`Umbrella case for ${umbrellaData.citizen.name} (household of ${umbrellaData.citizen.household}, ${umbrellaData.citizen.county} County) filed ${umbrellaData.filedAt}. ${childCasesData.length} child case${childCasesData.length === 1 ? "" : "s"} spanning ${umbrellaData.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrellaData.needs.find((n) => n.state === "unmet") ? `; ${umbrellaData.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrellaData.citizen.notes}`}
+              />
+              <CaseTabs
+                note={note}
+                setNote={setNote}
+                childCases={childCasesData}
+                umbrellaData={umbrellaData}
+                liveMatches={liveMatches}
+                onPostNote={handlePostNote}
+                postingNote={postingNote}
+                orgId={orgId}
+                caseNotes={caseNotes}
+              />
+            </>
+          }
+          rail={
+            <>
+              <ContextCard title="Citizen">
+                <ContextRow label="Name" value={umbrellaData.citizen.name || "—"} />
+                <ContextRow label="Phone" value={umbrellaData.citizen.phone || "—"} />
+                <ContextRow label="County" value={umbrellaData.citizen.county ? `${umbrellaData.citizen.county} County` : "—"} />
+                <ContextRow label="Household" value={umbrellaData.citizen.household} />
+              </ContextCard>
+              <ContextCard title="Case">
+                <ContextRow label="ID" value={<span className="font-mono text-[10.5px] text-white/55">{umbrellaData.id || "—"}</span>} />
+                <ContextRow label="Status" value={<span className="capitalize">{umbrellaData.status}</span>} />
+                <ContextRow label="Urgency" value={<span className="capitalize">{umbrellaData.urgency}</span>} />
+                <ContextRow label="Filed" value={umbrellaData.filedAt || "—"} />
+                <ContextRow label="Requests" value={childCasesData.length} />
+              </ContextCard>
+              {(umbrellaData.citizen.notes || caseNotes.length > 0) && (
+                <ContextCard title="Notes">
+                  {umbrellaData.citizen.notes && (
+                    <p className="text-[12px] text-white/75 leading-snug">{umbrellaData.citizen.notes}</p>
+                  )}
+                  {caseNotes.slice(0, 2).map((n, i) => (
+                    <div key={n.id ?? i} className={`text-[12px] text-white/65 leading-snug ${umbrellaData.citizen.notes || i > 0 ? "border-t border-white/6 pt-2 mt-2" : ""}`}>
+                      <span className="text-white/40 block text-[10px] mb-0.5">{n.author_name}</span>
+                      {n.content}
+                    </div>
+                  ))}
+                </ContextCard>
+              )}
+            </>
+          }
         />
       </main>
     </CrmShell>
@@ -307,16 +355,17 @@ export default function UmbrellaView() {
 }
 
 function CaseTabs({
-  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId,
+  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes,
 }: {
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
-  umbrellaData: typeof defaultUmbrella;
+  umbrellaData: UmbrellaShape;
   liveMatches: MatchCandidate[] | null;
   onPostNote: () => void;
   postingNote: boolean;
   orgId: string;
+  caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
 }) {
   const allMatchIds = Array.from(new Set(childCases.flatMap(() => Object.keys(matches))));
   const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
@@ -397,24 +446,8 @@ function CaseTabs({
     {
       key: "notes",
       label: "Notes",
-      count: noteEvents.length,
-      content: noteEvents.length ? (
-        <div className="divide-y divide-[var(--hairline)] -my-2">
-          {noteEvents.map((n, i) => (
-            <div key={i} className="py-3">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-mono text-[10px] text-white/45">{n.date} · {n.t} · {n.who}</span>
-              </div>
-              <p className="text-[13px] text-white/85">{n.msg}</p>
-            </div>
-          ))}
-          <div className="pt-3 mt-3 border-t border-[var(--hairline)]">
-            <p className="text-[12.5px] text-white/75 leading-relaxed">{umbrellaData.citizen.notes}</p>
-          </div>
-        </div>
-      ) : (
-        <EmptyTab label="No notes yet." />
-      ),
+      count: caseNotes.length || noteEvents.length || undefined,
+      content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} />,
     },
     {
       key: "comms",
@@ -447,36 +480,25 @@ function TimelineTab({
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
-  umbrellaData: typeof defaultUmbrella;
+  umbrellaData: UmbrellaShape;
   onPostNote: () => void;
   postingNote: boolean;
 }) {
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const events = [...umbrellaData.timeline].reverse();
+  const visible = showAll ? events : events.slice(0, 5);
+  const hidden = events.length - visible.length;
+
   return (
     <div className="-m-4">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--hairline)] bg-white/[0.02]">
-        <StickyNote size={14} className="text-white/40 shrink-0" />
-        <input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Add a note, status update, or @mention an org…"
-          className="flex-1 bg-transparent text-[13px] placeholder:text-white/35 focus:outline-none"
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && note.trim()) onPostNote(); }}
-        />
-        <button
-          onClick={onPostNote}
-          disabled={!note.trim() || postingNote}
-          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40"
-        >
-          <Send size={11} /> {postingNote ? "Posting…" : "Post"}
-        </button>
-      </div>
       <ol className="relative">
-        {[...umbrellaData.timeline].reverse().map((t, i, arr) => {
+        {visible.map((t, i, arr) => {
           const meta = KIND_META[t.kind] ?? KIND_META.note;
-          const org = orgs.find((o) => o.id === t.actor);
-          const linkedCase = t.caseId ? childCases.find((c) => c.id === t.caseId) : null;
+          const org = orgs.find((o: any) => o.id === t.actor);
+          const linkedCase = t.caseId ? childCases.find((c: any) => c.id === t.caseId) : null;
           const Icon = meta.icon;
-          const isLast = i === arr.length - 1;
+          const isLast = i === arr.length - 1 && hidden === 0;
           const inner = (
             <div className={`relative flex gap-3.5 px-4 py-3.5 transition ${linkedCase ? "hover:bg-white/4 cursor-pointer" : ""}`}>
               {!isLast && <span className="absolute left-[27.5px] top-9 bottom-0 w-px bg-white/8" />}
@@ -514,7 +536,165 @@ function TimelineTab({
             </li>
           );
         })}
+        {hidden > 0 && (
+          <li className="border-t border-[var(--hairline)]">
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full px-4 py-3 text-[12px] text-white/55 hover:text-white hover:bg-white/[0.03] transition text-left"
+            >
+              Show {hidden} earlier {hidden === 1 ? "event" : "events"}
+            </button>
+          </li>
+        )}
       </ol>
+
+      {/* Add note — at the bottom, collapsed by default */}
+      <div className="px-4 py-2.5 border-t border-[var(--hairline)]">
+        {!composerOpen ? (
+          <button
+            onClick={() => setComposerOpen(true)}
+            className="inline-flex items-center gap-1.5 text-[12.5px] text-white/55 hover:text-white/85 transition"
+          >
+            <Plus size={12} /> Add note
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <StickyNote size={14} className="text-white/40 shrink-0" />
+            <input
+              autoFocus
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Add a note or @mention an org…"
+              className="flex-1 bg-transparent text-[13px] placeholder:text-white/35 focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && note.trim()) {
+                  onPostNote();
+                  setComposerOpen(false);
+                }
+              }}
+            />
+            <button
+              onClick={() => { setNote(""); setComposerOpen(false); }}
+              className="w-7 h-7 rounded-md hover:bg-white/6 text-white/45 flex items-center justify-center"
+              aria-label="Cancel"
+            >
+              <X size={12} />
+            </button>
+            <button
+              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40"
+              disabled={!note.trim() || postingNote}
+              onClick={() => { onPostNote(); setComposerOpen(false); }}
+            >
+              <Send size={11} /> {postingNote ? "Posting…" : "Post"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const NOTE_TYPE_META: Record<string, { icon: typeof StickyNote; tint: string }> = {
+  note:   { icon: StickyNote, tint: "rgba(245,235,214,0.6)" },
+  filed:  { icon: Inbox,      tint: "#F5EBD6" },
+  routed: { icon: RouteIcon,  tint: "#89CFF0" },
+};
+
+function NotesTimeline({
+  caseNotes,
+  noteEvents,
+}: {
+  caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
+  noteEvents: Array<{ t: string; date: string; who: string; kind: string; msg: string }>;
+}) {
+  const [newNote, setNewNote] = useState("");
+
+  const items = caseNotes.length > 0
+    ? caseNotes.map((n) => ({
+        id: n.id,
+        type: n.note_type || "note",
+        author: n.author_name,
+        timestamp: n.created_at,
+        content: n.content,
+      }))
+    : noteEvents.map((n, i) => ({
+        id: String(i),
+        type: n.kind || "note",
+        author: n.who,
+        timestamp: `${n.date} · ${n.t}`,
+        content: n.msg,
+      }));
+
+  const handleAddNote = () => {
+    const text = newNote.trim();
+    if (!text) return;
+    console.log("add note:", text);
+    setNewNote("");
+  };
+
+  return (
+    <div className="-m-4">
+      {items.length === 0 ? (
+        <div className="px-4 py-8 text-center text-[13px] text-white/40">No notes yet.</div>
+      ) : (
+        <ol className="relative">
+          {items.map((item, i) => {
+            const meta = NOTE_TYPE_META[item.type] ?? NOTE_TYPE_META.note;
+            const Icon = meta.icon;
+            const isLast = i === items.length - 1;
+            return (
+              <li key={item.id ?? i} className={isLast ? "" : "border-b border-white/[0.04]"}>
+                <div className="relative flex gap-3.5 px-4 py-3.5">
+                  {!isLast && <span className="absolute left-[27.5px] top-9 bottom-0 w-px bg-white/8" />}
+                  <span
+                    className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] shrink-0"
+                    style={{ background: `${meta.tint}1a`, color: meta.tint }}
+                  >
+                    <Icon size={13} strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/75 font-medium">
+                        {item.author}
+                      </span>
+                      <span className="font-mono text-[10px] text-white/35">{item.timestamp}</span>
+                      {item.type !== "note" && (
+                        <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/6 text-white/45">
+                          {item.type}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-white/85 mt-1 leading-snug">{item.content}</p>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      {/* Add note composer */}
+      <div className="px-4 py-2.5 border-t border-[var(--hairline)]">
+        <div className="flex items-center gap-2">
+          <StickyNote size={14} className="text-white/40 shrink-0" />
+          <input
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            placeholder="Add a note…"
+            className="flex-1 bg-transparent text-[13px] placeholder:text-white/35 focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && newNote.trim()) handleAddNote();
+            }}
+          />
+          <button
+            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[12px] font-medium transition disabled:opacity-40"
+            disabled={!newNote.trim()}
+            onClick={handleAddNote}
+          >
+            <Send size={11} /> Add
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
