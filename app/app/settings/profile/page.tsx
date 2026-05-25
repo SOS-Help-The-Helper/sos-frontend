@@ -1,9 +1,12 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, Mail, Phone, Shield, Upload } from "lucide-react";
 import { Avatar } from "@/components/directory/Avatar";
 import { ScoreRing, FactorBar, ScoreCard, tierFor, type Factor } from "@/components/crm/Scoring";
 import { ShareSOS, ReferralLineItems, DEMO_REFERRALS } from "@/components/crm/ShareSOS";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 
 const PERSON_ID = "p-melissa-hart";
@@ -38,6 +41,23 @@ export default function MyProfile() {
   const score = READINESS.earned + COMMUNITY.earned + IMPACT.earned;
   const tier = tierFor(score);
 
+  const [name, setName] = useState("Melissa Hart");
+  const [email, setEmail] = useState("melissa@mountainareaaid.org");
+  const [phone, setPhone] = useState("(828) 555-0188");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await api.efCall("crm-settings", { action: "update_profile", name, email, phone });
+      toast.success("Profile saved");
+    } catch {
+      toast.error("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <ScoreCard title="SOS Score" hint="Your personal readiness, community trust, and impact.">
@@ -62,11 +82,8 @@ export default function MyProfile() {
       </ScoreCard>
 
       <Section title="You" hint="How teammates see you across SOS Connect.">
-
-
-
         <div className="flex items-start gap-4">
-          <Avatar name="Melissa Hart" size={64} />
+          <Avatar name={name} size={64} />
           <div className="flex-1 space-y-3">
             <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/6 hover:bg-white/10 text-[12px] font-medium transition">
               <Upload size={12} /> Change photo
@@ -76,10 +93,10 @@ export default function MyProfile() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
-          <Field label="Full name" value="Melissa Hart" />
-          <Field label="Title" value="Operations Director" />
-          <Field label="Email" icon={Mail} value="melissa@mountainareaaid.org" />
-          <Field label="Phone" icon={Phone} value="(828) 555-0188" />
+          <Field label="Full name" value={name} onChange={(e) => setName(e.target.value)} />
+          <Field label="Title" defaultValue="Operations Director" />
+          <Field label="Email" icon={Mail} value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Field label="Phone" icon={Phone} value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="mt-3">
           <Label>Bio</Label>
@@ -88,6 +105,16 @@ export default function MyProfile() {
             rows={2}
             className="w-full px-3 py-2 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40 resize-none"
           />
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save profile"}
+          </button>
         </div>
       </Section>
 
@@ -134,14 +161,26 @@ function Label({ children }: { children: React.ReactNode }) {
   return <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
 }
 
-function Field({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ComponentType<{ size?: number; className?: string }> }) {
+function Field({
+  label,
+  value,
+  defaultValue,
+  onChange,
+  icon: Icon,
+}: {
+  label: string;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
+}) {
   return (
     <div>
       <Label>{label}</Label>
       <div className="relative">
         {Icon && <Icon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />}
         <input
-          defaultValue={value}
+          {...(value !== undefined ? { value, onChange } : { defaultValue })}
           className={`w-full h-10 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40 ${Icon ? "pl-9 pr-3" : "px-3"}`}
         />
       </div>

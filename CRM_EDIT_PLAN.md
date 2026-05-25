@@ -26,13 +26,16 @@
 4. Person detail: delete/archive button with confirmation
 5. Import page: wire CSV import to bulk create_person
 
-### Chunk C: Directory — Request CRUD
-**Backend:** crm-cases EF needs: `create_request`, `update_request`, `cancel_request`
+### Chunk C: Directory — Request + Resource CRUD (via partner-write)
+**Backend:** NO new EFs needed — use `partner-write` (existing). This is the canonical path.
+`partner-write` handles: taxonomy validation, SOS umbrella find-or-create, location geocoding, household resolution, sos-sync to SOS DB, all intake fields.
+A raw `create_request` in crm-cases would bypass all of that — don't do it.
 **Frontend:**
-1. "New request" button → modal with person, category, urgency, location, household info
-2. Request detail: inline-edit status, urgency, category
-3. Request detail: cancel/close button
-4. Link request to existing case (or auto-create case)
+1. "New request" button → modal calls `api.efCall('partner-write', { person_name, phone, records: [{ type: 'request', taxonomy_code, urgency, ... }] })`
+2. "New resource" button → same path with `type: 'resource'`
+3. Request detail: status change → `partner-update` (updates partner DB + syncs to SOS)
+4. Request detail: cancel/close → `partner-update` with `action: 'cancel_request'`
+5. Resource detail: edit capacity/status → `partner-update`
 
 ### Chunk D: Directory — Resource + Org CRUD
 **Backend:** crm-directory EF needs: `create_resource`, `update_resource`, `delete_resource`, `create_org`, `update_org`
@@ -98,7 +101,7 @@
 ## Backend Work Summary
 | EF | New Actions Needed | Effort |
 |----|-------------------|--------|
-| crm-cases | create_case, update_case, archive_case, assign_case, create_request, update_request, cancel_request | 3 hrs |
+| crm-cases | update_case, archive_case, assign_case (create goes through partner-write) | 1.5 hrs |
 | crm-directory | create_person, delete_person, create_resource, update_resource, delete_resource, create_org, update_org | 2 hrs |
 | crm-settings | update_org_info, invite_member, remove_member, change_role | 1.5 hrs |
 | volunteer-mgmt | assign_volunteer, update_volunteer_status (new EF) | 1 hr |

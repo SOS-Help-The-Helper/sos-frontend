@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, MoreHorizontal, Search, UserPlus } from "lucide-react";
+import { Mail, MoreHorizontal, Search, UserPlus, X } from "lucide-react";
 import { Avatar } from "@/components/directory/Avatar";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 type Role = "Owner" | "Admin" | "Coordinator" | "Volunteer" | string;
 type Status = "Active" | "Invited";
@@ -17,6 +18,8 @@ type Member = {
   lastActive: string;
 };
 
+const ROLES: Role[] = ["Owner", "Admin", "Coordinator", "Volunteer"];
+
 const ROLE_TINT: Record<Role, string> = {
   Owner: "#EF4E4B",
   Admin: "#F5EBD6",
@@ -27,6 +30,11 @@ const ROLE_TINT: Record<Role, string> = {
 export default function PeopleSettings() {
   const { orgId } = useAuthContext();
   const [members, setMembers] = useState<Member[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("Coordinator");
+  const [inviting, setInviting] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!orgId) return;
@@ -43,9 +51,52 @@ export default function PeopleSettings() {
     }).catch(() => {});
   }, [orgId]);
 
-  const MEMBERS = members;
-  const active = MEMBERS.filter((m) => m.status === "Active").length;
-  const invited = MEMBERS.filter((m) => m.status === "Invited").length;
+  async function handleInvite() {
+    if (!orgId || !inviteEmail) return;
+    setInviting(true);
+    try {
+      await api.efCall("crm-directory", { action: "invite_member", org_id: orgId, email: inviteEmail, role: inviteRole });
+      toast.success(`Invite sent to ${inviteEmail}`);
+      setInviteOpen(false);
+      setInviteEmail("");
+      setInviteRole("Coordinator");
+    } catch {
+      toast.error("Failed to send invite");
+    } finally {
+      setInviting(false);
+    }
+  }
+
+  async function handleRemove(member: Member) {
+    if (!orgId) return;
+    if (!confirm(`Remove ${member.name} from this org?`)) return;
+    try {
+      await api.efCall("crm-directory", { action: "remove_member", org_id: orgId, person_id: member.id });
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+      toast.success(`${member.name} removed`);
+    } catch {
+      toast.error("Failed to remove member");
+    }
+  }
+
+  async function handleRoleChange(member: Member, role: Role) {
+    if (!orgId) return;
+    const prev = members;
+    setMembers((ms) => ms.map((m) => m.id === member.id ? { ...m, role } : m));
+    try {
+      await api.efCall("crm-directory", { action: "change_role", org_id: orgId, person_id: member.id, role });
+      toast.success(`${member.name} is now ${role}`);
+    } catch {
+      setMembers(prev);
+      toast.error("Failed to update role");
+    }
+  }
+
+  const filtered = members.filter((m) =>
+    !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase())
+  );
+  const active = members.filter((m) => m.status === "Active").length;
+  const invited = members.filter((m) => m.status === "Invited").length;
 
   return (
     <div className="space-y-4">
@@ -58,7 +109,10 @@ export default function PeopleSettings() {
               {invited > 0 && <> · <span className="text-white/55">{invited} invited</span></>}
             </p>
           </div>
-          <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition">
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition"
+          >
             <UserPlus size={13} /> Invite
           </button>
         </div>
@@ -66,13 +120,15 @@ export default function PeopleSettings() {
         <div className="relative mb-3">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
           <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email"
             className="w-full h-9 pl-9 pr-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
           />
         </div>
 
         <div className="rounded-xl border border-[var(--hairline)] overflow-hidden divide-y divide-[var(--hairline)]">
-          {MEMBERS.map((m) => (
+          {filtered.map((m) => (
             <div key={m.id} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition">
               <Avatar name={m.name} size={36} />
               <div className="min-w-0 flex-1">
@@ -87,16 +143,24 @@ export default function PeopleSettings() {
                 <p className="text-[12px] text-white/50 truncate">{m.email}</p>
               </div>
               <div className="hidden sm:block text-right">
-                <span
-                  className="inline-block text-[12px] font-medium px-2 py-0.5 rounded-md"
-                  style={{ color: ROLE_TINT[m.role], background: `${ROLE_TINT[m.role]}14` }}
+                <select
+                  value={m.role}
+                  onChange={(e) => handleRoleChange(m, e.target.value as Role)}
+                  className="text-[12px] font-medium px-2 py-0.5 rounded-md bg-transparent border border-transparent hover:border-white/10 focus:outline-none focus:border-white/20 cursor-pointer"
+                  style={{ color: ROLE_TINT[m.role] ?? "#94a3b8" }}
                 >
-                  {m.role}
-                </span>
+                  {ROLES.map((r) => (
+                    <option key={r} value={r} style={{ color: "#0a0a0a", background: "#fff" }}>{r}</option>
+                  ))}
+                </select>
                 <p className="text-[11px] text-white/40 mt-0.5">{m.lastActive}</p>
               </div>
-              <button className="w-8 h-8 rounded-md flex items-center justify-center text-white/45 hover:text-white hover:bg-white/5 transition">
-                {m.status === "Invited" ? <Mail size={14} /> : <MoreHorizontal size={14} />}
+              <button
+                onClick={() => handleRemove(m)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-white/45 hover:text-[#EF4E4B] hover:bg-white/5 transition"
+                title="Remove member"
+              >
+                <X size={14} />
               </button>
             </div>
           ))}
@@ -125,6 +189,67 @@ export default function PeopleSettings() {
           ))}
         </div>
       </section>
+
+      {inviteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-[#0F1E2B] border border-[var(--hairline)] p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold">Invite member</h3>
+              <button
+                onClick={() => setInviteOpen(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-white/45 hover:text-white hover:bg-white/5 transition"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Email</p>
+                <div className="relative">
+                  <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@org.org"
+                    className="w-full h-10 pl-9 pr-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Role</p>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as Role)}
+                  className="w-full h-10 px-3 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] text-white focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
+                >
+                  {ROLES.map((r) => (
+                    <option key={r} value={r} style={{ background: "#0F1E2B" }}>{r}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={() => setInviteOpen(false)}
+                className="h-9 px-4 rounded-lg text-[13px] text-white/65 hover:text-white transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleInvite}
+                disabled={inviting || !inviteEmail}
+                className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition disabled:opacity-50"
+              >
+                {inviting ? "Sending…" : "Send invite"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

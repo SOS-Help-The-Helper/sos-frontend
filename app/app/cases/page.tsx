@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 import { UrgencyBadge, SubStatusPill, CountChip } from "@/components/crm/pills";
 import { BUCKETS, bucketOf, type RequestStatus, type Bucket } from "@/lib/display-constants";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { Plus, Link2, AlertTriangle } from "lucide-react";
+import { Plus, Link2, AlertTriangle, X } from "lucide-react";
 
 type TabKey = "cases" | "requests" | "resources" | "reports";
 
@@ -89,6 +90,137 @@ function liveResourcesToCards(items: any[]): Card[] {
     sub: r.capacity_available != null ? `${r.capacity_available} avail` : undefined,
     href: `/app/directory/resource/${r.id}`,
   }));
+}
+
+function CreateCaseModal({
+  orgId,
+  onClose,
+  onCreated,
+}: {
+  orgId: string;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [personName, setPersonName] = useState("");
+  const [category, setCategory] = useState("housing");
+  const [urgency, setUrgency] = useState("medium");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!personName.trim()) return;
+    setSubmitting(true);
+    try {
+      // Use partner-write — the canonical intake path.
+      // Handles: taxonomy validation, SOS umbrella find-or-create,
+      // location geocoding, household resolution, sos-sync.
+      await api.efCall("partner-write", {
+        person_name: personName.trim(),
+        org_id: orgId,
+        records: [{
+          type: "request",
+          taxonomy_code: category,
+          urgency,
+          notes: notes.trim(),
+          source: "crm_portal",
+        }],
+      });
+      toast.success("Case created");
+      onCreated();
+      onClose();
+    } catch {
+      toast.error("Failed to create case");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const selectCls =
+    "w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-white/25 appearance-none";
+  const inputCls =
+    "w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-white/35 focus:outline-none focus:border-white/25";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-[#0F1E2B] border border-white/10 rounded-2xl shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[15px] font-semibold">New case</h2>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-md hover:bg-white/8 text-white/45 flex items-center justify-center transition"
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Person name</label>
+            <input
+              autoFocus
+              className={inputCls}
+              placeholder="Jane Smith"
+              value={personName}
+              onChange={(e) => setPersonName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Category</label>
+              <select className={selectCls} value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="housing">Housing</option>
+                <option value="food">Food</option>
+                <option value="medical">Medical</option>
+                <option value="childcare">Childcare</option>
+                <option value="transport">Transport</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Urgency</label>
+              <select className={selectCls} value={urgency} onChange={(e) => setUrgency(e.target.value)}>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Notes</label>
+            <textarea
+              className={`${inputCls} resize-none`}
+              rows={3}
+              placeholder="Additional context…"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-9 rounded-lg bg-white/6 hover:bg-white/10 text-[13px] font-medium text-white/70 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !personName.trim()}
+              className="flex-1 h-9 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[13px] font-medium text-white transition disabled:opacity-40"
+            >
+              {submitting ? "Creating…" : "Create case"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function SkeletonColumn({ accent }: { accent: string }) {
@@ -199,6 +331,8 @@ export default function CasesPage() {
 
   const totalOpen = cards.filter((c) => c.col !== "resolved" && c.col !== "Resolved").length;
 
+  const [modalOpen, setModalOpen] = useState(false);
+
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
@@ -209,10 +343,34 @@ export default function CasesPage() {
     setCards((prev) => prev.map((c) => (c.id === dragId ? { ...c, col: colId } : c)));
     setDragId(null);
     setDragOverCol(null);
-    // API mutation (fire-and-forget, no rollback on error)
+    // API mutation + toast
     if (card && (tab === "cases" || tab === "requests")) {
-      api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId }).catch((err) => { console.error("[cases] soses fetch failed:", err); });
+      api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId })
+        .then(() => toast.success(`Moved to ${colId}`))
+        .catch(() => toast.error("Failed to update status"));
     }
+  };
+
+  const refreshCases = () => {
+    setLoadingCases(true);
+    api.crmSosesList({ limit: 200 })
+      .then((data: any) => {
+        const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
+        if (items.length > 0) {
+          const newCards: Card[] = items.map((s: any) => ({
+            id: s.id,
+            col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
+            title: s.person_name || s.persons?.display_name || "Unknown",
+            meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
+            sub: s.days_open != null ? `${s.days_open}d` : undefined,
+            href: `/app/cases/${s.id}`,
+          }));
+          setLiveCases(newCards);
+          setCaseCards(newCards);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingCases(false));
   };
 
   const TABS: { id: TabKey; label: string; count: number }[] = [
@@ -224,11 +382,21 @@ export default function CasesPage() {
 
   return (
     <CrmShell module="Cases">
+      {modalOpen && (
+        <CreateCaseModal
+          orgId={orgId || ""}
+          onClose={() => setModalOpen(false)}
+          onCreated={refreshCases}
+        />
+      )}
       <PageHeader
         title="Cases"
         subtitle={`${totalOpen} open · ${cards.length} total ${label}s · drag to change stage`}
         actions={
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
+          <button
+            onClick={() => tab === "cases" && setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition"
+          >
             <Plus size={12} /> New {label}
           </button>
         }

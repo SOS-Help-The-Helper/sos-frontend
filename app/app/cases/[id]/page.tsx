@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
@@ -306,6 +307,7 @@ export default function UmbrellaView() {
                 summary={`Umbrella case for ${umbrellaData.citizen.name} (household of ${umbrellaData.citizen.household}, ${umbrellaData.citizen.county} County) filed ${umbrellaData.filedAt}. ${childCasesData.length} child case${childCasesData.length === 1 ? "" : "s"} spanning ${umbrellaData.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrellaData.needs.find((n) => n.state === "unmet") ? `; ${umbrellaData.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrellaData.citizen.notes}`}
               />
               <CaseTabs
+                sosId={id}
                 note={note}
                 setNote={setNote}
                 childCases={childCasesData}
@@ -355,8 +357,9 @@ export default function UmbrellaView() {
 }
 
 function CaseTabs({
-  note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes,
+  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes,
 }: {
+  sosId: string;
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
@@ -371,6 +374,68 @@ function CaseTabs({
   const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
   const aggMatches = liveMatches ?? protoMatches;
   const noteEvents = umbrellaData.timeline.filter((t) => t.kind === "note");
+
+  // Admin action state
+  const [availableOrgs, setAvailableOrgs] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedOrg, setSelectedOrg] = useState("");
+  const [assigningOrg, setAssigningOrg] = useState(false);
+  const [closingCase, setClosingCase] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [changingStatus, setChangingStatus] = useState(false);
+  const firstRequestId = childCases[0]?.id ?? sosId;
+
+  useEffect(() => {
+    api.crmBrowseOrgs({ limit: 50 })
+      .then((data: any) => {
+        const items: any[] = data?.orgs ?? data?.organizations ?? (Array.isArray(data) ? data : []);
+        setAvailableOrgs(items.map((o: any) => ({ id: o.id, name: o.name ?? o.slug ?? o.id })));
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleCloseCase = async () => {
+    setClosingCase(true);
+    try {
+      await api.crmCaseAction("close_case", { sos_id: sosId });
+      toast.success("Case closed");
+    } catch {
+      toast.error("Failed to close case");
+    } finally {
+      setClosingCase(false);
+    }
+  };
+
+  const handleAssignOrg = async (orgId: string) => {
+    if (!orgId) return;
+    setAssigningOrg(true);
+    try {
+      await api.crmCaseAction("assign_case", { sos_id: sosId, org_id: orgId });
+      const orgName = availableOrgs.find((o) => o.id === orgId)?.name ?? orgId;
+      toast.success(`Assigned to ${orgName}`);
+      setSelectedOrg(orgId);
+    } catch {
+      toast.error("Failed to assign org");
+    } finally {
+      setAssigningOrg(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!newStatus) return;
+    setChangingStatus(true);
+    try {
+      await api.crmCaseAction("transition_status", { request_id: firstRequestId, new_status: newStatus });
+      toast.success(`Status → ${newStatus}`);
+      setSelectedStatus(newStatus);
+    } catch {
+      toast.error("Failed to change status");
+    } finally {
+      setChangingStatus(false);
+    }
+  };
+
+  const selectCls =
+    "bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[12px] text-white focus:outline-none focus:border-white/25 appearance-none cursor-pointer disabled:opacity-40";
 
   const tabs: DetailTab[] = [
     {
@@ -465,10 +530,51 @@ function CaseTabs({
     <>
       <DetailTabs tabs={tabs} defaultKey="timeline" />
       <DetailSection title="Admin" icon={Shield}>
-        <AdminItem icon={Users} label="Reassign coordinator" />
+        {/* Assign to org */}
+        <div className="flex items-center gap-2.5 h-8 px-2">
+          <Users size={13} strokeWidth={1.85} className="text-white/55 shrink-0" />
+          <span className="flex-1 text-left text-[12.5px] font-medium text-white/75">Assign to org</span>
+          <select
+            className={selectCls}
+            value={selectedOrg}
+            disabled={assigningOrg || availableOrgs.length === 0}
+            onChange={(e) => handleAssignOrg(e.target.value)}
+          >
+            <option value="">Select org…</option>
+            {availableOrgs.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+        </div>
+        {/* Change status */}
+        <div className="flex items-center gap-2.5 h-8 px-2">
+          <RouteIcon size={13} strokeWidth={1.85} className="text-white/55 shrink-0" />
+          <span className="flex-1 text-left text-[12.5px] font-medium text-white/75">Change status</span>
+          <select
+            className={selectCls}
+            value={selectedStatus}
+            disabled={changingStatus}
+            onChange={(e) => handleStatusChange(e.target.value)}
+          >
+            <option value="">Select status…</option>
+            <option value="active">Active</option>
+            <option value="in_progress">In progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
         <AdminItem icon={FileText} label="Generate report" />
         <AdminItem icon={AlertTriangle} label="Flag for review" />
-        <AdminItem icon={CheckCircle2} label="Close umbrella" danger />
+        {/* Close case */}
+        <button
+          onClick={handleCloseCase}
+          disabled={closingCase}
+          className="w-full flex items-center gap-2.5 h-8 px-2 rounded-md text-[12.5px] font-medium transition text-[#EF4E4B] hover:bg-[#EF4E4B]/10 disabled:opacity-40"
+        >
+          <CheckCircle2 size={13} strokeWidth={1.85} />
+          <span className="flex-1 text-left">{closingCase ? "Closing…" : "Close case"}</span>
+          <ChevronRight size={12} className="text-white/30" />
+        </button>
       </DetailSection>
     </>
   );

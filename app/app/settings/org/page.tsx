@@ -4,6 +4,7 @@ import { Building2, Globe, Mail, MapPin, Phone, Upload } from "lucide-react";
 import { ScoreRing, FactorBar, ScoreCard, type Factor } from "@/components/crm/Scoring";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 const FALLBACK_TRUST: Factor[] = [
   { key: "fulfillment", label: "Fulfillment rate", earned: 0, max: 100 },
@@ -12,16 +13,92 @@ const FALLBACK_TRUST: Factor[] = [
   { key: "capacity", label: "Capacity reliability", earned: 0, max: 100 },
 ];
 
+type FormState = {
+  legalName: string;
+  shortName: string;
+  taxId: string;
+  founded: string;
+  mission: string;
+  email: string;
+  phone: string;
+  website: string;
+  primaryCounty: string;
+  street: string;
+  city: string;
+  stateField: string;
+  zip: string;
+};
+
+const DEFAULT_FORM: FormState = {
+  legalName: "Mountain Area Aid",
+  shortName: "MAA",
+  taxId: "84-3927145",
+  founded: "2018",
+  mission: "Coordinating shelter, transport, and supply response across western counties.",
+  email: "ops@mountainareaaid.org",
+  phone: "(828) 555-0142",
+  website: "mountainareaaid.org",
+  primaryCounty: "Burke",
+  street: "412 Ridge Road",
+  city: "Morganton",
+  stateField: "NC",
+  zip: "28655",
+};
+
 export default function OrgSettings() {
   const { orgId, orgName } = useAuthContext();
   const [orgData, setOrgData] = useState<Record<string, any> | null>(null);
   const [stats, setStats] = useState<{ active_cases: number; fulfilled: number; total_matches: number } | null>(null);
+  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
-    api.getPortalConfig(orgId).then((res: any) => setOrgData(res?.config ?? res)).catch(() => {});
+    api.getPortalConfig(orgId).then((res: any) => {
+      const config = res?.config ?? res;
+      setOrgData(config);
+      if (config) {
+        setForm((f) => ({
+          ...f,
+          legalName: config.name ?? config.legal_name ?? f.legalName,
+          shortName: config.short_name ?? f.shortName,
+          mission: config.mission ?? config.description ?? f.mission,
+          email: config.email ?? f.email,
+          phone: config.phone ?? f.phone,
+          website: config.website ?? f.website,
+        }));
+      }
+    }).catch(() => {});
     api.crmOrgStats(orgId).then((res: any) => setStats(res)).catch(() => {});
   }, [orgId]);
+
+  const set = (key: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  async function handleSave() {
+    if (!orgId) return;
+    setSaving(true);
+    try {
+      await api.updatePortalConfig(orgId, {
+        name: form.legalName,
+        short_name: form.shortName,
+        tax_id: form.taxId,
+        founded: form.founded,
+        mission: form.mission,
+        email: form.email,
+        phone: form.phone,
+        website: form.website,
+        primary_county: form.primaryCounty,
+        address: { street: form.street, city: form.city, state: form.stateField, zip: form.zip },
+      });
+      toast.success("Org settings saved");
+    } catch {
+      toast.error("Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const TRUST_FACTORS: Factor[] = orgData?.trust_factors ?? FALLBACK_TRUST;
   const SERVICES: string[] = orgData?.services ?? orgData?.capabilities ?? [];
@@ -82,15 +159,16 @@ export default function OrgSettings() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
-          <Field label="Legal name" value="Mountain Area Aid" />
-          <Field label="Short name" value="MAA" />
-          <Field label="Tax ID (EIN)" value="84-3927145" />
-          <Field label="Founded" value="2018" />
+          <Field label="Legal name" value={form.legalName} onChange={set("legalName")} />
+          <Field label="Short name" value={form.shortName} onChange={set("shortName")} />
+          <Field label="Tax ID (EIN)" value={form.taxId} onChange={set("taxId")} />
+          <Field label="Founded" value={form.founded} onChange={set("founded")} />
         </div>
         <div className="mt-3">
           <Label>Mission</Label>
           <textarea
-            defaultValue="Coordinating shelter, transport, and supply response across western counties."
+            value={form.mission}
+            onChange={set("mission")}
             rows={3}
             className="w-full px-3 py-2 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40 resize-none"
           />
@@ -99,20 +177,20 @@ export default function OrgSettings() {
 
       <Section title="Contact" hint="Primary channels routed to your inbox.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Email" icon={Mail} value="ops@mountainareaaid.org" />
-          <Field label="Phone" icon={Phone} value="(828) 555-0142" />
-          <Field label="Website" icon={Globe} value="mountainareaaid.org" />
-          <Field label="Primary county" icon={MapPin} value="Burke" />
+          <Field label="Email" icon={Mail} value={form.email} onChange={set("email")} />
+          <Field label="Phone" icon={Phone} value={form.phone} onChange={set("phone")} />
+          <Field label="Website" icon={Globe} value={form.website} onChange={set("website")} />
+          <Field label="Primary county" icon={MapPin} value={form.primaryCounty} onChange={set("primaryCounty")} />
         </div>
       </Section>
 
       <Section title="Address" hint="Headquarters / mailing address.">
         <div className="space-y-3">
-          <Field label="Street" value="412 Ridge Road" />
+          <Field label="Street" value={form.street} onChange={set("street")} />
           <div className="grid grid-cols-3 gap-3">
-            <Field label="City" value="Morganton" />
-            <Field label="State" value="NC" />
-            <Field label="ZIP" value="28655" />
+            <Field label="City" value={form.city} onChange={set("city")} />
+            <Field label="State" value={form.stateField} onChange={set("stateField")} />
+            <Field label="ZIP" value={form.zip} onChange={set("zip")} />
           </div>
         </div>
       </Section>
@@ -131,8 +209,19 @@ export default function OrgSettings() {
       </Section>
 
       <div className="flex justify-end gap-2">
-        <button className="h-9 px-4 rounded-lg text-[13px] text-white/65 hover:text-white transition">Discard</button>
-        <button className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition">Save changes</button>
+        <button
+          onClick={() => setForm(DEFAULT_FORM)}
+          className="h-9 px-4 rounded-lg text-[13px] text-white/65 hover:text-white transition"
+        >
+          Discard
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="h-9 px-4 rounded-lg bg-[#89CFF0] text-[#0a0a0a] text-[13px] font-semibold hover:bg-[#89CFF0]/90 transition disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
       </div>
     </div>
   );
@@ -152,14 +241,25 @@ function Label({ children }: { children: React.ReactNode }) {
   return <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
 }
 
-function Field({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ComponentType<{ size?: number; className?: string }> }) {
+function Field({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
+}) {
   return (
     <div>
       <Label>{label}</Label>
       <div className="relative">
         {Icon && <Icon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />}
         <input
-          defaultValue={value}
+          value={value}
+          onChange={onChange}
           className={`w-full h-10 rounded-lg bg-white/5 border border-[var(--hairline)] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40 ${Icon ? "pl-9 pr-3" : "px-3"}`}
         />
       </div>
