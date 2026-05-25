@@ -39,6 +39,7 @@ const orgs: any[] = [];
 const matches: Record<string, any> = {};
 import { UrgencyBadge } from "@/components/crm/pills";
 import { api } from "@/lib/api";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { useAuthContext } from "@/lib/auth-context";
 import {
   Phone, MessageSquare, MapPin, Users, Plus, AlertTriangle,
@@ -159,6 +160,7 @@ export default function UmbrellaView() {
   const [note, setNote] = useState("");
   const [postingNote, setPostingNote] = useState(false);
   const [caseNotes, setCaseNotes] = useState<Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     const efParams = isUmbrella ? { person_id: id } : { request_id: id };
@@ -284,6 +286,14 @@ export default function UmbrellaView() {
               <ActionBtn icon={Phone} label="Call" />
               <ActionBtn icon={MessageSquare} label="Message" />
               <ActionBtn icon={Plus} label="Add need" primary />
+              <button
+                onClick={() => setChatOpen(true)}
+                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-white/6 hover:bg-white/10 text-white/85 text-[12px] font-medium transition"
+                aria-label="Open chat"
+              >
+                <MessageSquare size={12} strokeWidth={2} />
+                Chat
+              </button>
               <button className="w-8 h-8 rounded-md hover:bg-white/8 text-white/55 hover:text-white flex items-center justify-center transition">
                 <MoreHorizontal size={14} />
               </button>
@@ -352,6 +362,14 @@ export default function UmbrellaView() {
           }
         />
       </main>
+
+      <ChatPanel
+        entityType="sos"
+        entityId={id}
+        orgId={orgId ?? ""}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </CrmShell>
   );
 }

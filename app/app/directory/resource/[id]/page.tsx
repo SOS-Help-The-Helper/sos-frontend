@@ -10,6 +10,8 @@ import {
   StatusPill, MetaPopover, OverflowMenu, HeroLine, HeroPanel, ActionBtn,
 } from "@/components/crm/DetailShell";
 import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { User, MapPin, Package, Calendar, GitBranch, ArrowRight, Sparkles, MessageSquare, Share2, Flag, XCircle } from "lucide-react";
 
 // Types matching the crmResourceDetail EF response
@@ -29,7 +31,9 @@ interface ResourceData {
 
 export default function ResourcePage() {
   const { id } = useParams<{ id: string }>();
+  const { orgId } = useAuthContext();
   const [data, setData] = useState<{ resource: ResourceData; matches: any[] } | null | undefined>(undefined);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     api.crmResourceDetail(id)
@@ -231,7 +235,7 @@ export default function ResourcePage() {
           }
           actions={
             <>
-              <ActionBtn icon={MessageSquare} label="Contact owner" />
+              <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
               <OverflowMenu
                 actions={[
                   { label: "Share", icon: Share2 },
@@ -307,6 +311,7 @@ export default function ResourcePage() {
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="resource" entityId={id} orgId={orgId} />
     </CrmShell>
   );
 }

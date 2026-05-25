@@ -11,6 +11,8 @@ import {
 } from "@/components/crm/DetailShell";
 import { STATUS_LABEL, TRANSPORT_STATUS_LABEL, type TransportStatus } from "@/lib/display-constants";
 import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import {
   MapPin, Calendar, User, Check, X, Camera, Truck, Package,
   ShieldCheck, Phone, MessageSquare, Sparkles,
@@ -46,7 +48,9 @@ interface ReqDetail {
 
 export default function RequestPage() {
   const { id } = useParams<{ id: string }>();
+  const { orgId } = useAuthContext();
   const [r, setR] = useState<ReqDetail | null | undefined>(undefined);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     api.crmCasesDetail({ request_id: id })
@@ -146,10 +150,10 @@ export default function RequestPage() {
           actions={
             <>
               <ActionBtn icon={Phone} label="Call" />
+              <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
               <ActionBtn icon={Check} label="Approve match" primary />
               <OverflowMenu
                 actions={[
-                  { label: "Message citizen", icon: MessageSquare },
                   { label: "Reassign", icon: Users },
                   { label: "Share", icon: Share2 },
                   { label: "Flag for review", icon: Flag, danger: true },
@@ -192,6 +196,7 @@ export default function RequestPage() {
 
         <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
       </main>
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="request" entityId={id} orgId={orgId} />
     </CrmShell>
   );
 }

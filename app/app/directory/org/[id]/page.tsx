@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2, Users } from "lucide-react";
+import { Mail, Phone, Globe, Plus, MapPin, ChevronRight, Share2, Flag, Building2, Users, MessageSquare } from "lucide-react";
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
 import { AiSummary } from "@/components/crm/AiSummary";
@@ -23,6 +23,7 @@ export default function OrgPage() {
   const { id } = useParams<{ id: string }>();
   const { orgId } = useAuthContext();
   const [org, setOrg] = useState<any>(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const [stats, setStats] = useState<any>({});
   const [members, setMembers] = useState<any[]>([]);
 
@@ -108,6 +109,7 @@ export default function OrgPage() {
           actions={
             <>
               <ActionBtn icon={Mail} label="Email" />
+              <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
               <ActionBtn icon={Plus} label="Invite member" primary />
               <OverflowMenu
                 actions={[
@@ -143,6 +145,7 @@ export default function OrgPage() {
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="organization" entityId={id} orgId={orgId} />
     </CrmShell>
   );
 }

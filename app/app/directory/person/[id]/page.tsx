@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus } from "lucide-react";
+import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus, MessageSquare } from "lucide-react";
 // // toast disabled
 import { CrmShell } from "@/components/crm-shell";
 import { Avatar } from "@/components/directory/Avatar";
@@ -19,6 +19,8 @@ import { StewardshipBand } from "@/components/directory/StewardshipChip";
 import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
 import { usePerson, canEdit, updatePerson } from "@/lib/directory-store";
 import { api } from "@/lib/api";
+import { useAuthContext } from "@/lib/auth-context";
+import { ChatPanel } from "@/components/chat/chat-panel";
 
 interface LinkedRequest {
   id: string;
@@ -52,7 +54,9 @@ const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
+  const { orgId } = useAuthContext();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     api.crmGetPerson(id)
@@ -183,6 +187,7 @@ export default function PersonPage() {
             <>
               <ActionBtn icon={Phone} label="Call" />
               <ActionBtn icon={Mail} label="Email" />
+              <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
               <OverflowMenu
                 actions={[
                   { label: "Locate", icon: MapPin },
@@ -258,6 +263,7 @@ export default function PersonPage() {
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
       </main>
+      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="person" entityId={id} orgId={orgId} />
     </CrmShell>
   );
 }
