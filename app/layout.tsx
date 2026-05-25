@@ -3,6 +3,7 @@ import Script from "next/script";
 import { AuthProvider } from "@/lib/auth-context";
 import { ViewProvider } from "@/lib/view-context";
 import { PortalConfigProviderWrapper } from "@/lib/portal-config-wrapper";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -46,13 +47,15 @@ export default function RootLayout({
         <meta name="theme-color" content="#0F1E2B" />
       </head>
       <body style={{ background: 'var(--sos-light-gray, #ECEEF1)' }}>
-        <AuthProvider>
-          <ViewProvider>
-            <PortalConfigProviderWrapper>
-              {children}
-            </PortalConfigProviderWrapper>
-          </ViewProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ViewProvider>
+              <PortalConfigProviderWrapper>
+                {children}
+              </PortalConfigProviderWrapper>
+            </ViewProvider>
+          </AuthProvider>
+        </ErrorBoundary>
         {/* HubSpot Tracking Code */}
         <Script
           id="hs-script-loader"
