@@ -68,16 +68,20 @@ function liveToCards(items: any[]): Card[] {
 
 // Map live API requests to Card shape
 function liveRequestsToCards(items: any[]): Card[] {
-  return items.map((r) => ({
-    id: r.id,
-    col: bucketOf(r.status),
-    title: r.display_name ?? r.person_name ?? r.id,
-    meta: [r.city ?? r.locations?.city, r.category ?? r.taxonomy_code].filter(Boolean).join(" · "),
-    sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
-    href: `/app/directory/request/${r.id}`,
-    urgency: r.urgency,
-    status: r.status,
-  }));
+  return items.map((r) => {
+    // person name can be in persons object, person_name, or display_name
+    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? r.id?.slice(0, 8);
+    return {
+      id: r.id,
+      col: bucketOf(r.status ?? "pending"),
+      title: personName,
+      meta: [r.city ?? r.county ?? r.state, r.category ?? r.taxonomy_code].filter(Boolean).join(" · "),
+      sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
+      href: `/app/directory/request/${r.id}`,
+      urgency: r.urgency,
+      status: r.status ?? "pending",
+    };
+  });
 }
 
 // Map live API resources to Card shape
@@ -316,6 +320,28 @@ export default function CasesPage() {
       .finally(() => setLoadingResources(false));
   }, [orgId]);
 
+  // Fetch reports
+  useEffect(() => {
+    api.getReports({ limit: 100 })
+      .then((res: any) => {
+        const items: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+        if (items.length > 0) {
+          const cards: Card[] = items.map((r: any) => ({
+            id: r.id,
+            col: r.status === "verified" ? "resolved" : r.severity === "critical" ? "needs_attention" : "active_work",
+            title: r.category ?? r.description?.slice(0, 40) ?? r.id?.slice(0, 8),
+            meta: r.description?.slice(0, 60),
+            sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
+            href: `/app/directory/report/${r.id}`,
+            urgency: r.severity as any,
+            status: r.status,
+          }));
+          setReportCards(cards);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const { cards, setCards, columns, label, loading } = useMemo(() => {
     switch (tab) {
       case "requests":
@@ -547,7 +573,7 @@ function DraggableCard({
       }`}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <span className="font-mono text-[10px] text-white/45">{card.id}</span>
+        <span className="font-mono text-[10px] text-white/45">{card.id?.slice(0, 8)}</span>
         {card.urgency && <UrgencyBadge urgency={card.urgency} />}
         {tab === "reports" && !card.urgency && (
           <span className="inline-flex items-center gap-1 text-[10px] text-[#EF4E4B]">

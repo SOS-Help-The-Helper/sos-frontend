@@ -39,10 +39,10 @@ export type RequestStatus =
 export type Bucket = "needs_attention" | "active_work" | "delivering" | "resolved";
 
 export const BUCKETS: { id: Bucket; label: string; accent: string; statuses: RequestStatus[] }[] = [
-  { id: "needs_attention", label: "Needs Attention", accent: "#EF4E4B", statuses: ["active", "under_review"] },
+  { id: "needs_attention", label: "Needs Attention", accent: "#EF4E4B", statuses: ["active", "under_review", "pending", "new"] },
   { id: "active_work", label: "Active Work", accent: "#89CFF0", statuses: ["matched"] },
   { id: "delivering", label: "Delivering", accent: "#89CFF0", statuses: ["in_progress"] },
-  { id: "resolved", label: "Resolved", accent: "#34D399", statuses: ["fulfilled", "closed"] },
+  { id: "resolved", label: "Resolved", accent: "#34D399", statuses: ["fulfilled", "closed", "resolved", "cancelled"] },
 ];
 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
@@ -55,7 +55,7 @@ export const STATUS_LABEL: Record<RequestStatus, string> = {
 };
 
 export function bucketOf(status: RequestStatus): Bucket {
-  return BUCKETS.find((b) => b.statuses.includes(status))!.id;
+  return BUCKETS.find((b) => b.statuses.includes(status))?.id ?? "needs_attention";
 }
 
 export type TransportStatus =
