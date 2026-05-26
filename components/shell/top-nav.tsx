@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import { toast } from "sonner";
 import {
   Briefcase, GitBranch, Map as MapIcon, Truck, Package, Users, Calendar,
   BarChart3, Radio, Network as NetworkIcon,
@@ -46,7 +47,9 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
   const path = usePathname();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   const enabledSet = new Set(enabledModules);
   const isEnabled = (m: ModuleId) => enabledSet.has(m);
@@ -62,6 +65,17 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
   }
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
+  useEffect(() => {
+    if (!avatarOpen) return;
+    function handleMouseDown(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [avatarOpen]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -173,7 +187,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
         {/* Right cluster */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", flex: "1 1 0", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-            <button style={iconBtn} aria-label="Notifications" className="inline-flex">
+            <button style={iconBtn} aria-label="Notifications" className="inline-flex" onClick={() => toast("No new notifications")}>
               <Bell size={16} />
             </button>
             {/* Mobile: bare avatar circle */}
@@ -183,15 +197,51 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
             >
               {initials}
             </span>
-            {/* Desktop: full avatar pill */}
-            <div
-              style={{ marginLeft: 6, alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 999, background: "rgba(255,255,255,0.06)" }}
-              className="hidden md:inline-flex"
-            >
-              <span style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--sos-coral)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
-                {initials}
-              </span>
-              <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.6)" }} />
+            {/* Desktop: full avatar pill with dropdown */}
+            <div ref={avatarRef} style={{ position: "relative" }} className="hidden md:block">
+              <button
+                onClick={() => setAvatarOpen(o => !o)}
+                style={{ marginLeft: 6, alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 999, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "inline-flex" }}
+              >
+                <span style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--sos-coral)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
+                  {initials}
+                </span>
+                <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.6)", transform: avatarOpen ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
+              </button>
+              {avatarOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 50,
+                  background: "#1B3A57", border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", minWidth: 180, overflow: "hidden",
+                }}>
+                  <Link
+                    href={settingsTo}
+                    onClick={() => setAvatarOpen(false)}
+                    style={{ display: "block", padding: "10px 14px", fontSize: 13, color: "#fff", textDecoration: "none", transition: "background 120ms" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => { setAvatarOpen(false); toast("Org switching coming soon"); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 13, color: "#fff", background: "transparent", border: "none", cursor: "pointer", transition: "background 120ms" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    Switch org
+                  </button>
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.10)", margin: "4px 0" }} />
+                  <button
+                    onClick={() => { setAvatarOpen(false); toast("Sign out coming soon"); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 13, color: "rgba(255,255,255,0.6)", background: "transparent", border: "none", cursor: "pointer", transition: "background 120ms" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
             {/* Hamburger — mobile only */}
             <button className="md:hidden inline-flex" style={iconBtn} aria-label="Menu" onClick={() => setMobileOpen(true)}>

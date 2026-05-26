@@ -11,8 +11,10 @@ export type DetailTab = {
   content: ReactNode;
 };
 
-export function DetailTabs({ tabs, defaultKey }: { tabs: DetailTab[]; defaultKey?: string }) {
-  const [active, setActive] = useState(defaultKey ?? tabs[0]?.key);
+export function DetailTabs({ tabs, defaultKey, activeKey, onActiveChange }: { tabs: DetailTab[]; defaultKey?: string; activeKey?: string; onActiveChange?: (key: string) => void }) {
+  const [internalActive, setInternalActive] = useState(defaultKey ?? tabs[0]?.key);
+  const active = activeKey ?? internalActive;
+  const setActive = (key: string) => { setInternalActive(key); onActiveChange?.(key); };
   const current = tabs.find((t) => t.key === active) ?? tabs[0];
   return (
     <section className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden">

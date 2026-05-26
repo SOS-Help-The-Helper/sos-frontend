@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { CrmShell } from "@/components/crm-shell";
 import { AiSummary } from "@/components/crm/AiSummary";
 import {
@@ -51,6 +52,22 @@ export default function RequestPage() {
   const { orgId } = useAuthContext();
   const [r, setR] = useState<ReqDetail | null | undefined>(undefined);
   const [chatOpen, setChatOpen] = useState(false);
+  const [finding, setFinding] = useState(false);
+
+  const handleFindMatches = async () => {
+    if (finding) return;
+    setFinding(true);
+    toast.success("Scoring candidates...");
+    try {
+      const result = await api.efCall("match-engine", { mode: "propose", request_id: id });
+      const count = result?.candidates?.length ?? result?.count ?? 0;
+      toast.success(`${count} candidates found`);
+    } catch {
+      toast.error("Match scoring failed");
+    } finally {
+      setFinding(false);
+    }
+  };
 
   useEffect(() => {
     api.crmCasesDetail({ request_id: id })
@@ -151,6 +168,7 @@ export default function RequestPage() {
             <>
               <ActionBtn icon={Phone} label="Call" />
               <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
+              <ActionBtn icon={Sparkles} label="Find matches" onClick={handleFindMatches} />
               <ActionBtn icon={Check} label="Approve match" primary />
               <OverflowMenu
                 actions={[

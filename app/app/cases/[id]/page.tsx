@@ -38,6 +38,7 @@ const cases: any[] = [];
 const orgs: any[] = [];
 const matches: Record<string, any> = {};
 import { UrgencyBadge } from "@/components/crm/pills";
+import { MatchChainView, type MatchChainData } from "@/components/match/match-chain-view";
 import { api } from "@/lib/api";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { useAuthContext } from "@/lib/auth-context";
@@ -161,6 +162,7 @@ export default function UmbrellaView() {
   const [postingNote, setPostingNote] = useState(false);
   const [caseNotes, setCaseNotes] = useState<Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>>([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("timeline");
 
   useEffect(() => {
     const efParams = isUmbrella ? { person_id: id } : { request_id: id };
@@ -286,6 +288,7 @@ export default function UmbrellaView() {
               <ActionBtn icon={Phone} label="Call" />
               <ActionBtn icon={MessageSquare} label="Message" />
               <ActionBtn icon={Plus} label="Add need" primary />
+              <ActionBtn icon={Sparkles} label="Find matches" onClick={() => setActiveTab("matches")} />
               <button
                 onClick={() => setChatOpen(true)}
                 className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-white/6 hover:bg-white/10 text-white/85 text-[12px] font-medium transition"
@@ -327,6 +330,8 @@ export default function UmbrellaView() {
                 postingNote={postingNote}
                 orgId={orgId}
                 caseNotes={caseNotes}
+                activeTab={activeTab}
+                onActiveTabChange={setActiveTab}
               />
             </>
           }
@@ -374,8 +379,37 @@ export default function UmbrellaView() {
   );
 }
 
+function candidateToChainData(m: MatchCandidate, umbrellaData: UmbrellaShape): MatchChainData {
+  return {
+    id: m.id,
+    title: m.title,
+    blurb: m.blurb,
+    score: m.score,
+    pipelineStatus: m.approved ? "accepted" : "proposed",
+    survivor: {
+      name: umbrellaData.citizen.name || "Unknown",
+      urgency: umbrellaData.urgency,
+      householdSize: umbrellaData.citizen.household,
+      county: umbrellaData.citizen.county,
+      state: "FL",
+    },
+    rv: {
+      year: new Date().getFullYear(),
+      make: m.title,
+      model: "",
+      status: m.approved ? "matched" : "available",
+      condition: "good",
+      vinLast5: "—",
+      sleeps: umbrellaData.citizen.household,
+    },
+    driver: null,
+    breakdown: m.breakdown,
+    rationale: m.rationale,
+  };
+}
+
 function CaseTabs({
-  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes,
+  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange,
 }: {
   sosId: string;
   note: string;
@@ -387,6 +421,8 @@ function CaseTabs({
   postingNote: boolean;
   orgId: string;
   caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
+  activeTab: string;
+  onActiveTabChange: (key: string) => void;
 }) {
   const allMatchIds = Array.from(new Set(childCases.flatMap(() => Object.keys(matches))));
   const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
@@ -508,22 +544,15 @@ function CaseTabs({
     {
       key: "matches",
       label: "Matches",
-      count: aggMatches.length,
-      content: (
-        <ul className="space-y-2">
+      count: aggMatches.length || undefined,
+      content: aggMatches.length > 0 ? (
+        <div className="space-y-4">
           {aggMatches.map((m) => (
-            <li key={m.id} className="flex items-center gap-3 p-3 rounded-lg border border-[var(--hairline)]">
-              <Sparkles size={14} className="text-[#89CFF0] shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium truncate">{m.title}</p>
-                <p className="text-[11px] text-white/55 truncate">{m.blurb}</p>
-              </div>
-              <span className="font-mono text-[14px] tabular-nums" style={{ color: m.approved ? "#34D399" : "#89CFF0" }}>
-                {m.score}
-              </span>
-            </li>
+            <MatchChainView key={m.id} match={candidateToChainData(m, umbrellaData)} />
           ))}
-        </ul>
+        </div>
+      ) : (
+        <EmptyTab label="No matches yet." />
       ),
     },
     {
@@ -546,7 +575,7 @@ function CaseTabs({
 
   return (
     <>
-      <DetailTabs tabs={tabs} defaultKey="timeline" />
+      <DetailTabs tabs={tabs} defaultKey="timeline" activeKey={activeTab} onActiveChange={onActiveTabChange} />
       <DetailSection title="Admin" icon={Shield}>
         {/* Assign to org */}
         <div className="flex items-center gap-2.5 h-8 px-2">
@@ -823,9 +852,10 @@ function NotesTimeline({
   );
 }
 
-function ActionBtn({ icon: Icon, label, primary }: { icon: typeof Phone; label: string; primary?: boolean }) {
+function ActionBtn({ icon: Icon, label, primary, onClick }: { icon: typeof Phone; label: string; primary?: boolean; onClick?: () => void }) {
   return (
     <button
+      onClick={onClick}
       className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] font-medium transition ${
         primary
           ? "bg-[#EF4E4B] hover:bg-[#d94340] text-white"

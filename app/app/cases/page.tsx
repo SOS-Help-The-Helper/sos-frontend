@@ -332,6 +332,12 @@ export default function CasesPage() {
   const totalOpen = cards.filter((c) => c.col !== "resolved" && c.col !== "Resolved").length;
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [mobileCol, setMobileCol] = useState<string>(CASE_COLS[0].id);
+
+  // Reset mobile column to first when tab changes
+  useEffect(() => {
+    setMobileCol(columns[0]?.id ?? "");
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
@@ -424,6 +430,23 @@ export default function CasesPage() {
         })}
       </div>
 
+      {/* Mobile column switcher */}
+      <div className="md:hidden flex gap-1.5 px-4 pt-3 pb-1 overflow-x-auto">
+        {columns.map((col) => (
+          <button
+            key={col.id}
+            onClick={() => setMobileCol(col.id)}
+            className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-medium transition ${
+              mobileCol === col.id
+                ? "bg-white/15 text-white"
+                : "bg-white/5 text-white/50 hover:text-white/80"
+            }`}
+          >
+            {col.label}
+          </button>
+        ))}
+      </div>
+
       <div className="px-4 pt-4 pb-4">
         <div
           className="grid gap-3 overflow-x-auto snap-x md:snap-none"
@@ -446,6 +469,8 @@ export default function CasesPage() {
                     }}
                     onDrop={() => onDrop(col.id)}
                     className={`snap-start rounded-2xl border p-3 transition ${
+                      col.id !== mobileCol ? "hidden md:block" : ""
+                    } ${
                       isOver
                         ? "bg-white/[0.06] border-white/20"
                         : "bg-[var(--surface-1)] border-[var(--hairline)]"
