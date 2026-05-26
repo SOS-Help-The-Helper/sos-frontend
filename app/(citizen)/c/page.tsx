@@ -139,7 +139,7 @@ export default function CitizenMapPage() {
             fetch(`${SOS_DB}/functions/v1/sos-read`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${SOS_ANON}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '100' } }),
+              body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '2000' } }),
             }).then(r => r.json()).catch(() => ({ type: 'FeatureCollection', features: [] })),
           ]);
           alertData = a;
