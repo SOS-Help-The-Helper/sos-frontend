@@ -7,7 +7,7 @@ const cases: any[] = [];
 import { Filter, Plus, Calendar, Layers } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { MapPinCard, type PinLayer } from "@/components/map/map-pin-card";
+import { MapPinCard, type PinLayer, type MapPin } from "@/components/map/map-pin-card";
 
 const LAYER_COLORS: Record<string, string> = {
   case: "#EF4E4B", resource: "#89CFF0", facility: "#4ADE80", event: "#A855F7",
@@ -40,7 +40,7 @@ const WNC_COUNTY_CENTROIDS: Record<string, [number, number]> = {
 };
 
 interface SelectedPin {
-  pin: { layer: PinLayer; id: string; title: string; subtitle?: string; status?: string; href: string };
+  pin: MapPin;
   x: number;
   y: number;
 }
@@ -207,6 +207,18 @@ function MapboxEmbed({
                   subtitle,
                   status,
                   href: hrefForPin(layer as PinLayer, id),
+                  urgency: p.urgency || undefined,
+                  county: p.county || undefined,
+                  taxonomy: p.taxonomy_code || p.taxonomy || undefined,
+                  capacity: p.capacity || p.capacity_available || undefined,
+                  matchedTo: p.matched_to || undefined,
+                  verifiedBy: p.verified_by || undefined,
+                  date: p.date || p.event_date || undefined,
+                  time: p.time || p.event_time || undefined,
+                  filled: p.filled != null ? Number(p.filled) : p.current_count != null ? Number(p.current_count) : undefined,
+                  slots: p.slots != null ? Number(p.slots) : p.capacity != null ? Number(p.capacity) : undefined,
+                  type: p.type || p.facility_type || undefined,
+                  description: p.description || undefined,
                 },
                 x: e.point.x,
                 y: e.point.y,

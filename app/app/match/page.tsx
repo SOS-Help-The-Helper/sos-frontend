@@ -41,6 +41,19 @@ const CANDIDATE_COLORS = ["#89CFF0", "#EF4E4B", "#F5EBD6", "#34D399"];
 
 const DECLINE_REASONS = ["Out of area", "At capacity", "Not a fit", "Other"];
 
+// ─── Scoring helpers ─────────────────────────────────────────────────────────
+
+function scoreMatch(request: any, resource: any): { score: number; breakdown: { service: number; county: number; capacity: number } } {
+  let service = 0, county = 0, capacity = 0;
+  // Service match: same taxonomy prefix = 40 pts
+  if (request.taxonomy_code && resource.taxonomy_code && request.taxonomy_code.split('.')[0] === resource.taxonomy_code.split('.')[0]) service = 40;
+  // County match: same county = 30 pts
+  if (request.county && resource.county && request.county.toLowerCase() === resource.county.toLowerCase()) county = 30;
+  // Capacity: has capacity = 30 pts
+  if (resource.capacity_available > 0) capacity = 30;
+  return { score: service + county + capacity, breakdown: { service, county, capacity } };
+}
+
 // ─── CandidateCard ──────────────────────────────────────────────────────────
 
 function CandidateCard({
@@ -67,6 +80,11 @@ function CandidateCard({
 
   const breakdown: ScoreBreakdown =
     candidate.breakdown ?? computeBreakdown(activeCase, candidate);
+
+  const localScore = scoreMatch(
+    { taxonomy_code: activeCase.taxonomy[0] ?? "", county: activeCase.county },
+    { taxonomy_code: activeCase.taxonomy[0] ?? "", county: counties.split(",")[0]?.trim() ?? "", capacity_available: open < 8 ? 1 : 0 },
+  );
 
   const countyMatch = breakdown.county > 0;
   const serviceMatch = breakdown.service > 0;
@@ -126,11 +144,18 @@ function CandidateCard({
 
         {/* Score */}
         <div className="w-[120px] shrink-0">
-          <div className="flex items-baseline justify-end gap-1">
+          <div className="flex items-baseline justify-end gap-1.5">
             <span className="font-mono text-[20px] font-semibold tabular-nums" style={{ color }}>
               {score}
             </span>
             <span className="font-mono text-[9px] uppercase tracking-wider text-white/40">fit</span>
+            <span
+              className="font-mono text-[9px] px-1 py-0.5 rounded"
+              style={{ background: `${color}22`, color }}
+              title={`Local score: service ${localScore.breakdown.service} + county ${localScore.breakdown.county} + capacity ${localScore.breakdown.capacity}`}
+            >
+              {localScore.score}
+            </span>
           </div>
           <div className="mt-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
             <div
@@ -559,6 +584,20 @@ export default function MatchPage() {
                       umbrella
                     </span>
                   )}
+                  <span
+                    className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center gap-1 ${
+                      sla === 0
+                        ? "bg-[#EF4E4B]/20 text-[#EF4E4B]"
+                        : sla < 24
+                          ? "bg-[#EF4E4B]/20 text-[#EF4E4B]"
+                          : sla < 48
+                            ? "bg-orange-500/20 text-orange-400"
+                            : "bg-[#34D399]/15 text-[#34D399]"
+                    }`}
+                  >
+                    <Clock size={8} />
+                    {sla === 0 ? "SLA breached" : `${sla}h SLA`}
+                  </span>
                 </div>
                 <h2 className="text-[20px] font-semibold">{activeCase.citizen}</h2>
                 <p className="text-[13px] text-white/75 mt-1">
