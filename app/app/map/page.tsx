@@ -354,8 +354,6 @@ export default function MapPage() {
           {selectedPin && (
             <MapPinCard
               pin={selectedPin.pin}
-              x={selectedPin.x}
-              y={selectedPin.y}
               onClose={() => setSelectedPin(null)}
             />
           )}

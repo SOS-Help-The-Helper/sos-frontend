@@ -1,16 +1,15 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { X, ArrowUpRight } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export type PinLayer = 'case' | 'resource' | 'facility' | 'event';
 
-const LAYER_META: Record<PinLayer, { label: string; color: string }> = {
-  case:     { label: 'Case',     color: '#EF4E4B' },
-  resource: { label: 'Resource', color: '#89CFF0' },
-  facility: { label: 'Facility', color: '#4ADE80' },
-  event:    { label: 'Event',    color: '#A855F7' },
+const LAYER_META: Record<PinLayer, { label: string; color: string; logoSrc: string }> = {
+  case:     { label: 'Case',     color: '#EF4E4B', logoSrc: '/logomark-red.svg' },
+  resource: { label: 'Resource', color: '#89CFF0', logoSrc: '/logomark-blue.svg' },
+  facility: { label: 'Facility', color: '#4ADE80', logoSrc: '/logomark-white.svg' },
+  event:    { label: 'Event',    color: '#A855F7', logoSrc: '/logomark-white.svg' },
 };
 
 export interface MapPinCardProps {
@@ -22,96 +21,112 @@ export interface MapPinCardProps {
     status?: string;
     href: string;
   };
-  x: number;
-  y: number;
   onClose: () => void;
 }
 
-export function MapPinCard({ pin, x, y, onClose }: MapPinCardProps) {
-  const { label, color } = LAYER_META[pin.layer] ?? { label: pin.layer, color: '#EF4E4B' };
-
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [placement, setPlacement] = useState<'above' | 'below'>('above');
-  const [shiftX, setShiftX] = useState(0);
-
-  useLayoutEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const parentRect = el.offsetParent?.getBoundingClientRect();
-    setPlacement(y - rect.height - 24 < 8 ? 'below' : 'above');
-    if (parentRect) {
-      const half = rect.width / 2;
-      let dx = 0;
-      if (x - half < 8) dx = 8 - (x - half);
-      else if (x + half > parentRect.width - 8) dx = parentRect.width - 8 - (x + half);
-      setShiftX(dx);
-    }
-  }, [x, y]);
-
-  const translateY = placement === 'above' ? 'calc(-100% - 18px)' : '18px';
+export function MapPinCard({ pin, onClose }: MapPinCardProps) {
+  const meta = LAYER_META[pin.layer] ?? { label: pin.layer, color: '#EF4E4B', logoSrc: '/logomark-red.svg' };
+  const { label, color, logoSrc } = meta;
 
   return (
-    <div
-      ref={cardRef}
-      className="pointer-events-auto absolute z-30 w-[280px] max-w-[calc(100%-24px)]"
-      style={{ left: x + shiftX, top: y, transform: `translate(-50%, ${translateY})` }}
-      role="dialog"
-    >
+    <>
+      {/* Backdrop */}
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          background: '#0F1E2B',
-          border: `1.5px solid ${color}`,
-          boxShadow: `0 0 28px ${color}35, 0 16px 40px rgba(0,0,0,0.5)`,
-        }}
-      >
-        {/* Header */}
-        <div className="relative px-4 pt-4 pb-2">
-          <button
-            onClick={onClose}
-            className="absolute right-2.5 top-2.5 w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-white/60"
-            aria-label="Close"
-          >
-            <X size={15} />
-          </button>
-          <div className="flex justify-center">
-            <span
-              className="font-mono text-[9.5px] uppercase tracking-[0.14em] px-2 py-0.5 rounded-full"
-              style={{ color, background: `${color}1A` }}
+        className="absolute inset-0 z-[25] bg-black/30 backdrop-blur-[2px] transition-opacity duration-300"
+        onClick={onClose}
+      />
+
+      {/* Centered card */}
+      <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
+        <div
+          className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out] relative"
+          style={{
+            background: 'rgba(26, 56, 80, 0.92)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRadius: '24px',
+            boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${color}25`,
+          }}
+        >
+          {/* Border with mask for logomark cutout */}
+          <div
+            className="absolute inset-0 rounded-[24px] pointer-events-none"
+            style={{
+              border: `1.5px solid ${color}4D`,
+              mask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+              WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
+            }}
+          />
+
+          {/* Floating logomark */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(15,30,43,0.95)',
+                boxShadow: `0 0 24px ${color}66`,
+                border: `2px solid ${color}66`,
+              }}
+            >
+              <img src={logoSrc} alt="SOS" className="w-8 h-8" />
+            </div>
+          </div>
+
+          <div className="px-6 pt-6 pb-5">
+            {/* Close */}
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Layer label */}
+            <p
+              className="text-center text-[11px] font-bold uppercase tracking-[0.2em] mb-3"
+              style={{ color }}
             >
               {label}
-            </span>
-          </div>
-        </div>
+            </p>
 
-        {/* Body */}
-        <div className="px-5 pb-5 pt-1">
-          <h2 className="font-semibold text-[16px] leading-tight text-white text-center">{pin.title}</h2>
+            {/* Title */}
+            <p className="text-center text-[15px] font-semibold text-white leading-tight mb-1">
+              {pin.title || pin.id?.slice(0, 8) || label}
+            </p>
 
-          {pin.subtitle && (
-            <p className="mt-1 text-[12.5px] text-white/55 text-center">{pin.subtitle}</p>
-          )}
+            {/* Subtitle */}
+            {pin.subtitle && (
+              <p className="text-center text-[13px] text-white/55 leading-relaxed mb-3">
+                {pin.subtitle}
+              </p>
+            )}
 
-          {pin.status && (
-            <div className="flex justify-center mt-2">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
-                {pin.status}
-              </span>
-            </div>
-          )}
+            {/* Status pill */}
+            {pin.status && (
+              <div className="flex justify-center mb-4">
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
+                  {pin.status.replace(/_/g, ' ')}
+                </span>
+              </div>
+            )}
 
-          <div className="mt-4">
+            {/* View details button */}
             <Link
               href={pin.href}
-              className="flex items-center justify-center gap-1.5 w-full h-10 rounded-full bg-white text-[#0F1E2B] text-[13px] font-semibold hover:bg-white/90 transition"
               onClick={onClose}
+              className="flex items-center justify-center w-full py-3 rounded-2xl text-white text-[13px] font-bold tracking-wide active:scale-[0.97] transition-transform"
+              style={{
+                background: color,
+                boxShadow: `0 4px 20px ${color}4D`,
+              }}
             >
-              View details <ArrowUpRight size={13} />
+              View details
             </Link>
           </div>
         </div>
       </div>
-    </div>
+
+      <style>{`@keyframes cardPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }`}</style>
+    </>
   );
 }
