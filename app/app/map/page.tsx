@@ -7,6 +7,7 @@ const cases: any[] = [];
 import { Filter, Plus, Calendar } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { MapPinCard, type PinLayer } from "@/components/map/map-pin-card";
 
 const LAYER_COLORS: Record<string, string> = {
   case: "#EF4E4B", resource: "#89CFF0", facility: "#4ADE80", event: "#A855F7",
@@ -38,9 +39,30 @@ const WNC_COUNTY_CENTROIDS: Record<string, [number, number]> = {
   clay:         [-83.76, 35.05],
 };
 
-function MapboxEmbed({ orgId }: { orgId: string }) {
+interface SelectedPin {
+  pin: { layer: PinLayer; id: string; title: string; subtitle?: string; status?: string; href: string };
+  x: number;
+  y: number;
+}
+
+function hrefForPin(layer: PinLayer, id: string): string {
+  if (layer === 'case') return `/app/cases/${id}`;
+  if (layer === 'resource') return `/app/directory/resource/${id}`;
+  if (layer === 'facility') return `/app/inventory#${id}`;
+  return `/app/calendar#${id}`;
+}
+
+function MapboxEmbed({
+  orgId,
+  onPinSelect,
+  onPinClear,
+}: { orgId: string; onPinSelect: (s: SelectedPin) => void; onPinClear: () => void }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const onPinSelectRef = useRef(onPinSelect);
+  onPinSelectRef.current = onPinSelect;
+  const onPinClearRef = useRef(onPinClear);
+  onPinClearRef.current = onPinClear;
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
@@ -153,42 +175,27 @@ function MapboxEmbed({ orgId }: { orgId: string }) {
               });
             });
 
-            // Click unclustered → show detail card popup
+            // Click unclustered → show MapPinCard overlay
             map.on("click", `${layer}-unclustered`, (e: any) => {
               const feat = e.features?.[0];
               if (!feat) return;
-              const coords = (feat.geometry as any).coordinates.slice();
               const p = feat.properties || {};
-              const label = layer === "case" ? "Case" : layer === "resource" ? "Resource" : layer === "facility" ? "Facility" : "Event";
-              const title = p.title || p.name || p.id?.slice(0, 8) || label;
-              const status = p.status || "";
-              const extra = layer === "facility"
-                ? `<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5)">Capacity: ${p.capacity || "—"}</div>`
-                : layer === "event"
-                ? `<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5)">${p.event_type || ""}</div>`
-                : p.urgency
-                ? `<div style="margin-top:6px;font-size:11px;color:${p.urgency === "critical" ? "#EF4E4B" : "#F5EBD6"}">${p.urgency}</div>`
-                : "";
-
-              new mapboxgl.Popup({
-                closeButton: true,
-                closeOnClick: true,
-                maxWidth: "260px",
-                className: "sos-popup",
-              })
-                .setLngLat(coords)
-                .setHTML(`
-                  <div style="background:#0F1E2B;border:1.5px solid ${color};border-radius:12px;padding:14px 16px;box-shadow:0 0 20px ${color}40;min-width:180px">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                      <span style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}"></span>
-                      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:${color};font-family:monospace">${label}</span>
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:#fff;line-height:1.3">${title}</div>
-                    ${status ? `<div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,0.5)">${status}</div>` : ""}
-                    ${extra}
-                  </div>
-                `)
-                .addTo(map);
+              const id = String(p.id || p.uuid || '');
+              const title = p.title || p.name || (id ? id.slice(0, 8) : layer);
+              const subtitle = p.subtitle || p.county || p.location || p.owner_name || undefined;
+              const status = p.status || undefined;
+              onPinSelectRef.current({
+                pin: {
+                  layer: layer as PinLayer,
+                  id,
+                  title,
+                  subtitle,
+                  status,
+                  href: hrefForPin(layer as PinLayer, id),
+                },
+                x: e.point.x,
+                y: e.point.y,
+              });
             });
 
             // Hover cursor
@@ -197,6 +204,13 @@ function MapboxEmbed({ orgId }: { orgId: string }) {
             map.on("mouseenter", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = "pointer"; });
             map.on("mouseleave", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = ""; });
           }
+
+          // Click on empty map → clear selected pin
+          map.on("click", (e: any) => {
+            const unclusteredLayers = LAYERS.map((l) => `${l}-unclustered`);
+            const hits = map.queryRenderedFeatures(e.point, { layers: unclusteredLayers });
+            if (hits.length === 0) onPinClearRef.current();
+          });
         } catch (e) {
           console.warn("Map data load failed:", e);
         }
@@ -295,6 +309,7 @@ export default function MapPage() {
   const { orgId } = useAuthContext();
   const [activeCounty, setActive] = useState<string | null>("Buncombe");
   const [layers, setLayers] = useState<LayeredFeatures | null>(null);
+  const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
 
   useEffect(() => {
     // admin: proceed without org filter
@@ -331,7 +346,19 @@ export default function MapPage() {
 
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100vh-220px)] min-h-[500px]">
-          <MapboxEmbed orgId={orgId} />
+          <MapboxEmbed
+            orgId={orgId}
+            onPinSelect={setSelectedPin}
+            onPinClear={() => setSelectedPin(null)}
+          />
+          {selectedPin && (
+            <MapPinCard
+              pin={selectedPin.pin}
+              x={selectedPin.x}
+              y={selectedPin.y}
+              onClose={() => setSelectedPin(null)}
+            />
+          )}
 
           <div className="absolute bottom-3 left-3 flex gap-1.5">
             {["HOUSING", "FOOD", "MEDICAL", "CHILDCARE"].map((t) => (

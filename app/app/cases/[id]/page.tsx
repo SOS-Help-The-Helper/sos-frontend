@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
+import { Avatar } from "@/components/directory/Avatar";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { AiSummary } from "@/components/crm/ai-summary";
@@ -260,11 +261,7 @@ export default function UmbrellaView() {
 
       <main className="max-w-[1240px] mx-auto px-6 py-7 space-y-5">
         <IdentityBand
-          avatar={
-            <div className="w-14 h-14 rounded-2xl bg-[#EF4E4B]/15 text-[#EF4E4B] flex items-center justify-center text-[18px] font-semibold">
-              {umbrellaData.citizen.name.split(" ").map((s) => s[0]).join("")}
-            </div>
-          }
+          avatar={<Avatar name={umbrellaData.citizen.name} size={56} />}
           eyebrow={<span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Umbrella · {umbrellaData.id}</span>}
           pills={
             <>

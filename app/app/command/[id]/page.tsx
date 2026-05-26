@@ -122,7 +122,7 @@ export default function IncidentDashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{incident.id} · {incident.status}</p>
-              <h1 className="text-[24px] font-semibold mt-0.5 leading-tight">{incident.name}</h1>
+              <h1 className="font-serif text-[26px] md:text-[32px] mt-0.5 leading-[1.1] tracking-tight">{incident.name}</h1>
               <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                 <Chip icon={MapPin}>{incident.county} County</Chip>
                 {incident.declared && <Chip icon={Calendar}>Declared {incident.declared}</Chip>}

@@ -98,7 +98,7 @@ export function IdentityBand({
               {pills}
             </div>
           )}
-          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-tight leading-tight">{title}</h1>
+          <h1 className="font-serif text-[26px] md:text-[32px] tracking-tight leading-[1.1]">{title}</h1>
           {chips && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-[12px] text-white/60">
               {chips}
