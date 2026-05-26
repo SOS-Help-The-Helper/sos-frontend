@@ -136,7 +136,7 @@ export default function CitizenMapPage() {
           const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
 
           const [a, reqRes, resRes] = await Promise.all([
-            getAlerts(lat, lng),
+            getAlerts(lat, lng).catch(() => [] as Alert[]),
             fetch(`${ERV_DB}/functions/v1/partner-read`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${ERV_ANON}`, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
@@ -214,17 +214,18 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === REPORTS SOURCE (white) — Mapbox vector tileset ===
-        map.addSource('reports-source', {
-          type: 'vector',
-          url: 'mapbox://sosconnect.sos-reports-v2',
-        });
-
-        map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
-        map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-        map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
+        try {
+          map.addSource('reports-source', {
+            type: 'vector',
+            url: 'mapbox://sosconnect.sos-reports-v2',
+          });
+          map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
+            paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
+          map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
+            paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
+          map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
+            paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
+        } catch (e) { console.warn('Reports tileset not available:', e); }
 
         // Detail fetch on zoom disabled — map-data EF retired May 4.
         // All data loaded upfront from partner-read.
