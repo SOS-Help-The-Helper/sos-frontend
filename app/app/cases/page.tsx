@@ -463,7 +463,10 @@ export default function CasesPage() {
         {columns.map((col) => (
           <button
             key={col.id}
-            onClick={() => setMobileCol(col.id)}
+            onClick={() => {
+              setMobileCol(col.id);
+              document.getElementById(`col-${col.id}`)?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+            }}
             className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-medium transition ${
               mobileCol === col.id
                 ? "bg-white/15 text-white"
@@ -488,6 +491,7 @@ export default function CasesPage() {
                 return (
                   <div
                     key={col.id}
+                    id={`col-${col.id}`}
                     onDragOver={(e) => {
                       e.preventDefault();
                       if (dragOverCol !== col.id) setDragOverCol(col.id);
