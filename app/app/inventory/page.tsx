@@ -460,7 +460,7 @@ function FacilityHeader({ f }: { f: Facility }) {
       </div>
       <div className="text-right">
         <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Capacity</p>
-        <p className="text-[26px] font-semibold tabular-nums">{Math.round(pct)}%</p>
+        <p className="font-serif text-[28px] tabular-nums">{Math.round(pct)}%</p>
         <p className="font-mono text-[10.5px] text-white/55">{f.currentCount} / {f.capacity}</p>
       </div>
     </div>

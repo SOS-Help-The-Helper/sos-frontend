@@ -162,7 +162,7 @@ function FleetKpi({ label, value, tone }: { label: string; value: string | numbe
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4">
       <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45">{label}</p>
-      <p className="text-[26px] font-semibold tabular-nums mt-1" style={{ color: tone }}>{value}</p>
+      <p className="font-serif text-[28px] tabular-nums mt-1" style={{ color: tone }}>{value}</p>
     </div>
   );
 }

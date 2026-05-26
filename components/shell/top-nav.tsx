@@ -87,6 +87,18 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
+  // ⌘K shortcut — dispatch custom event for CommandPalette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("sos-command-palette"));
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   const initials = userName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase() || "U";
 
   return (

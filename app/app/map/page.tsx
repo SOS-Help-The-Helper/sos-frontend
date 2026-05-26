@@ -174,7 +174,7 @@ function MapboxEmbed({
               paint: {
                 'heatmap-weight': ['interpolate', ['linear'], ['coalesce', ['get', 'point_count'], 1], 0, 0.6, 20, 1],
                 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 12, 2.2],
-                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'transparent', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FBBF24', 1, '#ffffff'],
+                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'transparent', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FCD34D', 1, '#ffffff'],
                 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 6, 14, 12, 42],
                 'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 13, 0],
               },
