@@ -131,43 +131,28 @@ export default function CitizenMapPage() {
         let requestFeatures: any[] = [], resourceFeatures: any[] = [];
         const seenIds = new Set<string>();
         try {
-          const ERV_DB = process.env.NEXT_PUBLIC_ERV_SUPABASE_URL || 'https://xbtrtztzaokeodarqvpr.supabase.co';
-          const ERV_ANON = process.env.NEXT_PUBLIC_ERV_ANON_KEY || '';
-          const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+          const SOS_DB = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+          const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-          const [a, reqRes, resRes] = await Promise.all([
+          const [a, areaRes] = await Promise.all([
             getAlerts(lat, lng).catch(() => [] as Alert[]),
-            fetch(`${ERV_DB}/functions/v1/partner-read`, {
+            fetch(`${SOS_DB}/functions/v1/sos-read`, {
               method: 'POST',
-              headers: { 'Authorization': `Bearer ${ERV_ANON}`, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query_type: 'recent_requests', limit: 3000 }),
-            }).then(r => r.json()).catch(() => ({ requests: [] })),
-            fetch(`${ERV_DB}/functions/v1/partner-read`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${ERV_ANON}`, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query_type: 'available_resources', limit: 1000 }),
-            }).then(r => r.json()).catch(() => ({ resources: [] })),
+              headers: { 'Authorization': `Bearer ${SOS_ANON}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '100' } }),
+            }).then(r => r.json()).catch(() => ({ type: 'FeatureCollection', features: [] })),
           ]);
           alertData = a;
 
-          (reqRes.requests || []).forEach((r: any) => {
-            if (!r.latitude && !r.lat) return;
-            if (!r.household_size) return;
-            requestFeatures.push({
-              type: 'Feature',
-              geometry: { type: 'Point', coordinates: [r.longitude || r.lng, r.latitude || r.lat] },
-              properties: { id: r.id, type: 'request', display_name: r.persons?.display_name || r.display_name, household_size: r.household_size, urgency: r.urgency, status: r.status },
-            });
-          });
-
-          (resRes.resources || []).forEach((r: any) => {
-            if (!r.latitude && !r.lat) return;
-            resourceFeatures.push({
-              type: 'Feature',
-              geometry: { type: 'Point', coordinates: [r.longitude || r.lng, r.latitude || r.lat] },
-              properties: { id: r.id, type: 'resource', source_type: 'partner', description: r.description, capacity: r.capacity_available, status: r.status },
-            });
-          });
+          // sos-read area scope returns GeoJSON FeatureCollection with id, type, display_name, household_size, etc.
+          for (const f of (areaRes.features || [])) {
+            const props = f.properties || {};
+            if (props.type === 'request' || props.featureType === 'request') {
+              requestFeatures.push(f);
+            } else if (props.type === 'resource' || props.featureType === 'resource') {
+              resourceFeatures.push(f);
+            }
+          }
 
           setAlerts(alertData);
         } catch (err) {
