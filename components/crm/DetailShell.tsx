@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronDown, Inbox, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronDown, ChevronRight, Inbox, MoreHorizontal, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type DetailTab = {
@@ -346,5 +346,197 @@ export function ActionBtn({
       {Icon && <Icon size={12} strokeWidth={2} />}
       {label}
     </button>
+  );
+}
+
+// ─── New primitives ──────────────────────────────────────────────────────────
+
+export type Crumb = { label: string; href?: string };
+
+/**
+ * HeroBlock — the visual anchor of every detail page.
+ * Large headline metric, optional secondary stats, progress, and a "what's next" hint.
+ */
+export function HeroBlock({
+  value,
+  unit,
+  label,
+  hint,
+  progress,
+  accent = "#89CFF0",
+  secondary,
+  visual,
+}: {
+  value: ReactNode;
+  unit?: ReactNode;
+  label: ReactNode;
+  hint?: ReactNode;
+  progress?: number;
+  accent?: string;
+  secondary?: { label: string; value: ReactNode }[];
+  visual?: ReactNode;
+}) {
+  return (
+    <section
+      className="rounded-2xl border bg-[var(--surface-1)] p-5 md:p-6"
+      style={{ borderColor: "var(--hairline)" }}
+    >
+      <div className="flex items-start gap-5">
+        <div className="flex-1 min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-2">{label}</p>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span
+              className="font-serif text-[40px] md:text-[48px] leading-none tabular-nums tracking-tight"
+              style={{ color: accent }}
+            >
+              {value}
+            </span>
+            {unit && <span className="text-[14px] text-muted-foreground">{unit}</span>}
+          </div>
+          {hint && <p className="text-[13px] text-white/65 mt-2 leading-snug">{hint}</p>}
+        </div>
+        {visual && <div className="shrink-0">{visual}</div>}
+      </div>
+
+      {progress != null && (
+        <div className="h-1.5 rounded-full bg-white/6 overflow-hidden mt-4">
+          <div
+            className="h-full rounded-full transition-[width]"
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%`, background: accent }}
+          />
+        </div>
+      )}
+
+      {secondary && secondary.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-5 pt-4 border-t border-[var(--hairline)]">
+          {secondary.map((s, i) => (
+            <div key={i}>
+              <p className="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+              <p className="font-serif text-[20px] tabular-nums mt-0.5">{s.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Two-column detail layout. Single column on mobile/tablet,
+ * splits into main + 320px context rail at lg+.
+ */
+export function DetailLayout({
+  main,
+  rail,
+}: {
+  main: ReactNode;
+  rail?: ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 lg:gap-6">
+      <div className="min-w-0 space-y-3">{main}</div>
+      {rail && <aside className="space-y-3 lg:sticky lg:top-16 lg:self-start">{rail}</aside>}
+    </div>
+  );
+}
+
+/**
+ * Small panel for the right-side context rail.
+ */
+export function ContextCard({
+  title,
+  action,
+  children,
+  padded = true,
+}: {
+  title?: string;
+  action?: ReactNode;
+  children: ReactNode;
+  padded?: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden">
+      {title && (
+        <div className="flex items-center gap-2 px-3.5 pt-3 pb-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/55 font-medium flex-1 min-w-0 truncate">
+            {title}
+          </p>
+          {action}
+        </div>
+      )}
+      <div className={padded ? "px-3.5 pb-3.5" : ""}>{children}</div>
+    </section>
+  );
+}
+
+export function ContextRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-1.5">
+      <span className="text-[11.5px] text-white/50 shrink-0">{label}</span>
+      <span className="text-[12.5px] text-white/85 text-right min-w-0 truncate">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * Branded not-found and error screens.
+ */
+export function DetailNotFound({
+  backTo,
+  backLabel,
+  entity,
+}: {
+  backTo: string;
+  backLabel: string;
+  entity: string;
+}) {
+  return (
+    <>
+      <DetailTopBar backTo={backTo} backLabel={backLabel} />
+      <main className="max-w-[640px] mx-auto px-4 py-16 text-center">
+        <div className="w-12 h-12 mx-auto rounded-full bg-white/8 flex items-center justify-center mb-4">
+          <Inbox size={20} className="text-white/45" />
+        </div>
+        <h1 className="text-[18px] font-semibold mb-1">{entity} not found</h1>
+        <p className="text-[13px] text-white/55 mb-5">
+          This record may have been removed or merged with another entry.
+        </p>
+        <Link
+          href={backTo}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md bg-[var(--sos-white)] border border-[var(--sos-hairline)] text-[var(--sos-navy)] text-[13px] font-medium hover:bg-[var(--sos-card-gray)] transition"
+        >
+          <ChevronLeft size={14} /> Back to {backLabel}
+        </Link>
+      </main>
+    </>
+  );
+}
+
+export function DetailError({
+  backTo,
+  backLabel,
+  message,
+}: {
+  backTo: string;
+  backLabel: string;
+  message: string;
+}) {
+  return (
+    <>
+      <DetailTopBar backTo={backTo} backLabel={backLabel} />
+      <main className="max-w-[640px] mx-auto px-4 py-16 text-center">
+        <div className="w-12 h-12 mx-auto rounded-full bg-[#EF4E4B]/15 text-[#EF4E4B] flex items-center justify-center mb-4">
+          <Inbox size={20} />
+        </div>
+        <h1 className="text-[18px] font-semibold mb-1">Something went wrong</h1>
+        <p className="text-[13px] text-white/55 mb-5 max-w-prose mx-auto">{message}</p>
+        <Link
+          href={backTo}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md bg-[var(--sos-white)] border border-[var(--sos-hairline)] text-[var(--sos-navy)] text-[13px] font-medium hover:bg-[var(--sos-card-gray)] transition"
+        >
+          <ChevronLeft size={14} /> Back to {backLabel}
+        </Link>
+      </main>
+    </>
   );
 }

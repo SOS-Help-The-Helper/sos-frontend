@@ -379,3 +379,54 @@ const iconBtn: React.CSSProperties = {
   background: "transparent", border: "none", alignItems: "center", justifyContent: "center",
   color: "rgba(255,255,255,0.8)", cursor: "pointer",
 };
+
+function AvatarMenuItem({
+  icon: Icon,
+  label,
+  href,
+  onClick,
+  danger,
+}: {
+  icon: ComponentType<{ size?: number; style?: React.CSSProperties }>;
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  danger?: boolean;
+}) {
+  const baseStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: 10, width: "100%",
+    padding: "9px 10px", borderRadius: 6, fontSize: 13, fontWeight: 500,
+    color: danger ? "var(--sos-coral)" : "rgba(255,255,255,0.85)",
+    background: "transparent", border: "none", cursor: "pointer",
+    textDecoration: "none", textAlign: "left",
+  };
+  const inner = (
+    <>
+      <Icon size={14} style={{ opacity: 0.75 }} />
+      <span>{label}</span>
+    </>
+  );
+  if (href) {
+    return (
+      <Link
+        href={href}
+        onClick={onClick}
+        style={baseStyle}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      style={baseStyle}
+      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+    >
+      {inner}
+    </button>
+  );
+}
