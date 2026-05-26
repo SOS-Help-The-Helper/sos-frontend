@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Map, Heart, Inbox } from 'lucide-react';
-import { TopNav } from '@/components/shell/top-nav';
-
 const BOTTOM_TABS = [
   { path: '/c', label: 'Map', icon: Map },
   { path: '/c/match', label: 'Match', icon: Heart },
@@ -28,10 +26,6 @@ export function CitizenShell({ children, title, onSOSTap, hideSOSButton }: Citiz
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--surface-app)', color: 'var(--foreground)', display: 'flex', flexDirection: 'column' }}>
-      <TopNav
-        enabledModules={[]}
-        labels={{}}
-      />
       {title && (
         <div style={{ padding: '16px 20px 0', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--sos-coral)' }}>
           {title}
