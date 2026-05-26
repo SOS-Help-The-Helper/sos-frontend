@@ -26,10 +26,10 @@ export type County = "Buncombe" | "Henderson" | "McDowell" | "Madison" | "Catawb
 
 export type Urgency = "critical" | "high" | "medium" | "low";
 
-// Full request status set
+// Unified coordination status (same for requests + resources)
 export type RequestStatus =
-  | "active"
-  | "under_review"
+  | "pending"
+  | "approved"
   | "matched"
   | "in_progress"
   | "fulfilled"
@@ -39,15 +39,15 @@ export type RequestStatus =
 export type Bucket = "needs_attention" | "active_work" | "delivering" | "resolved";
 
 export const BUCKETS: { id: Bucket; label: string; accent: string; statuses: RequestStatus[] }[] = [
-  { id: "needs_attention", label: "Needs Attention", accent: "#EF4E4B", statuses: ["active", "under_review", "pending", "new"] },
-  { id: "active_work", label: "Active Work", accent: "#89CFF0", statuses: ["matched"] },
-  { id: "delivering", label: "Delivering", accent: "#89CFF0", statuses: ["in_progress"] },
-  { id: "resolved", label: "Resolved", accent: "#34D399", statuses: ["fulfilled", "closed", "resolved", "cancelled"] },
+  { id: "needs_attention", label: "Pending", accent: "#EF4E4B", statuses: ["pending"] },
+  { id: "active_work", label: "Approved", accent: "#89CFF0", statuses: ["approved", "matched"] },
+  { id: "delivering", label: "In Progress", accent: "#89CFF0", statuses: ["in_progress"] },
+  { id: "resolved", label: "Fulfilled", accent: "#34D399", statuses: ["fulfilled", "closed"] },
 ];
 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
-  active: "active",
-  under_review: "under review",
+  pending: "pending",
+  approved: "approved",
   matched: "matched",
   in_progress: "in progress",
   fulfilled: "fulfilled",
