@@ -40,9 +40,11 @@ const CASE_COLS: Column[] = [
 const REQUEST_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
 
 const RESOURCE_COLS: Column[] = [
-  { id: "available", label: "Available", accent: "#34D399" },
+  { id: "pending", label: "Pending", accent: "#EF4E4B" },
+  { id: "approved", label: "Approved", accent: "#34D399" },
   { id: "matched", label: "Matched", accent: "#89CFF0" },
-  { id: "deployed", label: "Deployed", accent: "#89CFF0" },
+  { id: "fulfilled", label: "Fulfilled", accent: "#34D399" },
+  { id: "closed", label: "Closed", accent: "#9CA3AF" },
 ];
 
 const REPORT_COLS: Column[] = [
@@ -495,7 +497,7 @@ export default function CasesPage() {
                     }}
                     onDrop={() => onDrop(col.id)}
                     className={`snap-start rounded-2xl border p-3 transition ${
-                      col.id !== mobileCol ? "hidden md:block" : ""
+                      ""
                     } ${
                       isOver
                         ? "bg-white/[0.06] border-white/20"
