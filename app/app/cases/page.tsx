@@ -322,13 +322,13 @@ export default function CasesPage() {
 
   // Fetch reports
   useEffect(() => {
-    api.getReports({ limit: 100 })
+    api.efCall("crm-reports", { action: "list_reports", limit: 100 })
       .then((res: any) => {
-        const items: any[] = res?.data ?? (Array.isArray(res) ? res : []);
+        const items: any[] = res?.reports ?? res?.data ?? (Array.isArray(res) ? res : []);
         if (items.length > 0) {
           const cards: Card[] = items.map((r: any) => ({
             id: r.id,
-            col: r.status === "verified" ? "resolved" : r.severity === "critical" ? "needs_attention" : "active_work",
+            col: r.status === "fulfilled" ? "resolved" : r.severity === "critical" ? "needs_attention" : "active_work",
             title: r.category ?? r.description?.slice(0, 40) ?? r.id?.slice(0, 8),
             meta: r.description?.slice(0, 60),
             sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
