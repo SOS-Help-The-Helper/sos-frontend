@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 const cases: any[] = [];
-import { Filter, Plus, Calendar } from "lucide-react";
+import { Filter, Plus, Calendar, Layers } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { MapPinCard, type PinLayer } from "@/components/map/map-pin-card";
@@ -165,6 +165,21 @@ function MapboxEmbed({
               },
             });
 
+            // Heatmap layer (hidden by default)
+            map.addLayer({
+              id: `${layer}-heatmap`,
+              type: 'heatmap',
+              source: srcId,
+              layout: { visibility: 'none' },
+              paint: {
+                'heatmap-weight': ['interpolate', ['linear'], ['coalesce', ['get', 'point_count'], 1], 0, 0.6, 20, 1],
+                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 12, 2.2],
+                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'transparent', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FBBF24', 1, '#ffffff'],
+                'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 6, 14, 12, 42],
+                'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 13, 0],
+              },
+            });
+
             // Click cluster → zoom in
             map.on("click", `${layer}-clusters`, (e: any) => {
               const features = map.queryRenderedFeatures(e.point, { layers: [`${layer}-clusters`] });
@@ -236,17 +251,27 @@ function MapboxEmbed({
       } else if (cmd.action === "filter") {
         for (const layer of LAYERS) {
           const vis = Array.isArray(cmd.layers) && cmd.layers.includes(layer) ? "visible" : "none";
-          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow"]) {
+          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow", "-heatmap"]) {
             const layerId = `${layer}${suffix}`;
             if (map.getLayer(layerId)) {
               map.setLayoutProperty(layerId, "visibility", vis);
             }
           }
         }
-        if (cmd.county) {
-          const centroid = WNC_COUNTY_CENTROIDS[cmd.county.toLowerCase()];
-          if (centroid) map.flyTo({ center: centroid, zoom: 10 });
+      } else if (cmd.action === "mapMode") {
+        for (const layer of LAYERS) {
+          const isPins = cmd.mode === 'pins';
+          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow"]) {
+            const layerId = `${layer}${suffix}`;
+            if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", isPins ? "visible" : "none");
+          }
+          const heatmapId = `${layer}-heatmap`;
+          if (map.getLayer(heatmapId)) map.setLayoutProperty(heatmapId, "visibility", isPins ? "none" : "visible");
         }
+      }
+      if (cmd.action === "filter" && cmd.county) {
+        const centroid = WNC_COUNTY_CENTROIDS[cmd.county.toLowerCase()];
+        if (centroid) map.flyTo({ center: centroid, zoom: 10 });
       }
     };
 
