@@ -59,10 +59,14 @@ function orgName(id: string): string {
   return mockOrgs.find((o) => o.id === id)?.name ?? id;
 }
 
+// Default to Emergency RV for demo when no org context
+const DEMO_ORG_ID = "9ad0f2ad-7789-47a8-bfba-0ae3382c86cc";
+
 export default function DirectoryPage() {
   const searchParams = useSearchParams();
   const search = Object.fromEntries(searchParams);
-  const { orgId } = useAuthContext();
+  const { orgId: authOrgId } = useAuthContext();
+  const orgId = authOrgId || DEMO_ORG_ID;
   const people = usePeople();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>(search.type ?? "all");
