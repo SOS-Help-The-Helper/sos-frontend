@@ -161,6 +161,33 @@ export const api = {
   crmResourcesList: (orgId: string, filters?: Record<string, unknown>) =>
     efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
 
+  // CRM — Matches board (direct Supabase read with joins)
+  crmMatchesList: async (orgId: string) => {
+    const { data, error } = await supabaseRead
+      .from('matches')
+      .select(`
+        id, request_id, resource_id, resource_org_id, score, status, reasoning, committed_by, created_at,
+        requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
+        resources!resource_id(taxonomy_code, contact_name, category),
+        organizations!resource_org_id(name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return {
+      matches: (data || []).map((m: any) => ({
+        ...m,
+        request_person_name: m.requests?.persons?.display_name ?? m.requests?.contact_name ?? null,
+        request_taxonomy: m.requests?.taxonomy_code ?? m.requests?.category ?? null,
+        request_county: m.requests?.county ?? null,
+        request_urgency: m.requests?.urgency ?? null,
+        resource_name: m.resources?.contact_name ?? null,
+        resource_taxonomy: m.resources?.taxonomy_code ?? m.resources?.category ?? null,
+        org_name: m.organizations?.name ?? null,
+      })),
+    };
+  },
+
   // CRM — Search
   crmSearch: (query: string, orgId: string, filters?: Record<string, unknown>) =>
     efCall("crm-search", { query, org_id: orgId, ...filters }),
