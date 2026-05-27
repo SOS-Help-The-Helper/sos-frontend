@@ -210,7 +210,7 @@ export default function PersonPage() {
                 {person.household && (
                   <MetaChip icon={Users}>Household of {person.household.members.length}</MetaChip>
                 )}
-                <span className="font-mono text-[10px] text-white/40">{person.id}</span>
+                <span className="font-mono text-xs text-white/40">{person.id}</span>
               </MetaPopover>
             </>
           }
@@ -420,7 +420,7 @@ function SkillsTab({ person }: { person: Person }) {
       ))}
       {person.household && (
         <div className="px-4 py-3.5 bg-white/[0.02]">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Household · {person.household.address}</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Household · {person.household.address}</p>
           <div className="space-y-2">
             {person.household.members.map((m) => (
               <div key={m.name} className="flex items-center gap-3">
@@ -463,7 +463,7 @@ function RequestsTab({ requests }: { requests: LinkedRequest[] }) {
               </p>
             )}
           </div>
-          <span className="font-mono text-[10px] text-white/30 truncate max-w-[120px]">{r.id}</span>
+          <span className="font-mono text-xs text-white/30 truncate max-w-[120px]">{r.id}</span>
         </div>
       ))}
     </ListGroup>

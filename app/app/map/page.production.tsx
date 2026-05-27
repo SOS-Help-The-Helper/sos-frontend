@@ -504,9 +504,9 @@ function MapContent() {
         {/* Match legend (matches tab) */}
         {isMatchesTab && (
           <div className="ml-auto flex gap-2 flex-shrink-0">
-            <span className="text-[10px] text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-white inline-block" /> Proposed</span>
-            <span className="text-[10px] text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-sos-accent-500 inline-block" /> Accepted</span>
-            <span className="text-[10px] text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-green-500 inline-block" /> Fulfilled</span>
+            <span className="text-xs text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-white inline-block" /> Proposed</span>
+            <span className="text-xs text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-sos-accent-500 inline-block" /> Accepted</span>
+            <span className="text-xs text-sos-gray-500 flex items-center gap-1"><span className="w-4 h-0.5 bg-green-500 inline-block" /> Fulfilled</span>
           </div>
         )}
       </div>
@@ -523,19 +523,19 @@ function MapContent() {
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 flex gap-2 z-10">
-          <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
+          <span className="text-xs bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-sos-red-500" /> {filteredRequests.length} needs
           </span>
-          <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
+          <span className="text-xs bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-sos-accent-500" /> {filteredResources.length} resources
           </span>
           {isMatchesTab && (
-            <span className="text-[10px] bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
+            <span className="text-xs bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
               <Link2 className="h-3 w-3" /> {matchLines.length} matches
             </span>
           )}
           {activeView?.pins?.length ? (
-            <span className="text-[10px] bg-black/60 backdrop-blur-sm text-yellow-300 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+            <span className="text-xs bg-black/60 backdrop-blur-sm text-yellow-300 px-2.5 py-1 rounded-full flex items-center gap-1.5">
               📌 {activeView.pins.length} pins
             </span>
           ) : null}
@@ -604,7 +604,7 @@ function MapContent() {
                   {disasters.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
-              <p className="text-[10px] text-sos-gray-400">Current viewport will be saved with this view.</p>
+              <p className="text-xs text-sos-gray-400">Current viewport will be saved with this view.</p>
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowCreateModal(false)} className="flex-1 py-2.5 rounded-lg border border-sos-gray-300 text-sm font-semibold text-sos-gray-600">Cancel</button>

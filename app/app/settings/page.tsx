@@ -145,7 +145,7 @@ export default function SettingsPage() {
                   {pinned && (
                     <span className="flex items-center gap-1 text-[#EF4E4B]">
                       <Pin size={11} className="fill-[#EF4E4B]" />
-                      <span className="font-mono text-[10px]">{order}</span>
+                      <span className="font-mono text-xs">{order}</span>
                     </span>
                   )}
                 </button>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
                   className={`px-3 py-3 rounded-xl border text-left transition ${a ? 'border-[#89CFF0] bg-[#89CFF0]/8' : 'border-white/10 bg-white/3 hover:bg-white/5'}`}
                 >
                   <p className="font-medium text-[13px] capitalize">{d}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mt-0.5">
+                  <p className="font-mono text-xs uppercase tracking-wider text-white/45 mt-0.5">
                     {d === 'small' ? '<5 ppl' : d === 'mid' ? '5–50' : '50+'}
                   </p>
                 </button>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
+      <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
       <input defaultValue={value} key={value} className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40" />
     </div>
   );

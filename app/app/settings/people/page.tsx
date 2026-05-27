@@ -170,7 +170,7 @@ export default function PeopleSettings() {
                 <div className="flex items-center gap-2">
                   <p className="text-[13.5px] font-medium truncate">{m.name}</p>
                   {m.status === "Invited" && (
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#F5EBD6] bg-[#F5EBD6]/12 px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-mono uppercase tracking-wider text-[#F5EBD6] bg-[#F5EBD6]/12 px-1.5 py-0.5 rounded">
                       Pending
                     </span>
                   )}

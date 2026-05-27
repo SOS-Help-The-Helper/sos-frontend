@@ -191,7 +191,7 @@ export default function ResourcePage() {
                           <GitBranch size={11} />
                           {personName}
                         </Link>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border capitalize" style={{ borderColor: `${dotColor}44`, color: dotColor, background: `${dotColor}11` }}>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full border capitalize" style={{ borderColor: `${dotColor}44`, color: dotColor, background: `${dotColor}11` }}>
                           {matchStatus}
                         </span>
                       </div>
@@ -263,8 +263,8 @@ export default function ResourcePage() {
                   {r.org && <span className="text-white/40"> · {r.org}</span>}
                 </MetaChip>
                 <MetaChip icon={Calendar}>{r.capacity}</MetaChip>
-                <span className="font-mono text-[10px] text-white/40">{r.id}</span>
-                <span className="font-mono text-[10px] text-white/40">{r.taxonomy}</span>
+                <span className="font-mono text-xs text-white/40">{r.id}</span>
+                <span className="font-mono text-xs text-white/40">{r.taxonomy}</span>
               </MetaPopover>
             </>
           }
@@ -359,7 +359,7 @@ export default function ResourcePage() {
           summary={`${r.title} owned by ${r.ownerName}${r.org ? ` (${r.org})` : ""}, currently ${r.status}${r.matchedTo ? ` and matched to ${r.matchedTo.personName} on ${r.matchedTo.caseId}` : ""}. Staged at ${r.location}. Capacity: ${r.capacity}. ${r.history.length} events in deployment history.`}
         />
 
-        {r.capacityTotal != null && r.capacityAvailable != null && (
+        {r.capacityTotal != null && r.capacityAvailable != null && r.capacityTotal !== 0 && (
           <HeroPanel>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] uppercase tracking-widest text-white/45 font-mono">Capacity</span>
@@ -394,7 +394,7 @@ export default function ResourcePage() {
               />
               <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
                 <MapPin size={10} className="text-[#EF4E4B]" />
-                <span className="text-[10px] text-white/80">{r.location}</span>
+                <span className="text-xs text-white/80">{r.location}</span>
               </div>
             </div>
           </HeroPanel>

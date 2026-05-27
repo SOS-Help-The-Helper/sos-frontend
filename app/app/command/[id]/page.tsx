@@ -131,7 +131,7 @@ export default function IncidentDashboard() {
           }}
         >
           {isUrgent && (
-            <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#EF4E4B]/20 text-[#EF4E4B] text-[10px] font-mono uppercase tracking-wider">
+            <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#EF4E4B]/20 text-[#EF4E4B] text-xs font-mono uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-[#EF4E4B] animate-pulse" /> Live · Urgent
             </div>
           )}
@@ -140,7 +140,7 @@ export default function IncidentDashboard() {
               <AlertTriangle size={22} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{incident.id} · {incident.status}</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45">{incident.id} · {incident.status}</p>
               <h1 className="font-serif text-[26px] md:text-[32px] mt-0.5 leading-[1.1] tracking-tight">{incident.name}</h1>
               <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                 <Chip icon={MapPin}>{incident.county} County</Chip>
@@ -173,7 +173,7 @@ export default function IncidentDashboard() {
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Needs &amp; resources</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45">Needs &amp; resources</p>
               <p className="text-[13px] font-medium mt-0.5">Open requests vs offered resources by category</p>
             </div>
             <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-white/4">
@@ -214,7 +214,7 @@ export default function IncidentDashboard() {
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Case posture</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45">Case posture</p>
                 <p className="text-[13px] font-medium mt-0.5">Where cases sit right now</p>
               </div>
               <Link href="/app/cases" className="text-[11px] text-white/55 hover:text-white inline-flex items-center gap-1">Open queue <ArrowRight size={11} /></Link>
@@ -224,7 +224,7 @@ export default function IncidentDashboard() {
                 <div key={s.label} className="rounded-lg bg-white/4 px-3 py-2 text-center min-w-[80px]">
                   <p className="text-[18px] font-semibold tabular-nums">{s.count}</p>
                   <p className="font-mono text-[9px] uppercase tracking-wider text-white/45 mt-0.5">{s.label}</p>
-                  <p className="text-[10px] text-white/35 mt-0.5">{s.pct}%</p>
+                  <p className="text-xs text-white/35 mt-0.5">{s.pct}%</p>
                 </div>
               ))}
             </div>
@@ -235,7 +235,7 @@ export default function IncidentDashboard() {
         <div className="grid lg:grid-cols-[1fr_320px] gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Pinned reports</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45">Pinned reports</p>
               <Link href="/app/reports" className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-white/6 hover:bg-white/12 text-[11px] transition"><Plus size={11} /> Add from library</Link>
             </div>
             <div className="text-center py-10 text-white/40 text-[12.5px]">
@@ -244,7 +244,7 @@ export default function IncidentDashboard() {
           </div>
 
           <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Org load</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Org load</p>
             {orgLoad.length === 0 ? (
               <p className="text-[12px] text-white/40">No org data available.</p>
             ) : (
@@ -264,7 +264,7 @@ export default function IncidentDashboard() {
             {/* Collapsible more section */}
             {showMore && (
               <div className="mt-5 pt-4 border-t border-white/5">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">Quick info</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-3">Quick info</p>
                 <p className="text-[12px] text-white/55">Resources deployed: {efStats?.resources_deployed ?? "—"}</p>
                 <p className="text-[12px] text-white/55 mt-1">Fulfilled: {efStats?.fulfilled_pct ?? "—"}%</p>
               </div>
@@ -297,12 +297,12 @@ function ActionBtn({ children, primary, onClick }: { children: ReactNode; primar
 function NowTile({ label, value, tone, sub, spark }: { label: string; value: string | number; tone: string; sub: string; spark?: number[] }) {
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{label}</p>
+      <p className="font-mono text-xs uppercase tracking-wider text-white/45">{label}</p>
       <div className="flex items-end justify-between mt-1">
         <p className="text-[28px] font-semibold tabular-nums" style={{ color: tone }}>{value}</p>
         {spark && spark.length > 1 && <MiniSparkline data={spark} color={tone} />}
       </div>
-      <p className="font-mono text-[10px] text-white/40 mt-1">{sub}</p>
+      <p className="font-mono text-xs text-white/40 mt-1">{sub}</p>
     </div>
   );
 }
@@ -333,7 +333,7 @@ function BarRow({ label, count, pct, tone, solid }: { label: string; count: numb
       <div className="flex-1 h-3 rounded-full bg-white/5 overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: solid ? tone : `${tone}60` }} />
       </div>
-      <span className="font-mono text-[10px] tabular-nums text-white/55 w-6 text-right">{count}</span>
+      <span className="font-mono text-xs tabular-nums text-white/55 w-6 text-right">{count}</span>
     </div>
   );
 }

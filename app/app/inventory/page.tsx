@@ -154,7 +154,7 @@ export default function InventoryPage() {
           onSubmit={handleAddSubmit}
           className="mx-4 mt-3 rounded-xl bg-[var(--surface-1)] border border-[#89CFF0]/40 p-4 space-y-3"
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">New item</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45">New item</p>
           <input
             required
             placeholder="Item name"
@@ -251,7 +251,7 @@ export default function InventoryPage() {
         {/* Capacity bars (all-facilities view) */}
         {facilityId === "all" && (
           <section>
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Capacity by facility</p>
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45 mb-3">Capacity by facility</p>
             <div className="space-y-2">
               {facilities.map((f) => {
                 const pct = (f.currentCount / f.capacity) * 100;
@@ -287,11 +287,11 @@ export default function InventoryPage() {
 
         {/* Tracked assets table */}
         <section>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Tracked assets</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45 mb-3">Tracked assets</p>
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
+                <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
                   <th className="px-4 py-3 font-normal">ID</th>
                   <th className="px-4 py-3 font-normal">Item</th>
                   <th className="px-4 py-3 font-normal">Status</th>
@@ -327,11 +327,11 @@ export default function InventoryPage() {
 
         {/* Resources / inventory table */}
         <section>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">Resources</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45 mb-3">Resources</p>
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
+                <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
                   <th className="px-4 py-3 font-normal">Item</th>
                   <th className="px-4 py-3 font-normal">Owner</th>
                   <th className="px-4 py-3 font-normal">Location</th>
@@ -442,13 +442,13 @@ function FacilityChip({
       </div>
       {capacity ? (
         <>
-          <p className="font-mono text-[10px] tabular-nums text-white/55">{count} / {capacity}</p>
+          <p className="font-mono text-xs tabular-nums text-white/55">{count} / {capacity}</p>
           <div className="h-1 rounded-full bg-white/8 overflow-hidden mt-1.5">
             <div className="h-full" style={{ width: `${pct}%`, background: cap }} />
           </div>
         </>
       ) : (
-        <p className="font-mono text-[10px] text-white/55">{count} sites</p>
+        <p className="font-mono text-xs text-white/55">{count} sites</p>
       )}
     </button>
   );
@@ -460,14 +460,14 @@ function FacilityHeader({ f }: { f: Facility }) {
   return (
     <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5 flex items-center justify-between">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1">{f.type.replace(/_/g, " ")}</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1">{f.type.replace(/_/g, " ")}</p>
         <h2 className="text-[18px] font-semibold">{f.name}</h2>
         <p className="text-[12px] text-white/65 mt-0.5">
           {f.address} · <span style={{ color: org?.color }}>{org?.name}</span>
         </p>
       </div>
       <div className="text-right">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Capacity</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-white/45">Capacity</p>
         <p className="font-serif text-[28px] tabular-nums">{Math.round(pct)}%</p>
         <p className="font-mono text-[10.5px] text-white/55">{f.currentCount} / {f.capacity}</p>
       </div>
@@ -505,14 +505,14 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
       <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between">
           <div className="min-w-0">
-            <p className="font-mono text-[10px] text-white/45">{r.id}</p>
+            <p className="font-mono text-xs text-white/45">{r.id}</p>
             <p className="font-medium text-[14px] truncate">{r.title}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/8 rounded"><X size={14} /></button>
         </header>
         <div className="p-5 space-y-5">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Current facility</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Current facility</p>
             <div className="flex items-center gap-2">
               <p className="text-[13px] text-white/85 flex-1">{r.location}</p>
               <button className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-white/6 hover:bg-white/12 text-[11px] transition">
@@ -521,11 +521,11 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
             </div>
           </div>
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Condition</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Condition</p>
             <Stars n={4} />
           </div>
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">Asset event timeline · {events.length}</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-3">Asset event timeline · {events.length}</p>
             {events.length === 0 ? (
               <p className="text-[12px] text-white/45">No events yet.</p>
             ) : (

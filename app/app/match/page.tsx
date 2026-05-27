@@ -161,9 +161,9 @@ function MatchBoard({ orgId }: { orgId: string }) {
               <div className="flex items-center justify-between px-1 mb-3">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-white/55">{col.label}</span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-white/55">{col.label}</span>
                 </div>
-                <span className="font-mono text-[10px] text-white/35">{items.length}</span>
+                <span className="font-mono text-xs text-white/35">{items.length}</span>
               </div>
               <div className="space-y-2 max-h-[65vh] overflow-y-auto">
                 {items.length === 0 ? (
@@ -197,7 +197,8 @@ function MatchBoardCard({ match: m, accent }: { match: MatchRecord; accent: stri
       {/* Person + urgency */}
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: um.dot }} />
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: um.dot }} aria-hidden="true" />
+          <span className="sr-only">{urgency}</span>
           <p className="text-[13px] font-medium truncate">{personName}</p>
         </div>
         {m.score > 0 && (
@@ -208,14 +209,14 @@ function MatchBoardCard({ match: m, accent }: { match: MatchRecord; accent: stri
       </div>
 
       {/* Need */}
-      <p className="font-mono text-[10px] text-white/55 truncate mb-1">
+      <p className="font-mono text-xs text-white/55 truncate mb-1">
         {fmtTaxonomy(taxonomy)} · {county}
       </p>
 
       {/* Resource/org matched to */}
       <div className="flex items-center gap-1.5">
         <Package size={10} className="text-white/35 shrink-0" />
-        <p className="font-mono text-[10px] text-white/45 truncate">{resourceLabel}</p>
+        <p className="font-mono text-xs text-white/45 truncate">{resourceLabel}</p>
       </div>
 
       {/* Chain indicator + footer */}
@@ -375,7 +376,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
     <div className="px-4 pt-4 pb-4 grid lg:grid-cols-[320px_1fr] gap-4">
       {/* ── Sidebar list ─── */}
       <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-3 self-start">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 px-2 py-1.5">
+        <p className="font-mono text-xs uppercase tracking-wider text-white/45 px-2 py-1.5">
           Open requests · {filteredCases.length}
         </p>
 
@@ -421,7 +422,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
                   )}
                 </div>
                 <p className="text-[13px] font-medium">{c.citizen}</p>
-                <p className="font-mono text-[10px] text-white/50 mt-1">
+                <p className="font-mono text-xs text-white/50 mt-1">
                   {fmtTaxonomy(c.taxonomy[0]) || c.taxonomy[0] || "—"} · {c.county || "—"}
                 </p>
                 {hhStr && (
@@ -474,7 +475,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
         </section>
 
         <section className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-3">
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-3">
             Candidate orgs · {candidates.length}
           </p>
 
@@ -566,7 +567,7 @@ function CandidateCard({
               <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-white/55">Declined · {declineReason}</span>
             )}
           </div>
-          <p className="font-mono text-[10px] text-white/50 mt-0.5">
+          <p className="font-mono text-xs text-white/50 mt-0.5">
             {counties} · {open} open
             {responseHrs != null && responseHrs > 0 ? ` · ~${responseHrs}h response` : ""}
             {contact ? ` · ${contact}` : ""}
@@ -605,7 +606,7 @@ function CandidateCard({
 
       {state === "decline_open" && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/45 mr-1 self-center">Reason:</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-white/45 mr-1 self-center">Reason:</span>
           {DECLINE_REASONS.map((r) => (
             <button key={r} onClick={() => handleDecline(r)}
               className="h-6 px-2 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-[11px] text-white/75 transition">{r}</button>

@@ -167,7 +167,7 @@ export default function ReportPage() {
               <MetaChip icon={MapPin}>{r.location}</MetaChip>
               <MetaPopover>
                 <MetaChip icon={Calendar}>{r.date}</MetaChip>
-                <span className="font-mono text-[10px] text-white/40">{r.id}</span>
+                <span className="font-mono text-xs text-white/40">{r.id}</span>
               </MetaPopover>
             </>
           }

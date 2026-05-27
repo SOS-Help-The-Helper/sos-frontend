@@ -149,7 +149,7 @@ export default function VolunteersPage() {
       {showAddForm && (
         <form onSubmit={handleAddVolunteer} className="mx-4 mt-3 rounded-xl bg-white/5 border border-white/10 p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Name *</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45 block mb-1">Name *</label>
             <input
               value={addName} onChange={e => setAddName(e.target.value)}
               placeholder="Jane Smith"
@@ -157,7 +157,7 @@ export default function VolunteersPage() {
             />
           </div>
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Email</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45 block mb-1">Email</label>
             <input
               type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
               placeholder="jane@example.com"
@@ -165,7 +165,7 @@ export default function VolunteersPage() {
             />
           </div>
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Phone</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45 block mb-1">Phone</label>
             <input
               type="tel" value={addPhone} onChange={e => setAddPhone(e.target.value)}
               placeholder="+1 555 000 0000"
@@ -173,7 +173,7 @@ export default function VolunteersPage() {
             />
           </div>
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45 block mb-1">Skills (comma separated)</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45 block mb-1">Skills (comma separated)</label>
             <input
               value={addSkills} onChange={e => setAddSkills(e.target.value)}
               placeholder="First aid, Driving, Spanish"
@@ -236,7 +236,7 @@ export default function VolunteersPage() {
                           <p className="font-medium text-[13.5px] truncate">{v.name}</p>
                           {detail?.credentials?.some(c => c.verified) && <ShieldCheck size={11} className="text-[#34D399] shrink-0" />}
                         </div>
-                        <p className="font-mono text-[10px] text-white/45">{v.id} · <span style={{ color: org?.color }}>{org?.name ?? "—"}</span></p>
+                        <p className="font-mono text-xs text-white/45">{v.id} · <span style={{ color: org?.color }}>{org?.name ?? "—"}</span></p>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {v.skills.slice(0, 3).map((s: string) => (
                             <span key={s} className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-white/6 text-white/65">{s}</span>
@@ -249,11 +249,11 @@ export default function VolunteersPage() {
                         )}
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-mono text-[15px] tabular-nums text-white/85">{v.hours}<span className="text-[10px] text-white/40">h</span></p>
+                        <p className="font-mono text-[15px] tabular-nums text-white/85">{v.hours}<span className="text-xs text-white/40">h</span></p>
                         {detail && (
                           <div className="flex items-center gap-0.5 justify-end mt-0.5">
                             <Star size={9} className="fill-[#F5EBD6] text-[#F5EBD6]" />
-                            <span className="font-mono text-[10px] text-white/65">{detail.rating}</span>
+                            <span className="font-mono text-xs text-white/65">{detail.rating}</span>
                           </div>
                         )}
                       </div>
@@ -360,7 +360,7 @@ export default function VolunteersPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
+      <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
       {children}
     </div>
   );
@@ -375,7 +375,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
       <aside className="relative ml-auto w-full max-w-md h-full bg-[#0F1E2B] border-l border-white/10 overflow-y-auto">
         <header className="sticky top-0 bg-[#0F1E2B]/90 backdrop-blur border-b border-white/10 px-5 py-3 flex items-center justify-between">
           <div className="min-w-0">
-            <p className="font-mono text-[10px] text-white/45">{v.id}</p>
+            <p className="font-mono text-xs text-white/45">{v.id}</p>
             <p className="font-medium text-[14px] truncate">{v.name}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/8 rounded"><X size={14} /></button>
@@ -397,20 +397,20 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
                 <Stat label="Rating" value={v.rating} />
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Org</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Org</p>
                 <p className="text-[13px]" style={{ color: org?.color }}>{org?.name}</p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Phone</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Phone</p>
                 <p className="font-mono text-[12.5px] text-white/85">{v.phone}</p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Skills</p>
-                <div className="flex flex-wrap gap-1">{(v.skills ?? []).map((s: string) => <span key={s} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/6 text-white/85">{s}</span>)}</div>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Skills</p>
+                <div className="flex flex-wrap gap-1">{(v.skills ?? []).map((s: string) => <span key={s} className="font-mono text-xs px-1.5 py-0.5 rounded bg-white/6 text-white/85">{s}</span>)}</div>
               </div>
               {v.towCapacity && (
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Tow capacity</p>
+                  <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Tow capacity</p>
                   <p className="text-[12.5px] text-white/85"><Truck size={11} className="inline mr-1" /> {v.towCapacity.maxWeight.toLocaleString()} lbs · {v.towCapacity.hitchTypes.join(", ").replace(/_/g, " ")}</p>
                 </div>
               )}
@@ -426,7 +426,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
                 const slot = (v.availability ?? []).find((a: { day: string; slots: string[] }) => a.day === d);
                 return (
                   <Fragment key={d}>
-                    <div className="font-mono text-[10px] text-white/55 py-1.5">{d}</div>
+                    <div className="font-mono text-xs text-white/55 py-1.5">{d}</div>
                     {(["morning", "afternoon", "evening"] as const).map(s => (
                       <div key={s} className={`h-7 rounded ${slot?.slots.includes(s) ? "bg-[#34D399]/25 border border-[#34D399]/50" : "bg-white/4 border border-white/8"}`} />
                     ))}
@@ -440,8 +440,8 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
               {(v.deployments ?? []).map((d: { date: string; hours: number; role: string; mission: string }, i: number) => (
                 <div key={i} className="rounded-lg bg-white/4 p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-[10px] text-white/45">{d.date}</span>
-                    <span className="font-mono text-[10px] text-white/55">{d.hours}h · {d.role}</span>
+                    <span className="font-mono text-xs text-white/45">{d.date}</span>
+                    <span className="font-mono text-xs text-white/55">{d.hours}h · {d.role}</span>
                   </div>
                   <p className="text-[12.5px] text-white/85">{d.mission}</p>
                 </div>
@@ -457,7 +457,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
                     {expired ? <AlertCircle size={14} className="text-[#EF4E4B] shrink-0" /> : <CheckCircle2 size={14} className="text-[#34D399] shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-[12.5px] font-medium">{c.name}</p>
-                      <p className="font-mono text-[10px] text-white/45 capitalize">{c.type} {c.expires && `· expires ${c.expires}`}</p>
+                      <p className="font-mono text-xs text-white/45 capitalize">{c.type} {c.expires && `· expires ${c.expires}`}</p>
                     </div>
                     {c.verified && <ShieldCheck size={12} className="text-[#34D399]" />}
                   </div>

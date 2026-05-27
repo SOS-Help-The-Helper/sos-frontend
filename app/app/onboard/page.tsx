@@ -57,7 +57,7 @@ export default function OnboardPage() {
       <div className="max-w-lg w-full py-12">
         <div className="flex items-center gap-2.5 mb-8">
           <SosLogo size={28} />
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">Onboarding · {step + 1} of 3</span>
+          <span className="font-mono text-xs uppercase tracking-[0.18em] text-white/45">Onboarding · {step + 1} of 3</span>
         </div>
 
         <div className="flex gap-1.5 mb-8">
@@ -84,7 +84,7 @@ export default function OnboardPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{o.label}</p>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{o.sub}</p>
+                    <p className="font-mono text-xs uppercase tracking-wider text-white/45">{o.sub}</p>
                   </div>
                 </button>
               ))}
@@ -122,7 +122,7 @@ export default function OnboardPage() {
             <p className="text-white/55 mt-2">Tell us about your org, then optionally invite your team.</p>
             <div className="mt-6 space-y-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Org name</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Org name</p>
                 <input
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
@@ -131,7 +131,7 @@ export default function OnboardPage() {
                 />
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Contact email</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Contact email</p>
                 <input
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
@@ -141,7 +141,7 @@ export default function OnboardPage() {
                 />
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Invite team (optional)</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Invite team (optional)</p>
                 <textarea
                   value={invites}
                   onChange={(e) => setInvites(e.target.value)}

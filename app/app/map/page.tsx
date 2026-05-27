@@ -427,7 +427,7 @@ export default function MapPage() {
         </div>
 
         <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 h-fit">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Map Layers</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Map Layers</p>
           <div className="space-y-3">
             {[
               { label: "Cases", color: "#EF4E4B", count: layers?.cases?.length ?? 0 },
@@ -458,14 +458,14 @@ export default function MapPage() {
 
           {hasRealData && (layers?.events?.length ?? 0) > 0 && (
             <div className="mt-5 pt-4 border-t border-white/10">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-[#A855F7] mb-3">
+              <p className="font-mono text-xs uppercase tracking-wider text-[#A855F7] mb-3">
                 Upcoming Events
               </p>
               {layers?.events?.slice(0, 5).map((f, i) => (
                 <div key={`event-side-${i}`} className="rounded-xl bg-white/5 hover:bg-white/8 p-3 transition cursor-pointer mb-2">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar size={10} className="text-[#A855F7]" />
-                    <span className="font-mono text-[10px] text-white/45">{f.properties.event_type as string ?? 'event'}</span>
+                    <span className="font-mono text-xs text-white/45">{f.properties.event_type as string ?? 'event'}</span>
                   </div>
                   <p className="text-[12px] font-medium">{f.properties.title as string ?? 'Untitled'}</p>
                 </div>

@@ -123,7 +123,7 @@ export default function CalendarPage() {
           <div className="grid grid-cols-7 border-b border-white/8">
             {days.map((d) => (
               <div key={d.label} className="p-3 text-center border-r border-white/5 last:border-r-0">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{d.label}</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45">{d.label}</p>
                 <p className="text-[15px] font-semibold mt-0.5">{d.date.split(" ")[1]}</p>
               </div>
             ))}
@@ -147,7 +147,7 @@ export default function CalendarPage() {
                         style={{ borderColor: org?.color }}
                       >
                         <p className="text-[12px] font-medium leading-tight">{s.title}</p>
-                        <p className="font-mono text-[10px] text-white/55 mt-1">{s.time}</p>
+                        <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
                         <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
                           <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
                             <Users size={9} /> {s.filled}/{s.slots}
@@ -231,7 +231,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
       <aside className="relative ml-auto w-full max-w-md h-full bg-[var(--surface-1)] border-l border-[var(--hairline)] overflow-y-auto">
         <header className="sticky top-0 glass border-b border-[var(--hairline)] px-5 py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="font-mono text-[10px] text-white/45">{event.id}</p>
+            <p className="font-mono text-xs text-white/45">{event.id}</p>
             <p className="font-medium text-[14px] truncate">{event.title}</p>
           </div>
           <div className="flex items-center gap-1">
@@ -260,7 +260,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
           </div>
 
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Volunteers</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Volunteers</p>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[12.5px] text-white/85">{event.filled} of {event.slots} filled</span>
               <span className="font-mono text-[10.5px] tabular-nums text-white/55">{Math.round(pct)}%</span>
@@ -286,13 +286,13 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
 
           {event.location && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Location</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Location</p>
               <p className="text-[13px] text-white/85">{event.location}</p>
             </div>
           )}
           {event.notes && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Notes</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Notes</p>
               <p className="text-[13px] text-white/85 whitespace-pre-line">{event.notes}</p>
             </div>
           )}
@@ -473,7 +473,7 @@ function InlineEventEdit({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">Edit event</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-white/45">Edit event</p>
         <button onClick={onClose} className="p-1 hover:bg-white/8 rounded"><X size={12} /></button>
       </div>
       <div className="grid grid-cols-1 gap-2">
@@ -522,7 +522,7 @@ function InlineEventEdit({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
+      <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
       {children}
     </div>
   );

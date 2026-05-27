@@ -112,9 +112,9 @@ export default function ReportsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
             <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">{k.label}</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-white/45">{k.label}</p>
               <p className="text-[32px] font-semibold tracking-tight mt-2 tabular-nums">{k.value}</p>
-              <p className="font-mono text-[10px] text-[#34D399] mt-1">{k.delta}</p>
+              <p className="font-mono text-xs text-[#34D399] mt-1">{k.delta}</p>
             </div>
           ))}
         </div>
@@ -122,18 +122,18 @@ export default function ReportsPage() {
         {/* Severity donut + trend sparkline */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Severity distribution</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Severity distribution</p>
             <SeverityDonut kpis={kpis} />
           </div>
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">14-day trend</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">14-day trend</p>
             <TrendSparkline />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Cases by org</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Cases by org</p>
             <div className="space-y-3">
               {byOrg.map((b) => (
                 <div key={b.org?.id ?? b.name}>
@@ -150,7 +150,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-4">Taxonomy distribution</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Taxonomy distribution</p>
             <div className="space-y-3">
               {taxList.map(([t, n]) => (
                 <div key={t}>
@@ -209,7 +209,7 @@ function SeverityDonut({ kpis }: { kpis: Kpi[] }) {
           <div key={seg.label} className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: seg.color }} />
             <span className="text-[11px] text-white/70">{seg.label}</span>
-            <span className="font-mono text-[10px] tabular-nums text-white/45 ml-auto">{seg.value}</span>
+            <span className="font-mono text-xs tabular-nums text-white/45 ml-auto">{seg.value}</span>
           </div>
         ))}
       </div>

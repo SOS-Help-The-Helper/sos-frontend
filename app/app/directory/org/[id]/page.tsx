@@ -128,7 +128,7 @@ export default function OrgPage() {
             ].map(s => (
               <div key={s.label} className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
                 <p className="text-[20px] font-semibold tabular-nums">{s.value}</p>
-                <p className="font-mono text-[10px] text-white/45 mt-1">{s.label}</p>
+                <p className="font-mono text-xs text-white/45 mt-1">{s.label}</p>
               </div>
             ))}
           </div>
@@ -160,7 +160,7 @@ export default function OrgPage() {
                 {capabilities.length > 0 && <MetaChip icon={Building2}>
                   {capabilities.join(", ")}
                 </MetaChip>}
-                <span className="font-mono text-[10px] text-white/40">{org.id}</span>
+                <span className="font-mono text-xs text-white/40">{org.id}</span>
               </MetaPopover>
             </>
           }

@@ -61,9 +61,9 @@ export default function CommandPage() {
         </div>
 
         {/* Agent chat — fills everything */}
-        <div className="flex-1 min-h-0 mx-3 md:mx-4 mb-3 rounded-xl overflow-hidden border border-[var(--hairline)]">
+        <section aria-label="Command Chat" className="flex-1 min-h-0 mx-3 md:mx-4 mb-3 rounded-xl overflow-hidden border border-[var(--hairline)]">
           <AgentChat hideHeader />
-        </div>
+        </section>
       </div>
     </CrmShell>
   );
@@ -89,7 +89,7 @@ function StatPill({ icon, label, value, tone, primary }: {
         ) : (
           <span className="h-4 w-6 rounded bg-black/5 animate-pulse inline-block" />
         )}
-        <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium text-black/40 uppercase tracking-wide">{label}</span>
       </div>
     </div>
   );

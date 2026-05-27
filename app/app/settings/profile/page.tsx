@@ -70,7 +70,7 @@ export default function MyProfile() {
           </div>
         </div>
         <div className="mt-5 pt-4 border-t border-[var(--hairline)]">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2.5">
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2.5">
             Community · referrals
           </p>
           <ReferralLineItems />
@@ -158,7 +158,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
+  return <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
 }
 
 function Field({

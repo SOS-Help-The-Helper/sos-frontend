@@ -186,7 +186,7 @@ function CreateCaseModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Person name</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45">Person name</label>
             <input
               autoFocus
               className={inputCls}
@@ -199,7 +199,7 @@ function CreateCaseModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Category</label>
+              <label className="font-mono text-xs uppercase tracking-wider text-white/45">Category</label>
               <select className={selectCls} value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="housing">Housing</option>
                 <option value="food">Food</option>
@@ -209,7 +209,7 @@ function CreateCaseModal({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Urgency</label>
+              <label className="font-mono text-xs uppercase tracking-wider text-white/45">Urgency</label>
               <select className={selectCls} value={urgency} onChange={(e) => setUrgency(e.target.value)}>
                 <option value="critical">Critical</option>
                 <option value="high">High</option>
@@ -220,7 +220,7 @@ function CreateCaseModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-white/45">Notes</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-white/45">Notes</label>
             <textarea
               className={`${inputCls} resize-none`}
               rows={3}
@@ -491,7 +491,7 @@ export default function CasesPage() {
               }`}
             >
               {t.label}
-              <span className="font-mono text-[10px] text-white/40 tabular-nums">{t.count}</span>
+              <span className="font-mono text-xs text-white/40 tabular-nums">{t.count}</span>
               {active && (
                 <span className="absolute left-2 right-2 -bottom-px h-px bg-[#EF4E4B]" />
               )}
@@ -501,10 +501,13 @@ export default function CasesPage() {
       </div>
 
       {/* Mobile column switcher */}
-      <div className="md:hidden flex gap-1.5 px-4 pt-3 pb-1 overflow-x-auto">
+      <div role="tablist" aria-label="Case stages" className="md:hidden flex gap-1.5 px-4 pt-3 pb-1 overflow-x-auto">
         {columns.map((col) => (
           <button
             key={col.id}
+            role="tab"
+            aria-selected={mobileCol === col.id}
+            aria-controls={`col-${col.id}`}
             onClick={() => {
               setMobileCol(col.id);
               document.getElementById(`col-${col.id}`)?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
@@ -534,6 +537,7 @@ export default function CasesPage() {
                   <div
                     key={col.id}
                     id={`col-${col.id}`}
+                    role="tabpanel"
                     onDragOver={(e) => {
                       e.preventDefault();
                       if (dragOverCol !== col.id) setDragOverCol(col.id);
@@ -551,7 +555,7 @@ export default function CasesPage() {
                     <div className="flex items-center justify-between px-1.5 pb-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-white/75">
+                        <span className="font-mono text-xs uppercase tracking-wider text-white/75">
                           {col.label}
                         </span>
                       </div>
@@ -573,7 +577,7 @@ export default function CasesPage() {
                         />
                       ))}
                       {items.length === 0 && (
-                        <div className="rounded-xl border border-dashed border-white/8 py-6 text-center font-mono text-[10px] uppercase tracking-wider text-white/30">
+                        <div className="rounded-xl border border-dashed border-white/8 py-6 text-center font-mono text-xs uppercase tracking-wider text-white/30">
                           Drop here
                         </div>
                       )}
@@ -624,7 +628,7 @@ function DraggableCard({
       </div>
       {card.meta && <p className="text-[11px] text-white/50 mt-1 truncate">{card.meta}</p>}
       {card.sub && (
-        <p className="text-[10px] text-white/35 mt-1.5 tabular-nums">{card.sub}</p>
+        <p className="text-xs text-white/35 mt-1.5 tabular-nums">{card.sub}</p>
       )}
       {card.orgName && (
         <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">

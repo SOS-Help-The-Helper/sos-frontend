@@ -104,6 +104,11 @@ export function ScoreBar({
             <div
               className="h-full rounded-full transition-all"
               style={{ width: `${Math.min(100, (d.value / d.max) * 100)}%`, background: color }}
+              role="meter"
+              aria-valuenow={d.value}
+              aria-valuemin={0}
+              aria-valuemax={d.max}
+              aria-label={`${d.label}: ${d.value} out of ${d.max}`}
             />
           </div>
         </div>

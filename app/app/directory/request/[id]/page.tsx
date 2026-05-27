@@ -136,21 +136,21 @@ export default function RequestPage() {
               {(r.household_size != null || r.has_children || r.has_elderly || r.has_disabled || r.has_pets) && (
                 <span className="inline-flex items-center gap-1">
                   {r.household_size != null && (
-                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/8 text-white/70">
                       <Users size={9} /> {r.household_size}
                     </span>
                   )}
                   {r.has_children && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Children">👶</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Children">👶</span>
                   )}
                   {r.has_elderly && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Elderly">👴</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Elderly">👴</span>
                   )}
                   {r.has_disabled && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Disabled">♿</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Disabled">♿</span>
                   )}
                   {r.has_pets && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Pets">🐾</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/8 text-white/70" title="Pets">🐾</span>
                   )}
                 </span>
               )}
@@ -160,8 +160,8 @@ export default function RequestPage() {
                   {r.household.pets ? ` · ${r.household.pets}p` : ""}
                 </MetaChip>
                 <MetaChip icon={Calendar}>{r.daysOpen}d open</MetaChip>
-                <span className="font-mono text-[10px] text-white/40">{r.id} · {r.caseId}</span>
-                <span className="font-mono text-[10px] text-white/40">AIRS {r.airs} · OCHA {r.ocha}</span>
+                <span className="font-mono text-xs text-white/40">{r.id} · {r.caseId}</span>
+                <span className="font-mono text-xs text-white/40">AIRS {r.airs} · OCHA {r.ocha}</span>
               </MetaPopover>
             </>
           }
@@ -191,7 +191,7 @@ export default function RequestPage() {
 
         {/* Status section */}
         <div className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center gap-3">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 shrink-0">Status</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 shrink-0">Status</p>
           <StatusPill tint={urgencyTint}>
             {STATUS_LABEL[r.status as keyof typeof STATUS_LABEL] ?? r.status}
           </StatusPill>
@@ -201,7 +201,7 @@ export default function RequestPage() {
         {/* Static location map */}
         {r.latitude != null && r.longitude != null && (
           <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 px-3 pt-3 pb-2">Location</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 px-3 pt-3 pb-2">Location</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+ef4e4b(${r.longitude},${r.latitude})/${r.longitude},${r.latitude},12,0/300x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
@@ -242,7 +242,7 @@ function RequestTabs({
           {delivery && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45">
                   Delivery · {delivery.origin} → {delivery.destination}
                   {ta && <span className="ml-2 text-white/35">· {ta.id}</span>}
                 </p>
@@ -275,7 +275,7 @@ function RequestTabs({
                             {TRANSPORT_STATUS_LABEL[s as TransportStatus] ?? s}
                             {hist?.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
                           </p>
-                          <span className="font-mono text-[10px] text-white/40">{hist?.timestamp ?? ""}</span>
+                          <span className="font-mono text-xs text-white/40">{hist?.timestamp ?? ""}</span>
                         </div>
                       </li>
                     );
@@ -291,18 +291,19 @@ function RequestTabs({
                     return (
                       <li key={s.key} className="relative">
                         <span
+                          aria-label={`Status: ${s.label}`}
                           className={`absolute -left-[34px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] ${isCurrent ? "animate-pulse" : ""}`}
                           style={{ background: past ? "rgba(52,211,153,0.18)" : "rgba(245,235,214,0.06)" }}
                         >
-                          <Icon size={12} style={{ color }} />
+                          <Icon size={12} style={{ color }} aria-hidden="true" />
                         </span>
                         <div className="flex items-center justify-between">
                           <p className="text-[13px] font-medium" style={{ color: past ? "white" : "rgba(255,255,255,0.55)" }}>
                             {s.label}
                           </p>
-                          <span className="font-mono text-[10px] text-white/40">{s.timestamp}</span>
+                          <span className="font-mono text-xs text-white/40">{s.timestamp}</span>
                         </div>
-                        {s.location && <p className="font-mono text-[10px] text-white/45 mt-0.5">{s.location}</p>}
+                        {s.location && <p className="font-mono text-xs text-white/45 mt-0.5">{s.location}</p>}
                       </li>
                     );
                   })}
@@ -311,7 +312,7 @@ function RequestTabs({
             </div>
           )}
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Activity</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Activity</p>
             <div className="divide-y divide-[var(--hairline)]">
               {r.notes.map((n, i) => (
                 <div key={i} className="py-3">
@@ -319,7 +320,7 @@ function RequestTabs({
                     <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${n.system ? "bg-white/6 text-white/55" : "bg-[#89CFF0]/12 text-[#89CFF0]"}`}>
                       {n.system ? "system" : "manual"}
                     </span>
-                    <span className="font-mono text-[10px] text-white/45">{n.ts} · {n.who}</span>
+                    <span className="font-mono text-xs text-white/45">{n.ts} · {n.who}</span>
                   </div>
                   <p className="text-[13px] text-white/85">{n.msg}</p>
                 </div>

@@ -124,7 +124,7 @@ export default function OrgSettings() {
         </div>
 
         <div className="mt-5 pt-4 border-t border-[var(--hairline)]">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Services</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Services</p>
           <div className="flex flex-wrap gap-1.5">
             {SERVICES.map((s) => (
               <span key={s} className="inline-flex items-center h-7 px-2.5 rounded-full bg-white/5 border border-[var(--hairline)] text-[12px] text-white/80">
@@ -238,7 +238,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
+  return <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{children}</p>;
 }
 
 function Field({

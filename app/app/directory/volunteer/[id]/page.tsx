@@ -104,7 +104,7 @@ export default function VolunteerPage() {
             <>
               <MetaChip icon={Clock}>{v.hours}h logged</MetaChip>
               <MetaPopover>
-                <span className="font-mono text-[10px] text-white/40">{v.id}</span>
+                <span className="font-mono text-xs text-white/40">{v.id}</span>
                 <MetaChip>{v.skills.length} skill{v.skills.length === 1 ? "" : "s"}</MetaChip>
               </MetaPopover>
             </>

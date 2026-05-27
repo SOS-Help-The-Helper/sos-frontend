@@ -263,7 +263,7 @@ export default function UmbrellaView() {
       <main className="max-w-[1240px] mx-auto px-6 py-7 space-y-5">
         <IdentityBand
           avatar={<Avatar name={umbrellaData.citizen.name} size={56} />}
-          eyebrow={<span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Umbrella · {umbrellaData.id}</span>}
+          eyebrow={<span className="font-mono text-xs uppercase tracking-wider text-white/45">Umbrella · {umbrellaData.id}</span>}
           pills={
             <>
               <UrgencyBadge urgency={umbrellaData.urgency} />
@@ -355,7 +355,7 @@ export default function UmbrellaView() {
                   )}
                   {caseNotes.slice(0, 2).map((n, i) => (
                     <div key={n.id ?? i} className={`text-[12px] text-white/65 leading-snug ${umbrellaData.citizen.notes || i > 0 ? "border-t border-white/6 pt-2 mt-2" : ""}`}>
-                      <span className="text-white/40 block text-[10px] mb-0.5">{n.author_name}</span>
+                      <span className="text-white/40 block text-xs mb-0.5">{n.author_name}</span>
                       {n.content}
                     </div>
                   ))}
@@ -654,17 +654,18 @@ function TimelineTab({
             <div className={`relative flex gap-3.5 px-4 py-3.5 transition ${linkedCase ? "hover:bg-white/4 cursor-pointer" : ""}`}>
               {!isLast && <span className="absolute left-[27.5px] top-9 bottom-0 w-px bg-white/8" />}
               <span
+                aria-label={`Status: ${t.kind}`}
                 className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] shrink-0"
                 style={{ background: `${meta.tint}1a`, color: meta.tint }}
               >
-                <Icon size={13} strokeWidth={2} />
+                <Icon size={13} strokeWidth={2} aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[12.5px] font-medium" style={{ color: org?.color ?? "var(--cream)" }}>
                     {t.who}
                   </span>
-                  <span className="font-mono text-[10px] text-white/40">{t.date} · {t.t}</span>
+                  <span className="font-mono text-xs text-white/40">{t.date} · {t.t}</span>
                   {linkedCase && (
                     <span className="font-mono text-[9.5px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/8 text-white/65 inline-flex items-center gap-1">
                       {linkedCase.id}
@@ -798,17 +799,18 @@ function NotesTimeline({
                 <div className="relative flex gap-3.5 px-4 py-3.5">
                   {!isLast && <span className="absolute left-[27.5px] top-9 bottom-0 w-px bg-white/8" />}
                   <span
+                    aria-label={`Status: ${item.type}`}
                     className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center ring-4 ring-[var(--surface-1)] shrink-0"
                     style={{ background: `${meta.tint}1a`, color: meta.tint }}
                   >
-                    <Icon size={13} strokeWidth={2} />
+                    <Icon size={13} strokeWidth={2} aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/75 font-medium">
                         {item.author}
                       </span>
-                      <span className="font-mono text-[10px] text-white/35">{item.timestamp}</span>
+                      <span className="font-mono text-xs text-white/35">{item.timestamp}</span>
                       {item.type !== "note" && (
                         <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/6 text-white/45">
                           {item.type}
@@ -950,7 +952,7 @@ function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: st
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[11px] font-medium text-white/70">{m.org_name ?? m.author ?? "Unknown"}</span>
-                  <span className="font-mono text-[10px] text-white/35">{m.created_at ?? m.timestamp ?? ""}</span>
+                  <span className="font-mono text-xs text-white/35">{m.created_at ?? m.timestamp ?? ""}</span>
                 </div>
                 <p className={`text-[13px] leading-snug ${isSystem ? "italic text-white/45" : "text-white/85"}`}>
                   {m.note_text ?? m.text ?? m.message ?? ""}

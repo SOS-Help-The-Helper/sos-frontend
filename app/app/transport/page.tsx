@@ -166,7 +166,7 @@ export default function TransportPage() {
       {/* Inline new assignment form */}
       {showNewForm && (
         <form onSubmit={handleCreate} className="mx-4 mt-3 mb-1 rounded-xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 space-y-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">New assignment</p>
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45">New assignment</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] text-white/50 mb-1">Driver name</label>
@@ -247,7 +247,7 @@ export default function TransportPage() {
         ) : view === "list" ? (
           <>
             <section>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45 mb-3">
+              <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/45 mb-3">
                 Active transports <span className="text-white/65 tabular-nums ml-1">{assignments.length}</span>
               </p>
 
@@ -308,7 +308,7 @@ export default function TransportPage() {
               <div className="hidden md:block rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
                 <table className="w-full text-[13px]">
                   <thead>
-                    <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
+                    <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/45 border-b border-[var(--hairline)]">
                       <th className="px-4 py-3 font-normal">Status</th>
                       <th className="px-4 py-3 font-normal">Driver</th>
                       <th className="px-4 py-3 font-normal">Resource</th>
@@ -482,7 +482,7 @@ function ExpandedRow({ t }: { t: Assignment }) {
       <div className="lg:col-span-2">
         {history.length > 0 && (
           <>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Status history</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Status history</p>
             <ol className="relative ml-2 space-y-2.5 border-l border-[var(--hairline)] pl-5">
               {history.map((h, i) => (
                 <li key={i} className="relative">
@@ -494,7 +494,7 @@ function ExpandedRow({ t }: { t: Assignment }) {
                       {TRANSPORT_STATUS_LABEL[h.status as TransportStatus] ?? h.status}
                       {h.photo && <Camera size={10} className="inline ml-1.5 text-[#89CFF0]" />}
                     </p>
-                    <span className="font-mono text-[10px] text-white/40">{h.timestamp}</span>
+                    <span className="font-mono text-xs text-white/40">{h.timestamp}</span>
                   </div>
                   {h.note && <p className="text-[11.5px] text-white/55 mt-0.5">{h.note}</p>}
                 </li>
@@ -504,7 +504,7 @@ function ExpandedRow({ t }: { t: Assignment }) {
         )}
         {issues.length > 0 && (
           <div className="mt-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-2">Issues</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Issues</p>
             {issues.map((iss, i) => (
               <div key={i} className="flex items-start gap-2 rounded-lg bg-[#EF4E4B]/8 border border-[#EF4E4B]/25 px-3 py-2 mb-2">
                 <AlertTriangle size={13} className="text-[#EF4E4B] mt-0.5 shrink-0" />
@@ -521,12 +521,12 @@ function ExpandedRow({ t }: { t: Assignment }) {
       <div className="space-y-3">
         {t.driverPhone && (
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1">Driver contact</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1">Driver contact</p>
             <p className="text-[12.5px] text-white/75">{t.driverPhone}</p>
           </div>
         )}
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Photos · {photos.length}</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">Photos · {photos.length}</p>
           {photos.length === 0 ? (
             <p className="text-[12px] text-white/45">No photos yet.</p>
           ) : (

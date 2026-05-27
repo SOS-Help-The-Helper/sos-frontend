@@ -257,7 +257,7 @@ export default function DirectoryPage() {
                 }`}
               >
                 <span>{label}</span>
-                <span className={`ml-1.5 font-mono text-[10px] ${active ? "text-[#89CFF0]" : "text-white/30"}`}>
+                <span className={`ml-1.5 font-mono text-xs ${active ? "text-[#89CFF0]" : "text-white/30"}`}>
                   {n}
                 </span>
                 {active && <span className="absolute left-2 right-2 -bottom-px h-[2px] bg-[#89CFF0] rounded-full" />}
@@ -271,6 +271,8 @@ export default function DirectoryPage() {
           <div className="relative flex-1 max-w-md">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" strokeWidth={2} />
             <input
+              type="search"
+              aria-label="Search directory"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name, role…"
@@ -303,22 +305,24 @@ export default function DirectoryPage() {
                 </select>
                 <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/40" />
               </div>
-              <button
-                onClick={() => setHasRequests(!hasRequests)}
-                className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
-                  hasRequests ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
-                }`}
-              >
-                Has requests
-              </button>
-              <button
-                onClick={() => setHasCase(!hasCase)}
-                className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
-                  hasCase ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
-                }`}
-              >
-                Has case
-              </button>
+              <div role="group" aria-label="Filter by status" className="flex gap-2">
+                <button
+                  onClick={() => setHasRequests(!hasRequests)}
+                  className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
+                    hasRequests ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
+                  }`}
+                >
+                  Has requests
+                </button>
+                <button
+                  onClick={() => setHasCase(!hasCase)}
+                  className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
+                    hasCase ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
+                  }`}
+                >
+                  Has case
+                </button>
+              </div>
             </>
           )}
 
@@ -346,7 +350,7 @@ export default function DirectoryPage() {
             </button>
           </div>
 
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/40 ml-2">
+          <span className="font-mono text-xs uppercase tracking-wider text-white/40 ml-2">
             {rows.length} {rows.length === 1 ? "result" : "results"}
           </span>
         </div>
@@ -355,7 +359,7 @@ export default function DirectoryPage() {
           {/* Add person inline form */}
           {showAddForm && (
             <form onSubmit={handleAddPerson} className="mb-4 rounded-xl border border-[#89CFF0]/30 bg-[#89CFF0]/5 p-4 space-y-3">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-[#89CFF0]/80">New person</p>
+              <p className="font-mono text-xs uppercase tracking-wider text-[#89CFF0]/80">New person</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] text-white/50 mb-1">Name <span className="text-[#EF4E4B]">*</span></label>
@@ -444,11 +448,11 @@ export default function DirectoryPage() {
                   <thead className="bg-white/[0.02]">
                     <tr className="text-left">
                       <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[130px]">Phone</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[130px]">Phone</th>
                       <Th label="Role" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[120px]" />
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Location</th>
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[90px]">Requests</th>
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Case</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Location</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[90px]">Requests</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Case</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -468,9 +472,9 @@ export default function DirectoryPage() {
                     <tr className="text-left">
                       <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
                       <Th label="Type" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[140px]" />
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[100px]">Members</th>
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[120px]">Active Cases</th>
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Service Area</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[100px]">Members</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[120px]">Active Cases</th>
+                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Service Area</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -516,7 +520,7 @@ function Th({
   const active = current === sortKey;
   const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
   return (
-    <th className={`px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] ${className}`}>
+    <th className={`px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] ${className}`}>
       <button
         onClick={() => onSort(sortKey)}
         className={`inline-flex items-center gap-1 hover:text-white/80 transition ${active ? "text-white/80" : ""}`}
