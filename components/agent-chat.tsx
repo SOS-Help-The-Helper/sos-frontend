@@ -111,14 +111,14 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-12 h-12 rounded-full bg-sos-blue-800 flex items-center justify-center mb-3">
-              <img src="/logomark.svg" alt="SOS" className="h-10 w-10" />
+          <div className="flex flex-col items-center text-center pt-8">
+            <div className="w-10 h-10 rounded-full bg-sos-blue-800 flex items-center justify-center mb-2">
+              <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-bold text-sos-blue-800">
+            <h3 className="text-lg font-bold text-sos-blue-800">
               {agentName}
             </h3>
-            <div className="mt-2 max-w-md text-base text-sos-gray-600">
+            <div className="mt-1.5 max-w-md text-sm text-sos-gray-600">
               <TextReveal text={viewConfig.welcome} mode="spotlight" maxWidth={448} stagger={60} delay={300} />
             </div>
             <div className="flex flex-wrap gap-2 mt-5 justify-center max-w-lg">
