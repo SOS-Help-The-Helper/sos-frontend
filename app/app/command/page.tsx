@@ -108,19 +108,19 @@ function StatCard({ icon, label, value, tone }: {
     <div className="rounded-lg border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2 flex items-center gap-2.5">
       <span
         className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-        style={{ background: `${tone}15`, color: tone }}
+        style={{ background: `${tone}25`, color: tone }}
       >
         {icon}
       </span>
       <div className="min-w-0">
         {value != null ? (
-          <span className="text-[17px] font-semibold tabular-nums block leading-tight" style={{ color: tone }}>
+          <span className="text-[17px] font-bold tabular-nums block leading-tight text-[var(--foreground)]">
             {value.toLocaleString()}
           </span>
         ) : (
           <span className="h-4 w-8 rounded bg-white/10 animate-pulse block" />
         )}
-        <span className="font-mono text-[9px] uppercase tracking-wider text-white/40">{label}</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--foreground)] opacity-50">{label}</span>
       </div>
     </div>
   );

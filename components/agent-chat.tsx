@@ -121,12 +121,12 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             <div className="mt-2 max-w-md text-base text-sos-gray-600">
               <TextReveal text={viewConfig.welcome} mode="spotlight" maxWidth={448} stagger={60} delay={300} />
             </div>
-            <div className="flex flex-wrap gap-2.5 mt-6 justify-center max-w-sm">
+            <div className="flex flex-wrap gap-2 mt-5 justify-center max-w-lg">
               {viewConfig.suggestions.length > 0 ? viewConfig.suggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   onClick={() => { setInput(suggestion); }}
-                  className="text-sm px-4 py-2.5 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
+                  className="text-[13px] px-3.5 py-2 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -138,13 +138,12 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
                 <button
                   key={suggestion}
                   onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                  className="text-sm px-4 py-2.5 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
+                  className="text-[13px] px-3.5 py-2 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
                 >
                   {suggestion}
                 </button>
               ))}
             </div>
-            <p className="mt-5 text-xs text-sos-gray-400 italic">or, just start a conversation</p>
           </div>
         )}
 
