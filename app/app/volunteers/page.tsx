@@ -234,7 +234,7 @@ export default function VolunteersPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p className="font-medium text-[13.5px] truncate">{v.name}</p>
-                          {detail?.credentials.some(c => c.verified) && <ShieldCheck size={11} className="text-[#34D399] shrink-0" />}
+                          {detail?.credentials?.some(c => c.verified) && <ShieldCheck size={11} className="text-[#34D399] shrink-0" />}
                         </div>
                         <p className="font-mono text-[10px] text-white/45">{v.id} · <span style={{ color: org?.color }}>{org?.name ?? "—"}</span></p>
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -301,7 +301,7 @@ export default function VolunteersPage() {
                   <tr key={v.id} className="border-t border-white/5 hover:bg-white/4 transition">
                     <td className="px-3 py-2 text-[12px] font-medium">{v.name}</td>
                     {DAYS.map((d) => {
-                      const slot = v.availability.find((a: { day: string; slots: string[] }) => a.day === d);
+                      const slot = (v.availability ?? []).find((a: { day: string; slots: string[] }) => a.day === d);
                       const filled = slot ? slot.slots.length : 0;
                       const color = filled === 0 ? "transparent" : filled >= 3 ? "#34D399" : filled === 2 ? "#89CFF0" : "#F5EBD6";
                       return (
@@ -406,7 +406,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
               </div>
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 mb-1.5">Skills</p>
-                <div className="flex flex-wrap gap-1">{v.skills.map((s: string) => <span key={s} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/6 text-white/85">{s}</span>)}</div>
+                <div className="flex flex-wrap gap-1">{(v.skills ?? []).map((s: string) => <span key={s} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/6 text-white/85">{s}</span>)}</div>
               </div>
               {v.towCapacity && (
                 <div>
@@ -423,7 +423,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
               <div className="font-mono text-[9px] uppercase text-white/45 text-center">PM</div>
               <div className="font-mono text-[9px] uppercase text-white/45 text-center">EVE</div>
               {DAYS.map(d => {
-                const slot = v.availability.find((a: { day: string; slots: string[] }) => a.day === d);
+                const slot = (v.availability ?? []).find((a: { day: string; slots: string[] }) => a.day === d);
                 return (
                   <Fragment key={d}>
                     <div className="font-mono text-[10px] text-white/55 py-1.5">{d}</div>
@@ -437,7 +437,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
           )}
           {tab === "deployments" && (
             <div className="space-y-2">
-              {v.deployments.map((d: { date: string; hours: number; role: string; mission: string }, i: number) => (
+              {(v.deployments ?? []).map((d: { date: string; hours: number; role: string; mission: string }, i: number) => (
                 <div key={i} className="rounded-lg bg-white/4 p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-[10px] text-white/45">{d.date}</span>
@@ -450,7 +450,7 @@ function VolunteerDrawer({ v, onClose }: { v: VolunteerDetail; onClose: () => vo
           )}
           {tab === "credentials" && (
             <div className="space-y-2">
-              {v.credentials.map((c: { name: string; type: string; verified: boolean; expires?: string }, i: number) => {
+              {(v.credentials ?? []).map((c: { name: string; type: string; verified: boolean; expires?: string }, i: number) => {
                 const expired = c.expires && new Date(c.expires) < new Date();
                 return (
                   <div key={i} className="flex items-center gap-2.5 rounded-lg bg-white/4 p-3">

@@ -38,6 +38,7 @@ export default function IncidentDashboard() {
   const { orgId } = useAuthContext();
   const pinnedIds = useDashboard(id);
   const [incident, setIncident] = useState<Incident | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<CategoryId | "all">("all");
 
@@ -57,7 +58,8 @@ export default function IncidentDashboard() {
         const found = list.find((i: Incident) => i.id === id);
         if (found) setIncident(found);
       })
-      .catch(() => {});
+      .catch(() => { toast.error("Failed to load incident"); })
+      .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
@@ -66,11 +68,28 @@ export default function IncidentDashboard() {
       .catch(() => {});
   }, [id]);
 
+  if (loading) {
+    return (
+      <CrmShell module="Command">
+        <DetailTopBar backTo="/command" backLabel="Command" />
+        <div className="px-6 py-10 space-y-4 animate-pulse">
+          <div className="h-32 rounded-2xl bg-white/5" />
+          <div className="grid grid-cols-3 gap-3">
+            {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl bg-white/5" />)}
+          </div>
+        </div>
+      </CrmShell>
+    );
+  }
+
   if (!incident) {
     return (
       <CrmShell module="Command">
         <DetailTopBar backTo="/command" backLabel="Command" />
-        <div className="px-6 py-10 text-white/60">Incident not found.</div>
+        <div className="flex flex-col items-center gap-3 py-20 text-white/40">
+          <p>Incident not found or failed to load.</p>
+          <a href="/app/command" className="text-sm underline text-white/60">Back to Command</a>
+        </div>
       </CrmShell>
     );
   }

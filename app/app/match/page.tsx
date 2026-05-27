@@ -86,20 +86,27 @@ const DECLINE_REASONS = ["Out of area", "At capacity", "Not a fit", "Other"];
 function MatchBoard({ orgId }: { orgId: string }) {
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  function fetchMatches() {
     if (!orgId) return;
-    (async () => {
-      try {
-        // Fetch matches with joined request/resource data
-        const res = await api.crmMatchesList(orgId) as any;
+    setLoading(true);
+    setError(false);
+    api.crmMatchesList(orgId)
+      .then((res: any) => {
         const raw = res?.matches ?? res?.data ?? (Array.isArray(res) ? res : []);
         setMatches(raw);
-      } catch (err) {
-        console.error("[match-board] fetch failed:", err);
-      }
-      setLoading(false);
-    })();
+      })
+      .catch(() => {
+        setError(true);
+        toast.error("Failed to load matches");
+      })
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchMatches();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const grouped = useMemo(() => {
@@ -116,6 +123,17 @@ function MatchBoard({ orgId }: { orgId: string }) {
     }
     return map;
   }, [matches]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-16 text-white/40">
+        <p>Failed to load matches.</p>
+        <button onClick={() => fetchMatches()} className="text-sm text-white/60 underline">
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -223,6 +241,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
   const [activeId, setActive] = useState<string>("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [countyFilter, setCountyFilter] = useState("all");
   const [acceptedCandidateId, setAcceptedCandidateId] = useState<string | null>(null);
@@ -280,6 +299,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
   useEffect(() => {
     if (!activeId) return;
     let cancelled = false;
+    setCandidatesLoading(true);
     (async () => {
       try {
         const res = await api.efCall("match-engine", { mode: "propose", request_id: activeId }) as any;
@@ -300,7 +320,12 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
           );
         }
       } catch {
-        if (!cancelled) setCandidates([]);
+        if (!cancelled) {
+          setCandidates([]);
+          toast.error("Failed to fetch candidates");
+        }
+      } finally {
+        if (!cancelled) setCandidatesLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -453,7 +478,11 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
             Candidate orgs · {candidates.length}
           </p>
 
-          {candidates.length === 0 ? (
+          {candidatesLoading ? (
+            <div className="flex items-center justify-center py-12 text-white/40 text-sm">
+              Loading candidates…
+            </div>
+          ) : candidates.length === 0 ? (
             <div className="py-10 text-center text-white/40">
               <p className="text-[13px]">No candidates scored yet.</p>
               <p className="text-[11px] mt-1">Click &quot;Score&quot; to find matching organizations.</p>

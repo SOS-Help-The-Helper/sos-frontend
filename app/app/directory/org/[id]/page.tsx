@@ -25,6 +25,7 @@ export default function OrgPage() {
   const { id } = useParams<{ id: string }>();
   const { orgId } = useAuthContext();
   const [org, setOrg] = useState<any>(null);
+  const [error, setError] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [stats, setStats] = useState<any>({});
   const [members, setMembers] = useState<any[]>([]);
@@ -43,7 +44,7 @@ export default function OrgPage() {
     api.crmBrowseOrgs().then((res: any) => {
       const found = (res?.organizations ?? []).find((o: any) => o.id === id);
       if (found) setOrg(found);
-    }).catch(() => {});
+    }).catch(() => { setError(true); toast.error("Failed to load organization"); });
     api.crmOrgStats(id as string).then((res: any) => setStats(res ?? {})).catch(() => {});
     api.crmOrgMembers(id as string).then((res: any) => setMembers(res?.members ?? [])).catch(() => {});
   }, [id]);
@@ -86,6 +87,14 @@ export default function OrgPage() {
     }
   }
 
+  if (error) return (
+    <CrmShell module="Directory">
+      <div className="flex flex-col items-center gap-3 py-20 text-white/40">
+        <p>Failed to load organization.</p>
+        <a href="/app/directory" className="text-sm underline text-white/60">Back to Directory</a>
+      </div>
+    </CrmShell>
+  );
   if (!org) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Loading organization...</div></CrmShell>;
   const orgName = org.name ?? org.org_name ?? "Unknown Org";
   const orgType = org.type ?? org.org_type ?? "partner";

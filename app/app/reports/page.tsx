@@ -9,6 +9,7 @@ const protoKpis: Array<{ label: string; value: string | number; delta: string }>
 const orgs: any[] = [];
 const cases: any[] = [];
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
@@ -64,6 +65,7 @@ export default function ReportsPage() {
   cases.forEach((c) => c.taxonomy.forEach((t) => (protoTaxCounts[t] = (protoTaxCounts[t] || 0) + 1)));
   const protoTaxList: TaxEntry[] = Object.entries(protoTaxCounts).sort((a, b) => b[1] - a[1]);
 
+  const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<Kpi[]>(protoKpis);
   const [byOrg, setByOrg] = useState<OrgBar[]>(protoByOrg);
   const [taxList, setTaxList] = useState<TaxEntry[]>(protoTaxList);
@@ -80,9 +82,8 @@ export default function ReportsPage() {
         const mappedTax = mapDashboardToTaxList(data);
         if (mappedTax.length) setTaxList(mappedTax);
       })
-      .catch(() => {
-        // fallback to prototype data already set
-      });
+      .catch(() => { toast.error("Failed to load reports"); })
+      .finally(() => setLoading(false));
   }, [orgId]);
 
   const max = Math.max(...byOrg.map((b) => b.count), 1);
@@ -101,6 +102,13 @@ export default function ReportsPage() {
       />
 
       <div className="px-4 pt-4 pb-4 space-y-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/5 rounded-lg h-16 animate-pulse" />
+            ))}
+          </div>
+        ) : null}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
             <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">

@@ -218,7 +218,7 @@ export default function UmbrellaView() {
           );
         }
       })
-      .catch(() => {})
+      .catch(() => { setNotFound(true); })
       .finally(() => setLoading(false));
   }, [id, isUmbrella]);
 
@@ -250,6 +250,7 @@ export default function UmbrellaView() {
   }, [note, id, isUmbrella, childCasesData, orgId]);
 
   if (loading) return <LoadingSkeleton />;
+  if (notFound) return <CaseNotFound />;
 
   const orgsInvolved = new Set(childCasesData.map((c) => c.org)).size;
   const resolvedCount = childCasesData.filter((c) => c.status === "fulfilled" || c.status === "closed").length;

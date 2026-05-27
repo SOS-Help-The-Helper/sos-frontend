@@ -44,6 +44,8 @@ export default function InventoryPage() {
   const [inventory, setInventory] = useState<Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>>([]);
   const [resources, setResources] = useState<ResourceDetail[]>([]);
 
+  const [loading, setLoading] = useState(true);
+
   // Add-item form
   const [showAddForm, setShowAddForm] = useState(false);
   const [addName, setAddName] = useState("");
@@ -107,19 +109,17 @@ export default function InventoryPage() {
 
   useEffect(() => {
     // admin: proceed without org filter
-    api.crmFacilitiesList(orgId || '')
-      .then((data: unknown) => {
+    Promise.allSettled([
+      api.crmFacilitiesList(orgId || '').then((data: unknown) => {
         const rows = (data as { facilities?: Facility[] })?.facilities;
         if (rows?.length) setFacilities(rows);
-      })
-      .catch(() => {/* fall back to prototype */});
-    api.queryInventory({ org_id: orgId })
-      .then((data: unknown) => {
+      }),
+      api.queryInventory({ org_id: orgId }).then((data: unknown) => {
         const d = data as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
         if (d?.inventory?.length) setInventory(d.inventory);
         if (d?.resources?.length) setResources(d.resources);
-      })
-      .catch(() => {/* fall back to prototype */});
+      }),
+    ]).then(() => setLoading(false));
   }, [orgId]);
 
   const filteredItems = useMemo(() => {
@@ -213,6 +213,14 @@ export default function InventoryPage() {
             </button>
           </div>
         </form>
+      )}
+
+      {loading && (
+        <div className="px-4 pt-4 space-y-3 animate-pulse">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white/5 rounded-lg h-10" />
+          ))}
+        </div>
       )}
 
       <div className="px-4 pt-4 pb-4 space-y-5">

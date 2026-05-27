@@ -129,13 +129,13 @@ export default function PersonPage() {
     {
       key: "credentials",
       label: "Credentials",
-      count: person.credentials.length,
+      count: (person.credentials ?? []).length,
       content: <CredentialsTab person={person} />,
     },
     {
       key: "skills",
       label: "Skills",
-      count: person.skills.length,
+      count: (person.skills ?? []).length,
       content: <SkillsTab person={person} />,
     },
   ];
@@ -352,11 +352,11 @@ function ListGroup({ children }: { children: React.ReactNode }) {
 }
 
 function CredentialsTab({ person }: { person: Person }) {
-  if (person.credentials.length === 0) return <EmptyTab label="No credentials on file." />;
+  if ((person.credentials ?? []).length === 0) return <EmptyTab label="No credentials on file." />;
   return (
     <div className="space-y-3 -m-1">
       <ListGroup>
-        {person.credentials.map((c) => (
+        {(person.credentials ?? []).map((c) => (
           <div key={c.id} className="px-4 py-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -388,7 +388,7 @@ function CredentialsTab({ person }: { person: Person }) {
 }
 
 function SkillsTab({ person }: { person: Person }) {
-  if (person.skills.length === 0) return <EmptyTab label="No skills tracked." />;
+  if ((person.skills ?? []).length === 0) return <EmptyTab label="No skills tracked." />;
   const sourceMap = {
     self: { label: "Self-reported", tone: "neutral" as const },
     credential: { label: "Credential", tone: "green" as const },
@@ -398,7 +398,7 @@ function SkillsTab({ person }: { person: Person }) {
 
   return (
     <ListGroup>
-      {person.skills.map((s) => (
+      {(person.skills ?? []).map((s) => (
         <div key={s.name} className="px-4 py-3.5">
           <div className="flex items-center justify-between mb-2">
             <div>
