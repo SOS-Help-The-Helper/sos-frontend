@@ -56,7 +56,7 @@ export default function CommandPage() {
   }, [orgId]);
 
   return (
-    <CrmShell module="Command">
+    <CrmShell module="Command" bare>
       <div className="h-[calc(100vh-56px)] flex flex-col text-white overflow-hidden">
         {/* Stats row — compact */}
         <div className="px-4 md:px-6 pt-3 pb-2 flex-shrink-0">

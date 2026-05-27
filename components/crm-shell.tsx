@@ -14,10 +14,16 @@ import { usePortalConfig } from "@/lib/use-portal-config";
 export function CrmShell({
   children,
   module = "Directory",
+  footer,
+  bare = false,
 }: {
   children: ReactNode;
   module?: string;
   user?: { name: string; org: string };
+  /** Optional footer content pinned below the content area */
+  footer?: ReactNode;
+  /** If true, skip the bordered content wrapper (for pages that manage their own layout like Command) */
+  bare?: boolean;
 }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { config } = usePortalConfig();
@@ -43,7 +49,20 @@ export function CrmShell({
         onOpenAgent={() => setPaletteOpen(true)}
         settingsTo="/app/settings"
       />
-      <main>{children}</main>
+      {bare ? (
+        <main>{children}</main>
+      ) : (
+        <main className="h-[calc(100vh-56px)] flex flex-col p-3 md:p-4 gap-3">
+          <div className="flex-1 min-h-0 rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-auto">
+            {children}
+          </div>
+          {footer && (
+            <div className="flex-shrink-0">
+              {footer}
+            </div>
+          )}
+        </main>
+      )}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} module={module} />
     </div>
   );
