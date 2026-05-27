@@ -65,6 +65,10 @@ export default function TransportPage() {
   const [showNewForm, setShowNewForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [issueFormId, setIssueFormId] = useState<string | null>(null);
+  const [issueType, setIssueType] = useState('other');
+  const [issueText, setIssueText] = useState('');
+  const [issueSubmitting, setIssueSubmitting] = useState(false);
 
   function refresh() {
     if (!orgId) return;
@@ -119,16 +123,10 @@ export default function TransportPage() {
     }
   }
 
-  async function handleReportIssue(assignmentId: string) {
-    const description = window.prompt("Describe the issue:");
-    if (!description?.trim()) return;
-    try {
-      await api.transportReportIssue(assignmentId, "general", description.trim());
-      toast.success("Issue reported");
-      refresh();
-    } catch {
-      toast.error("Failed to report issue");
-    }
+  function handleReportIssue(assignmentId: string) {
+    setIssueFormId(assignmentId);
+    setIssueType('other');
+    setIssueText('');
   }
 
   const kpis = useMemo(() => {
@@ -196,6 +194,7 @@ export default function TransportPage() {
               <label className="block text-[11px] text-white/50 mb-1">Origin</label>
               <input
                 type="text"
+                autoComplete="street-address"
                 value={form.origin}
                 onChange={e => setForm(f => ({ ...f, origin: e.target.value }))}
                 placeholder="Ocala, FL"
@@ -206,6 +205,7 @@ export default function TransportPage() {
               <label className="block text-[11px] text-white/50 mb-1">Destination</label>
               <input
                 type="text"
+                autoComplete="street-address"
                 value={form.destination}
                 onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
                 placeholder="Atlanta, GA"
@@ -384,6 +384,76 @@ export default function TransportPage() {
           </div>
         )}
       </div>
+      {/* Issue report bottom sheet */}
+      {issueFormId && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/60"
+          onClick={() => setIssueFormId(null)}
+        >
+          <div
+            className="w-full bg-[var(--surface-1)] border-t border-[var(--hairline)] p-4 space-y-3"
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-sm font-medium text-white">Report Issue</p>
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Issue type</label>
+              <select
+                value={issueType}
+                onChange={e => setIssueType(e.target.value)}
+                className="w-full h-9 rounded-lg bg-white/8 border border-[var(--hairline)] px-3 text-[13px] text-white focus:outline-none focus:border-[#89CFF0]/40"
+              >
+                <option value="mechanical" className="bg-[#0F1E2B]">Mechanical</option>
+                <option value="flat_tire" className="bg-[#0F1E2B]">Flat tire</option>
+                <option value="weather_delay" className="bg-[#0F1E2B]">Weather delay</option>
+                <option value="route_blocked" className="bg-[#0F1E2B]">Route blocked</option>
+                <option value="other" className="bg-[#0F1E2B]">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] text-white/50 mb-1">Notes</label>
+              <textarea
+                value={issueText}
+                onChange={e => setIssueText(e.target.value)}
+                placeholder="Describe the issue…"
+                rows={3}
+                autoFocus
+                className="w-full bg-white/5 border border-[var(--hairline)] rounded-lg p-3 text-[13px]
+                           text-white placeholder-white/30 resize-none focus:outline-none
+                           focus:border-[#89CFF0]/40"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setIssueFormId(null)}
+                className="h-10 px-4 text-sm text-white/60 rounded-lg hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!issueText.trim() || issueSubmitting}
+                onClick={async () => {
+                  if (!issueFormId) return;
+                  setIssueSubmitting(true);
+                  try {
+                    await api.transportReportIssue(issueFormId, issueType, issueText.trim());
+                    toast.success("Issue reported");
+                    setIssueFormId(null);
+                    refresh();
+                  } catch {
+                    toast.error("Failed to report issue");
+                  } finally {
+                    setIssueSubmitting(false);
+                  }
+                }}
+                className="h-10 px-4 text-[13px] font-medium rounded-lg bg-[#89CFF0] text-[#0F1E2B]
+                           disabled:opacity-40 transition"
+              >
+                {issueSubmitting ? "Sending…" : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </CrmShell>
   );
 }
