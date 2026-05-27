@@ -1,9 +1,7 @@
 import { ImageResponse } from 'next/og';
+import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
-export const alt = 'SOS Map Pin';
-export const size = { width: 1200, height: 630 };
-export const contentType = 'image/png';
 
 const TYPE_COLORS: Record<string, { bg: string; accent: string; label: string }> = {
   request: { bg: '#1A3850', accent: '#EF4E4B', label: 'SOS REQUEST' },
@@ -18,18 +16,17 @@ const URGENCY_COLORS: Record<string, string> = {
   low: '#6B7280',
 };
 
-export default async function Image({ searchParams }: { searchParams: { pin?: string; type?: string } }) {
-  const pinId = searchParams?.pin;
-  const pinType = searchParams?.type || 'request';
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const pinId = searchParams.get('pin');
+  const pinType = searchParams.get('type') || 'request';
   const cfg = TYPE_COLORS[pinType] || TYPE_COLORS.request;
 
-  let title = 'SOS Connect';
-  let description = 'Everyone is a helper';
+  let description = '';
   let urgency = '';
   let location = '';
   let category = '';
 
-  // Fetch pin data if we have an ID
   if (pinId) {
     try {
       const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
@@ -47,12 +44,12 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
         location = r.location_text || '';
         category = (r.taxonomy_code || r.category || '').replace(/\./g, ' · ');
         if (r.household_size) description += ` · Family of ${r.household_size}`;
-        title = category || cfg.label;
       }
     } catch { /* use defaults */ }
   }
 
-  const logoData = await fetch(new URL('/logomark.png', 'https://sosconnect.org')).then(r => r.arrayBuffer());
+  const logoUrl = new URL('/logomark.png', 'https://sosconnect.org').toString();
+  const logoData = await fetch(logoUrl).then(r => r.arrayBuffer());
   const logoBase64 = `data:image/png;base64,${Buffer.from(logoData).toString('base64')}`;
 
   return new ImageResponse(
@@ -70,31 +67,28 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
           padding: '60px 80px',
         }}
       >
-        {/* Logomark */}
         <img src={logoBase64} width={100} height={100} style={{ marginBottom: 32 }} />
 
-        {/* Type label */}
         <div
           style={{
             color: cfg.accent,
             fontSize: 22,
             fontWeight: 800,
             letterSpacing: 4,
-            textTransform: 'uppercase',
+            textTransform: 'uppercase' as const,
             marginBottom: 16,
           }}
         >
           {cfg.label}
         </div>
 
-        {/* Category */}
         {category && (
           <div
             style={{
               color: 'rgba(255,255,255,0.6)',
               fontSize: 28,
               fontWeight: 600,
-              textTransform: 'uppercase',
+              textTransform: 'uppercase' as const,
               letterSpacing: 2,
               marginBottom: 20,
             }}
@@ -103,27 +97,22 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
           </div>
         )}
 
-        {/* Description */}
         {description && (
           <div
             style={{
               color: 'rgba(255,255,255,0.85)',
               fontSize: 36,
               fontWeight: 500,
-              textAlign: 'center',
+              textAlign: 'center' as const,
               lineHeight: 1.4,
               maxWidth: 900,
               marginBottom: 24,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              overflow: 'hidden',
             }}
           >
             {description.slice(0, 120)}
           </div>
         )}
 
-        {/* Bottom row: urgency + location */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 8 }}>
           {urgency && (
             <div
@@ -134,7 +123,7 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
                 fontWeight: 700,
                 padding: '6px 20px',
                 borderRadius: 20,
-                textTransform: 'uppercase',
+                textTransform: 'uppercase' as const,
                 letterSpacing: 1,
               }}
             >
@@ -148,10 +137,9 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
           )}
         </div>
 
-        {/* Footer */}
         <div
           style={{
-            position: 'absolute',
+            position: 'absolute' as const,
             bottom: 30,
             color: 'rgba(255,255,255,0.25)',
             fontSize: 18,
@@ -162,6 +150,6 @@ export default async function Image({ searchParams }: { searchParams: { pin?: st
         </div>
       </div>
     ),
-    { ...size }
+    { width: 1200, height: 630 }
   );
 }
