@@ -85,7 +85,7 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     if (!orgId) return;
-    api.crmBrowsePersons(orgId, { limit: 500 })
+    api.crmBrowsePersons(orgId, { limit: 200 })
       .then((res: any) => {
         const items: any[] = res?.persons ?? res?.people ?? (Array.isArray(res) ? res : []);
         if (items.length > 0) {
