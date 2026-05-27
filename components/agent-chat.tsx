@@ -207,7 +207,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={messages.length === 0 ? "Find resources near me, report an issue..." : "Message your SOS agent..."}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-base md:text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-base md:text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-sos-accent-400 focus:ring-1 focus:ring-sos-accent-400/30 transition-colors"
           />
           <button
             type="submit"
