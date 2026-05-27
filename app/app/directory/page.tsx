@@ -47,6 +47,8 @@ export default function DirectoryPage() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>((search.type as TypeFilter) === "orgs" ? "orgs" : "people");
   const [roleFilter, setRoleFilter] = useState("");
+  const [hasRequests, setHasRequests] = useState(false);
+  const [hasCase, setHasCase] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [view, setView] = useState<ViewMode>("table");
@@ -83,7 +85,7 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     if (!orgId) return;
-    api.crmBrowsePersons(orgId, { limit: 100 })
+    api.crmBrowsePersons(orgId, { limit: 500 })
       .then((res: any) => {
         const items: any[] = res?.persons ?? res?.people ?? (Array.isArray(res) ? res : []);
         if (items.length > 0) {
@@ -159,6 +161,8 @@ export default function DirectoryPage() {
       for (const p of personSource) {
         if (q && !p.name.toLowerCase().includes(q) && !p.subtitle.toLowerCase().includes(q)) continue;
         if (roleFilter && p.role !== roleFilter) continue;
+        if (hasRequests && !(p.requestCount && p.requestCount > 0)) continue;
+        if (hasCase && !p.sosId) continue;
         out.push(p);
       }
     }
@@ -195,7 +199,7 @@ export default function DirectoryPage() {
       return v * dir;
     });
     return out;
-  }, [people, q, type, roleFilter, sortKey, sortDir, efPersons, efOrgs]);
+  }, [people, q, type, roleFilter, hasRequests, hasCase, sortKey, sortDir, efPersons, efOrgs]);
 
   const counts = useMemo(() => ({
     people: efPersons.length > 0 ? efPersons.length : people.length,
@@ -283,21 +287,39 @@ export default function DirectoryPage() {
           </div>
 
           {type === "people" && (
-            <div className="relative">
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className={`h-8 pl-2.5 pr-7 rounded-md text-[12px] font-medium appearance-none transition cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#89CFF0]/50 ${
-                  roleFilter ? "bg-[#89CFF0]/15 text-[#89CFF0]" : "bg-white/6 text-white/65 hover:bg-white/10"
+            <>
+              <div className="relative">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className={`h-8 pl-2.5 pr-7 rounded-md text-[12px] font-medium appearance-none transition cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#89CFF0]/50 ${
+                    roleFilter ? "bg-[#89CFF0]/15 text-[#89CFF0]" : "bg-white/6 text-white/65 hover:bg-white/10"
+                  }`}
+                >
+                  <option value="">All roles</option>
+                  {roleOptions.map((r) => (
+                    <option key={r} value={r} className="capitalize">{r.replace(/_/g, " ")}</option>
+                  ))}
+                </select>
+                <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/40" />
+              </div>
+              <button
+                onClick={() => setHasRequests(!hasRequests)}
+                className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
+                  hasRequests ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
                 }`}
               >
-                <option value="">All roles</option>
-                {roleOptions.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-              <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/40" />
-            </div>
+                Has requests
+              </button>
+              <button
+                onClick={() => setHasCase(!hasCase)}
+                className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
+                  hasCase ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
+                }`}
+              >
+                Has case
+              </button>
+            </>
           )}
 
           <div className="flex-1" />
