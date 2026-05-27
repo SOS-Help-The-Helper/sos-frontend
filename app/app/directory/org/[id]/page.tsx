@@ -136,7 +136,7 @@ export default function OrgPage() {
         <IdentityBand
           avatar={
             <div className="w-14 h-14 rounded-2xl bg-[#89CFF0]/12 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold tracking-tight">
-              {org.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+              {(orgName).split(" ").map((s) => s[0]).slice(0, 2).join("")}
             </div>
           }
           pills={<StatusPill tint={trustTint}>{orgType}</StatusPill>}

@@ -437,7 +437,7 @@ function SkillsTab({ person }: { person: Person }) {
         className="flex items-center gap-3 px-4 py-3 hover:bg-white/4 transition"
       >
         <div className="w-9 h-9 rounded-lg bg-[#89CFF0]/12 text-[#89CFF0] flex items-center justify-center text-[13px] font-semibold">
-          {person.org.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+          {(person.org.name || "?").split(" ").map((s) => s[0]).slice(0, 2).join("")}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-medium truncate">{person.org.name}</p>

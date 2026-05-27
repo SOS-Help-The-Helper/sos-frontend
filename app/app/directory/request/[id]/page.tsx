@@ -99,7 +99,8 @@ export default function RequestPage() {
 
   const cands: MatchCandidate[] = r.candidates ?? [];
   const delivery = r.delivery ?? null;
-  const initials = r.personName.split(" ").map((s) => s[0]).join("");
+  const personName = r.personName || "Unknown";
+  const initials = personName.split(" ").map((s) => s[0]).join("");
   const householdSize = r.household.adults + r.household.children;
   const urgencyTint =
     r.urgency === "critical" ? "#EF4E4B" :
@@ -117,7 +118,7 @@ export default function RequestPage() {
             <Link
               href="#"
               className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
-              title={`View ${r.personName}`}
+              title={`View ${personName}`}
             >
               {initials}
             </Link>
@@ -128,7 +129,7 @@ export default function RequestPage() {
             <>
               <MetaChip icon={User}>
                 <Link href={`/app/directory/person/${r.personId ?? "#"}`} className="hover:text-white transition">
-                  {r.personName}
+                  {personName}
                 </Link>
               </MetaChip>
               <MetaChip icon={MapPin}>{r.county} County</MetaChip>
@@ -185,7 +186,7 @@ export default function RequestPage() {
         <AiSummary
           id={`${r.id} · ${r.caseId}`}
           tldr={`${r.urgency} ${r.taxonomy.toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
-          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${r.personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
+          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
 
         {/* Status section */}
