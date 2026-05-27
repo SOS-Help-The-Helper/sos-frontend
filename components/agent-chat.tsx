@@ -59,7 +59,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     function handlePrompt(e: Event) {
       const detail = (e as CustomEvent).detail;
       if (typeof detail === 'string' && detail.trim()) {
-        sendMessage({ message: detail });
+        sendMessage({ text: detail });
       }
     }
     window.addEventListener('sos-agent-prompt', handlePrompt);
