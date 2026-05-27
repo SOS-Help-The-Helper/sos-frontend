@@ -24,6 +24,9 @@ type Row = {
   phone?: string;
   role?: string;
   location?: string;
+  requestCount?: number;
+  resourceCount?: number;
+  sosId?: string | null;
   // org-specific
   orgType?: string;
   memberCount?: number;
@@ -89,11 +92,14 @@ export default function DirectoryPage() {
             id: String(p.id ?? p.person_id ?? ""),
             name: String(p.display_name ?? p.name ?? ""),
             subtitle: String(p.role ?? ""),
-            meta: String(p.city ?? p.county ?? ""),
+            meta: String(p.location ?? p.city ?? p.county ?? ""),
             href: `/app/directory/person/${p.id ?? p.person_id}`,
             phone: p.phone ?? "",
             role: p.role ?? "",
-            location: p.city ?? p.county ?? "",
+            location: p.location ?? p.city ?? p.county ?? "",
+            requestCount: p.request_count ?? 0,
+            resourceCount: p.resource_count ?? 0,
+            sosId: p.sos_id ?? null,
           })));
         }
       })
@@ -420,7 +426,7 @@ export default function DirectoryPage() {
                       <Th label="Role" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[120px]" />
                       <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Location</th>
                       <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[90px]">Requests</th>
-                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Last Active</th>
+                      <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Case</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -500,6 +506,25 @@ function Th({
   );
 }
 
+const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
+  recipient: { bg: "rgba(239,78,75,0.15)", text: "#EF4E4B" },
+  volunteer: { bg: "rgba(137,207,240,0.15)", text: "#89CFF0" },
+  donor: { bg: "rgba(52,211,153,0.15)", text: "#34D399" },
+  receiving_services: { bg: "rgba(245,235,214,0.15)", text: "#F5EBCA" },
+};
+
+function RolePill({ role }: { role: string }) {
+  const colors = ROLE_COLORS[role] || { bg: "rgba(255,255,255,0.08)", text: "rgba(255,255,255,0.6)" };
+  return (
+    <span
+      className="inline-flex items-center h-5 px-2 rounded-full text-[11px] font-medium capitalize"
+      style={{ background: colors.bg, color: colors.text }}
+    >
+      {role.replace(/_/g, " ")}
+    </span>
+  );
+}
+
 function PersonRow({ row }: { row: Row }) {
   const router = useRouter();
   const onNav = () => router.push(row.href);
@@ -511,14 +536,32 @@ function PersonRow({ row }: { row: Row }) {
       <td className="px-4 py-2.5 text-white/60 text-[12.5px]">
         {row.phone || <span className="text-white/20">—</span>}
       </td>
-      <td className="px-4 py-2.5 text-white/75 text-[12.5px]">
-        {row.role || <span className="text-white/20">—</span>}
+      <td className="px-4 py-2.5">
+        {row.role ? <RolePill role={row.role} /> : <span className="text-white/20">—</span>}
       </td>
-      <td className="px-4 py-2.5 text-white/60 text-[12.5px]">
+      <td className="px-4 py-2.5 text-white/60 text-[12.5px] max-w-[200px] truncate">
         {row.location || <span className="text-white/20">—</span>}
       </td>
-      <td className="px-4 py-2.5 font-mono tabular-nums text-white/55 text-[12px]">0</td>
-      <td className="px-4 py-2.5 text-white/30 text-[12.5px]">—</td>
+      <td className="px-4 py-2.5 font-mono tabular-nums text-[12px]">
+        {(row.requestCount ?? 0) > 0 ? (
+          <span className="text-[#89CFF0]">{row.requestCount}</span>
+        ) : (
+          <span className="text-white/20">0</span>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-[12.5px]">
+        {row.sosId ? (
+          <Link
+            href={`/app/cases/${row.sosId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[#89CFF0] hover:underline"
+          >
+            View case
+          </Link>
+        ) : (
+          <span className="text-white/20">—</span>
+        )}
+      </td>
     </tr>
   );
 }
