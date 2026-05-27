@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { Plus, Link2, AlertTriangle, X } from "lucide-react";
 
-type TabKey = "cases" | "requests" | "resources" | "reports";
+type TabKey = "cases" | "requests" | "resources";
 
 type Column = { id: string; label: string; accent: string };
 
@@ -349,8 +349,6 @@ export default function CasesPage() {
         return { cards: requestCards, setCards: setRequestCards, columns: REQUEST_COLS, label: "request", loading: loadingRequests };
       case "resources":
         return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource", loading: loadingResources };
-      case "reports":
-        return { cards: reportCards, setCards: setReportCards, columns: REPORT_COLS, label: "report", loading: false };
       default:
         return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case", loading: loadingCases };
     }
@@ -410,7 +408,6 @@ export default function CasesPage() {
     { id: "cases", label: "Cases", count: caseCards.length },
     { id: "requests", label: "Requests", count: requestCards.length },
     { id: "resources", label: "Resources", count: resourceCards.length },
-    { id: "reports", label: "Reports", count: reportCards.length },
   ];
 
   return (
