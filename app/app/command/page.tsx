@@ -57,65 +57,37 @@ export default function CommandPage() {
 
   return (
     <CrmShell module="Command">
-      <div className="min-h-screen text-white">
-        {/* Stats row */}
-        <div className="px-4 md:px-6 pt-5 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <StatCard
-              icon={<AlertTriangle size={15} />}
-              label="Open requests"
-              value={stats?.openRequests}
-              tone="#EF4E4B"
-            />
-            <StatCard
-              icon={<Zap size={15} />}
-              label="Vulnerable"
-              value={stats?.critical}
-              tone="#F5EBD6"
-              sub="veterans + FR"
-            />
-            <StatCard
-              icon={<FileText size={15} />}
-              label="Fulfilled"
-              value={stats?.fulfilled}
-              tone="#34D399"
-            />
-            <StatCard
-              icon={<Package size={15} />}
-              label="Resources"
-              value={stats?.resources}
-              tone="#89CFF0"
-            />
-            <StatCard
-              icon={<Users size={15} />}
-              label="People"
-              value={stats?.people}
-              tone="#89CFF0"
-            />
+      <div className="h-[calc(100vh-56px)] flex flex-col text-white overflow-hidden">
+        {/* Stats row — compact */}
+        <div className="px-4 md:px-6 pt-3 pb-2 flex-shrink-0">
+          <div className="grid grid-cols-5 gap-2">
+            <StatCard icon={<AlertTriangle size={13} />} label="Open" value={stats?.openRequests} tone="#EF4E4B" />
+            <StatCard icon={<Zap size={13} />} label="Vulnerable" value={stats?.critical} tone="#F5EBD6" />
+            <StatCard icon={<FileText size={13} />} label="Fulfilled" value={stats?.fulfilled} tone="#34D399" />
+            <StatCard icon={<Package size={13} />} label="Resources" value={stats?.resources} tone="#89CFF0" />
+            <StatCard icon={<Users size={13} />} label="People" value={stats?.people} tone="#89CFF0" />
           </div>
         </div>
 
-        {/* Agent chat area */}
-        <div className="px-4 md:px-6 pb-4">
-          <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden" style={{ minHeight: 400 }}>
+        {/* Agent chat — fills remaining space */}
+        <div className="px-4 md:px-6 pb-2 flex-1 min-h-0">
+          <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden h-full">
             <AgentChat hideHeader />
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="px-4 md:px-6 pb-8">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-white/40 mb-2.5 px-1">Quick actions</p>
-          <div className="flex flex-wrap gap-2">
+        {/* Quick actions — pinned to bottom */}
+        <div className="px-4 md:px-6 pb-3 flex-shrink-0">
+          <div className="flex flex-wrap gap-1.5">
             {QUICK_ACTIONS.map((a) => (
               <button
                 key={a.label}
                 onClick={() => {
-                  // Dispatch a custom event the AgentChat can listen for
                   window.dispatchEvent(new CustomEvent("sos-agent-prompt", { detail: a.prompt }));
                 }}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-white/[0.04] border border-[var(--hairline)] hover:bg-white/[0.08] hover:border-white/15 text-[12.5px] font-medium text-white/70 hover:text-white transition"
+                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg bg-white/[0.04] border border-[var(--hairline)] hover:bg-white/[0.08] hover:border-white/15 text-[11.5px] font-medium text-white/60 hover:text-white transition"
               >
-                <span>{a.icon}</span>
+                <span className="text-[13px]">{a.icon}</span>
                 {a.label}
               </button>
             ))}
@@ -126,33 +98,29 @@ export default function CommandPage() {
   );
 }
 
-function StatCard({ icon, label, value, tone, sub }: {
+function StatCard({ icon, label, value, tone }: {
   icon: React.ReactNode;
   label: string;
   value: number | undefined | null;
   tone: string;
-  sub?: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--hairline)] bg-[var(--surface-1)] p-3.5">
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: `${tone}15`, color: tone }}
-        >
-          {icon}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-white/45">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-1.5">
+    <div className="rounded-lg border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2 flex items-center gap-2.5">
+      <span
+        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+        style={{ background: `${tone}15`, color: tone }}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
         {value != null ? (
-          <span className="text-[22px] font-semibold tabular-nums" style={{ color: tone }}>
+          <span className="text-[17px] font-semibold tabular-nums block leading-tight" style={{ color: tone }}>
             {value.toLocaleString()}
           </span>
         ) : (
-          <span className="h-6 w-12 rounded bg-white/10 animate-pulse" />
+          <span className="h-4 w-8 rounded bg-white/10 animate-pulse block" />
         )}
-        {sub && <span className="text-[10px] text-white/35">{sub}</span>}
+        <span className="font-mono text-[9px] uppercase tracking-wider text-white/40">{label}</span>
       </div>
     </div>
   );
