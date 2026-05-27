@@ -149,14 +149,13 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                 </button>
                 {open && (
                   <div
-                    className="on-light"
                     style={{
-                      position: "absolute", top: "100%", left: 4, marginTop: 0,
-                      background: "#fff", border: "1px solid var(--sos-hairline)", borderRadius: 4,
-                      boxShadow: "0 20px 50px rgba(15,30,43,0.18)", width: 320, zIndex: 50, overflow: "hidden",
+                      position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 4,
+                      background: "var(--sos-navy)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+                      boxShadow: "0 20px 50px rgba(0,0,0,0.4)", minWidth: 180, zIndex: 50, overflow: "hidden",
                     }}
                   >
-                    <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ padding: 6, display: "flex", flexDirection: "column", gap: 2 }}>
                       {mods.map((m) => {
                         const vis = MODULE_VISUAL[m];
                         const Icon = vis.icon;
@@ -168,22 +167,14 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                             href={`/app/${m}`}
                             onClick={() => setOpenCat(null)}
                             style={{
-                              display: "flex", alignItems: "flex-start", gap: 14, padding: 12, borderRadius: 2,
-                              textDecoration: "none", background: itemActive ? "var(--sos-card-gray)" : "transparent", transition: "background 120ms",
+                              display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 6,
+                              textDecoration: "none", background: itemActive ? "rgba(255,255,255,0.08)" : "transparent", transition: "background 120ms",
                             }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-card-gray)"; }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = itemActive ? "var(--sos-card-gray)" : "transparent"; }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = itemActive ? "rgba(255,255,255,0.08)" : "transparent"; }}
                           >
-                            <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 4, background: vis.tint, color: vis.ink, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                              <Icon size={20} strokeWidth={2} />
-                            </span>
-                            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                              <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700, color: "var(--sos-navy)", lineHeight: 1.1 }}>
-                                {label}
-                              </span>
-                              <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: 11, color: "var(--sos-muted)", marginTop: 3, lineHeight: 1.2 }}>
-                                {vis.desc}
-                              </span>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: itemActive ? "#fff" : "rgba(255,255,255,0.7)" }}>
+                              {label}
                             </span>
                           </Link>
                         );
