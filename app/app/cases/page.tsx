@@ -81,7 +81,7 @@ function liveToCards(items: any[]): Card[] {
 // Map live API requests to Card shape
 function liveRequestsToCards(items: any[]): Card[] {
   return items.map((r) => {
-    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? "Unknown";
+    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? (r.persons?.phone ? `(${r.persons.phone.slice(-4)})` : null) ?? "—";
     const category = fmtTaxonomy(r.taxonomy_code) ?? (r.category ? r.category.charAt(0).toUpperCase() + r.category.slice(1) : null) ?? "Request";
     const location = r.city ?? r.county ?? r.state ?? undefined;
     const daysAgo = r.created_at ? Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000) : null;
@@ -104,7 +104,7 @@ function liveRequestsToCards(items: any[]): Card[] {
 // Map live API resources to Card shape
 function liveResourcesToCards(items: any[]): Card[] {
   return items.map((r) => {
-    const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? "Unknown";
+    const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? (r.persons?.phone ? `(${r.persons.phone.slice(-4)})` : null) ?? "—";
     const category = fmtTaxonomy(r.taxonomy_code) ?? (r.category ? r.category.charAt(0).toUpperCase() + r.category.slice(1) : null) ?? r.description?.slice(0, 40) ?? "Resource";
     const location = r.city ?? r.county ?? r.location_text ?? undefined;
     const daysAgo = r.created_at ? Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000) : null;
