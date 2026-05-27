@@ -36,8 +36,8 @@ export default function CommandPage() {
   useEffect(() => {
     if (!orgId) return;
     Promise.all([
-      api.crmRequestSummary(orgId).catch(() => null),
-      api.crmResourceSummary(orgId).catch(() => null),
+      api.crmRequestsList(orgId).catch(() => null),
+      api.crmResourcesList(orgId).catch(() => null),
       api.crmBrowsePersons(orgId, { limit: 1 }).catch(() => null),
     ]).then(([reqSum, resSum, people]: any[]) => {
       const byStatus = reqSum?.by_status || {};

@@ -577,11 +577,7 @@ function DraggableCard({
       <div className="flex items-center justify-between mb-1.5">
         <span className="font-mono text-[10px] text-white/45">{card.id?.slice(0, 8)}</span>
         {card.urgency && <UrgencyBadge urgency={card.urgency} />}
-        {tab === "reports" && !card.urgency && (
-          <span className="inline-flex items-center gap-1 text-[10px] text-[#EF4E4B]">
-            <AlertTriangle size={10} />
-          </span>
-        )}
+
       </div>
       <p className="text-[13px] font-medium leading-tight">{card.title}</p>
       {card.meta && <p className="font-mono text-[10px] text-white/50 mt-1">{card.meta}</p>}
