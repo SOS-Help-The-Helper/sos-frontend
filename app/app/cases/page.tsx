@@ -34,7 +34,6 @@ type Card = {
 const CASE_COLS: Column[] = [
   { id: "active", label: "Active", accent: "#EF4E4B" },
   { id: "resolved", label: "Resolved", accent: "#34D399" },
-  { id: "closed", label: "Closed", accent: "#9CA3AF" },
 ];
 // Requests tab uses the full pipeline stages
 const REQUEST_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
