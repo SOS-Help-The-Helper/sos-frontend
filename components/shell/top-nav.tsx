@@ -116,8 +116,12 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
           href="/app/command"
           style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", textDecoration: "none", flexShrink: 0, flex: "1 1 0", minWidth: 0 }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logomark.svg" alt="SOS" width={22} height={22} />
+          <span className="sos-pulse-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logomark.svg" alt="SOS" width={22} height={22} style={{ position: "relative", zIndex: 1 }} />
+            <span className="sos-pulse-ring" />
+            <span className="sos-pulse-ring sos-pulse-ring-2" />
+          </span>
           <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, color: "#fff", letterSpacing: "0.01em" }} className="hidden sm:inline">
             SOS
           </span>

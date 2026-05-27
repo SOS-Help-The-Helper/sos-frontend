@@ -54,6 +54,18 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
+  // Listen for quick action prompts from command page
+  useEffect(() => {
+    function handlePrompt(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === 'string' && detail.trim()) {
+        sendMessage({ message: detail });
+      }
+    }
+    window.addEventListener('sos-agent-prompt', handlePrompt);
+    return () => window.removeEventListener('sos-agent-prompt', handlePrompt);
+  }, [sendMessage]);
+
   function send(text: string) {
     sendMessage({ text });
   }
