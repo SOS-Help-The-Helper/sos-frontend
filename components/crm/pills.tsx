@@ -5,10 +5,10 @@ import type { RequestStatus, Urgency } from "@/lib/display-constants";
 import { STATUS_LABEL } from "@/lib/display-constants";
 
 const URGENCY_COLOR: Record<Urgency, { fg: string; bg: string; pulse?: boolean }> = {
-  critical: { fg: "#EF4E4B", bg: "rgba(239,78,75,0.14)", pulse: true },
-  high: { fg: "#F5EBD6", bg: "rgba(245,235,214,0.12)" },
-  medium: { fg: "#89CFF0", bg: "rgba(137,207,240,0.12)" },
-  low: { fg: "rgba(245,235,214,0.55)", bg: "rgba(245,235,214,0.06)" },
+  critical: { fg: "#fff", bg: "#EF4E4B", pulse: true },
+  high: { fg: "#92400E", bg: "#FDE68A" },
+  medium: { fg: "#1E40AF", bg: "#BFDBFE" },
+  low: { fg: "#374151", bg: "#E5E7EB" },
 };
 
 export function UrgencyBadge({ urgency }: { urgency: Urgency }) {

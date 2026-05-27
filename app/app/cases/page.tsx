@@ -300,12 +300,17 @@ export default function CasesPage() {
             const name = s.person_name || s.persons?.display_name || null;
             const reqCount = s.request_count || 0;
             const fulCount = s.fulfilled_count || 0;
+            const region = s.persons?.home_region || undefined;
+            const daysAgo = s.created_at ? Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000) : null;
+            const badges: string[] = [];
+            if (s.persons?.is_veteran) badges.push("🎖 Veteran");
+            if (s.persons?.is_first_responder) badges.push("🚒 FR");
             return {
               id: s.id,
               col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
               title: name || "Anonymous",
-              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null].filter(Boolean).join(' · '),
-              sub: s.days_open != null ? `${s.days_open}d` : undefined,
+              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
+              sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
               href: `/app/cases/${s.id}`,
             };
           });
@@ -324,6 +329,7 @@ export default function CasesPage() {
       .then((data: any) => {
         const items: any[] = data?.requests ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
+          items.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           const cards = liveRequestsToCards(items);
           setLiveRequests(cards);
           setRequestCards(cards);
@@ -340,6 +346,7 @@ export default function CasesPage() {
       .then((data: any) => {
         const items: any[] = data?.resources ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
+          items.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           const cards = liveResourcesToCards(items);
           setLiveResources(cards);
           setResourceCards(cards);
@@ -420,12 +427,17 @@ export default function CasesPage() {
             const name = s.person_name || s.persons?.display_name || null;
             const reqCount = s.request_count || 0;
             const fulCount = s.fulfilled_count || 0;
+            const region = s.persons?.home_region || undefined;
+            const daysAgo = s.created_at ? Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000) : null;
+            const badges: string[] = [];
+            if (s.persons?.is_veteran) badges.push("🎖 Veteran");
+            if (s.persons?.is_first_responder) badges.push("🚒 FR");
             return {
               id: s.id,
               col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
               title: name || "Anonymous",
-              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null].filter(Boolean).join(' · '),
-              sub: s.days_open != null ? `${s.days_open}d` : undefined,
+              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
+              sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
               href: `/app/cases/${s.id}`,
             };
           });
