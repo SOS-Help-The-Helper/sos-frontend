@@ -282,11 +282,11 @@ export default function MatchPage() {
         const raw: unknown[] = res?.data ?? res?.cases ?? [];
         const mapped: CaseItem[] = raw.map((r: any) => ({
           id: r.request_id ?? r.id,
-          citizen: r.person_name ?? r.citizen ?? "Unknown",
-          county: r.county ?? "",
-          taxonomy: Array.isArray(r.taxonomy) ? r.taxonomy : (r.taxonomy ? [r.taxonomy] : []),
+          citizen: r.person_name ?? r.persons?.display_name ?? r.contact_name ?? r.citizen ?? "Unknown",
+          county: r.county ?? r.location_text ?? "",
+          taxonomy: Array.isArray(r.taxonomy) ? r.taxonomy : r.taxonomy ? [r.taxonomy] : r.taxonomy_code ? [r.taxonomy_code] : r.category ? [r.category] : [],
           urgency: r.urgency ?? "medium",
-          umbrella: r.umbrella_id ?? null,
+          umbrella: r.umbrella_id ?? r.soses?.id ?? null,
           opened: r.created_at ?? "",
           household_size: r.household_size,
           has_children: r.has_children,
