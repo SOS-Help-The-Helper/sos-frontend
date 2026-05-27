@@ -266,17 +266,26 @@ export function getChatTools(opts?: { personId?: string; userLat?: number; userL
           notes: z.string().optional().describe('Additional details from conversation'),
         })),
         execute: async function({ helperType, skills, availability, lat, lng, distanceMiles, notes }) {
-          const resp = await fetch(`${SUPABASE_URL}/functions/v1/intake-write`, {
+          const description = [
+            `Helper: ${helperType}`,
+            skills?.length ? `Skills: ${skills.join(', ')}` : '',
+            `Availability: ${availability}`,
+            distanceMiles ? `Travel: ${distanceMiles}mi` : '',
+            notes || '',
+          ].filter(Boolean).join('. ');
+
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${SUPABASE_SERVICE}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              offers: [{ category: helperType, details: notes || '' }],
-              latitude: lat,
-              longitude: lng,
-              metadata: { helper_type: helperType, skills, availability, distance_miles: distanceMiles },
-              channel: 'web_ai_sdk',
-              consent_given: true,
-              consent_method: 'web',
+              actor: { phone: '+10000000000', name: 'Anonymous Web Helper', type: 'citizen' },
+              records: [{
+                type: 'resource',
+                taxonomy_code: `COMMUNITY.VOLUNTEER`,
+                description,
+              }],
+              location: { lat, lng },
+              context: { channel: 'web_ai_sdk', helper_type: helperType, skills, availability, distance_miles: distanceMiles },
             }),
           });
           const result = await resp.json();
@@ -302,55 +311,28 @@ export function getChatTools(opts?: { personId?: string; userLat?: number; userL
         })),
         execute: async function({ name, phone, skills, organization, motivation }) {
           try {
-            const nameParts = name.trim().split(' ');
-            const phoneCan = phone.replace(/[^\d+]/g, '');
-            const bio = [skills, motivation ? `Motivation: ${motivation}` : ''].filter(Boolean).join('. ');
+            const bio = [skills, motivation ? `Motivation: ${motivation}` : '', organization ? `Org: ${organization}` : ''].filter(Boolean).join('. ');
 
-            const resp = await fetch(`${SUPABASE_URL}/rest/v1/persons`, {
+            const resp = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${SUPABASE_ANON}`,
-                'apikey': SUPABASE_ANON,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation',
-              },
+              headers: { 'Authorization': `Bearer ${SUPABASE_SERVICE}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                display_name: name.trim(),
-                first_name: nameParts[0] || null,
-                last_name: nameParts.slice(1).join(' ') || null,
-                phone: phone.trim(),
-                phone_canonical: phoneCan,
-                bio: bio || null,
-                helper_status: 'interested',
-                consent_contact: true,
+                actor: { phone: phone.trim(), name: name.trim(), type: 'citizen' },
+                records: [{
+                  type: 'resource',
+                  taxonomy_code: 'COMMUNITY.VOLUNTEER',
+                  description: bio || 'Interested in joining SOS',
+                }],
+                context: { channel: 'web_join', organization: organization || undefined },
               }),
             });
 
-            if (!resp.ok) {
-              const errText = await resp.text().catch(() => 'unknown error');
-              return JSON.stringify({ success: false, message: `Could not save: ${errText}` });
-            }
-
-            const persons = await resp.json();
-            const newPersonId = persons?.[0]?.id;
-
-            if (organization && organization.trim()) {
-              await fetch(`${SUPABASE_URL}/rest/v1/organizations`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${SUPABASE_ANON}`,
-                  'apikey': SUPABASE_ANON,
-                  'Content-Type': 'application/json',
-                  'Prefer': 'return=minimal',
-                },
-                body: JSON.stringify({ name: organization.trim(), type: 'community_signup' }),
-              }).catch(() => {});
-            }
+            const result = await resp.json();
 
             return JSON.stringify({
-              success: true,
-              personId: newPersonId,
-              message: 'Welcome to SOS! Someone from the team will reach out soon.',
+              success: resp.ok,
+              personId: result.person_id || undefined,
+              message: resp.ok ? 'Welcome to SOS! Someone from the team will reach out soon.' : 'Something went wrong saving your info. Please try again.',
             });
           } catch (err: any) {
             return JSON.stringify({ success: false, message: 'Something went wrong saving your info. Please try again.' });
