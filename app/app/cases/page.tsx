@@ -81,15 +81,19 @@ function liveToCards(items: any[]): Card[] {
 // Map live API requests to Card shape
 function liveRequestsToCards(items: any[]): Card[] {
   return items.map((r) => {
-    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? undefined;
-    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? "Request";
+    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? "Unknown";
+    const category = fmtTaxonomy(r.taxonomy_code) ?? (r.category ? r.category.charAt(0).toUpperCase() + r.category.slice(1) : null) ?? "Request";
     const location = r.city ?? r.county ?? r.state ?? undefined;
+    const daysAgo = r.created_at ? Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000) : null;
+    const badges: string[] = [];
+    if (r.is_veteran || r.persons?.is_veteran) badges.push("🎖 Veteran");
+    if (r.is_first_responder || r.persons?.is_first_responder) badges.push("🚒 First Responder");
     return {
       id: r.id,
       col: bucketOf(r.status ?? "pending"),
-      title: category,
-      meta: [personName, location].filter(Boolean).join(" · ") || undefined,
-      sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
+      title: personName,
+      meta: [category, location].filter(Boolean).join(" · "),
+      sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(" · ") || undefined,
       href: `/app/directory/request/${r.id}`,
       urgency: r.urgency,
       status: r.status ?? "pending",
@@ -100,17 +104,17 @@ function liveRequestsToCards(items: any[]): Card[] {
 // Map live API resources to Card shape
 function liveResourcesToCards(items: any[]): Card[] {
   return items.map((r) => {
+    const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? "Unknown";
     const category = fmtTaxonomy(r.taxonomy_code) ?? (r.category ? r.category.charAt(0).toUpperCase() + r.category.slice(1) : null) ?? r.description?.slice(0, 40) ?? "Resource";
-    const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? undefined;
     const location = r.city ?? r.county ?? r.location_text ?? undefined;
-    const daysAgo = r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined;
+    const daysAgo = r.created_at ? Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000) : null;
     const cap = r.capacity_available != null && r.capacity_available > 1 ? `${r.capacity_available} units` : undefined;
     return {
       id: r.id,
       col: r.status ?? "available",
-      title: category,
-      meta: [personName, location].filter(Boolean).join(" · ") || undefined,
-      sub: [cap, daysAgo].filter(Boolean).join(" · ") || undefined,
+      title: personName,
+      meta: [category, location].filter(Boolean).join(" · ") || undefined,
+      sub: [daysAgo != null ? `${daysAgo}d ago` : null, cap].filter(Boolean).join(" · ") || undefined,
       href: `/app/directory/resource/${r.id}`,
     };
   });
