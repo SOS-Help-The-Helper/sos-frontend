@@ -382,7 +382,7 @@ export default function MapPage() {
       />
 
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
-        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100vh-220px)] min-h-[500px]">
+        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
           <MapboxEmbed
             orgId={orgId}
             onPinSelect={setSelectedPin}

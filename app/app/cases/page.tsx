@@ -177,7 +177,8 @@ function CreateCaseModal({
           <h2 className="text-[15px] font-semibold">New case</h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-md hover:bg-white/8 text-white/45 flex items-center justify-center transition"
+            aria-label="Close"
+            className="w-11 h-11 rounded-md hover:bg-white/8 text-white/45 flex items-center justify-center transition"
           >
             <X size={14} />
           </button>
@@ -542,8 +543,6 @@ export default function CasesPage() {
                     }}
                     onDrop={() => onDrop(col.id)}
                     className={`snap-start rounded-2xl border p-3 transition ${
-                      ""
-                    } ${
                       isOver
                         ? "bg-white/[0.06] border-white/20"
                         : "bg-[var(--surface-1)] border-[var(--hairline)]"

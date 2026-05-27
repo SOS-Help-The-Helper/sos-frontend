@@ -24,15 +24,15 @@ type CalEvent = {
   location?: string;
 };
 
-const days = [
-  { label: "Mon", date: "Mar 16" },
-  { label: "Tue", date: "Mar 17" },
-  { label: "Wed", date: "Mar 18" },
-  { label: "Thu", date: "Mar 19" },
-  { label: "Fri", date: "Mar 20" },
-  { label: "Sat", date: "Mar 21" },
-  { label: "Sun", date: "Mar 22" },
-];
+const today = new Date();
+const days = Array.from({ length: 7 }, (_, i) => {
+  const d = new Date(today);
+  d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon–Sun
+  return {
+    label: d.toLocaleDateString('en', { weekday: 'short' }),
+    date: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+  };
+});
 
 export default function CalendarPage() {
   const { orgId } = useAuthContext();
@@ -50,9 +50,7 @@ export default function CalendarPage() {
       if (Array.isArray(data) && data.length > 0) {
         setItems(data as CalEvent[]);
       }
-    }).catch(() => {
-      // fallback: keep seedEvents
-    });
+    }).catch(() => toast.error("Failed to load events"));
   }, [orgId]);
 
   function openNew(date?: string) {
@@ -81,7 +79,8 @@ export default function CalendarPage() {
           setItems((prev) => prev.map((e) => e.id === optimisticId ? { ...e, id: created.id } : e));
         }
       } catch {
-        toast.error("Failed to save event — kept locally");
+        setItems(prev => prev.filter(e => e.id !== optimisticId));
+        toast.error("Failed to create event");
       }
     }
   }

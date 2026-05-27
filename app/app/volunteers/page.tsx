@@ -60,6 +60,8 @@ export default function VolunteersPage() {
   const [addPhone, setAddPhone] = useState("");
   const [addSkills, setAddSkills] = useState("");
   const [addBusy, setAddBusy] = useState(false);
+  const [hasCdl, setHasCdl] = useState(false);
+  const [availableToday, setAvailableToday] = useState(false);
 
   function refreshVolunteers() {
     api.crmVolunteersAvailable(orgId)
@@ -67,7 +69,7 @@ export default function VolunteersPage() {
         const items = mapVolunteers(extractList(res, ["volunteers", "data", "results"]));
         if (items.length > 0) setVolunteers(items);
       })
-      .catch(() => {});
+      .catch(() => toast.error("Failed to load volunteers"));
   }
 
   useEffect(() => {
@@ -202,8 +204,14 @@ export default function VolunteersPage() {
               <option value="new">New</option>
               <option value="inactive">Inactive</option>
             </select>
-            <button className="h-8 px-3 rounded-md bg-white/6 hover:bg-white/12 text-[12px] transition">Has CDL</button>
-            <button className="h-8 px-3 rounded-md bg-white/6 hover:bg-white/12 text-[12px] transition">Available today</button>
+            <button
+              aria-pressed={hasCdl}
+              onClick={() => setHasCdl(v => !v)}
+              className="h-8 px-3 rounded-md bg-white/6 hover:bg-white/12 text-[12px] transition">Has CDL</button>
+            <button
+              aria-pressed={availableToday}
+              onClick={() => setAvailableToday(v => !v)}
+              className="h-8 px-3 rounded-md bg-white/6 hover:bg-white/12 text-[12px] transition">Available today</button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

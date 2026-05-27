@@ -70,14 +70,14 @@ export default function TransportPage() {
     if (!orgId) return;
     api.transportList(orgId)
       .then((res: unknown) => setAssignments(extractList(res)))
-      .catch(() => {});
+      .catch(() => toast.error("Failed to load assignments"));
   }
 
   useEffect(() => {
     if (!orgId) return;
     api.transportList(orgId)
       .then((res: unknown) => setAssignments(extractList(res)))
-      .catch(() => {})
+      .catch(() => toast.error("Failed to load assignments"))
       .finally(() => setLoading(false));
   }, [orgId]);
 
@@ -132,11 +132,12 @@ export default function TransportPage() {
   }
 
   const kpis = useMemo(() => {
+    if (loading) return { active: "—", inTransit: "—", delivered: "—" };
     const active = assignments.filter(t => t.status !== "completed" && t.status !== "verified").length;
     const inTransit = assignments.filter(t => t.status === "in_transit").length;
     const delivered = assignments.filter(t => t.status === "delivered" || t.status === "verified").length;
     return { active, inTransit, delivered };
-  }, [assignments]);
+  }, [assignments, loading]);
 
   return (
     <CrmShell module="Transport">
@@ -146,10 +147,10 @@ export default function TransportPage() {
         actions={
           <>
             <div className="flex items-center gap-0.5 rounded-lg bg-white/6 p-0.5">
-              <button onClick={() => setView("list")} className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${view === "list" ? "bg-white/12 text-white" : "text-white/55 hover:text-white"}`}>
+              <button onClick={() => setView("list")} className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-md text-[11.5px] font-medium transition ${view === "list" ? "bg-white/12 text-white" : "text-white/55 hover:text-white"}`}>
                 <List size={11} /> List
               </button>
-              <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[11.5px] font-medium transition ${view === "map" ? "bg-white/12 text-white" : "text-white/55 hover:text-white"}`}>
+              <button onClick={() => setView("map")} className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-md text-[11.5px] font-medium transition ${view === "map" ? "bg-white/12 text-white" : "text-white/55 hover:text-white"}`}>
                 <MapIcon size={11} /> Map
               </button>
             </div>

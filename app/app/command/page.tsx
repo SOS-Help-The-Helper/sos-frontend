@@ -8,8 +8,6 @@ import { useAuthContext } from "@/lib/auth-context";
 import { usePortalConfig } from "@/lib/use-portal-config";
 import { FileText, Users, Package, AlertTriangle, Zap } from "lucide-react";
 
-const DEMO_ORG_ID = "9ad0f2ad-7789-47a8-bfba-0ae3382c86cc";
-
 type Stats = {
   openRequests: number;
   critical: number;
@@ -20,7 +18,7 @@ type Stats = {
 
 export default function CommandPage() {
   const { orgId: authOrgId } = useAuthContext();
-  const orgId = authOrgId || DEMO_ORG_ID;
+  const orgId = authOrgId;
   const { config } = usePortalConfig();
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -46,17 +44,19 @@ export default function CommandPage() {
     });
   }, [orgId]);
 
+  if (!orgId) return <div className="p-6 text-white/50">Loading…</div>;
+
   return (
     <CrmShell module="Command" bare>
-      <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden" style={{ background: "var(--surface-app)" }}>
+      <div className="h-[calc(100dvh-56px)] flex flex-col overflow-hidden" style={{ background: "var(--surface-app)" }}>
         {/* Stats strip */}
         <div className="px-4 md:px-5 pt-3 pb-2 flex-shrink-0">
           <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide">
-            <StatPill label="Open" value={stats?.openRequests} tone="#EF4E4B" icon={<AlertTriangle size={11} />} primary />
-            <StatPill label="Vulnerable" value={stats?.critical} tone="#D97706" icon={<Zap size={11} />} />
-            <StatPill label="Fulfilled" value={stats?.fulfilled} tone="#059669" icon={<FileText size={11} />} />
-            <StatPill label="Resources" value={stats?.resources} tone="#2563EB" icon={<Package size={11} />} />
-            <StatPill label="People" value={stats?.people} tone="#6B7280" icon={<Users size={11} />} />
+            <StatPill label="Open" value={stats?.openRequests ?? "—"} tone="#EF4E4B" icon={<AlertTriangle size={11} />} primary />
+            <StatPill label="Vulnerable" value={stats?.critical ?? "—"} tone="#D97706" icon={<Zap size={11} />} />
+            <StatPill label="Fulfilled" value={stats?.fulfilled ?? "—"} tone="#059669" icon={<FileText size={11} />} />
+            <StatPill label="Resources" value={stats?.resources ?? "—"} tone="#2563EB" icon={<Package size={11} />} />
+            <StatPill label="People" value={stats?.people ?? "—"} tone="#6B7280" icon={<Users size={11} />} />
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default function CommandPage() {
 function StatPill({ icon, label, value, tone, primary }: {
   icon: React.ReactNode;
   label: string;
-  value: number | undefined | null;
+  value: number | string | undefined | null;
   tone: string;
   primary?: boolean;
 }) {
@@ -84,7 +84,7 @@ function StatPill({ icon, label, value, tone, primary }: {
       <div className="flex items-baseline gap-1.5">
         {value != null ? (
           <span className={"tabular-nums font-bold " + (primary ? "text-[18px]" : "text-[15px]")} style={{ color: tone }}>
-            {value.toLocaleString()}
+            {typeof value === "number" ? value.toLocaleString() : value}
           </span>
         ) : (
           <span className="h-4 w-6 rounded bg-black/5 animate-pulse inline-block" />

@@ -519,7 +519,7 @@ function MapContent() {
 
       {/* Map */}
       <div className="relative rounded-xl overflow-hidden border-2 border-sos-gray-300/80">
-        <div ref={mapRef} className="h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] bg-sos-blue-900" />
+        <div ref={mapRef} className="h-[calc(100dvh-12rem)] md:h-[calc(100dvh-10rem)] bg-sos-blue-900" />
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 flex gap-2 z-10">
