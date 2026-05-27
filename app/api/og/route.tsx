@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
 
   if (pinId) {
     try {
-      const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
-      const SOS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      const SOS_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+      const SOS_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
       const table = pinType === 'resource' ? 'resources' : pinType === 'report' ? 'reports' : 'requests';
       const res = await fetch(
         `${SOS_URL}/rest/v1/${table}?id=eq.${pinId}&select=description,public_display_text,urgency,location_text,taxonomy_code,category,household_size`,

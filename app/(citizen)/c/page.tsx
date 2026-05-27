@@ -23,8 +23,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   let description = 'View on SOS Connect map';
 
   try {
-    const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
-    const SOS_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const SOS_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+    const SOS_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
     const table = type === 'resource' ? 'resources' : type === 'report' ? 'reports' : 'requests';
 
     const res = await fetch(
