@@ -4,12 +4,13 @@ import CitizenMapPage from './citizen-map-client';
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  searchParams: { pin?: string; type?: string };
+  searchParams: Promise<{ pin?: string; type?: string }>;
 };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const pin = searchParams?.pin;
-  const type = searchParams?.type || 'request';
+  const params = await searchParams;
+  const pin = params?.pin;
+  const type = params?.type || 'request';
 
   if (!pin) {
     return {
