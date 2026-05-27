@@ -100,15 +100,17 @@ function liveRequestsToCards(items: any[]): Card[] {
 // Map live API resources to Card shape
 function liveResourcesToCards(items: any[]): Card[] {
   return items.map((r) => {
-    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? "Resource";
-    const personName = r.persons?.display_name ?? r.person_name ?? undefined;
-    const location = r.locations?.city ?? r.city ?? undefined;
+    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? r.description ?? "Resource";
+    const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? undefined;
+    const location = r.city ?? r.county ?? r.location_text ?? undefined;
+    const daysAgo = r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined;
+    const cap = r.capacity_available != null && r.capacity_available > 1 ? `${r.capacity_available} units` : undefined;
     return {
       id: r.id,
       col: r.status ?? "available",
       title: category,
       meta: [personName, location].filter(Boolean).join(" · ") || undefined,
-      sub: r.capacity_available != null ? `${r.capacity_available} available` : undefined,
+      sub: [cap, daysAgo].filter(Boolean).join(" · ") || undefined,
       href: `/app/directory/resource/${r.id}`,
     };
   });
@@ -601,22 +603,14 @@ function DraggableCard({
         isDragging ? "opacity-40" : ""
       }`}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        {card.urgency ? <UrgencyBadge urgency={card.urgency} /> : <span />}
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-medium leading-tight truncate">{card.title}</p>
+        {card.urgency && <UrgencyBadge urgency={card.urgency} />}
       </div>
-      <p className="text-[13px] font-medium leading-tight">{card.title}</p>
-      {card.meta && <p className="font-mono text-[10px] text-white/50 mt-1">{card.meta}</p>}
-      <div className="flex items-center gap-1.5 mt-2">
-        {card.status && <SubStatusPill status={card.status} />}
-        {card.sub && (
-          <span className="font-mono text-[10px] text-white/40 tabular-nums">{card.sub}</span>
-        )}
-        {card.badge && (
-          <span className="inline-flex items-center gap-0.5 font-mono text-[10px] text-[#89CFF0]">
-            <Link2 size={9} /> {card.badge}
-          </span>
-        )}
-      </div>
+      {card.meta && <p className="text-[11px] text-white/50 mt-1 truncate">{card.meta}</p>}
+      {card.sub && (
+        <p className="text-[10px] text-white/35 mt-1.5 tabular-nums">{card.sub}</p>
+      )}
       {card.orgName && (
         <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
           <span className="text-[11px]" style={{ color: card.orgColor }}>
