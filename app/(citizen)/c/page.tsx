@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import CitizenMapPage from './citizen-map-client';
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
   searchParams: { pin?: string; type?: string };
 };
