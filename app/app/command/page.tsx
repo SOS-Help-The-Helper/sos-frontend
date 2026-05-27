@@ -6,8 +6,9 @@ import { AgentChat } from "@/components/agent-chat";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { usePortalConfig } from "@/lib/use-portal-config";
-import { FileText, Users, Package, AlertTriangle, Zap } from "lucide-react";
+import { FileText, Users, Package, AlertTriangle, Zap, Send } from "lucide-react";
 
+// Default to ERV for demo
 const DEMO_ORG_ID = "9ad0f2ad-7789-47a8-bfba-0ae3382c86cc";
 
 type Stats = {
@@ -30,6 +31,7 @@ export default function CommandPage() {
   const orgId = authOrgId || DEMO_ORG_ID;
   const { config } = usePortalConfig();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [agentPrompt, setAgentPrompt] = useState("");
 
   useEffect(() => {
     if (!orgId) return;
@@ -55,8 +57,8 @@ export default function CommandPage() {
 
   return (
     <CrmShell module="Command" bare>
-      <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden" style={{ background: "var(--sos-navy)" }}>
-        {/* Stats row */}
+      <div className="h-[calc(100vh-56px)] flex flex-col text-white overflow-hidden">
+        {/* Stats row — compact */}
         <div className="px-4 md:px-6 pt-3 pb-2 flex-shrink-0">
           <div className="grid grid-cols-5 gap-2">
             <StatCard icon={<AlertTriangle size={13} />} label="Open" value={stats?.openRequests} tone="#EF4E4B" />
@@ -69,7 +71,7 @@ export default function CommandPage() {
 
         {/* Agent chat — fills remaining space */}
         <div className="px-4 md:px-6 pb-2 flex-1 min-h-0">
-          <div className="rounded-2xl border border-white/10 overflow-hidden h-full" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-hidden h-full">
             <AgentChat hideHeader />
           </div>
         </div>
@@ -83,8 +85,7 @@ export default function CommandPage() {
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent("sos-agent-prompt", { detail: a.prompt }));
                 }}
-                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border border-white/10 hover:bg-white/8 text-[11.5px] font-medium text-white/60 hover:text-white transition"
-                style={{ background: "rgba(255,255,255,0.04)" }}
+                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg bg-white/[0.04] border border-[var(--hairline)] hover:bg-white/[0.08] hover:border-white/15 text-[11.5px] font-medium text-white/60 hover:text-white transition"
               >
                 <span className="text-[13px]">{a.icon}</span>
                 {a.label}
@@ -104,10 +105,10 @@ function StatCard({ icon, label, value, tone }: {
   tone: string;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 px-3 py-2 flex items-center gap-2.5" style={{ background: "rgba(255,255,255,0.05)" }}>
+    <div className="rounded-lg border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2 flex items-center gap-2.5">
       <span
         className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-        style={{ background: `${tone}20`, color: tone }}
+        style={{ background: `${tone}15`, color: tone }}
       >
         {icon}
       </span>
@@ -119,7 +120,7 @@ function StatCard({ icon, label, value, tone }: {
         ) : (
           <span className="h-4 w-8 rounded bg-white/10 animate-pulse block" />
         )}
-        <span className="font-mono text-[9px] uppercase tracking-wider text-white/45">{label}</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-white/40">{label}</span>
       </div>
     </div>
   );
