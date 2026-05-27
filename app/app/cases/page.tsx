@@ -53,13 +53,24 @@ const REPORT_COLS: Column[] = [
   { id: "Resolved", label: "Resolved", accent: "#34D399" },
 ];
 
+// Format taxonomy code for display: "HOUSING.TEMPORARY" → "Housing — Temporary"
+function fmtTaxonomy(code: string | null | undefined): string | undefined {
+  if (!code) return undefined;
+  return code.split('.').map(p => p.charAt(0) + p.slice(1).toLowerCase()).join(' — ');
+}
+
+// Pluralize helper
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+
 // Map live API cases to Card shape
 function liveToCards(items: any[]): Card[] {
   return items.map((c) => ({
     id: c.id ?? c.request_id ?? String(Math.random()),
     col: bucketOf(c.status),
     title: c.display_name ?? c.person_name ?? c.citizen ?? c.id,
-    meta: [c.county, c.category ?? c.taxonomy_code].filter(Boolean).join(" · "),
+    meta: [c.county, fmtTaxonomy(c.category ?? c.taxonomy_code)].filter(Boolean).join(" · "),
     sub: c.days_open != null ? `${c.days_open}d` : undefined,
     href: `/app/cases/${c.umbrella_id ?? c.id}`,
     urgency: c.urgency,
@@ -70,13 +81,14 @@ function liveToCards(items: any[]): Card[] {
 // Map live API requests to Card shape
 function liveRequestsToCards(items: any[]): Card[] {
   return items.map((r) => {
-    // person name can be in persons object, person_name, or display_name
-    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? r.id?.slice(0, 8);
+    const personName = r.persons?.display_name ?? r.person_name ?? r.display_name ?? undefined;
+    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? "Request";
+    const location = r.city ?? r.county ?? r.state ?? undefined;
     return {
       id: r.id,
       col: bucketOf(r.status ?? "pending"),
-      title: personName,
-      meta: [r.city ?? r.county ?? r.state, r.category ?? r.taxonomy_code].filter(Boolean).join(" · "),
+      title: category,
+      meta: [personName, location].filter(Boolean).join(" · ") || undefined,
       sub: r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined,
       href: `/app/directory/request/${r.id}`,
       urgency: r.urgency,
@@ -87,14 +99,19 @@ function liveRequestsToCards(items: any[]): Card[] {
 
 // Map live API resources to Card shape
 function liveResourcesToCards(items: any[]): Card[] {
-  return items.map((r) => ({
-    id: r.id,
-    col: r.status ?? "available",
-    title: r.category ?? r.taxonomy_code ?? r.id,
-    meta: r.locations?.city ?? r.city ?? undefined,
-    sub: r.capacity_available != null ? `${r.capacity_available} avail` : undefined,
-    href: `/app/directory/resource/${r.id}`,
-  }));
+  return items.map((r) => {
+    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? "Resource";
+    const personName = r.persons?.display_name ?? r.person_name ?? undefined;
+    const location = r.locations?.city ?? r.city ?? undefined;
+    return {
+      id: r.id,
+      col: r.status ?? "available",
+      title: category,
+      meta: [personName, location].filter(Boolean).join(" · ") || undefined,
+      sub: r.capacity_available != null ? `${r.capacity_available} available` : undefined,
+      href: `/app/directory/resource/${r.id}`,
+    };
+  });
 }
 
 function CreateCaseModal({
@@ -273,14 +290,19 @@ export default function CasesPage() {
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
-          const cards: Card[] = items.map((s: any) => ({
-            id: s.id,
-            col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
-            title: s.person_name || s.persons?.display_name || "Unknown",
-            meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
-            sub: s.days_open != null ? `${s.days_open}d` : undefined,
-            href: `/app/cases/${s.id}`,
-          }));
+          const cards: Card[] = items.map((s: any) => {
+            const name = s.person_name || s.persons?.display_name || null;
+            const reqCount = s.request_count || 0;
+            const fulCount = s.fulfilled_count || 0;
+            return {
+              id: s.id,
+              col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
+              title: name || "Anonymous",
+              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null].filter(Boolean).join(' · '),
+              sub: s.days_open != null ? `${s.days_open}d` : undefined,
+              href: `/app/cases/${s.id}`,
+            };
+          });
           setLiveCases(cards);
           setCaseCards(cards);
         }
@@ -388,14 +410,19 @@ export default function CasesPage() {
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
-          const newCards: Card[] = items.map((s: any) => ({
-            id: s.id,
-            col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
-            title: s.person_name || s.persons?.display_name || "Unknown",
-            meta: `${s.request_count || 0} requests · ${s.fulfilled_count || 0} fulfilled`,
-            sub: s.days_open != null ? `${s.days_open}d` : undefined,
-            href: `/app/cases/${s.id}`,
-          }));
+          const newCards: Card[] = items.map((s: any) => {
+            const name = s.person_name || s.persons?.display_name || null;
+            const reqCount = s.request_count || 0;
+            const fulCount = s.fulfilled_count || 0;
+            return {
+              id: s.id,
+              col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
+              title: name || "Anonymous",
+              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null].filter(Boolean).join(' · '),
+              sub: s.days_open != null ? `${s.days_open}d` : undefined,
+              href: `/app/cases/${s.id}`,
+            };
+          });
           setLiveCases(newCards);
           setCaseCards(newCards);
         }
@@ -575,9 +602,7 @@ function DraggableCard({
       }`}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <span className="font-mono text-[10px] text-white/45">{card.id?.slice(0, 8)}</span>
-        {card.urgency && <UrgencyBadge urgency={card.urgency} />}
-
+        {card.urgency ? <UrgencyBadge urgency={card.urgency} /> : <span />}
       </div>
       <p className="text-[13px] font-medium leading-tight">{card.title}</p>
       {card.meta && <p className="font-mono text-[10px] text-white/50 mt-1">{card.meta}</p>}
