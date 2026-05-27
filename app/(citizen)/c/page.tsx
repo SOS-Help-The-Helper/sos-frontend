@@ -9,6 +9,7 @@ import { applyMapCategoryFilter, clearMapCategoryFilter } from '@/lib/map-filter
 import { getAlerts, type Alert } from '@/lib/citizen-api';
 import { supabase } from '@/lib/supabase-client';
 import { CitizenHeader } from '@/components/citizen-header';
+import { PinDetailCard } from '@/components/citizen/pin-detail-card';
 import { setPersonId } from '@/lib/person-cookie';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -653,122 +654,25 @@ export default function CitizenMapPage() {
 
       {/* Alert banner — disabled for now */}
 
-      {/* === Part 2: Detail Card — Centered circular popup === */}
+            {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
-        <>
-          {/* Backdrop */}
-          <div className="absolute inset-0 z-25 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300"
-            onClick={() => { setSelectedPin(null); setDetailMode('card'); }} />
-
-          {/* Centered card */}
-          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
-            <div className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out] relative"
-              style={{
-                background: 'rgba(26, 56, 80, 0.92)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderRadius: '24px',
-                boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${
-                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.15)' :
-                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.15)' : 'rgba(255,255,255,0.05)'
-                }`,
-              }}>
-
-              {/* Border that stops where logomark is — using pseudo-element via clip-path */}
-              <div className="absolute inset-0 rounded-[24px] pointer-events-none" style={{
-                border: `1.5px solid ${
-                  selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' :
-                  selectedPin.type === 'resource' ? 'rgba(137,207,240,0.3)' : 'rgba(255,255,255,0.15)'
-                }`,
-                mask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
-                WebkitMask: 'linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)',
-              }} />
-
-              {/* Top logomark — floating above the card */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{
-                    background: selectedPin.type === 'request' ? 'rgba(15,30,43,0.95)' : selectedPin.type === 'resource' ? 'rgba(15,30,43,0.95)' : 'rgba(15,30,43,0.95)',
-                    boxShadow: `0 0 24px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
-                    border: `2px solid ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.4)' : selectedPin.type === 'resource' ? 'rgba(137,207,240,0.4)' : 'rgba(255,255,255,0.2)'}`,
-                  }}>
-                  <img
-                    src={selectedPin.type === 'resource' ? '/logomark-blue.svg' : selectedPin.type === 'report' ? '/logomark-white.svg' : '/logomark-red.svg'}
-                    alt="SOS" className="w-8 h-8" />
-                </div>
-              </div>
-
-              <div className="px-6 pt-6 pb-5">
-                {/* Close button */}
-                <button onClick={() => { setSelectedPin(null); setDetailMode('card'); }}
-                  className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors">✕</button>
-
-                {/* Type label */}
-                <p className={`text-center text-[11px] font-bold uppercase tracking-[0.2em] mb-3 ${
-                  selectedPin.type === 'request' ? 'text-[#EF4E4B]' :
-                  selectedPin.type === 'resource' ? 'text-[#89CFF0]' : 'text-white/50'
-                }`}>
-                  SOS {selectedPin.type === 'request' ? 'Request' : selectedPin.type === 'resource' ? 'Resource' : selectedPin.type === 'report' ? 'Report' : 'Disaster'}
-                </p>
-
-                {/* Summary */}
-                <p className="text-center text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
-                  {p.details || p.description || `${(p.category || 'help').replace(/_/g, ' ')} ${selectedPin?.type === 'request' ? 'request' : 'resource'}${p.household ? ` for ${p.household} people` : ''}${p.urgency ? ` · ${p.urgency} urgency` : ''}`}
-                </p>
-
-                {/* Metadata pills */}
-                <div className="flex items-center justify-center gap-2 flex-wrap mb-5">
-                  {p.category && (
-                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
-                      {p.category.replace(/_/g, ' ')}
-                    </span>
-                  )}
-                  {selectedPin.type === 'request' && p.household && (
-                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">👨‍👩‍👧‍👦 {p.household}</span>
-                  )}
-                  {selectedPin.type === 'request' && p.urgency && (
-                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
-                      p.urgency === 'critical' ? 'bg-red-500/20 text-red-300' :
-                      p.urgency === 'high' ? 'bg-orange-500/20 text-orange-300' :
-                      'bg-white/10 text-white/60'
-                    }`}>{p.urgency}</span>
-                  )}
-                  {selectedPin.type === 'resource' && p.source_type && (
-                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">
-                      {p.source_type === '211' ? '211' : p.source_type === 'partner' ? 'Partner' : 'Community'}
-                    </span>
-                  )}
-                  {selectedPin.type === 'resource' && p.capacity != null && (
-                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/10 text-white/60">Capacity: {p.capacity}</span>
-                  )}
-                </div>
-
-                {/* Match button */}
-                <button onClick={() => {
-                    const pinData = { ...selectedPin };
-                    setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
-                    const matchContext = JSON.stringify({
-                      action: 'match',
-                      intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
-                      type: pinData.type, id: pinData.id,
-                      category: pinData.properties?.category, urgency: pinData.properties?.urgency,
-                      name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
-                    });
-                    setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
-                  }}
-                  className="w-full py-3 rounded-2xl text-white text-xs font-bold tracking-wide active:scale-[0.97] transition-transform"
-                  style={{
-                    background: selectedPin.type === 'request' ? '#EF4E4B' : '#89CFF0',
-                    boxShadow: `0 4px 20px ${selectedPin.type === 'request' ? 'rgba(239,78,75,0.3)' : 'rgba(137,207,240,0.3)'}`,
-                  }}>
-                  Match
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <style>{`@keyframes cardPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }`}</style>
-        </>
+        <PinDetailCard
+          type={selectedPin.type as any}
+          properties={selectedPin.properties || {}}
+          onClose={() => { setSelectedPin(null); setDetailMode('card'); }}
+          onMatch={() => {
+            const pinData = { ...selectedPin };
+            setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
+            const matchContext = JSON.stringify({
+              action: 'match',
+              intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
+              type: pinData.type, id: pinData.id,
+              category: pinData.properties?.category, urgency: pinData.properties?.urgency,
+              name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
+            });
+            setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
+          }}
+        />
       )}
 
       {/* Results slide-up */}
