@@ -100,7 +100,7 @@ function liveRequestsToCards(items: any[]): Card[] {
 // Map live API resources to Card shape
 function liveResourcesToCards(items: any[]): Card[] {
   return items.map((r) => {
-    const category = fmtTaxonomy(r.taxonomy_code) ?? r.category ?? r.description ?? "Resource";
+    const category = fmtTaxonomy(r.taxonomy_code) ?? (r.category ? r.category.charAt(0).toUpperCase() + r.category.slice(1) : null) ?? r.description?.slice(0, 40) ?? "Resource";
     const personName = r.persons?.display_name ?? r.person_name ?? r.contact_name ?? undefined;
     const location = r.city ?? r.county ?? r.location_text ?? undefined;
     const daysAgo = r.created_at ? `${Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000)}d` : undefined;
