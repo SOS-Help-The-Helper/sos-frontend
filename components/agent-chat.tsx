@@ -87,7 +87,7 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
   const agentName = effectiveOrgName;
 
   return (
-    <div className={"flex flex-col bg-[#F7F5F0] overflow-hidden " + (hideHeader ? "h-full" : "md:rounded-xl md:border md:border-sos-gray-300 md:h-[calc(100vh-7.5rem)] max-md:fixed max-md:inset-x-0 max-md:z-20 max-md:[top:env(safe-area-inset-top,0px)] max-md:[bottom:calc(64px+env(safe-area-inset-bottom,0px))]")}
+    <div className={"flex flex-col overflow-hidden " + (hideHeader ? "h-full bg-white" : "bg-[#F7F5F0] md:rounded-xl md:border md:border-sos-gray-300 md:h-[calc(100vh-7.5rem)] max-md:fixed max-md:inset-x-0 max-md:z-20 max-md:[top:env(safe-area-inset-top,0px)] max-md:[bottom:calc(64px+env(safe-area-inset-bottom,0px))]")}
     >
       {/* Header — hidden when embedded in dashboard shell */}
       {!hideHeader && (
@@ -107,34 +107,27 @@ export function AgentChat({ hideHeader = false }: AgentChatProps) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center text-center pt-8">
-            <div className="w-10 h-10 rounded-full bg-sos-blue-800 flex items-center justify-center mb-2">
-              <img src="/logomark.svg" alt="SOS" className="h-8 w-8" />
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-medium text-black/40">Agent ready</span>
             </div>
-            <h3 className="text-lg font-bold text-sos-blue-800">
+            <h3 className="text-base font-bold text-sos-blue-800">
               {agentName}
             </h3>
-            <div className="mt-1.5 max-w-md text-sm text-sos-gray-600">
-              <TextReveal text={viewConfig.welcome} mode="spotlight" maxWidth={448} stagger={60} delay={300} />
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5 justify-center max-w-lg">
-              {viewConfig.suggestions.length > 0 ? viewConfig.suggestions.map(suggestion => (
-                <button
-                  key={suggestion}
-                  onClick={() => { setInput(suggestion); }}
-                  className="text-[13px] px-3.5 py-2 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
-                >
-                  {suggestion}
-                </button>
-              )) : [
+            <p className="mt-1 max-w-sm text-[13px] text-black/50 leading-relaxed">
+              {viewConfig.welcome}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              {(viewConfig.suggestions.length > 0 ? viewConfig.suggestions : [
                 'Show me open matches',
                 'What\'s our capacity?',
                 'Situation brief',
-              ].map(suggestion => (
+              ]).map(suggestion => (
                 <button
                   key={suggestion}
-                  onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                  className="text-[13px] px-3.5 py-2 rounded-full bg-white border border-sos-gray-300 text-sos-blue-800 font-medium shadow-sm hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
+                  onClick={() => { send(suggestion); }}
+                  className="text-[12.5px] px-3 py-1.5 rounded-full bg-sos-blue-800/5 border border-sos-blue-800/15 text-sos-blue-800 font-medium hover:bg-sos-blue-800 hover:text-white hover:border-sos-blue-800 transition-colors"
                 >
                   {suggestion}
                 </button>
