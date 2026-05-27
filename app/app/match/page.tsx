@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/crm/manage-tabs";
 import {
   Check, X, ArrowRight, Sparkles, Users, MapPin, Phone,
   ChevronDown, LayoutGrid, Crosshair, User, Package,
+  Truck, UserCheck, AlertCircle, Search, Link2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -18,9 +19,16 @@ import {
   ScoreBar,
   FitChip,
   FactChip,
+  ChainCard,
+  ChainArrow,
+  MatchCardShell,
+  ScoreBreakdownPanel,
+  URGENCY_PILL,
   type ScoreBreakdown,
   type HouseholdFields,
+  type MatchEntry,
 } from "@/components/match/match-primitives";
+import { PipelineStepper } from "@/components/match/pipeline-stepper";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,6 +44,8 @@ type MatchRecord = {
   reasoning: string | null;
   committed_by: string | null;
   created_at: string;
+  chain_id?: string | null;
+  transport_status?: string | null;
   // Joined
   request_person_name?: string;
   request_taxonomy?: string;
@@ -190,10 +200,18 @@ function MatchBoardCard({ match: m, accent }: { match: MatchRecord; accent: stri
         <p className="font-mono text-[10px] text-white/45 truncate">{resourceLabel}</p>
       </div>
 
-      {/* Footer */}
-      {daysAgo != null && (
-        <p className="font-mono text-[9px] text-white/30 mt-1.5">{daysAgo}d ago</p>
-      )}
+      {/* Chain indicator + footer */}
+      <div className="flex items-center justify-between mt-1.5">
+        {m.chain_id ? (
+          <span className="inline-flex items-center gap-1 font-mono text-[9px] text-[#89CFF0] bg-[#89CFF0]/10 px-1.5 py-0.5 rounded">
+            <Link2 size={9} />
+            {m.transport_status ? m.transport_status.replace(/_/g, " ") : "chain"}
+          </span>
+        ) : <span />}
+        {daysAgo != null && (
+          <p className="font-mono text-[9px] text-white/30">{daysAgo}d ago</p>
+        )}
+      </div>
     </Link>
   );
 }
@@ -207,6 +225,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [countyFilter, setCountyFilter] = useState("all");
+  const [acceptedCandidateId, setAcceptedCandidateId] = useState<string | null>(null);
 
   const counties = useMemo(
     () => Array.from(new Set(caseList.map((c) => c.county).filter(Boolean))),
@@ -255,6 +274,10 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
   }, [orgId]);
 
   useEffect(() => {
+    setAcceptedCandidateId(null);
+  }, [activeId]);
+
+  useEffect(() => {
     if (!activeId) return;
     let cancelled = false;
     (async () => {
@@ -287,6 +310,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
     try {
       await api.crmCaseAction("approve_match", { match_id: candidateId, request_id: activeId });
       toast.success("Match committed");
+      setAcceptedCandidateId(candidateId);
     } catch {
       toast.error("Failed to approve match");
     }
@@ -451,6 +475,14 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
             </div>
           )}
         </section>
+
+        {/* ── Chain Preview (shown after a candidate is accepted) ─── */}
+        {acceptedCandidateId && (() => {
+          const accepted = candidates.find(c => c.id === acceptedCandidateId);
+          return accepted ? (
+            <MatchChainPreview activeCase={activeCase} candidate={accepted} />
+          ) : null;
+        })()}
       </div>
     </div>
   );
@@ -564,6 +596,96 @@ function CandidateCard({
         </div>
       )}
     </div>
+  );
+}
+
+// ─── MatchChainPreview ──────────────────────────────────────────────────────
+
+function MatchChainPreview({ activeCase, candidate }: { activeCase: CaseItem; candidate: Candidate }) {
+  const bd = candidate.breakdown ?? computeBreakdown(activeCase, candidate);
+
+  // Adapt ScoreBreakdown (service/county/capacity/speed) → MatchEntry.breakdown (category/distance/urgency/capacity/trust)
+  const entryBreakdown = {
+    category: Math.round((bd.service / 50) * 30),
+    distance: bd.county,
+    urgency: Math.round((bd.speed / 10) * 20),
+    capacity: bd.capacity,
+    trust: 0,
+  };
+
+  const matchEntry: MatchEntry = {
+    id: activeCase.id.slice(-8).toUpperCase(),
+    title: `${activeCase.citizen} → ${candidate.name}`,
+    blurb: `${fmtTaxonomy(activeCase.taxonomy[0]) || activeCase.taxonomy[0] || "—"} · ${activeCase.county || "—"}`,
+    score: candidate.score,
+    approved: true,
+    breakdown: entryBreakdown,
+    rationale: `Matched on service area, capacity, and response time.`,
+  };
+
+  const urgencyPill = URGENCY_PILL[activeCase.urgency] ?? "bg-white/8 text-white/55";
+
+  return (
+    <MatchCardShell kindLabel="Three-way match" match={matchEntry}>
+      <PipelineStepper current="accepted" />
+
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-3 md:gap-2 items-stretch">
+        {/* Survivor */}
+        <ChainCard
+          icon={<Users size={13} className="text-[#89CFF0]" />}
+          eyebrow="Survivor"
+          title={activeCase.citizen}
+          pills={[
+            <span key="u" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${urgencyPill}`}>
+              {activeCase.urgency}
+            </span>,
+          ]}
+          rows={[
+            { label: "Household", value: householdSummary(activeCase) || "—" },
+            { label: "Location", value: activeCase.county || "—", icon: <MapPin size={10} /> },
+          ]}
+        />
+        <ChainArrow />
+
+        {/* Resource (Org/Provider) */}
+        <ChainCard
+          icon={<Truck size={13} className="text-[#89CFF0]" />}
+          eyebrow="Resource"
+          title={candidate.name}
+          pills={[
+            <span key="s" className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#89CFF0]/15 text-[#89CFF0]">
+              matched
+            </span>,
+          ]}
+          rows={[
+            { label: "Area", value: candidate.counties || "—" },
+            { label: "Open", value: `${candidate.open} available` },
+            ...(candidate.responseHrs ? [{ label: "Response", value: `~${candidate.responseHrs}h` }] : []),
+          ]}
+        />
+        <ChainArrow />
+
+        {/* Driver — awaiting */}
+        <div className="rounded-xl border border-dashed border-[#F5A524]/40 bg-[#F5A524]/[0.04] p-3.5 flex flex-col gap-2.5 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <UserCheck size={13} className="text-[#F5A524]" />
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5A524]">Driver</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <AlertCircle size={12} className="text-[#F5A524]" />
+            <p className="text-[12.5px] font-medium text-white/85">Awaiting Driver</p>
+          </div>
+          <p className="text-[11px] text-white/55 leading-snug">
+            Match committed. Dispatch is sourcing a qualified driver within range.
+          </p>
+          <button className="mt-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md bg-[#89CFF0]/15 text-[#89CFF0] text-[11px] font-medium hover:bg-[#89CFF0]/25 transition">
+            <Search size={11} /> Find Driver
+          </button>
+        </div>
+      </div>
+
+      <ScoreBreakdownPanel match={matchEntry} />
+    </MatchCardShell>
   );
 }
 
