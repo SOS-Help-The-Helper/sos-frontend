@@ -206,38 +206,54 @@ export function getChatTools(opts?: { personId?: string; userLat?: number; userL
       },
 
       submit_sos: {
-        description: 'Submit a help request. Use after collecting category, count, circumstances, and location. Include taxonomy_codes when possible.',
+        description: 'Submit reports, requests, and/or resources to the SOS system. All records attach to the person\'s SOS case (auto-created on first interaction). Use after collecting details and getting user confirmation via show_sos_confirmation.',
         inputSchema: zodSchema(z.object({
-          categories: z.array(z.string()).describe('Selected categories'),
-          taxonomy_codes: z.array(z.string()).optional().describe('Taxonomy codes matching each category (e.g. HOUSING.EMERGENCY, FOOD.MEALS)'),
-          count: z.string().describe('Number of people'),
+          records: z.array(z.object({
+            type: z.enum(['request', 'report', 'resource']).describe('Record type: request (what they need), report (what they see/document), resource (what they offer)'),
+            taxonomy_code: z.string().describe('Taxonomy code (e.g. HOUSING.TEMPORARY, FOOD.MEALS, SAFETY.FLOOD)'),
+            description: z.string().describe('Human-readable description'),
+            urgency: z.string().optional().describe('critical/high/medium/low — for requests and reports'),
+          })).describe('Array of records to create — can mix reports, requests, and resources in one call'),
+          count: z.string().optional().describe('Number of people in household'),
           circumstances: z.array(z.string()).optional().describe('Special circumstances'),
           circumstanceNotes: z.string().optional().describe('Free text about circumstances'),
           lat: z.number().describe('Latitude'),
           lng: z.number().describe('Longitude'),
           locationName: z.string().optional().describe('Location name'),
-          urgency: z.string().optional().describe('critical/high/medium/low'),
+          photoUrl: z.string().optional().describe('URL of photo if one was uploaded (for reports)'),
         })),
-        execute: async function({ categories, taxonomy_codes, count, circumstances, circumstanceNotes, lat, lng, locationName, urgency }) {
-          // Call sos-write EF (replaced intake-write May 2026)
+        execute: async function({ records, count, circumstances, circumstanceNotes, lat, lng, locationName, photoUrl }) {
           const personId = _personId;
+          // Build records array for sos-write
+          const writeRecords = records.map((r) => ({
+            type: r.type,
+            taxonomy_code: r.taxonomy_code,
+            urgency: r.urgency || (r.type === 'request' ? 'high' : 'medium'),
+            description: r.description + (circumstanceNotes && r.type === 'request' ? '. ' + circumstanceNotes : ''),
+            ...(photoUrl && r.type === 'report' ? { photo_url: photoUrl } : {}),
+          }));
+
           const resp = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${SUPABASE_SERVICE}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               actor: personId ? { id: personId, type: 'citizen' } : { phone: '+10000000000', name: 'Anonymous Web User', type: 'citizen' },
-              records: categories.map((c: string, i: number) => ({
-                type: 'request',
-                taxonomy_code: taxonomy_codes?.[i] || 'HOUSING.TEMPORARY.RV',
-                urgency: urgency || 'high',
-                description: `${c.replace(/_/g, ' ')} needed for household of ${count || 1}${circumstances?.length ? '. ' + circumstances.join(', ') : ''}${circumstanceNotes ? '. ' + circumstanceNotes : ''}`,
-              })),
+              records: writeRecords,
               location: { lat, lng, text: locationName || null },
-              household: { size: parseInt(count) || 1, circumstances: circumstances || [] },
+              household: count ? { size: parseInt(count) || 1, circumstances: circumstances || [] } : undefined,
               context: { channel: 'web_ai_sdk' },
             }),
           });
           const result = await resp.json();
+
+          const reportCount = records.filter(r => r.type === 'report').length;
+          const requestCount = records.filter(r => r.type === 'request').length;
+          const resourceCount = records.filter(r => r.type === 'resource').length;
+          const parts = [];
+          if (reportCount) parts.push(`${reportCount} report${reportCount > 1 ? 's' : ''}`);
+          if (requestCount) parts.push(`${requestCount} request${requestCount > 1 ? 's' : ''}`);
+          if (resourceCount) parts.push(`${resourceCount} resource${resourceCount > 1 ? 's' : ''}`);
+          const summary = parts.join(' + ');
 
           return JSON.stringify({
             __tool: 'submit_confirmation',
@@ -247,9 +263,9 @@ export function getChatTools(opts?: { personId?: string; userLat?: number; userL
             personId: result.person_id || undefined,
             lat,
             lng,
-            category: categories[0],
-            title: resp.ok ? `SOS #${result.sos_id} Submitted` : 'Submission Failed',
-            message: resp.ok ? 'Your SOS has been submitted. We\'re searching for help near you now.' : 'Something went wrong. Please try again.',
+            category: records[0]?.taxonomy_code,
+            title: resp.ok ? `SOS Submitted — ${summary}` : 'Submission Failed',
+            message: resp.ok ? `Your SOS has been submitted (${summary}). We're searching for help near you now.` : 'Something went wrong. Please try again.',
           });
         },
       },
