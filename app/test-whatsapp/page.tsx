@@ -43,6 +43,12 @@ interface InboxAttachment {
   filename?: string;
 }
 
+interface InboxReaction {
+  emoji: string;
+  from: string;
+  timestamp: string;
+}
+
 interface InboxMessage {
   id: string;
   from: string;
@@ -54,6 +60,7 @@ interface InboxMessage {
   status?: 'sent' | 'delivered' | 'read' | 'failed' | string;
   statusError?: string;
   attachments?: InboxAttachment[];
+  reactions?: InboxReaction[];
 }
 
 const STATUS_BADGE: Record<string, string> = {
@@ -571,6 +578,19 @@ export default function TestWhatsAppPage() {
                         {m.statusError && (
                           <span className="text-[11px] text-red-300">{m.statusError}</span>
                         )}
+                      </div>
+                    )}
+                    {m.reactions && m.reactions.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {m.reactions.map((r, i) => (
+                          <span
+                            key={`${m.id}-rx-${i}`}
+                            title={`${r.from} · ${new Date(r.timestamp).toLocaleTimeString()}`}
+                            className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-xs"
+                          >
+                            {r.emoji}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </li>
