@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
+import { useApiFetch } from "@/lib/use-api-fetch";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
@@ -50,7 +51,6 @@ function mapVolunteers(data: unknown[]): VolunteerRow[] {
 
 export default function VolunteersPage() {
   const { orgId } = useAuthContext();
-  const [volunteers, setVolunteers] = useState<typeof volunteerDetails[number][]>([]);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -63,19 +63,14 @@ export default function VolunteersPage() {
   const [hasCdl, setHasCdl] = useState(false);
   const [availableToday, setAvailableToday] = useState(false);
 
-  function refreshVolunteers() {
-    api.crmVolunteersAvailable(orgId)
-      .then((res) => {
-        const items = mapVolunteers(extractList(res, ["volunteers", "data", "results"]));
-        if (items.length > 0) setVolunteers(items);
-      })
-      .catch(() => toast.error("Failed to load volunteers"));
-  }
-
-  useEffect(() => {
-    refreshVolunteers();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId]);
+  const { data: volunteersData, refetch: refreshVolunteers } = useApiFetch(
+    () => api.crmVolunteersAvailable(orgId).then((res) =>
+      mapVolunteers(extractList(res, ["volunteers", "data", "results"]))
+    ),
+    "Failed to load volunteers",
+    [orgId]
+  );
+  const volunteers = volunteersData ?? [];
 
   async function handleAddVolunteer(e: React.FormEvent) {
     e.preventDefault();

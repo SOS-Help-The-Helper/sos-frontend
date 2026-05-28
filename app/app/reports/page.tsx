@@ -2,14 +2,14 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useApiFetch } from "@/lib/use-api-fetch";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 const protoKpis: Array<{ label: string; value: string | number; delta: string }> = [];
 const orgs: any[] = [];
 const cases: any[] = [];
 import { Download } from "lucide-react";
-import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
@@ -65,26 +65,22 @@ export default function ReportsPage() {
   cases.forEach((c) => c.taxonomy.forEach((t) => (protoTaxCounts[t] = (protoTaxCounts[t] || 0) + 1)));
   const protoTaxList: TaxEntry[] = Object.entries(protoTaxCounts).sort((a, b) => b[1] - a[1]);
 
-  const [loading, setLoading] = useState(true);
-  const [kpis, setKpis] = useState<Kpi[]>(protoKpis);
-  const [byOrg, setByOrg] = useState<OrgBar[]>(protoByOrg);
-  const [taxList, setTaxList] = useState<TaxEntry[]>(protoTaxList);
+  const { data: dashboard, loading } = useApiFetch(
+    () => api.crmImpactDashboard(orgId || '').then((res) => {
+      const d = (res as Record<string, unknown>)?.data ?? res;
+      return {
+        kpis: mapDashboardToKpis(d),
+        byOrg: mapDashboardToOrgBars(d),
+        taxList: mapDashboardToTaxList(d),
+      };
+    }),
+    "Failed to load reports",
+    [orgId]
+  );
 
-  useEffect(() => {
-    // admin: proceed without org filter
-    api.crmImpactDashboard(orgId || '')
-      .then((res) => {
-        const data = (res as Record<string, unknown>)?.data ?? res;
-        const mappedKpis = mapDashboardToKpis(data);
-        if (mappedKpis.length) setKpis(mappedKpis);
-        const mappedOrgs = mapDashboardToOrgBars(data);
-        if (mappedOrgs.length) setByOrg(mappedOrgs);
-        const mappedTax = mapDashboardToTaxList(data);
-        if (mappedTax.length) setTaxList(mappedTax);
-      })
-      .catch(() => { toast.error("Failed to load reports"); })
-      .finally(() => setLoading(false));
-  }, [orgId]);
+  const kpis = useMemo(() => dashboard?.kpis?.length ? dashboard.kpis : protoKpis, [dashboard]);
+  const byOrg = useMemo(() => dashboard?.byOrg?.length ? dashboard.byOrg : protoByOrg, [dashboard]);
+  const taxList = useMemo(() => dashboard?.taxList?.length ? dashboard.taxList : protoTaxList, [dashboard]);
 
   const max = Math.max(...byOrg.map((b) => b.count), 1);
   const taxMax = Math.max(...taxList.map(([, n]) => n), 1);

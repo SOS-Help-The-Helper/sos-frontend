@@ -120,6 +120,28 @@ function liveResourcesToCards(items: any[]): Card[] {
   });
 }
 
+// Map SOS umbrella cases to Card shape (shared by initial fetch and refreshCases)
+function mapCasesToCards(items: any[]): Card[] {
+  return items.map((s: any) => {
+    const name = s.person_name || s.persons?.display_name || null;
+    const reqCount = s.request_count || 0;
+    const fulCount = s.fulfilled_count || 0;
+    const region = s.persons?.home_region || undefined;
+    const daysAgo = s.created_at ? Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000) : null;
+    const badges: string[] = [];
+    if (s.persons?.is_veteran) badges.push("🎖 Veteran");
+    if (s.persons?.is_first_responder) badges.push("🚒 FR");
+    return {
+      id: s.id,
+      col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
+      title: name || "Anonymous",
+      meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
+      sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
+      href: `/app/cases/${s.id}`,
+    };
+  });
+}
+
 function CreateCaseModal({
   orgId,
   onClose,
@@ -281,9 +303,7 @@ export default function CasesPage() {
   const [liveRequests, setLiveRequests] = useState<Card[] | null>(null);
   const [liveResources, setLiveResources] = useState<Card[] | null>(null);
 
-  const [loadingCases, setLoadingCases] = useState(true);
-  const [loadingRequests, setLoadingRequests] = useState(true);
-  const [loadingResources, setLoadingResources] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // Per-tab kanban state (populated by EF calls)
   const [caseCards, setCaseCards] = useState<Card[]>([]);
@@ -291,79 +311,42 @@ export default function CasesPage() {
   const [resourceCards, setResourceCards] = useState<Card[]>([]);
   const [reportCards, setReportCards] = useState<Card[]>([]);
 
-  // Fetch cases (SOS umbrellas) from EF
+  // Fetch all tab data in parallel
   useEffect(() => {
-    api.crmSosesList({ limit: 200 })
-      .then((data: any) => {
-        const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
-        if (items.length > 0) {
-          const cards: Card[] = items.map((s: any) => {
-            const name = s.person_name || s.persons?.display_name || null;
-            const reqCount = s.request_count || 0;
-            const fulCount = s.fulfilled_count || 0;
-            const region = s.persons?.home_region || undefined;
-            const daysAgo = s.created_at ? Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000) : null;
-            const badges: string[] = [];
-            if (s.persons?.is_veteran) badges.push("🎖 Veteran");
-            if (s.persons?.is_first_responder) badges.push("🚒 FR");
-            return {
-              id: s.id,
-              col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
-              title: name || "Anonymous",
-              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
-              sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
-              href: `/app/cases/${s.id}`,
-            };
-          });
+    setLoading(true);
+    Promise.all([
+      api.crmSosesList({ limit: 200 }),
+      api.crmRequestsList(orgId || ""),
+      api.crmResourcesList(orgId || ""),
+      api.efCall("crm-reports", { action: "list_reports", limit: 100 }),
+    ])
+      .then(([casesData, requestsData, resourcesData, reportsData]: any[]) => {
+        const caseItems: any[] = casesData?.cases ?? (Array.isArray(casesData) ? casesData : []);
+        if (caseItems.length > 0) {
+          const cards = mapCasesToCards(caseItems);
           setLiveCases(cards);
           setCaseCards(cards);
         }
-      })
-      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
-      .finally(() => setLoadingCases(false));
-  }, []);
 
-  // Fetch requests from EF
-  useEffect(() => {
-    
-    api.crmRequestsList(orgId || "")
-      .then((data: any) => {
-        const items: any[] = data?.requests ?? (Array.isArray(data) ? data : []);
-        if (items.length > 0) {
-          items.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-          const cards = liveRequestsToCards(items);
+        const requestItems: any[] = requestsData?.requests ?? (Array.isArray(requestsData) ? requestsData : []);
+        if (requestItems.length > 0) {
+          requestItems.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+          const cards = liveRequestsToCards(requestItems);
           setLiveRequests(cards);
           setRequestCards(cards);
         }
-      })
-      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
-      .finally(() => setLoadingRequests(false));
-  }, [orgId]);
 
-  // Fetch resources from EF
-  useEffect(() => {
-    
-    api.crmResourcesList(orgId || "")
-      .then((data: any) => {
-        const items: any[] = data?.resources ?? (Array.isArray(data) ? data : []);
-        if (items.length > 0) {
-          items.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-          const cards = liveResourcesToCards(items);
+        const resourceItems: any[] = resourcesData?.resources ?? (Array.isArray(resourcesData) ? resourcesData : []);
+        if (resourceItems.length > 0) {
+          resourceItems.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+          const cards = liveResourcesToCards(resourceItems);
           setLiveResources(cards);
           setResourceCards(cards);
         }
-      })
-      .catch((err) => { console.error("[cases] soses fetch failed:", err); })
-      .finally(() => setLoadingResources(false));
-  }, [orgId]);
 
-  // Fetch reports
-  useEffect(() => {
-    api.efCall("crm-reports", { action: "list_reports", limit: 100 })
-      .then((res: any) => {
-        const items: any[] = res?.reports ?? res?.data ?? (Array.isArray(res) ? res : []);
-        if (items.length > 0) {
-          const cards: Card[] = items.map((r: any) => ({
+        const reportItems: any[] = reportsData?.reports ?? reportsData?.data ?? (Array.isArray(reportsData) ? reportsData : []);
+        if (reportItems.length > 0) {
+          const cards: Card[] = reportItems.map((r: any) => ({
             id: r.id,
             col: r.status === "fulfilled" ? "resolved" : r.severity === "critical" ? "needs_attention" : "active_work",
             title: r.category ?? r.description?.slice(0, 40) ?? r.id?.slice(0, 8),
@@ -376,19 +359,20 @@ export default function CasesPage() {
           setReportCards(cards);
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => toast.error("Failed to load cases"))
+      .finally(() => setLoading(false));
+  }, [orgId]);
 
-  const { cards, setCards, columns, label, loading } = useMemo(() => {
+  const { cards, setCards, columns, label } = useMemo(() => {
     switch (tab) {
       case "requests":
-        return { cards: requestCards, setCards: setRequestCards, columns: REQUEST_COLS, label: "request", loading: loadingRequests };
+        return { cards: requestCards, setCards: setRequestCards, columns: REQUEST_COLS, label: "request" };
       case "resources":
-        return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource", loading: loadingResources };
+        return { cards: resourceCards, setCards: setResourceCards, columns: RESOURCE_COLS, label: "resource" };
       default:
-        return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case", loading: loadingCases };
+        return { cards: caseCards, setCards: setCaseCards, columns: CASE_COLS, label: "case" };
     }
-  }, [tab, caseCards, requestCards, resourceCards, reportCards, loadingCases, loadingRequests, loadingResources]);
+  }, [tab, caseCards, requestCards, resourceCards, reportCards]);
 
   const totalOpen = cards.filter((c) => c.col !== "resolved" && c.col !== "Resolved").length;
 
@@ -419,35 +403,18 @@ export default function CasesPage() {
   };
 
   const refreshCases = () => {
-    setLoadingCases(true);
+    setLoading(true);
     api.crmSosesList({ limit: 200 })
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
-          const newCards: Card[] = items.map((s: any) => {
-            const name = s.person_name || s.persons?.display_name || null;
-            const reqCount = s.request_count || 0;
-            const fulCount = s.fulfilled_count || 0;
-            const region = s.persons?.home_region || undefined;
-            const daysAgo = s.created_at ? Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000) : null;
-            const badges: string[] = [];
-            if (s.persons?.is_veteran) badges.push("🎖 Veteran");
-            if (s.persons?.is_first_responder) badges.push("🚒 FR");
-            return {
-              id: s.id,
-              col: s.status === "resolved" ? "resolved" : s.status === "closed" ? "closed" : "active",
-              title: name || "Anonymous",
-              meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
-              sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
-              href: `/app/cases/${s.id}`,
-            };
-          });
+          const newCards = mapCasesToCards(items);
           setLiveCases(newCards);
           setCaseCards(newCards);
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingCases(false));
+      .finally(() => setLoading(false));
   };
 
   const TABS: { id: TabKey; label: string; count: number }[] = [

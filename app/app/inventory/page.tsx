@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useApiFetch } from "@/lib/use-api-fetch";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
@@ -43,8 +44,6 @@ export default function InventoryPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [inventory, setInventory] = useState<Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>>([]);
   const [resources, setResources] = useState<ResourceDetail[]>([]);
-
-  const [loading, setLoading] = useState(true);
 
   // Add-item form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -107,20 +106,23 @@ export default function InventoryPage() {
     }
   }
 
-  useEffect(() => {
-    // admin: proceed without org filter
-    Promise.allSettled([
-      api.crmFacilitiesList(orgId || '').then((data: unknown) => {
-        const rows = (data as { facilities?: Facility[] })?.facilities;
-        if (rows?.length) setFacilities(rows);
-      }),
-      api.queryInventory({ org_id: orgId }).then((data: unknown) => {
-        const d = data as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
-        if (d?.inventory?.length) setInventory(d.inventory);
-        if (d?.resources?.length) setResources(d.resources);
-      }),
-    ]).then(() => setLoading(false));
-  }, [orgId]);
+  const { loading } = useApiFetch(
+    async () => {
+      await Promise.allSettled([
+        api.crmFacilitiesList(orgId || '').then((data: unknown) => {
+          const rows = (data as { facilities?: Facility[] })?.facilities;
+          if (rows?.length) setFacilities(rows);
+        }),
+        api.queryInventory({ org_id: orgId }).then((data: unknown) => {
+          const d = data as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+          if (d?.inventory?.length) setInventory(d.inventory);
+          if (d?.resources?.length) setResources(d.resources);
+        }),
+      ]);
+    },
+    "Failed to load inventory",
+    [orgId]
+  );
 
   const filteredItems = useMemo(() => {
     if (facilityId === "all") return inventory;
