@@ -10,6 +10,7 @@ export type StoredMessage = {
   text: string;
   timestamp: Date;
   direction: 'inbound' | 'outbound';
+  channel?: 'whatsapp' | 'imessage' | 'sms' | string;
   attachments?: Array<{ mimeType: string; filename: string; downloadUrl: string }>;
 };
 
@@ -42,6 +43,13 @@ export const messageStore = {
     return messages.filter(
       (m) => m.from === phoneNumber || m.to === phoneNumber
     );
+  },
+
+  /**
+   * Get messages filtered by channel ('whatsapp', 'imessage', 'sms').
+   */
+  getMessagesForChannel(channel: string): StoredMessage[] {
+    return messages.filter((m) => m.channel === channel);
   },
 
   /**

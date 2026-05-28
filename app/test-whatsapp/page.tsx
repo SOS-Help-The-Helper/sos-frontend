@@ -37,6 +37,23 @@ interface SendResponse {
   details?: unknown;
 }
 
+interface InboxMessage {
+  id: string;
+  from: string;
+  to: string;
+  text: string;
+  timestamp: string;
+  direction: 'inbound' | 'outbound';
+  channel?: string;
+}
+
+interface InboxResponse {
+  success?: boolean;
+  messages?: InboxMessage[];
+  count?: number;
+  error?: string;
+}
+
 const STATUS_LABEL: Record<string, string> = {
   not_enabled: 'Not enabled',
   disconnected: 'Disconnected',
@@ -71,7 +88,11 @@ export default function TestWhatsAppPage() {
   const [sendResult, setSendResult] = useState<SendResponse | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
 
+  const [inbox, setInbox] = useState<InboxMessage[]>([]);
+  const [inboxError, setInboxError] = useState<string | null>(null);
+
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inboxPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStatus = useCallback(async (): Promise<PairingStatus | null> => {
     try {
@@ -96,6 +117,31 @@ export default function TestWhatsAppPage() {
   useEffect(() => {
     void fetchStatus();
   }, [fetchStatus]);
+
+  const fetchInbox = useCallback(async () => {
+    try {
+      const res = await fetch('/api/whatsapp/messages', { cache: 'no-store' });
+      const data = (await res.json()) as InboxResponse;
+      if (!res.ok || data.error) {
+        setInboxError(data.error || `Inbox request failed with ${res.status}`);
+        return;
+      }
+      setInboxError(null);
+      setInbox((data.messages ?? []).slice().reverse());
+    } catch (err) {
+      setInboxError(err instanceof Error ? err.message : 'Inbox request failed');
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchInbox();
+    inboxPollRef.current = setInterval(() => {
+      void fetchInbox();
+    }, 5000);
+    return () => {
+      if (inboxPollRef.current) clearInterval(inboxPollRef.current);
+    };
+  }, [fetchInbox]);
 
   // Poll while a pairing is in flight. Stop once connected or back to a
   // terminal state so we don't burn through requests on an idle tab.
@@ -377,6 +423,53 @@ export default function TestWhatsAppPage() {
             <div className="mt-3 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-emerald-200">
               Sent. messageId: <span className="font-mono">{sendResult.messageId}</span>
             </div>
+          )}
+        </section>
+
+        <section className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-white/40">Inbox</p>
+              <p className="mt-1 text-xs text-white/50">
+                Inbound WhatsApp messages from the TextBubbles webhook. In-memory, resets on
+                redeploy. Polls every 5s.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void fetchInbox()}
+              className="rounded-md border border-white/15 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {inboxError && (
+            <p className="mt-3 text-xs text-red-300">{inboxError}</p>
+          )}
+
+          {inbox.length === 0 ? (
+            <p className="mt-4 text-xs text-white/40">
+              No messages yet. Send a WhatsApp message to {phoneNumber ?? 'the paired number'}{' '}
+              and it should appear here within ~5s.
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {inbox.map((m) => (
+                <li
+                  key={m.id}
+                  className="rounded-md border border-white/10 bg-black/20 p-3"
+                >
+                  <div className="flex items-center justify-between gap-2 text-[11px] text-white/50">
+                    <span className="font-mono">{m.from || 'unknown'}</span>
+                    <span>{new Date(m.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-white/90">
+                    {m.text || <span className="italic text-white/40">(no text)</span>}
+                  </p>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       </div>
