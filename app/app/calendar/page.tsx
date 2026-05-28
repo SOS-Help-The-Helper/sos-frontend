@@ -40,6 +40,10 @@ export default function CalendarPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefillDate, setPrefillDate] = useState<string | null>(null);
+  const [activeDay, setActiveDay] = useState(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 6 : d - 1; // Mon=0 … Sun=6
+  });
 
   const editingEvent = useMemo(() => items.find((s) => s.id === editingId) ?? null, [items, editingId]);
 
@@ -119,7 +123,90 @@ export default function CalendarPage() {
         }
       />
       <div className="px-4 pt-4 pb-4">
-        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
+        {/* Mobile: day-picker + single-day column */}
+        <div className="md:hidden space-y-3">
+          <div className="flex gap-1 overflow-x-auto pb-2">
+            {days.map((d, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveDay(i)}
+                className={`shrink-0 flex flex-col items-center px-3 py-1.5 rounded-lg text-xs transition
+                  ${activeDay === i ? 'bg-white text-[#0F1E2B]' : 'bg-white/5 text-white/60'}`}
+              >
+                <span>{d.label}</span>
+                <span className="font-medium">{d.date.split(' ')[1]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
+            {(() => {
+              const d = days[activeDay];
+              const dayEvents = items.filter((s) => s.date === d.date);
+              return (
+                <>
+                  <div className="p-3 text-center border-b border-white/8">
+                    <p className="font-mono text-xs uppercase tracking-wider text-white/45">{d.label}</p>
+                    <p className="text-[15px] font-semibold mt-0.5">{d.date}</p>
+                  </div>
+                  <div className="group/day p-2 space-y-2 relative min-h-[340px]">
+                    {dayEvents.map((s) => {
+                      const org = orgs.find((o) => o.id === s.org);
+                      const full = s.filled >= s.slots;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                          className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
+                          style={{ borderColor: org?.color }}
+                        >
+                          <p className="text-[12px] font-medium leading-tight">{s.title}</p>
+                          <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
+                          <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
+                            <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
+                              <Users size={9} /> {s.filled}/{s.slots}
+                            </span>
+                            {full ? (
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
+                            ) : (
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => openNew(d.date)}
+                      className="w-full h-7 rounded-md border border-dashed border-white/10 hover:border-white/25 hover:bg-white/4 text-white/35 hover:text-white/70 transition flex items-center justify-center gap-1 text-[11px]"
+                    >
+                      <Plus size={11} /> Add
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+            {editingId && editingEvent && (
+              <div className="border-t border-white/8 px-4 py-4">
+                <InlineEventEdit
+                  key={editingId}
+                  event={editingEvent}
+                  onClose={() => setEditingId(null)}
+                  onSave={async (patch) => {
+                    await updateEvent(editingId, patch);
+                    toast.success("Event updated");
+                    setEditingId(null);
+                  }}
+                  onDelete={async () => {
+                    await removeEvent(editingId);
+                    setEditingId(null);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop: full 7-column week grid */}
+        <div className="hidden md:block rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/8">
             {days.map((d) => (
               <div key={d.label} className="p-3 text-center border-r border-white/5 last:border-r-0">

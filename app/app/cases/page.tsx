@@ -523,6 +523,8 @@ export default function CasesPage() {
         ))}
       </div>
 
+      <p className="text-[10px] text-white/30 text-center mt-1 md:hidden">← swipe columns →</p>
+
       <div className="px-4 pt-4 pb-4">
         <div
           className="grid gap-3 overflow-x-auto snap-x md:snap-none"

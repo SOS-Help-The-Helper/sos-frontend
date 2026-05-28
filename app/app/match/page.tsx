@@ -87,6 +87,7 @@ function MatchBoard({ orgId }: { orgId: string }) {
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [mobileCol, setMobileCol] = useState(BOARD_COLS[0].id);
 
   function fetchMatches() {
     if (!orgId) return;
@@ -151,32 +152,61 @@ function MatchBoard({ orgId }: { orgId: string }) {
     );
   }
 
-  return (
-    <div className="px-4 pt-4 pb-4 overflow-x-auto">
-      <div className="grid gap-3 min-w-[1100px]" style={{ gridTemplateColumns: `repeat(${BOARD_COLS.length}, minmax(220px, 1fr))` }}>
-        {BOARD_COLS.map(col => {
-          const items = grouped[col.id] || [];
-          return (
-            <div key={col.id} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-3 self-start">
-              <div className="flex items-center justify-between px-1 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
-                  <span className="font-mono text-xs uppercase tracking-wider text-white/55">{col.label}</span>
-                </div>
-                <span className="font-mono text-xs text-white/35">{items.length}</span>
-              </div>
-              <div className="space-y-2 max-h-[65vh] overflow-y-auto">
-                {items.length === 0 ? (
-                  <p className="text-[11px] text-white/30 text-center py-6">No matches</p>
-                ) : (
-                  items.map(m => <MatchBoardCard key={m.id} match={m} accent={col.accent} />)
-                )}
-              </div>
-            </div>
-          );
-        })}
+  const colContent = (col: typeof BOARD_COLS[0]) => {
+    const items = grouped[col.id] || [];
+    return (
+      <div key={col.id} id={`match-col-${col.id}`} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-3 self-start">
+        <div className="flex items-center justify-between px-1 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
+            <span className="font-mono text-xs uppercase tracking-wider text-white/55">{col.label}</span>
+          </div>
+          <span className="font-mono text-xs text-white/35">{items.length}</span>
+        </div>
+        <div className="space-y-2 max-h-[65vh] overflow-y-auto">
+          {items.length === 0 ? (
+            <p className="text-[11px] text-white/30 text-center py-6">No matches</p>
+          ) : (
+            items.map(m => <MatchBoardCard key={m.id} match={m} accent={col.accent} />)
+          )}
+        </div>
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Mobile: pill switcher + single-column view */}
+      <div className="md:hidden">
+        <div className="flex gap-2 overflow-x-auto px-4 pt-4 pb-2">
+          {BOARD_COLS.map(col => (
+            <button
+              key={col.id}
+              role="tab"
+              aria-selected={mobileCol === col.id}
+              aria-controls={`match-col-${col.id}`}
+              onClick={() => setMobileCol(col.id)}
+              className={`shrink-0 px-3 h-8 rounded-full text-xs font-medium border transition
+                ${mobileCol === col.id
+                  ? 'bg-white text-[#0F1E2B] border-white'
+                  : 'bg-white/5 text-white/60 border-white/10'}`}
+            >
+              {col.label}
+            </button>
+          ))}
+        </div>
+        <div className="px-4 pb-4">
+          {colContent(BOARD_COLS.find(c => c.id === mobileCol) ?? BOARD_COLS[0])}
+        </div>
+      </div>
+
+      {/* Desktop: full 5-column board */}
+      <div className="hidden md:block px-4 pt-4 pb-4 overflow-x-auto">
+        <div className="grid gap-3 min-w-[1100px]" style={{ gridTemplateColumns: `repeat(${BOARD_COLS.length}, minmax(220px, 1fr))` }}>
+          {BOARD_COLS.map(col => colContent(col))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -583,11 +613,11 @@ function CandidateCard({
         {state === "idle" && (
           <div className="flex items-center gap-1.5 shrink-0">
             <button onClick={() => setState("decline_open")}
-              className="h-9 px-3 rounded-lg bg-white/8 hover:bg-white/15 text-white/70 text-[12px] transition inline-flex items-center gap-1.5">
+              className="h-11 px-3 rounded-lg bg-white/8 hover:bg-white/15 text-white/70 text-[12px] transition inline-flex items-center gap-1.5">
               <X size={13} /> Decline
             </button>
             <button onClick={onStartConfirm}
-              className="h-9 px-3 rounded-lg bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[12px] font-medium transition inline-flex items-center gap-1.5">
+              className="h-11 px-3 rounded-lg bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[12px] font-medium transition inline-flex items-center gap-1.5">
               <Check size={13} /> Accept
             </button>
           </div>
