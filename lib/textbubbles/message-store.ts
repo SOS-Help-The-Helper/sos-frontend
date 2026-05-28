@@ -11,6 +11,12 @@ export type StoredAttachment = {
   filename?: string;
 };
 
+export type StoredReaction = {
+  emoji: string;
+  from: string;
+  timestamp: Date;
+};
+
 export type StoredMessage = {
   id: string;
   from: string;
@@ -22,6 +28,7 @@ export type StoredMessage = {
   status?: MessageStatus;
   statusError?: string;
   attachments?: StoredAttachment[];
+  reactions?: StoredReaction[];
 };
 
 // Simple in-memory store
@@ -72,6 +79,25 @@ export const messageStore = {
     if (!msg) return false;
     msg.status = status;
     if (statusError) msg.statusError = statusError;
+    return true;
+  },
+
+  /**
+   * Attach a reaction to a stored message. WhatsApp reactions are
+   * single-emoji per sender; sending the same emoji twice is a remove,
+   * and any new emoji replaces the previous one for that sender. An
+   * empty `emoji` argument removes the sender's reaction entirely.
+   * Returns true if the target message was found.
+   */
+  setReaction(targetMessageId: string, reaction: { emoji: string; from: string }): boolean {
+    const msg = messages.find((m) => m.id === targetMessageId);
+    if (!msg) return false;
+    const existing = msg.reactions ?? [];
+    const filtered = existing.filter((r) => r.from !== reaction.from);
+    if (reaction.emoji && reaction.emoji.trim().length > 0) {
+      filtered.push({ emoji: reaction.emoji, from: reaction.from, timestamp: new Date() });
+    }
+    msg.reactions = filtered;
     return true;
   },
 

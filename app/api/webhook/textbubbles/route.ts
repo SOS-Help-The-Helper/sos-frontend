@@ -115,6 +115,43 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // WhatsApp reactions arrive as `message.reaction` events with a
+  // `reaction` field referencing the message they target. A single
+  // sender has at most one active reaction per message; an empty emoji
+  // means the sender cleared their previous reaction. Unknown target
+  // ids are dropped silently.
+  if (event.type === 'message.reaction') {
+    const data = event.data ?? {};
+    if (data.channel === 'whatsapp') {
+      const reactionField = (data.reaction ?? {}) as {
+        messageId?: string;
+        targetMessageId?: string;
+        emoji?: string;
+        content?: string;
+      };
+      const targetId =
+        typeof reactionField.targetMessageId === 'string'
+          ? reactionField.targetMessageId
+          : typeof reactionField.messageId === 'string'
+            ? reactionField.messageId
+            : typeof data.targetMessageId === 'string'
+              ? data.targetMessageId
+              : null;
+      const emoji =
+        typeof reactionField.emoji === 'string'
+          ? reactionField.emoji
+          : typeof reactionField.content === 'string'
+            ? reactionField.content
+            : '';
+      if (targetId) {
+        messageStore.setReaction(targetId, {
+          emoji,
+          from: normalizeFrom(data.from),
+        });
+      }
+    }
+  }
+
   // Return 200 immediately — TextBubbles is happy, our server handles the rest
   return NextResponse.json({ success: true });
 }
