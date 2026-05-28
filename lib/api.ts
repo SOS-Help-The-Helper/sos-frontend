@@ -162,11 +162,11 @@ export const api = {
     efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
 
   // CRM — Matches board (direct Supabase read with joins)
-  crmMatchesList: async (orgId: string) => {
+  crmMatchesList: async (_orgId: string) => {
     const { data, error } = await supabaseRead
       .from('matches')
       .select(`
-        id, request_id, resource_id, resource_org_id, score, status, reasoning, committed_by, created_at,
+        id, request_id, resource_id, match_score, match_reasoning, status, committed_by, chain_id, created_at,
         requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
         resources!resource_id(taxonomy_code, contact_name, category)
       `)
@@ -174,27 +174,18 @@ export const api = {
       .limit(500);
     if (error) throw error;
 
-    // Batch-fetch org names for any resource_org_id values
-    const orgIds = [...new Set((data || []).map((m: any) => m.resource_org_id).filter(Boolean))];
-    let orgMap: Record<string, string> = {};
-    if (orgIds.length > 0) {
-      const { data: orgs } = await supabaseRead
-        .from('organizations')
-        .select('id, name')
-        .in('id', orgIds);
-      orgMap = Object.fromEntries((orgs || []).map((o: any) => [o.id, o.name]));
-    }
-
     return {
       matches: (data || []).map((m: any) => ({
         ...m,
+        score: m.match_score,
+        reasoning: m.match_reasoning,
         request_person_name: m.requests?.persons?.display_name ?? m.requests?.contact_name ?? null,
         request_taxonomy: m.requests?.taxonomy_code ?? m.requests?.category ?? null,
         request_county: m.requests?.county ?? null,
         request_urgency: m.requests?.urgency ?? null,
         resource_name: m.resources?.contact_name ?? null,
         resource_taxonomy: m.resources?.taxonomy_code ?? m.resources?.category ?? null,
-        org_name: orgMap[m.resource_org_id] ?? null,
+        org_name: null,
       })),
     };
   },
