@@ -20,6 +20,7 @@ const PUBLIC_PATHS = new Set([
   '/reports',
   '/settings',
   '/volunteers',
+  '/test-whatsapp',
 ]);
 
 const PUBLIC_PREFIXES = [
