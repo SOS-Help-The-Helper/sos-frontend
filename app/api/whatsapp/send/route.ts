@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { messageStore, type StoredAttachment } from '@/lib/textbubbles/message-store';
 
 export const maxDuration = 60;
+
+type IncomingAttachment = {
+  url?: string;
+  mimeType?: string;
+  filename?: string;
+};
 
 /**
  * Send a WhatsApp message via TextBubbles.
  * POST /api/whatsapp/send
- * Body: { recipient: string, text: string }
+ * Body: {
+ *   recipient: string,
+ *   text?: string,
+ *   attachments?: Array<{ url: string, mimeType?: string, filename?: string }>
+ * }
  *
- * Routes through the shared /v1/messages endpoint with
- * `routing.preference = ['whatsapp']` so the message goes out over the
- * paired WhatsApp session on the deploy's TEXTBUBBLES_PHONE_NUMBER instead
- * of iMessage/SMS.
+ * At least one of `text` or `attachments` is required. Routes through the
+ * shared /v1/messages endpoint with `routing.preference = ['whatsapp']` so
+ * the message goes out over the paired WhatsApp session on the deploy's
+ * TEXTBUBBLES_PHONE_NUMBER instead of iMessage/SMS.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     let { recipient, text } = body ?? {};
+    const { attachments } = (body ?? {}) as { attachments?: IncomingAttachment[] };
 
     const tbApiKey = process.env.TEXTBUBBLES_API_KEY;
     const senderPhoneNumber = process.env.TEXTBUBBLES_PHONE_NUMBER;
@@ -45,9 +57,23 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+
+    const hasText = typeof text === 'string' && text.trim().length > 0;
+    const cleanAttachments: StoredAttachment[] = Array.isArray(attachments)
+      ? attachments
+          .map((a) => (a && typeof a.url === 'string' && a.url.trim().length > 0 ? a : null))
+          .filter((a): a is IncomingAttachment & { url: string } => a !== null)
+          .map((a) => ({
+            url: a.url,
+            mimeType: typeof a.mimeType === 'string' ? a.mimeType : undefined,
+            filename: typeof a.filename === 'string' ? a.filename : undefined,
+          }))
+      : [];
+    const hasAttachments = cleanAttachments.length > 0;
+
+    if (!hasText && !hasAttachments) {
       return NextResponse.json(
-        { error: 'Message text is required' },
+        { error: 'Message text or at least one attachment is required' },
         { status: 400 },
       );
     }
@@ -61,12 +87,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const requestBody = {
+    // content.text has minLength: 1 upstream, so omit it on attachment-only
+    // sends rather than passing an empty string.
+    const content: Record<string, unknown> = {};
+    if (hasText) content.text = text;
+
+    const requestBody: Record<string, unknown> = {
       to: normalizedRecipient,
       from: senderPhoneNumber,
-      content: { text },
+      content,
       routing: { preference: ['whatsapp'] },
     };
+    if (hasAttachments) {
+      requestBody.attachments = cleanAttachments.map((a) => ({
+        type: 'url' as const,
+        url: a.url,
+        ...(a.mimeType ? { mimeType: a.mimeType } : {}),
+        ...(a.filename ? { filename: a.filename } : {}),
+      }));
+    }
 
     const response = await fetch('https://api.textbubbles.com/v1/messages', {
       method: 'POST',
@@ -94,11 +133,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Push the outbound row into the test store so the inbox renders both
+    // sides of the conversation. Subsequent message.delivered / .failed
+    // webhook events patch this row in place via messageStore.updateStatus.
+    if (messageId) {
+      messageStore.addMessage({
+        id: messageId,
+        from: senderPhoneNumber,
+        to: normalizedRecipient,
+        text: hasText ? text : '',
+        timestamp: new Date(),
+        direction: 'outbound',
+        channel: 'whatsapp',
+        status: 'sent',
+        ...(hasAttachments ? { attachments: cleanAttachments } : {}),
+      });
+    }
+
     return NextResponse.json({
       success: true,
       messageId,
       recipient: normalizedRecipient,
-      text,
+      text: hasText ? text : '',
       senderNumber: senderPhoneNumber,
       message: 'WhatsApp message sent successfully via TextBubbles',
     });

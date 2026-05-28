@@ -58,6 +58,26 @@ export async function POST(request: NextRequest) {
     const data = event.data ?? {};
     const channel = typeof data.channel === 'string' ? data.channel : undefined;
     if (channel === 'whatsapp') {
+      const rawAttachments = Array.isArray(data.attachments) ? data.attachments : [];
+      const attachments = rawAttachments
+        .map((a: unknown) => {
+          if (typeof a !== 'object' || a === null) return null;
+          const o = a as Record<string, unknown>;
+          const url =
+            typeof o.downloadUrl === 'string'
+              ? o.downloadUrl
+              : typeof o.url === 'string'
+                ? o.url
+                : null;
+          if (!url) return null;
+          return {
+            url,
+            mimeType: typeof o.mimeType === 'string' ? o.mimeType : undefined,
+            filename: typeof o.filename === 'string' ? o.filename : undefined,
+          };
+        })
+        .filter((a): a is { url: string; mimeType?: string; filename?: string } => a !== null);
+
       messageStore.addMessage({
         id: typeof data.messageId === 'string' ? data.messageId : crypto.randomUUID(),
         from: normalizeFrom(data.from),
@@ -66,7 +86,32 @@ export async function POST(request: NextRequest) {
         timestamp: new Date(),
         direction: 'inbound',
         channel: 'whatsapp',
+        ...(attachments.length > 0 ? { attachments } : {}),
       });
+    }
+  }
+
+  // Delivery status updates for outbound messages we already pushed into
+  // the store at /api/whatsapp/send. TextBubbles surfaces `message.sent`,
+  // `message.delivered`, `message.read`, and `message.failed` — anything
+  // we can match by messageId, we patch in place. Unknown ids are dropped
+  // silently (the send may have predated this deploy).
+  if (
+    event.type === 'message.sent' ||
+    event.type === 'message.delivered' ||
+    event.type === 'message.read' ||
+    event.type === 'message.failed'
+  ) {
+    const data = event.data ?? {};
+    if (data.channel === 'whatsapp' && typeof data.messageId === 'string') {
+      const status = event.type.replace(/^message\./, '');
+      const errorMessage =
+        event.type === 'message.failed'
+          ? (data.error?.message as string | undefined) ??
+            (data.errorCode as string | undefined) ??
+            'failed'
+          : undefined;
+      messageStore.updateStatus(data.messageId, status, errorMessage);
     }
   }
 

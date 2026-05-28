@@ -37,6 +37,12 @@ interface SendResponse {
   details?: unknown;
 }
 
+interface InboxAttachment {
+  url: string;
+  mimeType?: string;
+  filename?: string;
+}
+
 interface InboxMessage {
   id: string;
   from: string;
@@ -45,6 +51,20 @@ interface InboxMessage {
   timestamp: string;
   direction: 'inbound' | 'outbound';
   channel?: string;
+  status?: 'sent' | 'delivered' | 'read' | 'failed' | string;
+  statusError?: string;
+  attachments?: InboxAttachment[];
+}
+
+const STATUS_BADGE: Record<string, string> = {
+  sent: 'bg-white/10 text-white/60',
+  delivered: 'bg-sky-500/20 text-sky-200',
+  read: 'bg-emerald-500/20 text-emerald-200',
+  failed: 'bg-red-500/20 text-red-200',
+};
+
+function isImageMime(mime?: string): boolean {
+  return typeof mime === 'string' && mime.startsWith('image/');
 }
 
 interface InboxResponse {
@@ -84,6 +104,7 @@ export default function TestWhatsAppPage() {
 
   const [recipient, setRecipient] = useState('');
   const [messageText, setMessageText] = useState('Test message from SOS WhatsApp test page.');
+  const [attachmentUrl, setAttachmentUrl] = useState('');
   const [sendBusy, setSendBusy] = useState(false);
   const [sendResult, setSendResult] = useState<SendResponse | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -231,10 +252,18 @@ export default function TestWhatsAppPage() {
     setSendResult(null);
     setSendError(null);
     try {
+      const trimmedAttachment = attachmentUrl.trim();
+      const payload: Record<string, unknown> = {
+        recipient,
+        text: messageText,
+      };
+      if (trimmedAttachment.length > 0) {
+        payload.attachments = [{ url: trimmedAttachment }];
+      }
       const res = await fetch('/api/whatsapp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient, text: messageText }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json()) as SendResponse;
       if (!res.ok || data.success === false) {
@@ -243,12 +272,15 @@ export default function TestWhatsAppPage() {
         return;
       }
       setSendResult(data);
+      // Pull the new outbound row into the inbox immediately rather than
+      // waiting for the next 5s poll tick.
+      void fetchInbox();
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Send failed');
     } finally {
       setSendBusy(false);
     }
-  }, [recipient, messageText]);
+  }, [recipient, messageText, attachmentUrl, fetchInbox]);
 
   const copyCode = useCallback(() => {
     if (!pairingCode) return;
@@ -402,10 +434,30 @@ export default function TestWhatsAppPage() {
             className="mt-1 w-full resize-y rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-white/30 focus:outline-none"
           />
 
+          <label className="mt-3 block text-xs text-white/60">
+            Attachment URL <span className="text-white/30">(optional)</span>
+          </label>
+          <input
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={attachmentUrl}
+            onChange={(e) => setAttachmentUrl(e.target.value)}
+            className="mt-1 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-white/30 focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] text-white/40">
+            Image ≤16 MB · Video ≤64 MB · Document ≤100 MB. TextBubbles fetches the URL and
+            forwards it as a WhatsApp attachment.
+          </p>
+
           <button
             type="button"
             onClick={() => void handleSend()}
-            disabled={sendBusy || !isConnected || !recipient || !messageText}
+            disabled={
+              sendBusy ||
+              !isConnected ||
+              !recipient ||
+              (!messageText && !attachmentUrl.trim())
+            }
             className="mt-4 rounded-md bg-[#EF4E4B] px-4 py-2 text-sm font-medium text-white hover:bg-[#EF4E4B]/90 disabled:opacity-50"
           >
             {sendBusy ? 'Sending…' : 'Send WhatsApp'}
@@ -431,7 +483,8 @@ export default function TestWhatsAppPage() {
             <div>
               <p className="text-xs uppercase tracking-wide text-white/40">Inbox</p>
               <p className="mt-1 text-xs text-white/50">
-                Inbound WhatsApp messages from the TextBubbles webhook. In-memory, resets on
+                Inbound + outbound WhatsApp messages. Outbound status is patched in place by
+                webhook events (sent → delivered → read, or failed). In-memory, resets on
                 redeploy. Polls every 5s.
               </p>
             </div>
@@ -455,20 +508,74 @@ export default function TestWhatsAppPage() {
             </p>
           ) : (
             <ul className="mt-4 space-y-2">
-              {inbox.map((m) => (
-                <li
-                  key={m.id}
-                  className="rounded-md border border-white/10 bg-black/20 p-3"
-                >
-                  <div className="flex items-center justify-between gap-2 text-[11px] text-white/50">
-                    <span className="font-mono">{m.from || 'unknown'}</span>
-                    <span>{new Date(m.timestamp).toLocaleTimeString()}</span>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-white/90">
-                    {m.text || <span className="italic text-white/40">(no text)</span>}
-                  </p>
-                </li>
-              ))}
+              {inbox.map((m) => {
+                const outbound = m.direction === 'outbound';
+                return (
+                  <li
+                    key={m.id}
+                    className={`rounded-md border p-3 ${
+                      outbound
+                        ? 'ml-6 border-[#EF4E4B]/30 bg-[#EF4E4B]/5'
+                        : 'mr-6 border-white/10 bg-black/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-white/50">
+                      <span className="font-mono">
+                        {outbound ? `→ ${m.to || 'unknown'}` : m.from || 'unknown'}
+                      </span>
+                      <span>{new Date(m.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    {m.text && (
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-white/90">{m.text}</p>
+                    )}
+                    {m.attachments && m.attachments.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {m.attachments.map((a, i) => (
+                          <div key={`${m.id}-att-${i}`}>
+                            {isImageMime(a.mimeType) ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={a.url}
+                                alt={a.filename || 'attachment'}
+                                className="max-h-64 rounded-md border border-white/10"
+                              />
+                            ) : (
+                              <a
+                                href={a.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="break-all text-xs text-sky-300 underline"
+                              >
+                                {a.filename || a.url}
+                              </a>
+                            )}
+                            {a.mimeType && (
+                              <p className="mt-1 text-[10px] text-white/40">{a.mimeType}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!m.text && (!m.attachments || m.attachments.length === 0) && (
+                      <p className="mt-1 italic text-xs text-white/40">(no text)</p>
+                    )}
+                    {outbound && m.status && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                            STATUS_BADGE[m.status] ?? 'bg-white/10 text-white/60'
+                          }`}
+                        >
+                          {m.status}
+                        </span>
+                        {m.statusError && (
+                          <span className="text-[11px] text-red-300">{m.statusError}</span>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
