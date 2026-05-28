@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { CrmShell } from "@/components/crm-shell";
@@ -457,7 +457,7 @@ export default function CasesPage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative h-9 px-3 inline-flex items-center gap-2 text-[12px] font-medium transition ${
+              className={`relative h-11 px-3 inline-flex items-center gap-2 text-[12px] font-medium transition ${
                 active ? "text-white" : "text-white/55 hover:text-white/85"
               }`}
             >
@@ -527,7 +527,8 @@ export default function CasesPage() {
                   >
                     <div className="flex items-center justify-between px-1.5 pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} />
+                        <span className="w-2 h-2 rounded-full" style={{ background: col.accent }} aria-hidden="true" />
+                        <span className="sr-only">{col.label}: </span>
                         <span className="font-mono text-xs uppercase tracking-wider text-white/75">
                           {col.label}
                         </span>
@@ -541,11 +542,13 @@ export default function CasesPage() {
                           key={c.id}
                           card={c}
                           tab={tab}
+                          columns={columns}
                           onDragStart={() => setDragId(c.id)}
                           onDragEnd={() => {
                             setDragId(null);
                             setDragOverCol(null);
                           }}
+                          onMoveTo={(colId) => onDrop(colId)}
                           isDragging={dragId === c.id}
                         />
                       ))}
@@ -567,49 +570,99 @@ export default function CasesPage() {
 function DraggableCard({
   card,
   tab,
+  columns,
   onDragStart,
   onDragEnd,
+  onMoveTo,
   isDragging,
 }: {
   card: Card;
   tab: TabKey;
+  columns: Column[];
   onDragStart: () => void;
   onDragEnd: () => void;
+  onMoveTo: (colId: string) => void;
   isDragging: boolean;
 }) {
+  const [touchMoveOpen, setTouchMoveOpen] = useState(false);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTouchStart = () => {
+    touchTimerRef.current = setTimeout(() => setTouchMoveOpen(true), 300);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
   return (
-    <Link
-      href={card.href}
-      draggable
-      onDragStart={(e) => {
-        // Prevent ghost from being the full link drag-image quirks
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart();
-      }}
-      onDragEnd={onDragEnd}
-      onClick={(e) => {
-        // suppress click if a drag just happened
-        if (isDragging) e.preventDefault();
-      }}
-      className={`block rounded-xl p-3 bg-white/4 hover:bg-white/7 border border-transparent hover:border-white/8 transition cursor-grab active:cursor-grabbing ${
-        isDragging ? "opacity-40" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-[13px] font-medium leading-tight truncate">{card.title}</p>
-        {card.urgency && <UrgencyBadge urgency={card.urgency} />}
-      </div>
-      {card.meta && <p className="text-[11px] text-white/50 mt-1 truncate">{card.meta}</p>}
-      {card.sub && (
-        <p className="text-xs text-white/35 mt-1.5 tabular-nums">{card.sub}</p>
-      )}
-      {card.orgName && (
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-          <span className="text-[11px]" style={{ color: card.orgColor }}>
-            {card.orgName}
-          </span>
+    <div className="relative">
+      <Link
+        href={card.href}
+        draggable
+        onDragStart={(e) => {
+          // Prevent ghost from being the full link drag-image quirks
+          e.dataTransfer.effectAllowed = "move";
+          onDragStart();
+        }}
+        onDragEnd={onDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchEnd}
+        onClick={(e) => {
+          // suppress click if a drag just happened or touch-move menu is open
+          if (isDragging || touchMoveOpen) e.preventDefault();
+        }}
+        className={`block rounded-xl p-3 bg-white/4 hover:bg-white/7 border border-transparent hover:border-white/8 transition cursor-grab active:cursor-grabbing ${
+          isDragging ? "opacity-40" : ""
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] font-medium leading-tight truncate">{card.title}</p>
+          {card.urgency && (
+            <>
+              <UrgencyBadge urgency={card.urgency} />
+              <span className="sr-only">{card.urgency}</span>
+            </>
+          )}
+        </div>
+        {card.meta && <p className="text-[11px] text-white/50 mt-1 truncate">{card.meta}</p>}
+        {card.sub && (
+          <p className="text-xs text-white/35 mt-1.5 tabular-nums">{card.sub}</p>
+        )}
+        {card.orgName && (
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+            <span className="text-[11px]" style={{ color: card.orgColor }}>
+              {card.orgName}
+            </span>
+          </div>
+        )}
+      </Link>
+      {touchMoveOpen && (
+        <div className="mt-1 rounded-lg bg-[#0F1E2B] border border-white/15 p-2 z-10">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-white/45 px-1 pb-1">Move to stage</p>
+          <select
+            autoFocus
+            className="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-[12px] text-white focus:outline-none appearance-none"
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) {
+                onMoveTo(e.target.value);
+                setTouchMoveOpen(false);
+              }
+            }}
+            onBlur={() => setTouchMoveOpen(false)}
+          >
+            <option value="" disabled>Select stage…</option>
+            {columns.map((col) => (
+              <option key={col.id} value={col.id}>{col.label}</option>
+            ))}
+          </select>
         </div>
       )}
-    </Link>
+    </div>
   );
 }

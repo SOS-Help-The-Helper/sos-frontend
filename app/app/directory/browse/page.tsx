@@ -105,7 +105,7 @@ export default function DirectoryPage() {
           })));
         }
       })
-      .catch(() => {});
+      .catch(() => { toast.error("Failed to load directory"); });
   }, [orgId, refreshKey]);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function DirectoryPage() {
           })));
         }
       })
-      .catch(() => {});
+      .catch(() => { toast.error("Failed to load organizations"); });
   }, []);
 
   const q = query.trim().toLowerCase();
@@ -308,6 +308,7 @@ export default function DirectoryPage() {
               <div role="group" aria-label="Filter by status" className="flex gap-2">
                 <button
                   onClick={() => setHasRequests(!hasRequests)}
+                  aria-pressed={hasRequests}
                   className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
                     hasRequests ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
                   }`}
@@ -316,6 +317,7 @@ export default function DirectoryPage() {
                 </button>
                 <button
                   onClick={() => setHasCase(!hasCase)}
+                  aria-pressed={hasCase}
                   className={`h-8 px-3 rounded-md text-[12px] font-medium transition ${
                     hasCase ? "bg-[#EF4E4B]/15 text-[#EF4E4B]" : "bg-white/6 text-white/65 hover:bg-white/10"
                   }`}

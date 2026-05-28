@@ -49,7 +49,7 @@ export default function PeopleSettings() {
         status: "Active" as Status,
         lastActive: "—",
       })));
-    }).catch(() => {});
+    }).catch(() => { toast.error("Failed to load team members"); });
   }, [orgId]);
 
   async function handleInvite() {

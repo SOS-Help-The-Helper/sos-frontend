@@ -36,7 +36,7 @@ export default function SettingsPage() {
           email: data.org.contact_email ?? FALLBACK_ORG.email,
         });
       }
-    }).catch(() => {});
+    }).catch(() => { toast.error("Failed to load settings"); });
   }, [orgId]);
 
   async function toggleModule(m: ModuleId) {
@@ -181,10 +181,11 @@ export default function SettingsPage() {
 }
 
 function Field({ label, value }: { label: string; value: string }) {
+  const fieldId = `settings-field-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
     <div>
-      <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5">{label}</p>
-      <input defaultValue={value} key={value} className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40" />
+      <label htmlFor={fieldId} className="font-mono text-xs uppercase tracking-wider text-white/45 mb-1.5 block">{label}</label>
+      <input id={fieldId} defaultValue={value} key={value} className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40" />
     </div>
   );
 }

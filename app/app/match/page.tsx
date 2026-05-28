@@ -440,7 +440,8 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: um.dot }} />
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: um.dot }} aria-hidden="true" />
+                    <span className="sr-only">{um.label}</span>
                     <span className={`font-mono text-[9px] uppercase tracking-wider px-1 py-0.5 rounded ${um.pill}`}>
                       {um.label}
                     </span>
@@ -625,7 +626,7 @@ function CandidateCard({
       </div>
 
       <div className="mt-3 pt-3 border-t border-white/5 space-y-2.5">
-        <ScoreBar breakdown={breakdown} color={color} />
+        <ScoreBar breakdown={breakdown} color={color} score={score} />
         <div className="flex flex-wrap gap-1.5">
           <FitChip ok={serviceMatch} label="Service" hint={`Service: ${breakdown.service}/50`} />
           <FitChip ok={countyMatch} label="County" hint={`County: ${breakdown.county}/25`} />
@@ -649,9 +650,9 @@ function CandidateCard({
           <span className="text-[12px] text-white/70 flex-1">Confirm match?</span>
           <div className="flex gap-1.5 shrink-0">
             <button onClick={onCancelConfirm}
-              className="h-7 px-2.5 rounded-md bg-white/8 hover:bg-white/15 text-white/70 text-[11px] transition">Cancel</button>
+              className="h-11 px-3 rounded-md bg-white/8 hover:bg-white/15 text-white/70 text-[11px] transition">Cancel</button>
             <button onClick={handleAccept}
-              className="h-7 px-2.5 rounded-md bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[11px] font-medium transition">Confirm</button>
+              className="h-11 px-3 rounded-md bg-[#34D399] hover:bg-[#22b97f] text-[#0F1E2B] text-[11px] font-medium transition">Confirm match</button>
           </div>
         </div>
       )}

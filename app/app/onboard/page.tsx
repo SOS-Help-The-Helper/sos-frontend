@@ -127,6 +127,7 @@ export default function OnboardPage() {
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   placeholder="Mountain Area Aid"
+                  autoComplete="organization"
                   className="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
                 />
               </div>
@@ -137,6 +138,7 @@ export default function OnboardPage() {
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="ops@yourorg.com"
                   type="email"
+                  autoComplete="email"
                   className="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#89CFF0]/40"
                 />
               </div>

@@ -68,7 +68,7 @@ export default function OrgSettings() {
           website: config.website ?? f.website,
         }));
       }
-    }).catch(() => {});
+    }).catch(() => { toast.error("Failed to load org settings"); });
     api.crmOrgStats(orgId).then((res: any) => setStats(res)).catch(() => {});
   }, [orgId]);
 

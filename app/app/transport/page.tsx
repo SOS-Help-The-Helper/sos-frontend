@@ -231,7 +231,7 @@ export default function TransportPage() {
           <Kpi label="Active" value={kpis.active} accent="#89CFF0" />
           <Kpi label="In transit" value={kpis.inTransit} accent="#89CFF0" />
           <Kpi label="Delivered" value={kpis.delivered} accent="#34D399" />
-          <Kpi label="Total" value={assignments.length} accent="#89CFF0" />
+          <Kpi label="Total" value={loading ? "—" : assignments.length} accent="#89CFF0" />
         </div>
 
         {loading ? (

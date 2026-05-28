@@ -80,9 +80,11 @@ export function computeBreakdown(
 export function ScoreBar({
   breakdown,
   color,
+  score,
 }: {
   breakdown: ScoreBreakdown;
   color: string;
+  score?: number;
 }) {
   const dims = [
     { label: "Service",  value: breakdown.service,  max: 50 },
@@ -91,7 +93,10 @@ export function ScoreBar({
     { label: "Speed",    value: breakdown.speed,    max: 10 },
   ];
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div
+      className="grid grid-cols-4 gap-2"
+      aria-label={score != null ? `Score: ${score} out of 100` : undefined}
+    >
       {dims.map((d) => (
         <div key={d.label}>
           <div className="flex items-center justify-between mb-1">

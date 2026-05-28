@@ -88,6 +88,8 @@ function MapboxEmbed({
         center: [-82.5, 35.5],
         zoom: 8,
       });
+      map.dragRotate.disable();
+      map.touchZoomRotate.disableRotation();
       mapInstance.current = map;
 
       map.on("load", async () => {

@@ -10,6 +10,7 @@ const protoKpis: Array<{ label: string; value: string | number; delta: string }>
 const orgs: any[] = [];
 const cases: any[] = [];
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
@@ -98,21 +99,20 @@ export default function ReportsPage() {
       />
 
       <div className="px-4 pt-4 pb-4 space-y-4">
-        {loading ? (
-          <div className="grid grid-cols-2 gap-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/5 rounded-lg h-16 animate-pulse" />
-            ))}
-          </div>
-        ) : null}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {kpis.map((k) => (
-            <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
-              <p className="font-mono text-xs uppercase tracking-wider text-white/45">{k.label}</p>
-              <p className="text-[32px] font-semibold tracking-tight mt-2 tabular-nums">{k.value}</p>
-              <p className="font-mono text-xs text-[#34D399] mt-1">{k.delta}</p>
-            </div>
-          ))}
+          {loading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/5 rounded-lg p-3 h-16 animate-pulse" />
+            ))
+          ) : (
+            kpis.map((k) => (
+              <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
+                <p className="font-mono text-xs uppercase tracking-wider text-white/45">{k.label}</p>
+                <p className="text-[32px] font-semibold tracking-tight mt-2 tabular-nums">{k.value}</p>
+                <p className="font-mono text-xs text-[#34D399] mt-1">{k.delta}</p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Severity donut + trend sparkline */}

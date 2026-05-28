@@ -227,7 +227,7 @@ export default function UmbrellaView() {
       .then((data: any) => {
         if (data?.notes && Array.isArray(data.notes)) setCaseNotes(data.notes);
       })
-      .catch(() => {});
+      .catch(() => toast.error("Failed to load case"));
   }, [id]);
 
   const handlePostNote = useCallback(async () => {
@@ -442,7 +442,7 @@ function CaseTabs({
         const items: any[] = data?.orgs ?? data?.organizations ?? (Array.isArray(data) ? data : []);
         setAvailableOrgs(items.map((o: any) => ({ id: o.id, name: o.name ?? o.slug ?? o.id })));
       })
-      .catch(() => {});
+      .catch(() => toast.error("Failed to load case"));
   }, []);
 
   const handleCloseCase = async () => {

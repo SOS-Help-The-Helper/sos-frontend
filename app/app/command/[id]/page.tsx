@@ -65,7 +65,7 @@ export default function IncidentDashboard() {
   useEffect(() => {
     api.crmCommandSummary(id)
       .then((res) => setEfStats(res as typeof efStats))
-      .catch(() => {});
+      .catch(() => { toast.error("Failed to load incident"); });
   }, [id]);
 
   if (loading) {

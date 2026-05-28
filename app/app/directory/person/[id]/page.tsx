@@ -66,7 +66,7 @@ export default function PersonPage() {
   useEffect(() => {
     api.crmGetPerson(id)
       .then((data: unknown) => setApiData(data as ApiResponse))
-      .catch(() => setApiData(null));
+      .catch(() => { setApiData(null); toast.error("Failed to load person"); });
   }, [id]);
 
   const seed = people.find((p) => p.id === id);

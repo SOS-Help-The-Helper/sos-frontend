@@ -8,8 +8,6 @@ import { CrmShell } from "@/components/crm-shell";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 
-const DEMO_ORG_ID = "9ad0f2ad-7789-47a8-bfba-0ae3382c86cc";
-
 type Counts = {
   people: number;
   orgs: number;
@@ -33,8 +31,7 @@ const CATEGORIES: {
 
 export default function DirectoryPage() {
   const router = useRouter();
-  const { orgId: authOrgId } = useAuthContext();
-  const orgId = authOrgId || DEMO_ORG_ID;
+  const { orgId } = useAuthContext();
   const [counts, setCounts] = useState<Counts>({ people: 0, orgs: 0, requests: 0, resources: 0 });
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,6 +52,8 @@ export default function DirectoryPage() {
       });
     }).finally(() => setLoading(false));
   }, [orgId]);
+
+  if (!orgId) return <div className="flex items-center justify-center h-32"><div className="animate-spin w-6 h-6 rounded-full border-2 border-white/20 border-t-white" /></div>;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +94,8 @@ export default function DirectoryPage() {
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/35" />
             <input
+              type="search"
+              inputMode="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search people, organizations, requests..."

@@ -44,19 +44,22 @@ export default function CommandPage() {
     });
   }, [orgId]);
 
-  if (!orgId) return <div className="p-6 text-white/50">Loading…</div>;
+  if (!orgId) return <div className="flex items-center justify-center h-32"><div className="animate-spin w-6 h-6 rounded-full border-2 border-white/20 border-t-white" /></div>;
 
   return (
     <CrmShell module="Command" bare>
       <div className="h-[calc(100dvh-56px)] flex flex-col overflow-hidden" style={{ background: "var(--surface-app)" }}>
         {/* Stats strip */}
         <div className="px-4 md:px-5 pt-3 pb-2 flex-shrink-0">
-          <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide">
-            <StatPill label="Open" value={stats?.openRequests ?? "—"} tone="#EF4E4B" icon={<AlertTriangle size={11} />} primary />
-            <StatPill label="Vulnerable" value={stats?.critical ?? "—"} tone="#D97706" icon={<Zap size={11} />} />
-            <StatPill label="Fulfilled" value={stats?.fulfilled ?? "—"} tone="#059669" icon={<FileText size={11} />} />
-            <StatPill label="Resources" value={stats?.resources ?? "—"} tone="#2563EB" icon={<Package size={11} />} />
-            <StatPill label="People" value={stats?.people ?? "—"} tone="#6B7280" icon={<Users size={11} />} />
+          <div className="relative">
+            <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-1">
+              <StatPill label="Open" value={stats?.openRequests ?? "—"} tone="#EF4E4B" icon={<AlertTriangle size={11} />} primary />
+              <StatPill label="Vulnerable" value={stats?.critical ?? "—"} tone="#D97706" icon={<Zap size={11} />} />
+              <StatPill label="Fulfilled" value={stats?.fulfilled ?? "—"} tone="#059669" icon={<FileText size={11} />} />
+              <StatPill label="Resources" value={stats?.resources ?? "—"} tone="#2563EB" icon={<Package size={11} />} />
+              <StatPill label="People" value={stats?.people ?? "—"} tone="#6B7280" icon={<Users size={11} />} />
+            </div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0F1E2B] to-transparent pointer-events-none" />
           </div>
         </div>
 

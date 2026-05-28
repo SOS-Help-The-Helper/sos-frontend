@@ -174,6 +174,7 @@ export default function InventoryPage() {
             </select>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               value={addQty}
               onChange={e => setAddQty(Number(e.target.value))}
@@ -265,7 +266,7 @@ export default function InventoryPage() {
                       <span className="font-mono text-[10.5px] tabular-nums text-white/65">{f.currentCount} / {f.capacity}</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-                      <div className="h-full" style={{ width: `${pct}%`, background: color }} />
+                      <div className="h-full" style={{ width: `${Math.min(100, Math.round(pct))}%`, background: color }} />
                     </div>
                   </div>
                 );
@@ -446,7 +447,7 @@ function FacilityChip({
         <>
           <p className="font-mono text-xs tabular-nums text-white/55">{count} / {capacity}</p>
           <div className="h-1 rounded-full bg-white/8 overflow-hidden mt-1.5">
-            <div className="h-full" style={{ width: `${pct}%`, background: cap }} />
+            <div className="h-full" style={{ width: `${Math.min(100, Math.round(pct))}%`, background: cap }} />
           </div>
         </>
       ) : (
