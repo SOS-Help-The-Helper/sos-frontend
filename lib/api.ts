@@ -168,12 +168,23 @@ export const api = {
       .select(`
         id, request_id, resource_id, resource_org_id, score, status, reasoning, committed_by, created_at,
         requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
-        resources!resource_id(taxonomy_code, contact_name, category),
-        organizations!resource_org_id(name)
+        resources!resource_id(taxonomy_code, contact_name, category)
       `)
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;
+
+    // Batch-fetch org names for any resource_org_id values
+    const orgIds = [...new Set((data || []).map((m: any) => m.resource_org_id).filter(Boolean))];
+    let orgMap: Record<string, string> = {};
+    if (orgIds.length > 0) {
+      const { data: orgs } = await supabaseRead
+        .from('organizations')
+        .select('id, name')
+        .in('id', orgIds);
+      orgMap = Object.fromEntries((orgs || []).map((o: any) => [o.id, o.name]));
+    }
+
     return {
       matches: (data || []).map((m: any) => ({
         ...m,
@@ -183,7 +194,7 @@ export const api = {
         request_urgency: m.requests?.urgency ?? null,
         resource_name: m.resources?.contact_name ?? null,
         resource_taxonomy: m.resources?.taxonomy_code ?? m.resources?.category ?? null,
-        org_name: m.organizations?.name ?? null,
+        org_name: orgMap[m.resource_org_id] ?? null,
       })),
     };
   },

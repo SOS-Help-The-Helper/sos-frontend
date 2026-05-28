@@ -314,13 +314,17 @@ export default function CasesPage() {
   // Fetch all tab data in parallel
   useEffect(() => {
     setLoading(true);
-    Promise.all([
+    Promise.allSettled([
       api.crmSosesList({ limit: 200 }),
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
-      api.efCall("crm-reports", { action: "list_reports", limit: 100 }),
+      api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
     ])
-      .then(([casesData, requestsData, resourcesData, reportsData]: any[]) => {
+      .then(([casesRes, requestsRes, resourcesRes, reportsRes]) => {
+        const casesData = casesRes.status === "fulfilled" ? casesRes.value : null;
+        const requestsData = requestsRes.status === "fulfilled" ? requestsRes.value : null;
+        const resourcesData = resourcesRes.status === "fulfilled" ? resourcesRes.value : null;
+        const reportsData = reportsRes.status === "fulfilled" ? reportsRes.value : null;
         const caseItems: any[] = casesData?.cases ?? (Array.isArray(casesData) ? casesData : []);
         if (caseItems.length > 0) {
           const cards = mapCasesToCards(caseItems);
