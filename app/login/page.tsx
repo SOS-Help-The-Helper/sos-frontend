@@ -35,9 +35,11 @@ function LoginInner() {
 
   const supabase = createSupabaseBrowserClient();
 
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [method, setMethod] = useState<'phone' | 'email'>('phone');
+  const [step, setStep] = useState<'phone' | 'otp' | 'email' | 'email-sent'>('phone');
   const [phoneInput, setPhoneInput] = useState('');
   const [e164, setE164] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +106,33 @@ function LoginInner() {
     }
   }
 
+  async function sendMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const email = emailInput.trim();
+    if (!email || !email.includes('@')) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}${redirectTo}` },
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message || 'Could not send magic link.');
+      return;
+    }
+    setStep('email-sent');
+  }
+
+  function switchMethod(m: 'phone' | 'email') {
+    setMethod(m);
+    setStep(m === 'phone' ? 'phone' : 'email');
+    setError(null);
+  }
+
   return (
     <div
       style={{
@@ -134,13 +163,73 @@ function LoginInner() {
             SOS Portal
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
-            {step === 'phone'
-              ? 'Sign in with your phone number'
-              : `Code sent to ${prettyPhone(e164)}`}
+            {step === 'phone' && 'Sign in with your phone number'}
+            {step === 'otp' && `Code sent to ${prettyPhone(e164)}`}
+            {step === 'email' && 'Sign in with a magic link'}
+            {step === 'email-sent' && `Check ${emailInput} for your login link`}
           </p>
         </div>
 
-        {step === 'phone' ? (
+        {/* Method toggle — only on initial steps */}
+        {(step === 'phone' || step === 'email') && (
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderRadius: 10, background: 'rgba(255,255,255,0.06)', padding: 4 }}>
+            <button
+              type="button"
+              onClick={() => switchMethod('phone')}
+              style={{
+                flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, transition: 'all 120ms',
+                background: method === 'phone' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: method === 'phone' ? '#fff' : 'rgba(255,255,255,0.45)',
+              }}
+            >
+              📱 Phone
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMethod('email')}
+              style={{
+                flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, transition: 'all 120ms',
+                background: method === 'email' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: method === 'email' ? '#fff' : 'rgba(255,255,255,0.45)',
+              }}
+            >
+              ✉️ Email
+            </button>
+          </div>
+        )}
+
+        {step === 'email' ? (
+          <form onSubmit={sendMagicLink} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label style={labelStyle} htmlFor="email">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              autoFocus
+              placeholder="you@example.com"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              style={inputStyle}
+            />
+            {error && <p style={errorStyle}>{error}</p>}
+            <button type="submit" disabled={loading} style={primaryBtn(loading)}>
+              {loading ? 'Sending…' : 'Send Magic Link'}
+            </button>
+          </form>
+        ) : step === 'email-sent' ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.8)', marginBottom: 16 }}>
+              Check your email for a login link.
+            </p>
+            <button type="button" onClick={() => switchMethod('email')} style={linkBtn}>
+              ← Try again
+            </button>
+          </div>
+        ) : step === 'phone' ? (
           <form onSubmit={sendCode} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={labelStyle} htmlFor="phone">
               Phone number
@@ -194,8 +283,8 @@ function LoginInner() {
         )}
 
         <p style={{ marginTop: 28, fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', lineHeight: 1.5 }}>
-          Standard message and data rates may apply. By continuing you agree to
-          receive a one-time verification code via SMS.
+          By continuing you agree to receive a one-time verification code.
+          Standard message and data rates may apply for phone verification.
         </p>
       </div>
     </div>
