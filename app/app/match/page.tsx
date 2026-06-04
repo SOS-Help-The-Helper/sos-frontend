@@ -338,15 +338,20 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
         if (!cancelled) {
           setCandidates(
             raw.map((c: any, i: number) => ({
-              id: c.org_id ?? c.id ?? String(i),
-              name: c.org_name ?? c.name ?? "Unknown",
+              id: c.candidate_id ?? c.id ?? String(i),
+              name: c.description ?? c.org_name ?? c.name ?? "Unknown",
               score: c.score ?? 0,
-              counties: Array.isArray(c.counties) ? c.counties.join(", ") : (c.service_area ?? ""),
-              open: c.open_count ?? c.open ?? 0,
+              counties: c.distance_miles != null ? `${Math.round(c.distance_miles)} mi away` : (Array.isArray(c.counties) ? c.counties.join(", ") : (c.service_area ?? "")),
+              open: c.capacity ?? c.open_count ?? c.open ?? 0,
               color: CANDIDATE_COLORS[i % CANDIDATE_COLORS.length],
-              contact: c.intake_contact ?? c.contact ?? undefined,
+              contact: c.org_name ?? c.intake_contact ?? c.contact ?? undefined,
               responseHrs: c.response_hours ?? c.response_hrs ?? undefined,
-              breakdown: c.breakdown ?? undefined,
+              breakdown: c.score_breakdown?.score_breakdown ? {
+                service: c.score_breakdown.score_breakdown.taxonomy === "exact" ? 50 : c.score_breakdown.score_breakdown.taxonomy === "airs_exact" ? 40 : 20,
+                county: c.distance_miles != null ? Math.max(0, 25 - Math.round(c.distance_miles / 20)) : 0,
+                capacity: (c.capacity ?? 0) > 0 ? 15 : 0,
+                speed: 10,
+              } : (c.breakdown ?? undefined),
             })),
           );
         }
@@ -509,7 +514,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
 
         <section className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
           <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-3">
-            Candidate orgs · {candidates.length}
+            Match candidates · {candidates.length}
           </p>
 
           {candidatesLoading ? (
@@ -519,7 +524,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
           ) : candidates.length === 0 ? (
             <div className="py-10 text-center text-white/40">
               <p className="text-[13px]">No candidates scored yet.</p>
-              <p className="text-[11px] mt-1">Click &quot;Score&quot; to find matching organizations.</p>
+              <p className="text-[11px] mt-1">Click &quot;Score&quot; to find matching resources.</p>
             </div>
           ) : (
             <div className="space-y-2">

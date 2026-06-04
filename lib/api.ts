@@ -168,7 +168,7 @@ export const api = {
       .select(`
         id, request_id, resource_id, match_score, match_reasoning, status, committed_by, chain_id, created_at,
         requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
-        resources!resource_id(taxonomy_code, contact_name, category)
+        resources!resource_id(taxonomy_code, contact_name, category, description, org_id, organizations:org_id(name))
       `)
       .order('created_at', { ascending: false })
       .limit(500);
@@ -178,15 +178,15 @@ export const api = {
     return {
       matches: (data || []).map((m: any) => ({
         ...m,
-        score: m.match_score,
+        score: m.match_score ?? 0,
         reasoning: m.match_reasoning,
         request_person_name: m.requests?.persons?.display_name ?? m.requests?.contact_name ?? null,
         request_taxonomy: m.requests?.taxonomy_code ?? m.requests?.category ?? null,
         request_county: m.requests?.county ?? null,
         request_urgency: m.requests?.urgency ?? null,
-        resource_name: m.resources?.contact_name ?? null,
+        resource_name: m.resources?.description ?? m.resources?.contact_name ?? null,
         resource_taxonomy: m.resources?.taxonomy_code ?? m.resources?.category ?? null,
-        org_name: null,
+        org_name: m.resources?.organizations?.name ?? null,
       })),
     };
   },
