@@ -152,7 +152,7 @@ export function ChatPanel({ entityType, entityId, orgId, onClose, open }: ChatPa
           <MessageSquare size={14} className="text-[#89CFF0]" />
           <span className="flex-1 text-[13px] font-medium text-white/85">Chat</span>
           <span className="font-mono text-[9.5px] uppercase tracking-wider text-white/35 pr-2">
-            {entityType} · {entityId.slice(0, 8)}
+            {entityType} · {(entityId ?? "").slice(0, 8)}
           </span>
           <button
             onClick={onClose}

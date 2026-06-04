@@ -14,9 +14,10 @@ export function AiSummary({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   // Derive a short preview if no tldr is provided
+  const safeSummary = summary ?? "";
   const preview =
     tldr ??
-    (summary.length > 110 ? summary.slice(0, 107).trimEnd() + "…" : summary);
+    (safeSummary.length > 110 ? safeSummary.slice(0, 107).trimEnd() + "…" : safeSummary);
 
   return (
     <div className="rounded-2xl border border-[#89CFF0]/20 bg-[var(--surface-1)]">

@@ -451,7 +451,7 @@ export default function DrivePageClient({
           >
             {/* Resource name */}
             <p className="text-xl font-semibold text-white text-center mt-8 leading-tight">
-              {resourceDescription.toUpperCase()}
+              {(resourceDescription ?? '').toUpperCase()}
             </p>
 
             {/* Status pill */}
@@ -460,7 +460,7 @@ export default function DrivePageClient({
                 className="text-[11px] uppercase tracking-widest font-bold px-3 py-1 rounded-full"
                 style={{ background: pillStyle.bg, color: pillStyle.text }}
               >
-                {currentStatus.replace(/_/g, ' ')}
+                {(currentStatus ?? '').replace(/_/g, ' ')}
               </span>
             </div>
 

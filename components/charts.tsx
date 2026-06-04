@@ -68,7 +68,7 @@ export function HorizontalBars({ data, label }: { data: BarItem[]; label?: strin
           return (
             <div key={i}>
               <div className="flex items-center justify-between text-xs mb-0.5">
-                <span className="text-sos-blue-800 capitalize">{item.label.replace(/_/g, ' ')}</span>
+                <span className="text-sos-blue-800 capitalize">{(item.label ?? '').replace(/_/g, ' ')}</span>
                 <span className="font-bold text-sos-blue-800">{item.value}</span>
               </div>
               <div className="h-2 bg-sos-gray-200 rounded-full overflow-hidden">
@@ -121,7 +121,7 @@ export function DonutChart({ data, size = 120, label }: { data: DonutSlice[]; si
         {data.map((slice, i) => (
           <div key={i} className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: slice.color }} />
-            <span className="text-[10px] text-sos-blue-800 capitalize">{slice.label.replace(/_/g, ' ')}</span>
+            <span className="text-[10px] text-sos-blue-800 capitalize">{(slice.label ?? '').replace(/_/g, ' ')}</span>
             <span className="text-[10px] font-bold text-sos-gray-500 ml-auto">{slice.value}</span>
           </div>
         ))}

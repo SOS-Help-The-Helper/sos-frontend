@@ -38,7 +38,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     if (rows?.[0]) {
       const r = rows[0];
       const cat = (r.taxonomy_code || r.category || '').replace(/\./g, ' · ');
-      const urg = r.urgency ? ` · ${r.urgency.toUpperCase()}` : '';
+      const urg = r.urgency ? ` · ${(r.urgency ?? '').toUpperCase()}` : '';
       title = `SOS: ${cat}${urg}`;
       description = r.public_display_text || r.description || `${cat} ${type}`;
       if (r.household_size) description += ` · Family of ${r.household_size}`;

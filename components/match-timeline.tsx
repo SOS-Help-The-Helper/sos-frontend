@@ -37,7 +37,7 @@ export function MatchTimeline({ events }: MatchTimelineProps) {
             <div className="flex-1 pb-2">
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase ${getStatusColor(event.event_type)}`}>
-                  {event.event_type.replace(/_/g, ' ')}
+                  {(event.event_type ?? '').replace(/_/g, ' ')}
                 </span>
                 <span className="text-[10px] text-sos-gray-500">
                   by {event.actor_type}

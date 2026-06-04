@@ -68,7 +68,8 @@ export function Typewriter({
   let charsSoFar = 0;
   return (
     <div className={className}>
-      {lines.map((line, i) => {
+      {lines.map((rawLine, i) => {
+        const line = rawLine ?? '';
         const lineStart = charsSoFar;
         charsSoFar += line.length;
         const visibleCount = Math.max(0, Math.min(line.length, revealedChars - lineStart));

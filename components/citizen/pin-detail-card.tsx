@@ -52,7 +52,7 @@ const CATEGORY_ICONS: Record<string, typeof MapPin> = {
 
 export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDetailCardProps) {
   const cfg = TYPE_CONFIG[type];
-  const category = (p.category || p.taxonomy_code?.split(".")[0] || "").toLowerCase();
+  const category = (p.category || p.taxonomy_code?.split(".")?.[0] || "").toLowerCase();
   const CategoryIcon = CATEGORY_ICONS[category] || MapPin;
 
   // Normalize field names across data sources

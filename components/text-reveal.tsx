@@ -66,7 +66,7 @@ export function TextReveal({
     return (
       <div ref={containerRef} className={`relative ${className}`} style={{ minHeight: `${lines.length * lineHeight}px` }}>
         {lines.map((line, i) => {
-          const words = line.text.split(/\s+/);
+          const words = (line.text ?? '').split(/\s+/);
           return (
             <div key={i} style={{ height: `${lineHeight}px`, overflow: 'hidden' }}>
               {words.map((word, wi) => {

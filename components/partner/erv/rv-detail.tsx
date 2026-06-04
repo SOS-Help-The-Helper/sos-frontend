@@ -95,7 +95,7 @@ export function RVDetail({ resource, onClose }: RVDetailProps) {
               <div key={e.id || i} className="flex items-start gap-2 bg-white/[0.03] rounded-lg px-3 py-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-white/20 mt-1.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-[11px] text-white/60">{e.event_type.replace(/_/g, ' ')}{e.from_status ? `: ${e.from_status} → ${e.to_status}` : ''}</p>
+                  <p className="text-[11px] text-white/60">{(e.event_type ?? '').replace(/_/g, ' ')}{e.from_status ? `: ${e.from_status} → ${e.to_status}` : ''}</p>
                   {e.notes && <p className="text-[10px] text-white/30">{e.notes}</p>}
                   <p className="text-[9px] text-white/15">{new Date(e.created_at).toLocaleString()}</p>
                 </div>

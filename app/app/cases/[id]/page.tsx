@@ -151,7 +151,7 @@ function LoadingSkeleton() {
 export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
-  const isUmbrella = id.startsWith("U-");
+  const isUmbrella = (id ?? "").startsWith("U-");
   const { orgId } = useAuthContext();
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);

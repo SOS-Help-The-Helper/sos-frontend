@@ -62,10 +62,10 @@ export function computeBreakdown(
   activeCase: { county: string; urgency: string; opened: string },
   candidate: { counties: string; open: number; score: number },
 ): ScoreBreakdown {
-  const countyMatch = candidate.counties
+  const countyMatch = (candidate.counties ?? "")
     .toLowerCase()
     .split(/[,\s]+/)
-    .some((p) => p && activeCase.county.toLowerCase().includes(p));
+    .some((p) => p && (activeCase.county ?? "").toLowerCase().includes(p));
   const county    = countyMatch ? 25 : 0;
   const capacity  = Math.max(0, Math.min(15, 15 - candidate.open));
   const sla       = slaHoursLeft(activeCase.opened, activeCase.urgency);

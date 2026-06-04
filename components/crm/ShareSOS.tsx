@@ -25,7 +25,7 @@ export function buildReferralMessage(personId: string) {
 }
 
 function initials(name: string) {
-  return name.split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  return (name ?? "").split(/\s+/).map((s) => s[0] ?? "").slice(0, 2).join("").toUpperCase();
 }
 
 export function ShareSOS({

@@ -200,7 +200,7 @@ export default function RequestPage() {
         <AiSummary
           id={`${r.id} · ${r.caseId}`}
           tldr={`${r.urgency} ${(r.taxonomy || '').toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
-          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${personName} (household of ${householdSize}${(r.household?.pets || 0) > 0 ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${(r.assignedTo || '').replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
+          summary={`${(r.urgency ?? "").toUpperCase()} ${r.taxonomy} request from ${personName} (household of ${householdSize}${(r.household?.pets || 0) > 0 ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${(r.status ?? "").replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${(r.assignedTo || '').replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${(delivery.current ?? "").replace(/_/g, " ")}.` : ""}`}
         />
 
         {/* Status section */}
@@ -364,9 +364,9 @@ function RequestTabs({
               >
                 <GitBranch size={13} className="text-white/40" />
                 <span className="font-mono text-[10.5px] text-white/45 w-12 shrink-0">{c.id}</span>
-                <p className="font-mono text-[10.5px] text-white/80 truncate flex-1">{c.taxonomy.join(" · ")}</p>
+                <p className="font-mono text-[10.5px] text-white/80 truncate flex-1">{(c.taxonomy ?? []).join(" · ")}</p>
                 <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/8 text-white/65 shrink-0">
-                  {c.status.replace(/_/g, " ")}
+                  {(c.status ?? "").replace(/_/g, " ")}
                 </span>
               </Link>
             </li>

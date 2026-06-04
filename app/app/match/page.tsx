@@ -682,7 +682,7 @@ function MatchChainPreview({ activeCase, candidate }: { activeCase: CaseItem; ca
   };
 
   const matchEntry: MatchEntry = {
-    id: activeCase.id.slice(-8).toUpperCase(),
+    id: (activeCase.id ?? "").slice(-8).toUpperCase(),
     title: `${activeCase.citizen} → ${candidate.name}`,
     blurb: `${fmtTaxonomy(activeCase.taxonomy[0]) || activeCase.taxonomy[0] || "—"} · ${activeCase.county || "—"}`,
     score: candidate.score,

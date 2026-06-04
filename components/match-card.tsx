@@ -78,7 +78,7 @@ export function MatchCard({ match, onClick, isNew }: MatchCardProps) {
             </span>
           )}
           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${getStatusColor(match.status)}`}>
-            {match.status.replace(/_/g, ' ')}
+            {(match.status ?? '').replace(/_/g, ' ')}
           </span>
         </div>
       </div>

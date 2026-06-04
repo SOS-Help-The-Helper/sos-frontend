@@ -54,7 +54,7 @@ export function MatchChainView({ match }: { match: MatchChainData }) {
         <Arrow />
         <ChainCard icon={<Truck size={13} className="text-[#89CFF0]" />} eyebrow="RV" title={`${rv.year} ${rv.make} ${rv.model}`}
           pills={[
-            <span key="s" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${RV_STATUS_PILL[rv.status] ?? "bg-white/8 text-white/65"}`}>{rv.status.replace(/_/g, " ")}</span>,
+            <span key="s" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${RV_STATUS_PILL[rv.status] ?? "bg-white/8 text-white/65"}`}>{(rv.status ?? "").replace(/_/g, " ")}</span>,
             <span key="c" className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/8 text-white/65">{rv.condition}</span>,
           ]}
           rows={[{ label: "VIN", value: <span className="font-mono">····{rv.vinLast5}</span> }, { label: "Sleeps", value: `${rv.sleeps}` }]}
@@ -63,10 +63,10 @@ export function MatchChainView({ match }: { match: MatchChainData }) {
         {driver ? (
           <ChainCard icon={<UserCheck size={13} className="text-[#89CFF0]" />} eyebrow="Driver" title={driver.name}
             pills={[
-              <span key="s" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${DRIVER_STATUS_PILL[driver.status] ?? "bg-white/8 text-white/65"}`}>{driver.status.replace(/_/g, " ")}</span>,
+              <span key="s" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${DRIVER_STATUS_PILL[driver.status] ?? "bg-white/8 text-white/65"}`}>{(driver.status ?? "").replace(/_/g, " ")}</span>,
               driver.hasClassA ? <span key="cdl" className="inline-flex items-center gap-0.5 font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#34D399]/12 text-[#34D399]"><Award size={9} /> Class A</span> : null,
             ]}
-            rows={[{ label: "Tow", value: driver.towVehicle }, { label: "Capacity", value: `${driver.towCapacityLbs.toLocaleString()} lbs` }, { label: "Hours", value: driver.availabilityHours, icon: <Clock size={10} /> }]}
+            rows={[{ label: "Tow", value: driver.towVehicle }, { label: "Capacity", value: `${(driver.towCapacityLbs ?? 0).toLocaleString()} lbs` }, { label: "Hours", value: driver.availabilityHours, icon: <Clock size={10} /> }]}
           />
         ) : (
           <div className="rounded-xl border border-dashed border-[#F5A524]/40 bg-[#F5A524]/[0.04] p-3.5 flex flex-col gap-2.5 min-w-0">

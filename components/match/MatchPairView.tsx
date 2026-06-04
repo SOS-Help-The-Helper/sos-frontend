@@ -59,7 +59,7 @@ export function MatchPairView({ match }: { match: MatchCandidate }) {
           title={resource.title}
           pills={[
             <span key="s" className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${RESOURCE_STATUS_PILL[resource.status]}`}>
-              {resource.status.replace(/_/g, " ")}
+              {(resource.status ?? "").replace(/_/g, " ")}
             </span>,
             <span key="o" className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/8 text-white/65">
               {resource.orgName}

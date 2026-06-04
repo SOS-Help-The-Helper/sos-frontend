@@ -56,7 +56,7 @@ export function ChainView({ matches }: ChainViewProps) {
                     {match.chain_role || `Step ${match.chain_sequence}`}
                   </span>
                   <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase ${getStatusColor(match.status)}`}>
-                    {match.status.replace(/_/g, ' ')}
+                    {(match.status ?? '').replace(/_/g, ' ')}
                   </span>
                   <span className="text-[10px] text-sos-gray-500">
                     Score: {match.match_score}

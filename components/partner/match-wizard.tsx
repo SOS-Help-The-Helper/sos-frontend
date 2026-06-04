@@ -517,9 +517,9 @@ export function MatchWizard({ preselected, onClose, onPropose }: MatchWizardProp
                                 )}
                               </div>
                               {/* Display lines from proposal engine */}
-                              {p.display_lines.length > 0 && (
+                              {(p.display_lines ?? []).length > 0 && (
                                 <div className="mt-2 space-y-0.5">
-                                  {p.display_lines.slice(0, 3).map((line, i) => (
+                                  {(p.display_lines ?? []).slice(0, 3).map((line, i) => (
                                     <p key={i} className="text-xs text-gray-500">{line}</p>
                                   ))}
                                 </div>

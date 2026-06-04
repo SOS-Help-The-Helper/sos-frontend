@@ -50,7 +50,7 @@ export function NotificationFeed({ open, onClose }: NotificationFeedProps) {
               <Icon className="h-3.5 w-3.5 text-white/30 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-white/70">
-                  {e.event_type.replace(/_/g, ' ')}: {e.from_status || '?'} → {e.to_status || '?'}
+                  {(e.event_type ?? '').replace(/_/g, ' ')}: {e.from_status || '?'} → {e.to_status || '?'}
                 </p>
                 {e.notes && <p className="text-[10px] text-white/30 truncate">{e.notes}</p>}
                 <p className="text-[9px] text-white/20">{new Date(e.created_at).toLocaleString()}</p>
