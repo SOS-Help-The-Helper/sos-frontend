@@ -12,6 +12,7 @@
     "@ai-sdk/anthropic": "3.0.64",
     "@ai-sdk/react": "^3.0.143",
     "@chenglou/pretext": "^0.0.2",
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.100.0",
     "@tailwindcss/postcss": "^4.2.2",
     "ai": "6.0.141",

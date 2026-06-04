@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 // ── Public routes (everything else returns 404) ──
 const PUBLIC_PATHS = new Set([
   '/',
   '/c',
+  '/home',
   '/home-v25.html',
+  '/login',
   '/join',
   '/app',
   '/cases',
@@ -83,8 +86,61 @@ function rateLimit(req: NextRequest): NextResponse | null {
   return null;
 }
 
+// ── Auth gate for the partner portal (/app/*) ──
+// Auth ALWAYS runs against the SOS DB (the identity layer). Unauthenticated
+// requests to /app are redirected to /login; authenticated ones pass through
+// with a refreshed session cookie. Returns a response to send, or null to let
+// the request continue normally.
+async function gateApp(req: NextRequest): Promise<NextResponse | null> {
+  const path = req.nextUrl.pathname;
+  const isProtected = path === '/app' || path.startsWith('/app/');
+  if (!isProtected) return null;
+
+  const url =
+    process.env.NEXT_PUBLIC_SOS_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    '';
+  const anonKey =
+    process.env.NEXT_PUBLIC_SOS_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    '';
+  // Auth not configured (e.g. build/preview) → don't lock anyone out.
+  if (!url || !anonKey) return null;
+
+  let res = NextResponse.next({ request: req });
+
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return req.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+        res = NextResponse.next({ request: req });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          res.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.search = `?redirect=${encodeURIComponent(path + req.nextUrl.search)}`;
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Authenticated — return the response carrying any refreshed session cookies.
+  return res;
+}
+
 // ── Main proxy ──
-export default function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // Block non-public routes
@@ -95,6 +151,10 @@ export default function middleware(req: NextRequest) {
   // Rate limit API
   const limited = rateLimit(req);
   if (limited) return limited;
+
+  // Gate the partner portal behind a Supabase session
+  const gated = await gateApp(req);
+  if (gated) return gated;
 
   return NextResponse.next();
 }

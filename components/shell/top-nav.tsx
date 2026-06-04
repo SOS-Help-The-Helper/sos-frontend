@@ -44,13 +44,18 @@ export interface TopNavProps {
   userName?: string;
 }
 
-export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app/settings", userName = "U" }: TopNavProps) {
+export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app/settings", userName }: TopNavProps) {
   const path = usePathname();
+  const { signOut, userEmail, userPhone, userName: ctxUserName } = useAuthContext();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
+
+  // Display identity: prefer person name, fall back to email/phone.
+  const displayName = userName || ctxUserName || "User";
+  const contactLine = userEmail || userPhone || "";
 
   const enabledSet = new Set(enabledModules);
   const isEnabled = (m: ModuleId) => enabledSet.has(m);
@@ -100,7 +105,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  const initials = userName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase() || "U";
+  const initials = displayName.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase() || "U";
 
   return (
     <header
@@ -222,8 +227,19 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                 <div style={{
                   position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 50,
                   background: "#1B3A57", border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", minWidth: 180, overflow: "hidden",
+                  borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", minWidth: 200, overflow: "hidden",
                 }}>
+                  {/* Signed-in user */}
+                  <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {displayName}
+                    </div>
+                    {contactLine && (
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                        {contactLine}
+                      </div>
+                    )}
+                  </div>
                   <Link
                     href={settingsTo}
                     onClick={() => setAvatarOpen(false)}
@@ -233,17 +249,9 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                   >
                     Settings
                   </Link>
-                  <button
-                    onClick={() => { setAvatarOpen(false); toast("Org switching coming soon"); }}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 13, color: "#fff", background: "transparent", border: "none", cursor: "pointer", transition: "background 120ms" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
-                    Switch org
-                  </button>
                   <div style={{ height: 1, background: "rgba(255,255,255,0.10)", margin: "4px 0" }} />
                   <button
-                    onClick={() => { setAvatarOpen(false); toast("Sign out coming soon"); }}
+                    onClick={() => { setAvatarOpen(false); void signOut(); }}
                     style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", fontSize: 13, color: "rgba(255,255,255,0.6)", background: "transparent", border: "none", cursor: "pointer", transition: "background 120ms" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -365,6 +373,12 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
 
           {/* Footer */}
           <div style={{ padding: "12px 12px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+            {contactLine && (
+              <div style={{ padding: "4px 8px 8px" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{displayName}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{contactLine}</div>
+              </div>
+            )}
             <Link
               href={settingsTo}
               onClick={() => setMobileOpen(false)}
@@ -377,6 +391,16 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
             >
               Settings
             </Link>
+            <button
+              onClick={() => { setMobileOpen(false); void signOut(); }}
+              style={{
+                display: "block", width: "100%", textAlign: "left", padding: "10px 8px", borderRadius: 8,
+                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)",
+                background: "transparent", border: "none", cursor: "pointer",
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>
