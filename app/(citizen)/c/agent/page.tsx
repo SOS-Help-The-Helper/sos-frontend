@@ -29,7 +29,7 @@ function AgentContent() {
   const initialized = useRef(false);
   const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
-  const { messages, sendMessage, status, error: chatError } = useChat({
+  const { messages, sendMessage, status, error: chatError, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       headers: {
@@ -75,6 +75,16 @@ function AgentContent() {
     if (!personId || messages.length <= 1) return;
     saveChatHistoryDebounced(personId, messages);
   }, [personId, messages]);
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (personId && !initialized.current) {
+      const history = loadChatHistory(personId);
+      if (history && history.length > 0) {
+        setMessages(history);
+      }
+    }
+  }, [personId, setMessages]);
 
   // Initial query from URL
   useEffect(() => {

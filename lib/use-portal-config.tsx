@@ -257,6 +257,8 @@ export function PortalConfigProvider({
         localStorage.setItem(CACHE_KEY, JSON.stringify({ org_id: orgId, config: merged }));
       } catch (err) {
         console.error('[usePortalConfig] failed to save:', err);
+        // Rethrow error so callers can handle it properly
+        throw err;
       }
     }
   }, [config, orgId]);

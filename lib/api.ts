@@ -162,7 +162,7 @@ export const api = {
     efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
 
   // CRM — Matches board (direct Supabase read with joins)
-  crmMatchesList: async (_orgId: string) => {
+  crmMatchesList: async (orgId: string) => {
     const { data, error } = await supabaseRead
       .from('matches')
       .select(`
@@ -173,6 +173,7 @@ export const api = {
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;
+    // TODO: Add org filtering via .eq('request_org_id', orgId) when available in schema
 
     return {
       matches: (data || []).map((m: any) => ({
@@ -198,8 +199,8 @@ export const api = {
   crmBrowsePersons: (orgId: string, params?: { limit?: number; offset?: number; sort?: string }) =>
     efCall("crm-directory", { action: "browse_persons", org_id: orgId, ...params }),
 
-  crmBrowseOrgs: (params?: { limit?: number; offset?: number }) =>
-    efCall("crm-directory", { action: "browse_orgs", ...params }),
+  crmBrowseOrgs: (orgId: string, params?: { limit?: number; offset?: number }) =>
+    efCall("crm-directory", { action: "browse_orgs", org_id: orgId, ...params }),
 
   crmOrgMembers: (orgId: string) =>
     efCall("crm-directory", { action: "list_org_members", org_id: orgId }),
@@ -285,8 +286,6 @@ export const api = {
     efCall("crm-directory", { action: "get_person", person_id: personId }),
   crmUpdatePerson: (personId: string, field: string, value: string) =>
     efCall("crm-directory", { action: "update_person", person_id: personId, field, value }),
-  crmOrgMembers: (orgId: string) =>
-    efCall("crm-directory", { action: "org_members", org_id: orgId }),
   crmOrgStats: (orgId: string) =>
     efCall("crm-directory", { action: "org_stats", org_id: orgId }),
 

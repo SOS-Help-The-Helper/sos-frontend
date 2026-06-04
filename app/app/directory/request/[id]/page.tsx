@@ -71,14 +71,28 @@ export default function RequestPage() {
 
   useEffect(() => {
     api.crmCasesDetail({ request_id: id })
-      .then((data: ReqDetail | null) => setR(data ?? null))
+      .then((data: ReqDetail | null) => {
+        if (data) {
+          // Normalize response with sensible defaults to prevent crashes
+          const normalized = {
+            ...data,
+            household: data.household || { adults: 0, children: 0, pets: 0 },
+            notes: data.notes || [],
+            taxonomy: data.taxonomy || '',
+            assignedTo: data.assignedTo || '',
+          };
+          setR(normalized);
+        } else {
+          setR(null);
+        }
+      })
       .catch(() => setR(null));
   }, [id]);
 
   if (r === undefined) {
     return (
       <CrmShell module="Cases">
-        <DetailTopBar backTo="/cases" backLabel="Cases" />
+        <DetailTopBar backTo="/app/cases" backLabel="Cases" />
         <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
           <div className="h-20 rounded-xl bg-white/5" />
           <div className="h-16 rounded-xl bg-white/5" />
@@ -91,7 +105,7 @@ export default function RequestPage() {
   if (!r) {
     return (
       <CrmShell module="Cases">
-        <DetailTopBar backTo="/cases" backLabel="Cases" />
+        <DetailTopBar backTo="/app/cases" backLabel="Cases" />
         <div className="p-10 text-center text-white/50">Request not found</div>
       </CrmShell>
     );
@@ -101,7 +115,7 @@ export default function RequestPage() {
   const delivery = r.delivery ?? null;
   const personName = r.personName || "Unknown";
   const initials = personName.split(" ").map((s) => s[0]).join("");
-  const householdSize = r.household.adults + r.household.children;
+  const householdSize = (r.household?.adults || 0) + (r.household?.children || 0);
   const urgencyTint =
     r.urgency === "critical" ? "#EF4E4B" :
     r.urgency === "high" ? "#F5EBD6" :
@@ -110,7 +124,7 @@ export default function RequestPage() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <DetailTopBar backTo="/app/cases" backLabel="Cases" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
@@ -156,8 +170,8 @@ export default function RequestPage() {
               )}
               <MetaPopover>
                 <MetaChip icon={Users}>
-                  {r.household.adults}a · {r.household.children}c
-                  {r.household.pets ? ` · ${r.household.pets}p` : ""}
+                  {r.household?.adults || 0}a · {r.household?.children || 0}c
+                  {(r.household?.pets || 0) > 0 ? ` · ${r.household.pets}p` : ""}
                 </MetaChip>
                 <MetaChip icon={Calendar}>{r.daysOpen}d open</MetaChip>
                 <span className="font-mono text-xs text-white/40">{r.id} · {r.caseId}</span>
@@ -185,8 +199,8 @@ export default function RequestPage() {
 
         <AiSummary
           id={`${r.id} · ${r.caseId}`}
-          tldr={`${r.urgency} ${r.taxonomy.toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
-          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${personName} (household of ${householdSize}${r.household.pets ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${r.assignedTo.replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
+          tldr={`${r.urgency} ${(r.taxonomy || '').toLowerCase()} · household of ${householdSize} · ${cands.length} match${cands.length === 1 ? "" : "es"}.`}
+          summary={`${r.urgency.toUpperCase()} ${r.taxonomy} request from ${personName} (household of ${householdSize}${(r.household?.pets || 0) > 0 ? ` + ${r.household.pets} pet${r.household.pets > 1 ? "s" : ""}` : ""}) in ${r.county} County following ${r.disaster ?? "the disaster"}. Status: ${r.status.replace(/_/g, " ")}, open ${r.daysOpen}d, assigned to ${(r.assignedTo || '').replace(/-/g, " ")}. ${cands.length} match candidate${cands.length === 1 ? "" : "s"} scored${cands.find((c) => c.approved) ? `; top match approved (${cands.find((c) => c.approved)!.title})` : ""}.${delivery ? ` Delivery ${delivery.id} is ${delivery.current.replace(/_/g, " ")}.` : ""}`}
         />
 
         {/* Status section */}
@@ -236,7 +250,7 @@ function RequestTabs({
     {
       key: "activity",
       label: "Activity",
-      count: r.notes.length + (delivery ? (delivery.steps?.length ?? 0) : 0),
+      count: (r.notes || []).length + (delivery ? (delivery.steps?.length ?? 0) : 0),
       content: (
         <div className="space-y-5">
           {delivery && (
@@ -315,7 +329,7 @@ function RequestTabs({
           <div>
             <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Activity</p>
             <div className="divide-y divide-[var(--hairline)]">
-              {r.notes.map((n, i) => (
+              {(r.notes || []).map((n, i) => (
                 <div key={i} className="py-3">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${n.system ? "bg-white/6 text-white/55" : "bg-[#89CFF0]/12 text-[#89CFF0]"}`}>

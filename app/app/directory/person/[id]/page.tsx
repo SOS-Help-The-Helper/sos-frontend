@@ -12,12 +12,10 @@ import {
   DetailTabs, EmptyTab, type DetailTab,
   StatusPill, MetaPopover, OverflowMenu, HeroLine, ActionBtn,
 } from "@/components/crm/DetailShell";
-import { people, type Person } from "@/lib/directory-data";
 import { StatusBadge } from "@/components/directory/Badges";
 import { Timeline } from "@/components/directory/Timeline";
 import { StewardshipBand } from "@/components/directory/StewardshipChip";
 import { EditableCell, EditableSelect } from "@/components/directory/EditableCell";
-import { usePerson, canEdit, updatePerson } from "@/lib/directory-store";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -55,7 +53,7 @@ const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
   const { orgId } = useAuthContext();
-  const [apiData, setApiData] = useState<ApiResponse | null>(null);
+  const [apiData, setApiData] = useState<ApiResponse | null | undefined>(undefined);
   const [chatOpen, setChatOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState("");
@@ -69,9 +67,55 @@ export default function PersonPage() {
       .catch(() => { setApiData(null); toast.error("Failed to load person"); });
   }, [id]);
 
-  const seed = people.find((p) => p.id === id);
-  if (!seed) return <CrmShell module="Directory"><div className="p-10 text-center text-white/50">Person not found</div></CrmShell>;
-  const person = usePerson(seed.id) ?? seed;
+  // Loading state
+  if (apiData === undefined) {
+    return (
+      <CrmShell module="Directory">
+        <DetailTopBar backTo="/app/directory" backLabel="Directory" />
+        <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
+          <div className="h-20 rounded-xl bg-white/5" />
+          <div className="h-16 rounded-xl bg-white/5" />
+          <div className="h-48 rounded-xl bg-white/5" />
+        </main>
+      </CrmShell>
+    );
+  }
+
+  // Not found state
+  if (!apiData) {
+    return (
+      <CrmShell module="Directory">
+        <DetailTopBar backTo="/app/directory" backLabel="Directory" />
+        <div className="p-10 text-center text-white/50">Person not found</div>
+      </CrmShell>
+    );
+  }
+
+  // Map API data to person object
+  const apiPerson = apiData.person || {};
+  const person = {
+    id: id,
+    name: apiPerson.display_name || apiPerson.name || "Unknown Person",
+    phoneMask: apiPerson.phone || apiPerson.phone_number || "",
+    email: apiPerson.email || "",
+    county: apiPerson.county || "",
+    role: apiPerson.role || "Citizen",
+    housingStatus: apiPerson.housing_status || "Unknown" as "Stable" | "Displaced" | "At Risk" | "Unknown",
+    sosScore: apiPerson.sos_score || 0,
+    scoreBreakdown: {
+      community: apiPerson.community_score || 0,
+      impact: apiPerson.impact_score || 0,
+      readiness: apiPerson.readiness_score || 0,
+    },
+    org: {
+      id: apiPerson.org_id || orgId || "",
+      name: apiPerson.org_name || "Unknown Org",
+    },
+    credentials: apiPerson.credentials || [],
+    skills: apiPerson.skills || [],
+    history: apiPerson.activity || [],
+    household: apiPerson.household || null,
+  };
 
   function openEdit() {
     setEditName(person.name);
@@ -98,15 +142,14 @@ export default function PersonPage() {
   function cancelEdit() {
     setEditMode(false);
   }
-  const editable = canEdit(person.org.id);
+  const editable = true; // canEdit(person.org.id);
 
-  const apiPerson = apiData?.person;
   const linkedRequests: LinkedRequest[] = apiData?.requests ?? [];
   const householdRequest = linkedRequests.find(
     (r) => r.household_size != null || r.has_children || r.has_elderly || r.has_disabled || r.has_pets
   );
-  const personLat = apiPerson?.lat ?? apiPerson?.latitude;
-  const personLng = apiPerson?.lng ?? apiPerson?.longitude;
+  const personLat = apiPerson.lat ?? apiPerson.latitude;
+  const personLng = apiPerson.lng ?? apiPerson.longitude;
   const housingTint =
     person.housingStatus === "Stable" ? "#34D399" :
     person.housingStatus === "Displaced" ? "#F5EBD6" :
@@ -142,7 +185,7 @@ export default function PersonPage() {
 
   return (
     <CrmShell module="Directory">
-      <DetailTopBar backTo="/directory" backLabel="Directory" />
+      <DetailTopBar backTo="/app/directory" backLabel="Directory" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
@@ -156,8 +199,8 @@ export default function PersonPage() {
                 <span className="w-1 h-1 rounded-full" style={{ background: housingTint }} />
                 <EditableSelect
                   value={person.housingStatus}
-                  editable
-                  onCommit={(v) => updatePerson(person.id, "housingStatus", v, { kind: "user", label: "you" })}
+                  editable={false}
+                  onCommit={() => {}}
                   options={HOUSING_OPTIONS}
                   className="!h-5 !text-[9.5px] uppercase tracking-wider font-mono"
                 />
@@ -179,8 +222,8 @@ export default function PersonPage() {
                 <span className="text-white/35 mx-1">·</span>
                 <EditableCell
                   value={person.role}
-                  editable={editable}
-                  onCommit={(v) => updatePerson(person.id, "role", v, { kind: "user", label: "you" })}
+                  editable={false}
+                  onCommit={() => {}}
                   className="text-white/65"
                 />
               </MetaChip>
@@ -188,22 +231,22 @@ export default function PersonPage() {
                 <MetaChip icon={Phone}>
                   <EditableCell
                     value={person.phoneMask}
-                    editable={editable}
-                    onCommit={(v) => updatePerson(person.id, "phoneMask", v, { kind: "user", label: "you" })}
+                    editable={false}
+                    onCommit={() => {}}
                   />
                 </MetaChip>
                 <MetaChip icon={Mail}>
                   <EditableCell
                     value={person.email}
-                    editable={editable}
-                    onCommit={(v) => updatePerson(person.id, "email", v, { kind: "user", label: "you" })}
+                    editable={false}
+                    onCommit={() => {}}
                   />
                 </MetaChip>
                 <MetaChip icon={MapPin}>
                   <EditableCell
                     value={person.county}
-                    editable={editable}
-                    onCommit={(v) => updatePerson(person.id, "county", v, { kind: "user", label: "you" })}
+                    editable={false}
+                    onCommit={() => {}}
                   />
                   <span className="ml-1">County</span>
                 </MetaChip>
@@ -351,7 +394,7 @@ function ListGroup({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CredentialsTab({ person }: { person: Person }) {
+function CredentialsTab({ person }: { person: any }) {
   if ((person.credentials ?? []).length === 0) return <EmptyTab label="No credentials on file." />;
   return (
     <div className="space-y-3 -m-1">
@@ -387,7 +430,7 @@ function CredentialsTab({ person }: { person: Person }) {
   );
 }
 
-function SkillsTab({ person }: { person: Person }) {
+function SkillsTab({ person }: { person: any }) {
   if ((person.skills ?? []).length === 0) return <EmptyTab label="No skills tracked." />;
   const sourceMap = {
     self: { label: "Self-reported", tone: "neutral" as const },

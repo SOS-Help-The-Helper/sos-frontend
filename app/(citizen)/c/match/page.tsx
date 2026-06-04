@@ -218,13 +218,18 @@ export default function MatchPage() {
       // Call match-respond via api.respondMatch
       try {
         await api.respondMatch(proposal.id, 'accept');
+        // Only advance to next card if accept succeeds
+        setCurrentIndex(prev => prev + 1);
       } catch (err) {
         console.error('Match accept failed:', err);
+        // Show error toast and don't advance card
+        import('sonner').then(({ toast }) => toast.error('Failed to accept match'));
+        return;
       }
+    } else {
+      // For skip, advance immediately (no API call needed)
+      setCurrentIndex(prev => prev + 1);
     }
-
-    // Advance to next card (SwipeCard handles animation)
-    setCurrentIndex(prev => prev + 1);
   }
 
   // Apply filter mode

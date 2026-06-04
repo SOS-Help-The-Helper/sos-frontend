@@ -416,7 +416,7 @@ export default function ManagePage() {
                         <div className="flex gap-2 pt-2">
                           <button
                             onClick={async () => {
-                              await api.respondMatch(m.id, 'accept');
+                              await api.respondMatch(m.id, 'accept', { actor: { citizen: true, id: personId } });
                               setExpandedId(null);
                               if (personId) loadData(personId);
                             }}
@@ -426,7 +426,7 @@ export default function ManagePage() {
                           </button>
                           <button
                             onClick={async () => {
-                              await api.respondMatch(m.id, 'decline');
+                              await api.respondMatch(m.id, 'decline', { actor: { citizen: true, id: personId } });
                               setExpandedId(null);
                               if (personId) loadData(personId);
                             }}

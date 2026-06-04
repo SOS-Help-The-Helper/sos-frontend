@@ -66,7 +66,7 @@ export default function ReportsPage() {
   cases.forEach((c) => c.taxonomy.forEach((t) => (protoTaxCounts[t] = (protoTaxCounts[t] || 0) + 1)));
   const protoTaxList: TaxEntry[] = Object.entries(protoTaxCounts).sort((a, b) => b[1] - a[1]);
 
-  const { data: dashboard, loading } = useApiFetch(
+  const { data: dashboard, loading, error, refetch } = useApiFetch(
     () => api.crmImpactDashboard(orgId || '').then((res) => {
       const d = (res as Record<string, unknown>)?.data ?? res;
       return {
@@ -99,12 +99,25 @@ export default function ReportsPage() {
       />
 
       <div className="px-4 pt-4 pb-4 space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {loading ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/5 rounded-lg p-3 h-16 animate-pulse" />
-            ))
-          ) : (
+        {error ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <span className="text-3xl">⚠️</span>
+            <p className="text-sm font-bold text-white">Failed to load reports</p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-xs font-medium transition"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {loading ? (
+                [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white/5 rounded-lg p-3 h-16 animate-pulse" />
+                ))
+              ) : (
             kpis.map((k) => (
               <div key={k.label} className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
                 <p className="font-mono text-xs uppercase tracking-wider text-white/45">{k.label}</p>
@@ -162,60 +175,33 @@ export default function ReportsPage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     </CrmShell>
   );
 }
 
 function SeverityDonut({ kpis }: { kpis: Kpi[] }) {
-  // Use KPI values as donut segments
-  const segments = [
-    { label: "Critical", value: 12, color: "#EF4E4B" },
-    { label: "High", value: 25, color: "#F59E0B" },
-    { label: "Medium", value: 45, color: "#89CFF0" },
-    { label: "Low", value: 18, color: "#34D399" },
-  ];
-  const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
-  let cumulative = 0;
-  const r = 40, cx = 50, cy = 50;
-
+  // Severity data not available in dashboard API yet - show placeholder
   return (
-    <div className="flex items-center gap-6">
-      <svg width={100} height={100} viewBox="0 0 100 100" className="shrink-0">
-        {segments.map((seg, i) => {
-          const start = cumulative / total;
-          const end = (cumulative + seg.value) / total;
-          cumulative += seg.value;
-          const startAngle = start * 2 * Math.PI - Math.PI / 2;
-          const endAngle = end * 2 * Math.PI - Math.PI / 2;
-          const largeArc = seg.value / total > 0.5 ? 1 : 0;
-          const x1 = cx + r * Math.cos(startAngle);
-          const y1 = cy + r * Math.sin(startAngle);
-          const x2 = cx + r * Math.cos(endAngle);
-          const y2 = cy + r * Math.sin(endAngle);
-          return (
-            <path key={i} d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`} fill={seg.color} opacity={0.8} />
-          );
-        })}
-        <circle cx={cx} cy={cy} r={22} fill="var(--surface-1)" />
-        <text x={cx} y={cy + 4} textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{total}</text>
-      </svg>
-      <div className="space-y-1.5">
-        {segments.map(seg => (
-          <div key={seg.label} className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: seg.color }} />
-            <span className="text-[11px] text-white/70">{seg.label}</span>
-            <span className="font-mono text-xs tabular-nums text-white/45 ml-auto">{seg.value}</span>
-          </div>
-        ))}
-      </div>
+    <div className="flex items-center justify-center h-24">
+      <p className="text-sm text-white/40">Severity data not yet available</p>
     </div>
   );
 }
 
 function TrendSparkline() {
-  // Placeholder 14-day data — will be replaced by EF data
-  const data = [8, 12, 10, 15, 13, 18, 22, 19, 16, 20, 17, 14, 21, 24];
+  // No trend data available from the dashboard API yet
+  const data: number[] = [];
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-20">
+        <p className="text-sm text-white/40">Trend data not available</p>
+      </div>
+    );
+  }
+
   const max = Math.max(...data, 1);
   const w = 280, h = 80;
   const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * (h - 10)}`).join(" ");

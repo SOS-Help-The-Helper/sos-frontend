@@ -51,7 +51,33 @@ function extractList(res: unknown): Assignment[] {
   if (!res || typeof res !== 'object') return [];
   const d = res as Record<string, unknown>;
   const arr = d.assignments ?? d.data ?? d.transports ?? (Array.isArray(res) ? res : []);
-  return Array.isArray(arr) ? arr : [];
+  if (!Array.isArray(arr)) return [];
+
+  // Map snake_case API response to camelCase frontend fields
+  return arr.map((item: any) => ({
+    id: item.id || '',
+    org: item.org || '',
+    resourceId: item.resource_id || item.resourceId || '',
+    status: item.transport_status || item.status || 'pending',
+    origin: item.origin_address || item.origin || '',
+    destination: item.destination_address || item.destination || '',
+    driverName: item.driver_name || item.driverName || '',
+    driverPhone: item.driver_phone || item.driverPhone,
+    estimatedArrival: item.estimated_arrival || item.estimatedArrival,
+    statusHistory: item.status_history || item.statusHistory || [],
+    issues: item.issues || [],
+    photos: item.photos || [],
+    priority: item.priority || 'normal',
+    resourceSummary: item.resource_name || item.resource_summary || item.resourceSummary,
+    convoy_id: item.convoy_id || item.convoyId,
+    convoyPosition: item.convoy_position || item.convoyPosition,
+    originLat: item.origin_lat || item.originLat,
+    originLng: item.origin_lng || item.originLng,
+    destinationLat: item.destination_lat || item.destinationLat,
+    destinationLng: item.destination_lng || item.destinationLng,
+    currentLat: item.current_lat || item.currentLat,
+    currentLng: item.current_lng || item.currentLng,
+  }));
 }
 
 const emptyForm = { driverName: "", origin: "", destination: "", status: "pending" };

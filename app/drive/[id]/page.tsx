@@ -19,10 +19,18 @@ const transportAssignments: TransportAssignment[] = [];
 type TransportAssignment = {
   id: string; org: string; resourceId: string; status: string;
   origin: string; destination: string; driverName: string;
-  driverPhone?: string; estimatedArrival?: string;
-  statusHistory?: { status: string; timestamp: string; photo?: boolean }[];
-  statusPipeline?: string[];
-  convoy_id?: string;
+  driverPhone?: string; driverVehicle?: string;
+  resourceSummary: string; originLat: number; originLng: number;
+  destinationLat: number; destinationLng: number;
+  currentLat?: number | null; currentLng?: number | null;
+  estimatedArrival?: string; distanceMiles: number;
+  priority: 'normal' | 'high' | 'urgent';
+  convoyId?: string; convoyPosition?: number;
+  coordinatorName: string; coordinatorPhone: string;
+  notes?: string;
+  statusHistory: { status: string; timestamp: string; photo?: boolean }[];
+  issues: { type: string; description: string; timestamp: string; resolved: boolean }[];
+  photos: { url: string; stage: string; timestamp: string }[];
 };
 const orgTransportConfig: Record<string, any> = {};
 const convoys: any[] = [];
@@ -30,25 +38,31 @@ const convoys: any[] = [];
 const PRIVACY_REVEAL_AFTER: TransportStatus[] = ['at_pickup', 'hooked_up', 'loaded', 'in_transit', 'at_staging', 'delivered', 'verified', 'completed'];
 
 function mapApiToAssignment(raw: Record<string, unknown>): TransportAssignment {
-  const proto = transportAssignments[0];
   return {
-    ...proto,
-    id: String(raw.id ?? proto.id),
-    status: (raw.status as TransportStatus) ?? proto.status,
-    driverName: String(raw.driver_name ?? proto.driverName),
-    resourceSummary: String(raw.resource_description ?? proto.resourceSummary),
-    origin: String(raw.origin ?? proto.origin),
-    destination: String(raw.destination ?? proto.destination),
-    originLat: Number(raw.origin_lat ?? proto.originLat),
-    originLng: Number(raw.origin_lng ?? proto.originLng),
-    destinationLat: Number(raw.destination_lat ?? proto.destinationLat),
-    destinationLng: Number(raw.destination_lng ?? proto.destinationLng),
+    id: String(raw.id ?? ''),
+    org: String(raw.org_id ?? 'unknown'),
+    resourceId: String(raw.resource_id ?? raw.id ?? ''),
+    status: (raw.status as TransportStatus) ?? 'assigned',
+    origin: String(raw.origin ?? ''),
+    destination: String(raw.destination ?? ''),
+    driverName: String(raw.driver_name ?? 'Unknown Driver'),
+    driverPhone: raw.driver_phone != null ? String(raw.driver_phone) : undefined,
+    driverVehicle: String(raw.driver_vehicle ?? ''),
+    resourceSummary: String(raw.resource_description ?? raw.resource_summary ?? 'Resource'),
+    originLat: Number(raw.origin_lat ?? 0),
+    originLng: Number(raw.origin_lng ?? 0),
+    destinationLat: Number(raw.destination_lat ?? 0),
+    destinationLng: Number(raw.destination_lng ?? 0),
     currentLat: raw.current_lat != null ? Number(raw.current_lat) : null,
     currentLng: raw.current_lng != null ? Number(raw.current_lng) : null,
-    estimatedArrival: raw.estimated_arrival != null ? String(raw.estimated_arrival) : null,
+    estimatedArrival: raw.estimated_arrival != null ? String(raw.estimated_arrival) : undefined,
+    distanceMiles: Number(raw.distance_miles ?? raw.distance ?? 0),
     priority: (raw.priority as TransportAssignment['priority']) ?? 'normal',
-    convoyId: raw.convoy_id != null ? String(raw.convoy_id) : null,
-    convoyPosition: raw.convoy_position != null ? Number(raw.convoy_position) : null,
+    convoyId: raw.convoy_id != null ? String(raw.convoy_id) : undefined,
+    convoyPosition: raw.convoy_position != null ? Number(raw.convoy_position) : undefined,
+    coordinatorName: String(raw.coordinator_name ?? 'Coordinator'),
+    coordinatorPhone: String(raw.coordinator_phone ?? ''),
+    notes: raw.notes != null ? String(raw.notes) : undefined,
     statusHistory: [],
     issues: [],
     photos: [],
@@ -67,9 +81,7 @@ function Logomark({ size }: { size: number }) {
 export default function DriverPage() {
   const { id } = useParams<{ id: string }>();
   const { orgId } = useAuthContext();
-  const [base, setBase] = useState<TransportAssignment | null>(
-    () => transportAssignments.find((a) => a.id === id) ?? null
-  );
+  const [base, setBase] = useState<TransportAssignment | null>(null);
 
   useEffect(() => {
     if (!orgId) return;
@@ -128,19 +140,25 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
       return;
     }
     const ts = 'Just now';
+    const prevStatus = assignment.status;
+    // Optimistic update
     setAssignment((a) => ({
       ...a,
       status: nextStatus,
       statusHistory: [...a.statusHistory, { status: nextStatus, timestamp: ts }],
     }));
     toast.success(`Updated to ${TRANSPORT_STATUS_LABEL[nextStatus]}`);
-    try {
-      api.transportUpdateStatus(assignment.id, nextStatus).catch(() => {
-        toast.error('Failed to sync status — coordinator may not see update');
-      });
-    } catch {
+
+    // Real API call
+    api.transportUpdateStatus(assignment.id, nextStatus).catch(() => {
+      // Rollback optimistic update on failure
+      setAssignment((a) => ({
+        ...a,
+        status: prevStatus,
+        statusHistory: a.statusHistory.filter(h => h.status !== nextStatus || h.timestamp !== ts),
+      }));
       toast.error('Failed to sync status — coordinator may not see update');
-    }
+    });
   }
 
   function onPhoto() {
@@ -148,6 +166,7 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
   }
 
   function onFile() {
+    // TODO: Connect to real photo upload API - currently local-only mock
     const stage = nextStatus ?? assignment.status;
     setAssignment((a) => ({
       ...a,
@@ -415,11 +434,22 @@ function DriverPageInner({ base }: { base: TransportAssignment }) {
               setShareLocation((v) => {
                 const next = !v;
                 if (next) {
-                  // Start sending mock location every 30s
+                  // Start sending real location every 30s
                   locationIntervalRef.current = setInterval(() => {
-                    api.transportUpdateLocation(assignment.id, 29.5 + Math.random() * 0.01, -82.0 + Math.random() * 0.01).catch(() => {
-                      toast.error('Location update failed');
-                    });
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                          api.transportUpdateLocation(assignment.id, position.coords.latitude, position.coords.longitude).catch(() => {
+                            toast.error('Location update failed');
+                          });
+                        },
+                        () => {
+                          toast.error('Could not get location');
+                        }
+                      );
+                    } else {
+                      toast.error('Geolocation not supported');
+                    }
                   }, 30_000);
                 } else {
                   if (locationIntervalRef.current !== null) {

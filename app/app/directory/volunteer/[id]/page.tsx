@@ -40,7 +40,7 @@ export default function VolunteerPage() {
   if (person === undefined) {
     return (
       <CrmShell module="Directory">
-        <DetailTopBar backTo="/directory" backLabel="Directory" />
+        <DetailTopBar backTo="/app/directory" backLabel="Directory" />
         <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
           <div className="h-20 rounded-xl bg-white/5" />
           <div className="h-16 rounded-xl bg-white/5" />
@@ -50,7 +50,7 @@ export default function VolunteerPage() {
     );
   }
 
-  if (!person) return <CrmShell module="Directory"><DetailTopBar backTo="/directory" backLabel="Directory" /><div className="p-10 text-center text-white/50">Volunteer not found</div></CrmShell>;
+  if (!person) return <CrmShell module="Directory"><DetailTopBar backTo="/app/directory" backLabel="Directory" /><div className="p-10 text-center text-white/50">Volunteer not found</div></CrmShell>;
 
   const v = {
     id: person.id,
@@ -93,7 +93,7 @@ export default function VolunteerPage() {
 
   return (
     <CrmShell module="Directory">
-      <DetailTopBar backTo="/directory" backLabel="Directory" />
+      <DetailTopBar backTo="/app/directory" backLabel="Directory" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand

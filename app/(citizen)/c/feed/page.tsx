@@ -23,10 +23,13 @@ export default function FeedPage() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  useEffect(() => {
-    async function load() {
+  async function loadFeed() {
+    setLoading(true);
+    setError(false);
+    try {
       // Community messages
       const msgs = await api.getMessages('community') as Array<{
         id: string; person_id: string; message_text: string;
@@ -45,9 +48,15 @@ export default function FeedPage() {
       }));
 
       setItems(feedItems);
+    } catch {
+      setError(true);
+    } finally {
       setLoading(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadFeed();
   }, []);
 
   const filtered = filter === 'all' ? items : items.filter(i => i.type === filter);
@@ -80,6 +89,12 @@ export default function FeedPage() {
         <div className="flex-1 overflow-y-auto bg-[#0F1E2B]">
           {loading ? (
             <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <span className="text-3xl">⚠️</span>
+              <p className="text-sm font-bold text-white mt-2">Something went wrong</p>
+              <button onClick={loadFeed} className="text-xs text-sos-accent-500 mt-2 underline">Tap to retry</button>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <span className="text-3xl">📋</span>

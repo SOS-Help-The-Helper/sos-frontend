@@ -71,7 +71,7 @@ const NEED_STATE: Record<string, { label: string; fg: string; bg: string }> = {
 function CaseNotFound() {
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <DetailTopBar backTo="/app/cases" backLabel="Cases" />
       <main className="max-w-[960px] mx-auto px-6 py-7 flex flex-col items-center justify-center gap-4 min-h-[40vh] text-center">
         <div className="w-14 h-14 rounded-2xl bg-white/8 flex items-center justify-center">
           <AlertTriangle className="w-6 h-6 text-white/40" />
@@ -94,7 +94,7 @@ function CaseNotFound() {
 function LoadingSkeleton() {
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <DetailTopBar backTo="/app/cases" backLabel="Cases" />
       <main className="max-w-[960px] mx-auto px-6 py-7 space-y-5 animate-pulse">
         {/* Identity band skeleton */}
         <div className="flex items-start gap-4">
@@ -217,6 +217,25 @@ export default function UmbrellaView() {
             }))
           );
         }
+
+        // Map citizen/case-level fields from the response
+        if (data) {
+          setUmbrellaData((prev) => ({
+            ...prev,
+            id: data.id || data.sos_id || id,
+            status: data.status || "active",
+            urgency: data.urgency || data.priority || "medium",
+            filedAt: data.filed_at || data.created_at || "",
+            citizen: {
+              id: data.person_id || data.citizen?.id || "",
+              name: data.display_name || data.citizen?.name || data.person_name || "",
+              phone: data.phone || data.citizen?.phone || "",
+              county: data.county || data.citizen?.county || "",
+              household: data.household_size || data.citizen?.household || 1,
+              notes: data.summary || data.notes || data.citizen?.notes || "",
+            },
+          }));
+        }
       })
       .catch(() => { setNotFound(true); })
       .finally(() => setLoading(false));
@@ -258,7 +277,7 @@ export default function UmbrellaView() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/cases" backLabel="Cases" />
+      <DetailTopBar backTo="/app/cases" backLabel="Cases" />
 
       <main className="max-w-[1240px] mx-auto px-6 py-7 space-y-5">
         <IdentityBand
@@ -557,7 +576,7 @@ function CaseTabs({
       key: "notes",
       label: "Notes",
       count: caseNotes.length || noteEvents.length || undefined,
-      content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} />,
+      content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} umbrellaData={umbrellaData} orgId={orgId} onNotesUpdate={setCaseNotes} />,
     },
     {
       key: "comms",
@@ -755,9 +774,15 @@ const NOTE_TYPE_META: Record<string, { icon: typeof StickyNote; tint: string }> 
 function NotesTimeline({
   caseNotes,
   noteEvents,
+  umbrellaData,
+  orgId,
+  onNotesUpdate,
 }: {
   caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
   noteEvents: Array<{ t: string; date: string; who: string; kind: string; msg: string }>;
+  umbrellaData: UmbrellaShape;
+  orgId: string;
+  onNotesUpdate?: (notes: any[]) => void;
 }) {
   const [newNote, setNewNote] = useState("");
 
@@ -777,11 +802,20 @@ function NotesTimeline({
         content: n.msg,
       }));
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     const text = newNote.trim();
     if (!text) return;
-    console.log("add note:", text);
-    setNewNote("");
+    try {
+      await api.crmCaseAction('add_case_note', { umbrella_id: umbrellaData.id, note_text: text, author_id: orgId });
+      setNewNote("");
+      // Refresh case notes
+      const data = await api.crmGetCaseNotes(umbrellaData.id);
+      if (data?.notes && Array.isArray(data.notes)) {
+        onNotesUpdate?.(data.notes);
+      }
+    } catch (error) {
+      console.error('Failed to add note:', error);
+    }
   };
 
   return (

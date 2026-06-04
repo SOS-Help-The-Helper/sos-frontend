@@ -364,7 +364,8 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
 
   async function handleAccept(candidateId: string) {
     try {
-      await api.crmCaseAction("approve_match", { match_id: candidateId, request_id: activeId });
+      // candidateId is actually org_id from the candidate mapping
+      await api.crmCaseAction("approve_match", { org_id: candidateId, request_id: activeId });
       toast.success("Match committed");
       setAcceptedCandidateId(candidateId);
     } catch {
@@ -374,7 +375,8 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
 
   async function handleReject(candidateId: string, reason: string) {
     try {
-      await api.crmCaseAction("reject_match", { match_id: candidateId, reason });
+      // candidateId is actually org_id from the candidate mapping
+      await api.crmCaseAction("reject_match", { org_id: candidateId, reason });
       toast(`Declined · ${reason}`);
     } catch {
       toast.error("Failed to reject candidate");

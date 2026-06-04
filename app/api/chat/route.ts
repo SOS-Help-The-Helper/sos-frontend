@@ -248,8 +248,8 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     model: anthropic('claude-sonnet-4-6'),
     system: activeSystemPrompt,
     messages,
-    // Don't pass tools for join flow (pure conversation)
-    ...(joinFlow ? {} : { tools: getChatTools({ personId, userLat, userLng }), stopWhen: stepCountIs(5) }),
+    // Join flow needs submit_join_person tool, other flows get full tools
+    ...(joinFlow ? { tools: { submit_join_person: getChatTools({ personId, userLat, userLng }).submit_join_person } } : { tools: getChatTools({ personId, userLat, userLng }), stopWhen: stepCountIs(5) }),
   });
 
   return result.toUIMessageStreamResponse();

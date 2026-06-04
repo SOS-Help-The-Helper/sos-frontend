@@ -124,7 +124,7 @@ export default function VolunteersPage() {
   if (skillFilter) filtered = filtered.filter(v => v.skills.includes(skillFilter));
   if (statusFilter) filtered = filtered.filter(v => v.status === statusFilter);
 
-  const drawer = drawerId ? volunteerDetails.find(v => v.id === drawerId) : null;
+  const drawer = drawerId ? volunteers.find(v => v.id === drawerId) as VolunteerDetail | undefined : null;
 
   return (
     <CrmShell module="Volunteers">

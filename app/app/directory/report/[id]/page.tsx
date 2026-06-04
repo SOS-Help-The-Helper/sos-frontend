@@ -50,7 +50,7 @@ export default function ReportPage() {
   if (report === undefined) {
     return (
       <CrmShell module="Cases">
-        <DetailTopBar backTo="/reports" backLabel="Reports" />
+        <DetailTopBar backTo="/app/reports" backLabel="Reports" />
         <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
           <div className="h-20 rounded-xl bg-white/5" />
           <div className="h-16 rounded-xl bg-white/5" />
@@ -60,7 +60,7 @@ export default function ReportPage() {
     );
   }
 
-  if (!report) return <CrmShell module="Cases"><DetailTopBar backTo="/reports" backLabel="Reports" /><div className="p-10 text-center text-white/50">Report not found</div></CrmShell>;
+  if (!report) return <CrmShell module="Cases"><DetailTopBar backTo="/app/reports" backLabel="Reports" /><div className="p-10 text-center text-white/50">Report not found</div></CrmShell>;
 
   const r = {
     id: report.id,
@@ -144,7 +144,7 @@ export default function ReportPage() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/reports" backLabel="Reports" />
+      <DetailTopBar backTo="/app/reports" backLabel="Reports" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand

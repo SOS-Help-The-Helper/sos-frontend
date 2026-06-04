@@ -65,10 +65,10 @@ export default function PublicIncidentPage() {
   const county = incident.county ?? "Unknown County";
   const status = incident.status ?? "active";
   const declared = incident.declared ?? incident.created_at;
-  const totalCases = incident.cases ?? incident.total_cases ?? 0;
-  const fulfilled = incident.fulfilled ?? incident.fulfilled_count ?? 0;
-  const capacity = incident.capacity ?? incident.total_capacity ?? 0;
-  const categories = incident.categories ?? [];
+  const totalCases = incident.open_cases ?? incident.cases ?? incident.total_cases ?? 0;
+  const fulfilled = Math.round((incident.fulfilled_pct ?? 0) * totalCases / 100) || (incident.fulfilled ?? incident.fulfilled_count ?? 0);
+  const capacity = incident.total_capacity ?? incident.capacity ?? 0;
+  const categories = Object.entries(incident.requests_by_category ?? {}).map(([id, count]: [string, any]) => ({ id, count: Number(count) }));
 
   return (
     <div className="min-h-screen bg-[#0F1E2B] text-white">

@@ -25,11 +25,14 @@ export default function ProfilePage() {
   const [matchCount, setMatchCount] = useState(0);
   const [reportCount, setReportCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const personId = typeof window !== 'undefined' ? getPersonId() : null;
 
-  useEffect(() => {
-    async function load() {
+  async function loadProfile() {
+    setLoading(true);
+    setError(false);
+    try {
       if (personId) {
         const [scoreData, matchData, reportData] = await Promise.all([
           api.getScore(personId) as Promise<SOSScore>,
@@ -40,9 +43,15 @@ export default function ProfilePage() {
         setMatchCount(Array.isArray(matchData) ? matchData.length : 0);
         setReportCount(Array.isArray(reportData) ? reportData.length : 0);
       }
+    } catch {
+      setError(true);
+    } finally {
       setLoading(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadProfile();
   }, [personId]);
 
   const checklist = score?.checklist || {};
@@ -59,6 +68,12 @@ export default function ProfilePage() {
 
         {loading ? (
           <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-sos-accent-500 border-t-transparent rounded-full animate-spin" /></div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <span className="text-3xl">⚠️</span>
+            <p className="text-sm font-bold text-white">Something went wrong</p>
+            <button onClick={loadProfile} className="text-xs text-sos-accent-500 underline">Tap to retry</button>
+          </div>
         ) : (
           <div className="px-4 py-4 space-y-4">
             {/* SOS Score */}

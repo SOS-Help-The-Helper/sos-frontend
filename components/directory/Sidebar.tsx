@@ -3,18 +3,18 @@ import { usePathname } from "next/navigation";
 import { Search, Users, ShieldCheck, Upload, Settings } from "lucide-react";
 
 const desktopItems = [
-  { to: "/directory", icon: Search, label: "Search" },
-  { to: "/directory", icon: Users, label: "People" },
-  { to: "/directory", icon: ShieldCheck, label: "Credentials" },
-  { to: "/directory/import", icon: Upload, label: "Import" },
-  { to: "/directory", icon: Settings, label: "Settings" },
+  { to: "/app/directory", icon: Search, label: "Search" },
+  { to: "/app/directory", icon: Users, label: "People" },
+  { to: "/app/directory", icon: ShieldCheck, label: "Credentials" },
+  { to: "/app/directory/import", icon: Upload, label: "Import" },
+  { to: "/app/directory", icon: Settings, label: "Settings" },
 ];
 
 const mobileItems = [
-  { to: "/directory", icon: Search, label: "Search" },
-  { to: "/directory", icon: Users, label: "People" },
-  { to: "/directory/import", icon: Upload, label: "Import" },
-  { to: "/directory", icon: Settings, label: "More" },
+  { to: "/app/directory", icon: Search, label: "Search" },
+  { to: "/app/directory", icon: Users, label: "People" },
+  { to: "/app/directory/import", icon: Upload, label: "Import" },
+  { to: "/app/directory", icon: Settings, label: "More" },
 ];
 
 export function Sidebar() {
@@ -26,8 +26,8 @@ export function Sidebar() {
       </Link>
       {desktopItems.map((Item, i) => {
         const active =
-          (i === 0 && path === "/directory") ||
-          (i === 3 && path.startsWith("/directory/import"));
+          (i === 0 && path === "/app/directory") ||
+          (i === 3 && path.startsWith("/app/directory/import"));
         return (
           <Link
             key={i}
@@ -50,7 +50,7 @@ export function MobileBottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--hairline)] flex justify-around pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-40">
       {mobileItems.map((Item, i) => {
-        const active = (i === 2 && path.startsWith("/directory/import")) || (i !== 2 && path.startsWith("/directory") && !path.startsWith("/directory/import") && i === 0);
+        const active = (i === 2 && path.startsWith("/app/directory/import")) || (i !== 2 && path.startsWith("/app/directory") && !path.startsWith("/app/directory/import") && i === 0);
         return (
           <Link key={i} href={Item.to} className={`flex flex-col items-center gap-1 px-3 py-1 transition ${active ? "text-[#89CFF0]" : "text-white/55"}`}>
             <Item.icon size={22} strokeWidth={1.75} />

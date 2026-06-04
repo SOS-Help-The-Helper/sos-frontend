@@ -59,7 +59,7 @@ export function Timeline({ entries, label }: { entries: HistoryEntry[]; label?: 
                 <I size={12} style={{ color }} />
               </span>
               {h.link ? (
-                <Link href={`/cases/${h.link.caseId}`} className="block">
+                <Link href={`/app/cases/${h.link.caseId}`} className="block">
                   {inner}
                 </Link>
               ) : (

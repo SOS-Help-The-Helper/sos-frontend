@@ -41,10 +41,15 @@ export default function OrgPage() {
 
   useEffect(() => {
     if (!id) return;
-    api.crmBrowseOrgs().then((res: any) => {
-      const found = (res?.organizations ?? []).find((o: any) => o.id === id);
-      if (found) setOrg(found);
-    }).catch(() => { setError(true); toast.error("Failed to load organization"); });
+    api.crmGetOrg(id as string)
+      .then((res: any) => {
+        if (res) setOrg(res);
+        else setError(true);
+      })
+      .catch(() => {
+        setError(true);
+        toast.error("Failed to load organization");
+      });
     api.crmOrgStats(id as string).then((res: any) => setStats(res ?? {})).catch(() => {});
     api.crmOrgMembers(id as string).then((res: any) => setMembers(res?.members ?? [])).catch(() => {});
   }, [id]);
@@ -139,7 +144,7 @@ export default function OrgPage() {
 
   return (
     <CrmShell module="Directory">
-      <DetailTopBar backTo="/directory" backLabel="Directory" />
+      <DetailTopBar backTo="/app/directory" backLabel="Directory" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand

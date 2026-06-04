@@ -71,7 +71,7 @@ export default function IncidentDashboard() {
   if (loading) {
     return (
       <CrmShell module="Command">
-        <DetailTopBar backTo="/command" backLabel="Command" />
+        <DetailTopBar backTo="/app/command" backLabel="Command" />
         <div className="px-6 py-10 space-y-4 animate-pulse">
           <div className="h-32 rounded-2xl bg-white/5" />
           <div className="grid grid-cols-3 gap-3">
@@ -85,7 +85,7 @@ export default function IncidentDashboard() {
   if (!incident) {
     return (
       <CrmShell module="Command">
-        <DetailTopBar backTo="/command" backLabel="Command" />
+        <DetailTopBar backTo="/app/command" backLabel="Command" />
         <div className="flex flex-col items-center gap-3 py-20 text-white/40">
           <p>Incident not found or failed to load.</p>
           <a href="/app/command" className="text-sm underline text-white/60">Back to Command</a>
@@ -120,7 +120,7 @@ export default function IncidentDashboard() {
 
   return (
     <CrmShell module="Command">
-      <DetailTopBar backTo="/command" backLabel="Command" />
+      <DetailTopBar backTo="/app/command" backLabel="Command" />
       <main className="max-w-[1240px] mx-auto px-4 py-4 md:py-6 space-y-5">
         {/* ============ Header ============ */}
         <div

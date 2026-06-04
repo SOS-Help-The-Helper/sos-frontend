@@ -74,7 +74,7 @@ export default function InventoryPage() {
       setShowAddForm(false);
       setAddName(""); setAddQty(1); setAddCondition("good"); setAddFacilityId("");
       // refresh
-      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
       if (data?.inventory?.length) setInventory(data.inventory);
       if (data?.resources?.length) setResources(data.resources);
     } catch {
@@ -99,7 +99,7 @@ export default function InventoryPage() {
       await api.inventoryMoveToFacility(itemId, targetFacilityId);
       const fac = facilities.find(f => f.id === targetFacilityId);
       toast(`Moved to ${fac?.name ?? "facility"}`);
-      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
       if (data?.inventory?.length) setInventory(data.inventory);
     } catch {
       toast.error("Failed to move item");
@@ -108,17 +108,24 @@ export default function InventoryPage() {
 
   const { loading } = useApiFetch(
     async () => {
-      await Promise.allSettled([
+      const results = await Promise.allSettled([
         api.crmFacilitiesList(orgId || '').then((data: unknown) => {
           const rows = (data as { facilities?: Facility[] })?.facilities;
           if (rows?.length) setFacilities(rows);
         }),
         api.queryInventory({ org_id: orgId }).then((data: unknown) => {
-          const d = data as { inventory?: typeof prototypeInventory; resources?: ResourceDetail[] };
+          const d = data as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
           if (d?.inventory?.length) setInventory(d.inventory);
           if (d?.resources?.length) setResources(d.resources);
         }),
       ]);
+
+      // Check for any failed promises and throw to trigger error handling
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        const errors = failures.map(failure => (failure as PromiseRejectedResult).reason);
+        throw new Error(`Some data failed to load: ${errors.join(', ')}`);
+      }
     },
     "Failed to load inventory",
     [orgId]

@@ -340,12 +340,12 @@ function CaseListBlock({ query, close }: { query: string; close: () => void }) {
   const hits = cases.filter((c) => c.county === "Buncombe" && c.taxonomy.some((t) => t.startsWith("HOUSING")));
   const display = [...hits, ...cases.filter((c) => c.taxonomy[0].startsWith("HOUSING")).slice(0, 2)].slice(0, 4);
   return (
-    <ResultShell label={query} count={display.length} action={<Link href="/cases" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">open ↗</Link>}>
+    <ResultShell label={query} count={display.length} action={<Link href="/app/cases" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">open ↗</Link>}>
       <div>
         {display.map((c) => {
           const org = orgs.find((o) => o.id === c.org);
           return (
-            <Link key={c.id} href={`/cases/${c.umbrella ?? c.id}`} onClick={close} className="row row-hover">
+            <Link key={c.id} href={`/app/cases/${c.umbrella ?? c.id}`} onClick={close} className="row row-hover">
               <span className="font-mono text-[10px] text-white/40 w-12 shrink-0">{c.id}</span>
               <span className="text-[12.5px] font-medium flex-1 truncate">{c.citizen}</span>
               <span className="t-meta hidden sm:inline">{c.county}</span>
@@ -360,7 +360,7 @@ function CaseListBlock({ query, close }: { query: string; close: () => void }) {
 
 function MapMiniBlock({ close }: { close: () => void }) {
   return (
-    <ResultShell label="Closest open request" action={<Link href="/map" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">open map ↗</Link>}>
+    <ResultShell label="Closest open request" action={<Link href="/app/map" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">open map ↗</Link>}>
       <div className="p-3">
         <div className="relative rounded-lg overflow-hidden bg-[var(--background)] h-32">
           <svg viewBox="0 0 300 130" className="w-full h-full">
@@ -379,7 +379,7 @@ function MapMiniBlock({ close }: { close: () => void }) {
             <p className="text-[12.5px] font-medium">Janet T. · C-1042</p>
             <p className="t-meta mt-0.5">Buncombe · 2.4 mi from you · HOUSING.TEMPORARY</p>
           </div>
-          <Link href="/cases/C-1042" onClick={close} className="text-[11px] text-[#89CFF0] hover:text-white inline-flex items-center gap-1">
+          <Link href="/app/cases/C-1042" onClick={close} className="text-[11px] text-[#89CFF0] hover:text-white inline-flex items-center gap-1">
             Open <ArrowRight size={11} />
           </Link>
         </div>
@@ -391,12 +391,12 @@ function MapMiniBlock({ close }: { close: () => void }) {
 function PersonCardBlock({ credential, close }: { credential: string; close: () => void }) {
   const hits = people.filter((p) => p.credentials.some((c) => c.includes("CDL")));
   return (
-    <ResultShell label={`People with ${credential}`} count={hits.length} action={<Link href="/directory" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">directory ↗</Link>}>
+    <ResultShell label={`People with ${credential}`} count={hits.length} action={<Link href="/app/directory" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">directory ↗</Link>}>
       <div>
         {hits.map((p) => {
           const org = orgs.find((o) => o.id === p.org);
           return (
-            <Link key={p.id} href={`/directory/person/${p.id}`} onClick={close} className="row row-hover">
+            <Link key={p.id} href={`/app/directory/person/${p.id}`} onClick={close} className="row row-hover">
               <div className="w-8 h-8 rounded-full bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[11px] font-semibold shrink-0">
                 {p.name.split(" ").map((s) => s[0]).join("")}
               </div>
@@ -438,7 +438,7 @@ function DraftBlock({ to }: { to: string }) {
 function InventoryBlock({ close }: { close: () => void }) {
   const low = inventory.filter((i) => i.qty < i.threshold);
   return (
-    <ResultShell label="Inventory below threshold" count={low.length} action={<Link href="/inventory" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">inventory ↗</Link>}>
+    <ResultShell label="Inventory below threshold" count={low.length} action={<Link href="/app/inventory" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">inventory ↗</Link>}>
       <div>
         {low.map((i) => {
           const org = orgs.find((o) => o.id === i.org);
@@ -466,7 +466,7 @@ function InventoryBlock({ close }: { close: () => void }) {
 function ShiftsBlock({ close }: { close: () => void }) {
   const today = shifts.slice(0, 3);
   return (
-    <ResultShell label="Shifts today" count={today.length} action={<Link href="/calendar" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">calendar ↗</Link>}>
+    <ResultShell label="Shifts today" count={today.length} action={<Link href="/app/calendar" onClick={close} className="text-[10px] font-mono uppercase tracking-wider text-[#89CFF0] hover:text-white">calendar ↗</Link>}>
       <div>
         {today.map((s) => {
           const org = orgs.find((o) => o.id === s.org);

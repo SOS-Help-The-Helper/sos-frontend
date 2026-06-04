@@ -37,6 +37,7 @@ const days = Array.from({ length: 7 }, (_, i) => {
 export default function CalendarPage() {
   const { orgId } = useAuthContext();
   const [items, setItems] = useState<CalEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefillDate, setPrefillDate] = useState<string | null>(null);
@@ -49,12 +50,14 @@ export default function CalendarPage() {
 
   useEffect(() => {
     // admin: proceed without org filter
+    setLoading(true);
     api.crmEventsList(orgId || '').then((res) => {
       const data = (res as { events?: unknown[] }).events;
-      if (Array.isArray(data) && data.length > 0) {
-        setItems(data as CalEvent[]);
-      }
-    }).catch(() => toast.error("Failed to load events"));
+      setItems(Array.isArray(data) ? data as CalEvent[] : []);
+    }).catch(() => {
+      toast.error("Failed to load events");
+      setItems([]);
+    }).finally(() => setLoading(false));
   }, [orgId]);
 
   function openNew(date?: string) {
@@ -149,37 +152,50 @@ export default function CalendarPage() {
                     <p className="text-[15px] font-semibold mt-0.5">{d.date}</p>
                   </div>
                   <div className="group/day p-2 space-y-2 relative min-h-[340px]">
-                    {dayEvents.map((s) => {
-                      const org = orgs.find((o) => o.id === s.org);
-                      const full = s.filled >= s.slots;
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={() => setEditingId(editingId === s.id ? null : s.id)}
-                          className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
-                          style={{ borderColor: org?.color }}
-                        >
-                          <p className="text-[12px] font-medium leading-tight">{s.title}</p>
-                          <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
-                          <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
-                            <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
-                              <Users size={9} /> {s.filled}/{s.slots}
-                            </span>
-                            {full ? (
-                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
-                            ) : (
-                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() => openNew(d.date)}
-                      className="w-full h-7 rounded-md border border-dashed border-white/10 hover:border-white/25 hover:bg-white/4 text-white/35 hover:text-white/70 transition flex items-center justify-center gap-1 text-[11px]"
-                    >
-                      <Plus size={11} /> Add
-                    </button>
+                    {loading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="w-6 h-6 border-2 border-[#89CFF0] border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : dayEvents.length > 0 ? (
+                      dayEvents.map((s) => {
+                        const org = orgs.find((o) => o.id === s.org);
+                        const full = s.filled >= s.slots;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                            className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
+                            style={{ borderColor: org?.color }}
+                          >
+                            <p className="text-[12px] font-medium leading-tight">{s.title}</p>
+                            <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
+                            <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
+                              <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
+                                <Users size={9} /> {s.filled}/{s.slots}
+                              </span>
+                              {full ? (
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
+                              ) : (
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-32 text-white/40 text-center">
+                        <CalIcon size={24} className="mb-2" />
+                        <p className="text-[12px]">No events scheduled</p>
+                      </div>
+                    )}
+                    {!loading && (
+                      <button
+                        onClick={() => openNew(d.date)}
+                        className="w-full h-7 rounded-md border border-dashed border-white/10 hover:border-white/25 hover:bg-white/4 text-white/35 hover:text-white/70 transition flex items-center justify-center gap-1 text-[11px]"
+                      >
+                        <Plus size={11} /> Add
+                      </button>
+                    )}
                   </div>
                 </>
               );
@@ -223,37 +239,50 @@ export default function CalendarPage() {
                   key={d.label}
                   className="group/day p-2 border-r border-white/5 last:border-r-0 space-y-2 relative"
                 >
-                  {dayEvents.map((s) => {
-                    const org = orgs.find((o) => o.id === s.org);
-                    const full = s.filled >= s.slots;
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => setEditingId(editingId === s.id ? null : s.id)}
-                        className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
-                        style={{ borderColor: org?.color }}
-                      >
-                        <p className="text-[12px] font-medium leading-tight">{s.title}</p>
-                        <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
-                        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
-                          <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
-                            <Users size={9} /> {s.filled}/{s.slots}
-                          </span>
-                          {full ? (
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
-                          ) : (
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => openNew(d.date)}
-                    className="w-full h-7 rounded-md border border-dashed border-white/10 hover:border-white/25 hover:bg-white/4 text-white/35 hover:text-white/70 transition flex items-center justify-center gap-1 text-[11px] opacity-0 group-hover/day:opacity-100"
-                  >
-                    <Plus size={11} /> Add
-                  </button>
+                  {loading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <div className="w-4 h-4 border border-[#89CFF0] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : dayEvents.length > 0 ? (
+                    dayEvents.map((s) => {
+                      const org = orgs.find((o) => o.id === s.org);
+                      const full = s.filled >= s.slots;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                          className="w-full text-left rounded-lg p-2.5 border-l-2 bg-white/4 hover:bg-white/8 transition"
+                          style={{ borderColor: org?.color }}
+                        >
+                          <p className="text-[12px] font-medium leading-tight">{s.title}</p>
+                          <p className="font-mono text-xs text-white/55 mt-1">{s.time}</p>
+                          <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-white/5">
+                            <span className="font-mono text-[9px] flex items-center gap-1 text-white/55">
+                              <Users size={9} /> {s.filled}/{s.slots}
+                            </span>
+                            {full ? (
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#34D399]">full</span>
+                            ) : (
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-[#F5EBD6]">need {s.slots - s.filled}</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-32 text-white/30 text-center">
+                      <CalIcon size={16} className="mb-1" />
+                      <p className="text-[10px]">No events scheduled</p>
+                    </div>
+                  )}
+                  {!loading && (
+                    <button
+                      onClick={() => openNew(d.date)}
+                      className="w-full h-7 rounded-md border border-dashed border-white/10 hover:border-white/25 hover:bg-white/4 text-white/35 hover:text-white/70 transition flex items-center justify-center gap-1 text-[11px] opacity-0 group-hover/day:opacity-100"
+                    >
+                      <Plus size={11} /> Add
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -413,7 +442,7 @@ function EventFormDrawer({
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [time, setTime] = useState(initial?.time ?? "9a–1p");
   const [slots, setSlots] = useState(initial?.slots ?? 3);
-  const [org, setOrg] = useState(initial?.org ?? orgs[0].id);
+  const [org, setOrg] = useState(initial?.org ?? orgs[0]?.id ?? '');
   const [location, setLocation] = useState(initial?.location ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
 

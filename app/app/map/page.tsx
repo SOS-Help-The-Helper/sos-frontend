@@ -56,7 +56,15 @@ function MapboxEmbed({
   orgId,
   onPinSelect,
   onPinClear,
-}: { orgId: string; onPinSelect: (s: SelectedPin) => void; onPinClear: () => void }) {
+  featuresData,
+  onMapReady,
+}: {
+  orgId: string;
+  onPinSelect: (s: SelectedPin) => void;
+  onPinClear: () => void;
+  featuresData?: MapFeature[];
+  onMapReady?: (map: any) => void;
+}) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const onPinSelectRef = useRef(onPinSelect);
@@ -94,8 +102,8 @@ function MapboxEmbed({
 
       map.on("load", async () => {
         try {
-          const data = await api.crmMapFeatures(orgId || '');
-          const features: any[] = (data as any)?.features ?? [];
+          // Use prop data instead of fetching again
+          const features: any[] = featuresData ?? [];
 
           for (const layer of LAYERS) {
             const geojson = {
@@ -240,6 +248,9 @@ function MapboxEmbed({
             const hits = map.queryRenderedFeatures(e.point, { layers: unclusteredLayers });
             if (hits.length === 0) onPinClearRef.current();
           });
+
+          // Expose map instance to parent
+          onMapReady?.(map);
         } catch (e) {
           console.warn("Map data load failed:", e);
         }
@@ -349,14 +360,17 @@ export default function MapPage() {
   const [activeCounty, setActive] = useState<string | null>("Buncombe");
   const [layers, setLayers] = useState<LayeredFeatures | null>(null);
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
+  const [features, setFeatures] = useState<MapFeature[]>([]);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
     // admin: proceed without org filter
     api.crmMapFeatures(orgId || '')
       .then((res: unknown) => {
         const data = res as { features?: MapFeature[] };
-        const features = Array.isArray(data) ? (data as MapFeature[]) : (data?.features ?? []);
-        if (features.length > 0) setLayers(groupByLayer(features));
+        const featureList = Array.isArray(data) ? (data as MapFeature[]) : (data?.features ?? []);
+        setFeatures(featureList);
+        if (featureList.length > 0) setLayers(groupByLayer(featureList));
       })
       .catch(() => {
         // fallback to prototype — leave layers null
@@ -389,6 +403,8 @@ export default function MapPage() {
             orgId={orgId}
             onPinSelect={setSelectedPin}
             onPinClear={() => setSelectedPin(null)}
+            featuresData={features}
+            onMapReady={(map) => { mapRef.current = map; }}
           />
           {selectedPin && (
             <MapPinCard
@@ -440,12 +456,16 @@ export default function MapPage() {
               <label key={l.label} className="flex items-center justify-between cursor-pointer group">
                 <div className="flex items-center gap-2">
                   <input type="checkbox" defaultChecked className="sr-only peer" onChange={(e) => {
-                    const map = (document.querySelector('.mapboxgl-canvas')?.closest('.mapboxgl-map') as any)?.__map;
+                    const map = mapRef.current;
                     if (!map) return;
                     const layerKey = l.label.toLowerCase().replace(/s$/, '');
                     const visibility = e.target.checked ? 'visible' : 'none';
-                    [`${layerKey}-clusters`, `${layerKey}-cluster-glow`, `${layerKey}-unclustered`].forEach(id => {
-                      try { map.setLayoutProperty(id, 'visibility', visibility); } catch {}
+                    [`${layerKey}-clusters`, `${layerKey}-cluster-glow`, `${layerKey}-unclustered`, `${layerKey}-glow`].forEach(id => {
+                      try {
+                        if (map.getLayer(id)) {
+                          map.setLayoutProperty(id, 'visibility', visibility);
+                        }
+                      } catch {}
                     });
                   }} />
                   <span className="w-4 h-4 rounded border border-white/20 flex items-center justify-center peer-checked:bg-white/15 peer-checked:border-white/40 transition">

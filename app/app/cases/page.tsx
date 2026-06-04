@@ -34,11 +34,13 @@ type Card = {
 const CASE_COLS: Column[] = [
   { id: "active", label: "Active", accent: "#EF4E4B" },
   { id: "resolved", label: "Resolved", accent: "#34D399" },
+  { id: "closed", label: "Closed", accent: "#9CA3AF" },
 ];
 // Requests tab uses the full pipeline stages
 const REQUEST_COLS: Column[] = BUCKETS.map((b) => ({ id: b.id, label: b.label, accent: b.accent }));
 
 const RESOURCE_COLS: Column[] = [
+  { id: "available", label: "Available", accent: "#34D399" },
   { id: "pending", label: "Pending", accent: "#EF4E4B" },
   { id: "approved", label: "Approved", accent: "#34D399" },
   { id: "matched", label: "Matched", accent: "#89CFF0" },
@@ -394,15 +396,23 @@ export default function CasesPage() {
   const onDrop = (colId: string) => {
     if (!dragId) return;
     const card = cards.find((c) => c.id === dragId);
+    if (!card) return;
+    const previousCol = card.col;
+
     // Optimistic update
     setCards((prev) => prev.map((c) => (c.id === dragId ? { ...c, col: colId } : c)));
     setDragId(null);
     setDragOverCol(null);
+
     // API mutation + toast
-    if (card && (tab === "cases" || tab === "requests")) {
+    if (tab === "cases" || tab === "requests") {
       api.crmCaseAction("transition_status", { request_id: card.id, new_status: colId })
         .then(() => toast.success(`Moved to ${colId}`))
-        .catch(() => toast.error("Failed to update status"));
+        .catch(() => {
+          // Rollback optimistic update on failure
+          setCards((prev) => prev.map((c) => (c.id === dragId ? { ...c, col: previousCol } : c)));
+          toast.error("Failed to update status");
+        });
     }
   };
 

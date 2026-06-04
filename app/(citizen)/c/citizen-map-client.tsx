@@ -127,44 +127,20 @@ export default function CitizenMapPage() {
       map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
-        // Load requests + resources from EF, alerts separately
-        let alertData: Alert[] = [];
-        let requestFeatures: any[] = [], resourceFeatures: any[] = [];
-        const seenIds = new Set<string>();
+        // Load alerts initially with current position
         try {
-          const SOS_DB = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
-          const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-          const [a, areaRes] = await Promise.all([
-            getAlerts(lat, lng).catch(() => [] as Alert[]),
-            fetch(`${SOS_DB}/functions/v1/sos-read`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${SOS_ANON}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '2000' } }),
-            }).then(r => r.json()).catch(() => ({ type: 'FeatureCollection', features: [] })),
-          ]);
-          alertData = a;
-
-          // sos-read area scope returns GeoJSON FeatureCollection with id, type, display_name, household_size, etc.
-          for (const f of (areaRes.features || [])) {
-            const props = f.properties || {};
-            if (props.type === 'request' || props.featureType === 'request') {
-              requestFeatures.push(f);
-            } else if (props.type === 'resource' || props.featureType === 'resource') {
-              resourceFeatures.push(f);
-            }
-          }
-
+          const alertData = await getAlerts(lat, lng).catch(() => [] as Alert[]);
           setAlerts(alertData);
         } catch (err) {
-          console.error('Map data load error:', err);
+          console.error('Alert load error:', err);
         }
         // === REQUESTS SOURCE (red) ===
-        requestFeaturesRef.current = requestFeatures;
+        requestFeaturesRef.current = [];
+        resourceFeaturesRef.current = [];
 
         map.addSource('requests-source', {
           type: 'geojson',
-          data: { type: 'FeatureCollection', features: requestFeatures },
+          data: { type: 'FeatureCollection', features: [] },
           cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
@@ -182,11 +158,9 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
         // === RESOURCES SOURCE (blue) ===
-        resourceFeaturesRef.current = resourceFeatures;
-
         map.addSource('resources-source', {
           type: 'geojson',
-          data: { type: 'FeatureCollection', features: resourceFeatures },
+          data: { type: 'FeatureCollection', features: [] },
           cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
         });
 
@@ -374,6 +348,59 @@ export default function CitizenMapPage() {
     initMap();
     return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
+
+  // Fetch area data when GPS coordinates change
+  useEffect(() => {
+    if (!gpsReady || !mapInstance.current) return;
+
+    const fetchAreaData = async () => {
+      try {
+        const SOS_DB = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+        const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+        const [alertData, areaRes] = await Promise.all([
+          getAlerts(lat, lng).catch(() => [] as Alert[]),
+          fetch(`${SOS_DB}/functions/v1/sos-read`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SOS_ANON}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '2000' } }),
+          }).then(r => r.json()).catch(() => ({ type: 'FeatureCollection', features: [] })),
+        ]);
+
+        setAlerts(alertData);
+
+        // Process features
+        let requestFeatures: any[] = [], resourceFeatures: any[] = [];
+        for (const f of (areaRes.features || [])) {
+          const props = f.properties || {};
+          if (props.type === 'request' || props.featureType === 'request') {
+            requestFeatures.push(f);
+          } else if (props.type === 'resource' || props.featureType === 'resource') {
+            resourceFeatures.push(f);
+          }
+        }
+
+        // Update map sources
+        const map = mapInstance.current;
+        requestFeaturesRef.current = requestFeatures;
+        resourceFeaturesRef.current = resourceFeatures;
+
+        const requestSrc = map.getSource('requests-source');
+        const resourceSrc = map.getSource('resources-source');
+
+        if (requestSrc) {
+          (requestSrc as any).setData({ type: 'FeatureCollection', features: requestFeatures });
+        }
+        if (resourceSrc) {
+          (resourceSrc as any).setData({ type: 'FeatureCollection', features: resourceFeatures });
+        }
+      } catch (err) {
+        console.error('Area data fetch error:', err);
+      }
+    };
+
+    fetchAreaData();
+  }, [lat, lng, gpsReady]);
 
   // Map command subscription (for search results)
   useEffect(() => {

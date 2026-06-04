@@ -67,7 +67,7 @@ export default function DirectoryPage() {
     if (!addName.trim()) return;
     setAddLoading(true);
     try {
-      await api.efCall("partner-write", { person_name: addName.trim(), phone: addPhone.trim(), email: addEmail.trim(), org_id: orgId, records: [] });
+      await api.efCall("partner-write", { person_name: addName.trim(), phone: addPhone.trim(), email: addEmail.trim(), role: addRole, org_id: orgId, records: [] });
       toast.success("Person added");
       setShowAddForm(false);
       setAddName(""); setAddPhone(""); setAddEmail(""); setAddRole("Survivor");
@@ -82,33 +82,37 @@ export default function DirectoryPage() {
   // Real EF data
   const [efPersons, setEfPersons] = useState<Row[]>([]);
   const [efOrgs, setEfOrgs] = useState<Row[]>([]);
+  const [personsLoading, setPersonsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!orgId) return;
+    setPersonsLoading(true);
+    setLoading(true);
     api.crmBrowsePersons(orgId, { limit: 200 })
       .then((res: any) => {
         const items: any[] = res?.persons ?? res?.people ?? (Array.isArray(res) ? res : []);
-        if (items.length > 0) {
-          setEfPersons(items.map((p: any) => ({
-            kind: "person" as const,
-            id: String(p.id ?? p.person_id ?? ""),
-            name: String(p.display_name ?? p.name ?? ""),
-            subtitle: String(p.role ?? ""),
-            meta: String(p.location ?? p.city ?? p.county ?? ""),
-            href: `/app/directory/person/${p.id ?? p.person_id}`,
-            phone: p.phone ?? "",
-            role: p.role ?? "",
-            location: p.location ?? p.city ?? p.county ?? "",
-            requestCount: p.request_count ?? 0,
-            resourceCount: p.resource_count ?? 0,
-            sosId: p.sos_id ?? null,
-          })));
-        }
+        setEfPersons(items.map((p: any) => ({
+          kind: "person" as const,
+          id: String(p.id ?? p.person_id ?? ""),
+          name: String(p.display_name ?? p.name ?? ""),
+          subtitle: String(p.role ?? ""),
+          meta: String(p.location ?? p.city ?? p.county ?? ""),
+          href: `/app/directory/person/${p.id ?? p.person_id}`,
+          phone: p.phone ?? "",
+          role: p.role ?? "",
+          location: p.location ?? p.city ?? p.county ?? "",
+          requestCount: p.request_count ?? 0,
+          resourceCount: p.resource_count ?? 0,
+          sosId: p.sos_id ?? null,
+        })));
       })
-      .catch(() => { toast.error("Failed to load directory"); });
+      .catch(() => { toast.error("Failed to load directory"); })
+      .finally(() => { setPersonsLoading(false); setLoading(false); });
   }, [orgId, refreshKey]);
 
   useEffect(() => {
+    setLoading(true);
     api.crmBrowseOrgs({ limit: 100 })
       .then((res: any) => {
         const items: any[] = res?.orgs ?? res?.organizations ?? (Array.isArray(res) ? res : []);
@@ -126,7 +130,8 @@ export default function DirectoryPage() {
           })));
         }
       })
-      .catch(() => { toast.error("Failed to load organizations"); });
+      .catch(() => { toast.error("Failed to load organizations"); })
+      .finally(() => setLoading(false));
   }, []);
 
   const q = query.trim().toLowerCase();
@@ -358,144 +363,178 @@ export default function DirectoryPage() {
         </div>
 
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-10">
-          {/* Add person inline form */}
-          {showAddForm && (
-            <form onSubmit={handleAddPerson} className="mb-4 rounded-xl border border-[#89CFF0]/30 bg-[#89CFF0]/5 p-4 space-y-3">
-              <p className="font-mono text-xs uppercase tracking-wider text-[#89CFF0]/80">New person</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] text-white/50 mb-1">Name <span className="text-[#EF4E4B]">*</span></label>
-                  <input
-                    value={addName}
-                    onChange={(e) => setAddName(e.target.value)}
-                    placeholder="Full name"
-                    required
-                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] text-white/50 mb-1">Phone</label>
-                  <input
-                    value={addPhone}
-                    onChange={(e) => setAddPhone(e.target.value)}
-                    placeholder="(555) 555-5555"
-                    type="tel"
-                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] text-white/50 mb-1">Email</label>
-                  <input
-                    value={addEmail}
-                    onChange={(e) => setAddEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    type="email"
-                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] text-white/50 mb-1">Role</label>
-                  <select
-                    value={addRole}
-                    onChange={(e) => setAddRole(e.target.value as typeof addRole)}
-                    className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition appearance-none"
-                  >
-                    <option value="Survivor">Survivor</option>
-                    <option value="Volunteer">Volunteer</option>
-                    <option value="Staff">Staff</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="submit"
-                  disabled={addLoading || !addName.trim()}
-                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-white text-[12px] font-medium transition"
-                >
-                  {addLoading ? "Adding…" : "Add person"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="inline-flex items-center h-8 px-3 rounded-md text-[12px] text-white/60 hover:text-white hover:bg-white/6 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Mobile card list (always cards) */}
-          <div className="md:hidden space-y-2">
-            {rows.length === 0 ? (
-              <EmptyState query={query} />
-            ) : (
-              rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
-            )}
-          </div>
-
-          {/* Desktop: cards or table */}
-          {view === "cards" ? (
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-3">
-              {rows.length === 0 ? (
-                <div className="col-span-full"><EmptyState query={query} /></div>
-              ) : (
-                rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
-              )}
+          {loading ? (
+            <div className="text-center py-20">
+              <p className="text-white/60">Loading...</p>
             </div>
           ) : (
-            <div className="hidden md:block rounded-2xl border border-[var(--hairline)] overflow-hidden bg-[var(--surface-1)]">
-              {type === "people" ? (
-                <table className="w-full text-[13px] t-cols">
-                  <thead className="bg-white/[0.02]">
-                    <tr className="text-left">
-                      <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[130px]">Phone</th>
-                      <Th label="Role" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[120px]" />
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Location</th>
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[90px]">Requests</th>
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Case</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-16 text-center">
-                          <EmptyState query={query} />
-                        </td>
-                      </tr>
-                    )}
-                    {rows.map((r) => <PersonRow key={r.id} row={r} />)}
-                  </tbody>
-                </table>
-              ) : (
-                <table className="w-full text-[13px] t-cols">
-                  <thead className="bg-white/[0.02]">
-                    <tr className="text-left">
-                      <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
-                      <Th label="Type" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[140px]" />
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[100px]">Members</th>
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[120px]">Active Cases</th>
-                      <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Service Area</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-16 text-center">
-                          <EmptyState query={query} />
-                        </td>
-                      </tr>
-                    )}
-                    {rows.map((r) => <OrgRow key={r.id} row={r} />)}
-                  </tbody>
-                </table>
+            <>
+              {/* Add person inline form */}
+              {showAddForm && (
+                <form onSubmit={handleAddPerson} className="mb-4 rounded-xl border border-[#89CFF0]/30 bg-[#89CFF0]/5 p-4 space-y-3">
+                  <p className="font-mono text-xs uppercase tracking-wider text-[#89CFF0]/80">New person</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-white/50 mb-1">Name <span className="text-[#EF4E4B]">*</span></label>
+                      <input
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
+                        placeholder="Full name"
+                        required
+                        className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-white/50 mb-1">Phone</label>
+                      <input
+                        value={addPhone}
+                        onChange={(e) => setAddPhone(e.target.value)}
+                        placeholder="(555) 555-5555"
+                        type="tel"
+                        className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-white/50 mb-1">Email</label>
+                      <input
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        type="email"
+                        className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] placeholder:text-white/35 outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-white/50 mb-1">Role</label>
+                      <select
+                        value={addRole}
+                        onChange={(e) => setAddRole(e.target.value as typeof addRole)}
+                        className="w-full h-8 px-3 rounded-md bg-white/8 hover:bg-white/10 focus:bg-white/12 text-[13px] outline-none focus:ring-1 focus:ring-[#89CFF0]/50 transition appearance-none"
+                      >
+                        <option value="Survivor">Survivor</option>
+                        <option value="Volunteer">Volunteer</option>
+                        <option value="Staff">Staff</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="submit"
+                      disabled={addLoading || !addName.trim()}
+                      className="inline-flex items-center gap-1.5 h-8 px-4 rounded-md bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-white text-[12px] font-medium transition"
+                    >
+                      {addLoading ? "Adding…" : "Add person"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddForm(false)}
+                      className="inline-flex items-center h-8 px-3 rounded-md text-[12px] text-white/60 hover:text-white hover:bg-white/6 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               )}
-            </div>
+
+              {/* Mobile card list (always cards) */}
+              <div className="md:hidden space-y-2">
+                {loading || (personsLoading && type === "people") ? (
+                  <LoadingState />
+                ) : rows.length === 0 ? (
+                  <EmptyState query={query} />
+                ) : (
+                  rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
+                )}
+              </div>
+              {/* Desktop: cards or table */}
+              {view === "cards" ? (
+                <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  {loading || (personsLoading && type === "people") ? (
+                    <div className="col-span-full"><LoadingState /></div>
+                  ) : rows.length === 0 ? (
+                    <div className="col-span-full"><EmptyState query={query} /></div>
+                  ) : (
+                    rows.map((r) => <CardItem key={`${r.kind}-${r.id}`} row={r} />)
+                  )}
+                </div>
+              ) : (
+                <div className="hidden md:block rounded-2xl border border-[var(--hairline)] overflow-hidden bg-[var(--surface-1)]">
+                  {type === "people" ? (
+                    <table className="w-full text-[13px] t-cols">
+                      <thead className="bg-white/[0.02]">
+                        <tr className="text-left">
+                          <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[130px]">Phone</th>
+                          <Th label="Role" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[120px]" />
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Location</th>
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[90px]">Requests</th>
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[110px]">Case</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading || (personsLoading && type === "people") ? (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-16 text-center">
+                              <LoadingState />
+                            </td>
+                          </tr>
+                        ) : rows.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-16 text-center">
+                              <EmptyState query={query} />
+                            </td>
+                          </tr>
+                        ) : (
+                          rows.map((r) => <PersonRow key={r.id} row={r} />)
+                        )}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <table className="w-full text-[13px] t-cols">
+                      <thead className="bg-white/[0.02]">
+                        <tr className="text-left">
+                          <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={onSort} />
+                          <Th label="Type" sortKey="type" current={sortKey} dir={sortDir} onSort={onSort} className="w-[140px]" />
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[100px]">Members</th>
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)] w-[120px]">Active Cases</th>
+                          <th className="px-4 py-2.5 font-mono text-xs uppercase tracking-wider font-medium text-white/45 border-b border-[var(--hairline)]">Service Area</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-16 text-center">
+                              <LoadingState />
+                            </td>
+                          </tr>
+                        ) : rows.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-16 text-center">
+                              <EmptyState query={query} />
+                            </td>
+                          </tr>
+                        ) : (
+                          rows.map((r) => <OrgRow key={r.id} row={r} />)
+                        )}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
     </CrmShell>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] py-12 text-center">
+      <div className="w-6 h-6 mx-auto border-2 border-[#89CFF0] border-t-transparent rounded-full animate-spin mb-3" />
+      <p className="font-medium text-[14px]">Loading directory...</p>
+    </div>
   );
 }
 

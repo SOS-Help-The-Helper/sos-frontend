@@ -42,10 +42,10 @@ export default function ResourcePage() {
   const [editCategory, setEditCategory] = useState('');
 
   useEffect(() => {
-    api.crmResourceDetail(id)
+    api.crmResourceDetail(id, orgId)
       .then((res: any) => setData(res?.resource ? res : null))
       .catch(() => setData(null));
-  }, [id]);
+  }, [id, orgId]);
 
   useEffect(() => {
     if (data?.resource) {
@@ -61,13 +61,14 @@ export default function ResourcePage() {
       await (api as any).efCall('partner-update', {
         action: 'update_resource',
         resource_id: id,
+        org_id: orgId,
         ...(editCapacity !== '' ? { capacity_available: Number(editCapacity) } : {}),
         status: editStatus,
         category: editCategory,
       });
       toast.success('Resource updated');
       setEditMode(false);
-      const res: any = await api.crmResourceDetail(id);
+      const res: any = await api.crmResourceDetail(id, orgId);
       if (res?.resource) setData(res);
     } catch {
       toast.error('Failed to update resource');
@@ -79,7 +80,7 @@ export default function ResourcePage() {
   if (data === undefined) {
     return (
       <CrmShell module="Directory">
-        <DetailTopBar backTo="/inventory" backLabel="Resources" />
+        <DetailTopBar backTo="/app/inventory" backLabel="Resources" />
         <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4 animate-pulse">
           <div className="h-20 rounded-xl bg-white/5" />
           <div className="h-16 rounded-xl bg-white/5" />
@@ -90,7 +91,7 @@ export default function ResourcePage() {
   }
 
   if (!data || !data.resource) {
-    return <CrmShell module="Directory"><DetailTopBar backTo="/inventory" backLabel="Resources" /><div className="p-10 text-center text-white/50">Resource not found</div></CrmShell>;
+    return <CrmShell module="Directory"><DetailTopBar backTo="/app/inventory" backLabel="Resources" /><div className="p-10 text-center text-white/50">Resource not found</div></CrmShell>;
   }
 
   // Map API response to display-friendly shape
@@ -238,7 +239,7 @@ export default function ResourcePage() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/inventory" backLabel="Resources" />
+      <DetailTopBar backTo="/app/inventory" backLabel="Resources" />
 
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
