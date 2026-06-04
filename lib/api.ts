@@ -3,23 +3,61 @@
  * Replaces direct Supabase PostgREST queries with typed wrappers around EF endpoints.
  */
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`;
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-async function efCall<T = unknown>(
+// ---------------------------------------------------------------------------
+// Multi-tenant DB routing
+// ---------------------------------------------------------------------------
+// The active org's DB connection is resolved at runtime by the auth context
+// (which calls /api/org-config and then setOrgConfig). Until that resolves we
+// fall back to the env-var DB so server components and first paint keep working.
+//
+// SOS DB ("the coordination layer") is always reachable via the SOS_* consts
+// regardless of which partner org is active — use sosEfCall for cross-partner
+// operations (match-engine propose/commit, etc.).
+
+const DEFAULT_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const DEFAULT_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// SOS DB — the routing table / coordination layer. Always points at SOS.
+const SOS_URL =
+  process.env.NEXT_PUBLIC_SOS_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SOS_BASE_URL = `${SOS_URL}/functions/v1`;
+const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Active (per-org) connection — mutated by setOrgConfig at runtime.
+let efBaseUrl = `${DEFAULT_URL}/functions/v1`;
+let efAnonKey = DEFAULT_ANON_KEY;
+
+/**
+ * Point all EF calls + direct PostgREST reads at a partner org's database.
+ * Called by the auth context once it resolves the org's config from
+ * /api/org-config. Passing empty/SOS values restores the default SOS DB.
+ */
+export function setOrgConfig(url: string, anonKey: string) {
+  efBaseUrl = `${url || DEFAULT_URL}/functions/v1`;
+  efAnonKey = anonKey || DEFAULT_ANON_KEY;
+  // Rebuild the direct-read client so db.* / crmMatchesList hit the active DB.
+  supabaseRead = createClient(url || DEFAULT_URL, anonKey || DEFAULT_ANON_KEY);
+}
+
+async function callEf<T = unknown>(
+  base: string,
+  authKey: string,
   fn: string,
   body?: Record<string, unknown>,
   options: { method?: 'GET' | 'POST' } = {}
 ): Promise<T> {
   const method = options.method ?? (body === undefined ? 'GET' : 'POST');
   const url = method === 'GET' && body
-    ? `${BASE_URL}/${fn}?${new URLSearchParams(body as Record<string, string>).toString()}`
-    : `${BASE_URL}/${fn}`;
+    ? `${base}/${fn}?${new URLSearchParams(body as Record<string, string>).toString()}`
+    : `${base}/${fn}`;
 
   const res = await fetch(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${authKey}`,
     },
     ...(method === 'POST' && body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
@@ -29,6 +67,27 @@ async function efCall<T = unknown>(
   }
 
   return res.json() as Promise<T>;
+}
+
+/** Call an edge function on the ACTIVE org's database. */
+async function efCall<T = unknown>(
+  fn: string,
+  body?: Record<string, unknown>,
+  options: { method?: 'GET' | 'POST' } = {}
+): Promise<T> {
+  return callEf<T>(efBaseUrl, efAnonKey, fn, body, options);
+}
+
+/**
+ * Call an edge function on the SOS DB, regardless of the active partner org.
+ * Use for cross-partner / coordination ops (match-engine propose & commit).
+ */
+async function sosEfCall<T = unknown>(
+  fn: string,
+  body?: Record<string, unknown>,
+  options: { method?: 'GET' | 'POST' } = {}
+): Promise<T> {
+  return callEf<T>(SOS_BASE_URL, SOS_ANON_KEY, fn, body, options);
 }
 
 // ---------------------------------------------------------------------------
@@ -140,6 +199,9 @@ export const api = {
 
   // Raw EF caller — use for one-off queries until a named wrapper is added
   efCall,
+
+  // Raw EF caller pinned to the SOS DB (cross-partner / coordination ops).
+  sosEfCall,
 
   // CRM — Cases
   crmCasesList: (orgId: string, filters?: { status?: string; urgency?: string; county?: string; assigned_to?: string; category?: string }) =>
@@ -306,12 +368,10 @@ export const api = {
 // These replace direct supabase.from() calls in frontend pages.
 // Uses anon key + RLS (same security as before, but centralized).
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseRead = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+// Direct PostgREST read client (RLS-protected, anon key). Reassigned by
+// setOrgConfig so reads route to the active org's DB. Closures below reference
+// the variable, so reassignment takes effect at call time.
+let supabaseRead: SupabaseClient = createClient(DEFAULT_URL, DEFAULT_ANON_KEY);
 
 // Scoped read-only queries (RLS-protected, anon key)
 export const db = {

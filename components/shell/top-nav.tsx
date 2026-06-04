@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Menu, X } from "lucide-react";
+import { Bell, ChevronDown, Menu, X, Building2, Check } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   BarChart3, Radio, Network as NetworkIcon,
 } from "lucide-react";
 import type { ModuleId } from "@/lib/use-portal-config";
+import { useAuthContext } from "@/lib/auth-context";
 
 // Module visual metadata (icons, tints, descriptions)
 type IconType = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
@@ -193,6 +194,8 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
 
         {/* Right cluster */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", flex: "1 1 0", minWidth: 0 }}>
+          {/* Org switcher — admin only */}
+          <OrgSwitcher />
           <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
             <button style={iconBtn} aria-label="Notifications" className="inline-flex" onClick={() => toast("No new notifications")}>
               <Bell size={16} />
@@ -386,6 +389,84 @@ const iconBtn: React.CSSProperties = {
   background: "transparent", border: "none", alignItems: "center", justifyContent: "center",
   color: "rgba(255,255,255,0.8)", cursor: "pointer",
 };
+
+/**
+ * Admin-only org switcher. Lists every org from the auth context and re-routes
+ * all API calls to the selected org's database via switchOrg(). Hidden entirely
+ * for non-admins. "SOS (All Partners)" is the default coordination view.
+ */
+function OrgSwitcher() {
+  const { isAdmin, orgId, orgName, allOrgs, switchOrg } = useAuthContext();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  if (!isAdmin) return null;
+
+  const label = orgName || "Select org";
+
+  return (
+    <div ref={ref} style={{ position: "relative" }} className="hidden md:block">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Switch organization"
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 10px",
+          borderRadius: 999, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",
+          color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", maxWidth: 200,
+        }}
+      >
+        <Building2 size={14} style={{ flexShrink: 0, opacity: 0.8 }} />
+        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+        <ChevronDown size={12} style={{ flexShrink: 0, color: "rgba(255,255,255,0.6)", transform: open ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 50,
+            background: "#1B3A57", border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", minWidth: 220,
+            maxHeight: 360, overflowY: "auto", padding: 4,
+          }}
+        >
+          {allOrgs.length === 0 && (
+            <div style={{ padding: "10px 12px", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+              No organizations
+            </div>
+          )}
+          {allOrgs.map((o) => {
+            const active = o.org_id === orgId;
+            return (
+              <button
+                key={o.org_id}
+                onClick={() => { switchOrg(o.org_id); setOpen(false); }}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, width: "100%",
+                  padding: "9px 12px", borderRadius: 6, fontSize: 13, textAlign: "left",
+                  color: active ? "#fff" : "rgba(255,255,255,0.8)", fontWeight: active ? 600 : 500,
+                  background: active ? "rgba(255,255,255,0.08)" : "transparent", border: "none", cursor: "pointer",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = active ? "rgba(255,255,255,0.08)" : "transparent"; }}
+              >
+                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.org_name}</span>
+                {active && <Check size={14} style={{ flexShrink: 0, color: "var(--sos-coral)" }} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AvatarMenuItem({
   icon: Icon,
