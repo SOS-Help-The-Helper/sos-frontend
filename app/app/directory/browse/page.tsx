@@ -113,7 +113,7 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     setLoading(true);
-    api.crmBrowseOrgs({ limit: 100 })
+    api.crmBrowseOrgs(orgId, { limit: 100 })
       .then((res: any) => {
         const items: any[] = res?.orgs ?? res?.organizations ?? (Array.isArray(res) ? res : []);
         if (items.length > 0) {

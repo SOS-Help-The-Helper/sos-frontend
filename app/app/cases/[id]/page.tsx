@@ -456,7 +456,7 @@ function CaseTabs({
   const firstRequestId = childCases[0]?.id ?? sosId;
 
   useEffect(() => {
-    api.crmBrowseOrgs({ limit: 50 })
+    api.crmBrowseOrgs(orgId, { limit: 50 })
       .then((data: any) => {
         const items: any[] = data?.orgs ?? data?.organizations ?? (Array.isArray(data) ? data : []);
         setAvailableOrgs(items.map((o: any) => ({ id: o.id, name: o.name ?? o.slug ?? o.id })));

@@ -40,7 +40,7 @@ export default function DirectoryPage() {
     if (!orgId) return;
     Promise.all([
       api.crmBrowsePersons(orgId, { limit: 1 }).catch(() => null),
-      api.crmBrowseOrgs({ limit: 1 }).catch(() => null),
+      api.crmBrowseOrgs(orgId, { limit: 1 }).catch(() => null),
       api.crmRequestsList(orgId).catch(() => null),
       api.crmResourcesList(orgId).catch(() => null),
     ]).then(([pRes, oRes, rqRes, rsRes]: any[]) => {
