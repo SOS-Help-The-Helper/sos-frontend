@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CommandPalette } from "@/components/command-palette";
 import { TopNav } from "@/components/shell/top-nav";
+import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
 import { usePortalConfig } from "@/lib/use-portal-config";
 
 /**
@@ -50,9 +51,9 @@ export function CrmShell({
         settingsTo="/app/settings"
       />
       {bare ? (
-        <main>{children}</main>
+        <main className="pb-16 md:pb-0">{children}</main>
       ) : (
-        <main className="h-[calc(100vh-56px)] flex flex-col p-3 md:p-4 gap-3">
+        <main className="h-[calc(100vh-56px)] flex flex-col px-3 pt-3 pb-20 md:p-4 gap-3">
           <div className="flex-1 min-h-0 rounded-2xl border border-[var(--hairline)] bg-[var(--surface-1)] overflow-auto">
             {children}
           </div>
@@ -64,6 +65,7 @@ export function CrmShell({
         </main>
       )}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} module={module} />
+      <MobileBottomNav />
     </div>
   );
 }

@@ -9,7 +9,7 @@
  *   New requests: queued offline via IndexedDB, synced on reconnect
  */
 
-const CACHE_NAME = 'sos-v2';
+const CACHE_NAME = 'sos-v3';
 const PERSON_CACHE = 'sos-person-v1';
 
 const STATIC_ASSETS = [

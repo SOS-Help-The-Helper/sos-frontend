@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Menu, X, Building2, Check } from "lucide-react";
+import { Bell, ChevronDown, Building2, Check } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 import {
@@ -15,7 +15,7 @@ import { useAuthContext } from "@/lib/auth-context";
 // Module visual metadata (icons, tints, descriptions)
 type IconType = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 
-const MODULE_VISUAL: Record<ModuleId, { icon: IconType; desc: string; tint: string; ink: string }> = {
+export const MODULE_VISUAL: Record<ModuleId, { icon: IconType; desc: string; tint: string; ink: string }> = {
   directory:  { icon: NetworkIcon, desc: "People, orgs, requests & resources", tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
   cases:      { icon: Briefcase,   desc: "Open requests & their workflow",     tint: "rgba(137,207,240,0.20)", ink: "#0F1E2B" },
   match:      { icon: GitBranch,   desc: "Route requests to the best org",     tint: "rgba(239,78,75,0.10)",   ink: "#EF4E4B" },
@@ -46,9 +46,8 @@ export interface TopNavProps {
 
 export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app/settings", userName }: TopNavProps) {
   const path = usePathname();
-  const { signOut, userEmail, userPhone, userName: ctxUserName } = useAuthContext();
+  const { signOut, userEmail, userPhone, userName: ctxUserName, orgName, isAdmin, allOrgs, switchOrg, orgId } = useAuthContext();
   const [openCat, setOpenCat] = useState<string | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
@@ -59,7 +58,6 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
 
   const enabledSet = new Set(enabledModules);
   const isEnabled = (m: ModuleId) => enabledSet.has(m);
-  const getLabel = (m: ModuleId) => labels[m] || m.charAt(0).toUpperCase() + m.slice(1);
 
   function openWithDelay(key: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -82,16 +80,6 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
     document.addEventListener("mousedown", handleMouseDown);
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [avatarOpen]);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
 
   // ⌘K shortcut — dispatch custom event for CommandPalette
   useEffect(() => {
@@ -117,21 +105,32 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
       }}
     >
       <div style={{ height: 56, padding: "0 16px", display: "flex", alignItems: "center", gap: 16 }}>
-        {/* Logo → Command */}
-        <Link
-          href="/app/command"
-          style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", textDecoration: "none", flexShrink: 0, flex: "1 1 0", minWidth: 0 }}
-        >
-          <span className="sos-pulse-wrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logomark.svg" alt="SOS" width={22} height={22} style={{ position: "relative", zIndex: 1 }} />
-            <span className="sos-pulse-ring" />
-            <span className="sos-pulse-ring sos-pulse-ring-2" />
-          </span>
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, color: "#fff", letterSpacing: "0.01em" }} className="hidden sm:inline">
-            SOS
-          </span>
-        </Link>
+        {/* Logo → Command (+ org name on mobile) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 0", minWidth: 0 }}>
+          <Link
+            href="/app/command"
+            style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", textDecoration: "none", flexShrink: 0 }}
+          >
+            <span className="sos-pulse-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logomark.svg" alt="SOS" width={22} height={22} style={{ position: "relative", zIndex: 1 }} />
+              <span className="sos-pulse-ring" />
+              <span className="sos-pulse-ring sos-pulse-ring-2" />
+            </span>
+            <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, color: "#fff", letterSpacing: "0.01em" }} className="hidden sm:inline">
+              SOS
+            </span>
+          </Link>
+          {/* Org name — mobile only (desktop shows it in the OrgSwitcher pill) */}
+          {orgName && (
+            <span
+              className="md:hidden"
+              style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}
+            >
+              {orgName}
+            </span>
+          )}
+        </div>
 
         {/* Desktop nav — centered categories */}
         <nav className="hidden md:flex" style={{ alignItems: "center", gap: 2, justifyContent: "center", flexShrink: 0 }}>
@@ -205,15 +204,8 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
             <button style={iconBtn} aria-label="Notifications" className="inline-flex" onClick={() => toast("No new notifications")}>
               <Bell size={16} />
             </button>
-            {/* Mobile: bare avatar circle */}
-            <span
-              className="md:hidden inline-flex"
-              style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--sos-coral)", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0 }}
-            >
-              {initials}
-            </span>
-            {/* Desktop: full avatar pill with dropdown */}
-            <div ref={avatarRef} style={{ position: "relative" }} className="hidden md:block">
+            {/* Avatar pill with dropdown — all viewports */}
+            <div ref={avatarRef} style={{ position: "relative" }} className="block">
               <button
                 onClick={() => setAvatarOpen(o => !o)}
                 style={{ marginLeft: 6, alignItems: "center", gap: 6, padding: "4px 8px 4px 4px", borderRadius: 999, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "inline-flex" }}
@@ -240,6 +232,34 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                       </div>
                     )}
                   </div>
+                  {/* Org switcher — mobile only (desktop has the dedicated pill) */}
+                  {isAdmin && allOrgs.length > 0 && (
+                    <div className="md:hidden" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "4px 4px 6px" }}>
+                      <div style={{ padding: "8px 10px 4px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>
+                        Organization
+                      </div>
+                      <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                        {allOrgs.map((o) => {
+                          const active = o.org_id === orgId;
+                          return (
+                            <button
+                              key={o.org_id}
+                              onClick={() => { switchOrg(o.org_id); setAvatarOpen(false); }}
+                              style={{
+                                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, width: "100%",
+                                padding: "9px 10px", borderRadius: 6, fontSize: 13, textAlign: "left",
+                                color: active ? "#fff" : "rgba(255,255,255,0.8)", fontWeight: active ? 600 : 500,
+                                background: active ? "rgba(255,255,255,0.08)" : "transparent", border: "none", cursor: "pointer",
+                              }}
+                            >
+                              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.org_name}</span>
+                              {active && <Check size={14} style={{ flexShrink: 0, color: "var(--sos-coral)" }} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   <Link
                     href={settingsTo}
                     onClick={() => setAvatarOpen(false)}
@@ -261,149 +281,10 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
                 </div>
               )}
             </div>
-            {/* Hamburger — mobile only */}
-            <button className="md:hidden inline-flex" style={iconBtn} aria-label="Menu" onClick={() => setMobileOpen(true)}>
-              <Menu size={18} />
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile nav — full-screen overlay with slide-in animation */}
-      {/* Always rendered (not conditional) so the CSS transition can play */}
-      <div
-        className="md:hidden"
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 60,
-          pointerEvents: mobileOpen ? "auto" : "none",
-        }}
-      >
-        {/* Backdrop */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(15,30,43,0.6)",
-            opacity: mobileOpen ? 1 : 0,
-            transition: "opacity 250ms ease",
-          }}
-          onClick={() => setMobileOpen(false)}
-        />
-
-        {/* Slide-in panel */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: "100%",
-            background: "var(--sos-navy)",
-            display: "flex",
-            flexDirection: "column",
-            color: "#fff",
-            overflowY: "auto",
-            transform: mobileOpen ? "translateX(0)" : "translateX(100%)",
-            transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          {/* Header row */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 16px", height: 56, flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logomark.svg" alt="SOS" width={22} height={22} />
-              <span style={{ fontFamily: "var(--font-serif)", fontSize: 18, color: "#fff" }}>SOS</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--sos-coral)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
-                {initials}
-              </span>
-              <button onClick={() => setMobileOpen(false)} style={{ ...iconBtn, display: "inline-flex" }} aria-label="Close menu">
-                <X size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* Nav content — all categories expanded */}
-          <div style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 24 }}>
-            {NAV_CATEGORIES.map((cat) => {
-              const mods = cat.modules.filter(isEnabled);
-              if (mods.length === 0) return null;
-              return (
-                <div key={cat.key}>
-                  {/* Category label */}
-                  <div style={{ padding: "0 8px 8px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    {cat.label}
-                  </div>
-                  {/* Module links */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    {mods.map((m) => {
-                      const vis = MODULE_VISUAL[m];
-                      const Icon = vis.icon;
-                      const itemActive = path.startsWith(`/app/${m}`);
-                      const label = getLabel(m);
-                      return (
-                        <Link
-                          key={m}
-                          href={`/app/${m}`}
-                          onClick={() => setMobileOpen(false)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 12,
-                            padding: "10px 8px", borderRadius: 8, textDecoration: "none",
-                            color: itemActive ? "#fff" : "rgba(255,255,255,0.75)",
-                            background: itemActive ? "rgba(255,255,255,0.08)" : "transparent",
-                            borderLeft: itemActive ? "3px solid var(--sos-coral)" : "3px solid transparent",
-                            transition: "background 120ms",
-                          }}
-                        >
-                          <span style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 6, background: vis.tint, color: itemActive ? "inherit" : vis.ink, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                            <Icon size={16} strokeWidth={2} />
-                          </span>
-                          <span style={{ fontSize: 15, fontWeight: 600 }}>{label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Footer */}
-          <div style={{ padding: "12px 12px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-            {contactLine && (
-              <div style={{ padding: "4px 8px 8px" }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{displayName}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{contactLine}</div>
-              </div>
-            )}
-            <Link
-              href={settingsTo}
-              onClick={() => setMobileOpen(false)}
-              style={{
-                display: "block", padding: "10px 8px", borderRadius: 8, textDecoration: "none",
-                fontSize: 14, fontWeight: 600,
-                color: path.startsWith("/app/settings") ? "#fff" : "rgba(255,255,255,0.6)",
-                background: path.startsWith("/app/settings") ? "rgba(255,255,255,0.08)" : "transparent",
-              }}
-            >
-              Settings
-            </Link>
-            <button
-              onClick={() => { setMobileOpen(false); void signOut(); }}
-              style={{
-                display: "block", width: "100%", textAlign: "left", padding: "10px 8px", borderRadius: 8,
-                fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.6)",
-                background: "transparent", border: "none", cursor: "pointer",
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>
     </header>
   );
 }
