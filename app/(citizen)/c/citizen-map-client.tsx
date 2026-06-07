@@ -26,7 +26,7 @@ export default function CitizenMapPage() {
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
   const mapboxglRef = useRef<any>(null);
-
+  const pinCache = useRef(new Map<string, Record<string, any>>());
 
   const realtimeChannelRef = useRef<any>(null);
 
@@ -50,6 +50,18 @@ export default function CitizenMapPage() {
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [mapResultsQuery, setMapResultsQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+
+  async function fetchPinDetail(id: string, type: string): Promise<Record<string, any> | null> {
+    const key = type + ':' + id;
+    if (pinCache.current.has(key)) return pinCache.current.get(key)!;
+    try {
+      const res = await fetch('/api/pin/' + id + '?type=' + type);
+      if (!res.ok) return null;
+      const data = await res.json();
+      pinCache.current.set(key, data);
+      return data;
+    } catch { return null; }
+  }
 
   // Heatmap mode toggle effect
   useEffect(() => {
@@ -258,6 +270,9 @@ export default function CitizenMapPage() {
             const props = e.features[0].properties;
             const pinType = props.type || 'request';
             setSelectedPin({ type: pinType, id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
+            fetchPinDetail(props.id, pinType).then(full => {
+              if (full) setSelectedPin(prev => prev && prev.id === props.id ? { ...prev, properties: { ...prev.properties, ...full } } : prev);
+            });
             setDetailMode('card');
             setMatchMode(false);
           });
@@ -399,6 +414,9 @@ export default function CitizenMapPage() {
               layerClickedRef.current = true;
               const props = e.features[0].properties;
               setSelectedPin({ type: props.type === 'request' ? 'request' : 'resource', id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
+              fetchPinDetail(props.id, props.type === 'request' ? 'request' : 'resource').then(full => {
+                if (full) setSelectedPin(prev => prev && prev.id === props.id ? { ...prev, properties: { ...prev.properties, ...full } } : prev);
+              });
               setDetailMode('card');
               setMatchMode(false);
             });
