@@ -378,6 +378,9 @@ export default function CasesPage() {
   });
   useEffect(() => { localStorage.setItem('sos-view-mode', viewMode); }, [viewMode]);
 
+  // Org-customizable table column config (keyed by tab)
+  const [orgTableConfig, setOrgTableConfig] = useState<Record<string, any>>({});
+
   // Live data from EFs (null = not yet loaded or EF failed → fall back to prototype)
   const [liveCases, setLiveCases] = useState<Card[] | null>(null);
   const [liveRequests, setLiveRequests] = useState<Card[] | null>(null);
@@ -399,12 +402,15 @@ export default function CasesPage() {
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
       api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
+      api.efCall("partner-read", { query_type: "org_detail", org_id: orgId }).catch(() => null),
     ])
-      .then(([casesRes, requestsRes, resourcesRes, reportsRes]) => {
+      .then(([casesRes, requestsRes, resourcesRes, reportsRes, orgRes]) => {
         const casesData = casesRes.status === "fulfilled" ? casesRes.value : null;
         const requestsData = requestsRes.status === "fulfilled" ? requestsRes.value : null;
         const resourcesData = resourcesRes.status === "fulfilled" ? resourcesRes.value : null;
         const reportsData = reportsRes.status === "fulfilled" ? reportsRes.value : null;
+        const orgData = orgRes.status === "fulfilled" ? orgRes.value : null;
+        if (orgData?.table_config) setOrgTableConfig(orgData.table_config);
         const caseItems: any[] = casesData?.cases ?? (Array.isArray(casesData) ? casesData : []);
         if (caseItems.length > 0) {
           const cards = mapCasesToCards(caseItems);
@@ -493,6 +499,22 @@ export default function CasesPage() {
         });
     }
   };
+
+  // Merge default table columns with the org's table_config (hide + custom cols)
+  function mergeColumns(defaults: TableColumn[], tabKey: string): TableColumn[] {
+    const cfg = orgTableConfig[tabKey];
+    if (!cfg) return defaults;
+    let cols = [...defaults];
+    // Hide columns
+    if (cfg.hidden?.length) cols = cols.filter(c => !cfg.hidden.includes(c.id));
+    // Add custom metadata columns
+    if (cfg.custom?.length) {
+      for (const custom of cfg.custom) {
+        cols.push({ id: custom.id, label: custom.label, source: custom.source, editable: custom.editable ?? true, type: custom.type ?? 'text', width: custom.width ?? 140 });
+      }
+    }
+    return cols;
+  }
 
   async function handleTableSave(rowId: string, field: string, value: any) {
     if (field === 'status' && tab === 'requests') {
@@ -696,7 +718,7 @@ export default function CasesPage() {
       ) : (
         <div className="px-4 pt-4 pb-4">
           <EditableTable
-            columns={tab === "cases" ? CASE_TABLE_COLS : tab === "requests" ? REQUEST_TABLE_COLS : tab === "resources" ? RESOURCE_TABLE_COLS : CASE_TABLE_COLS}
+            columns={mergeColumns(tab === "cases" ? CASE_TABLE_COLS : tab === "requests" ? REQUEST_TABLE_COLS : RESOURCE_TABLE_COLS, tab)}
             rows={cards}
             onSave={handleTableSave}
             onRowClick={(id) => { const card = cards.find((c) => c.id === id); if (card?.href) window.location.href = card.href; }}
