@@ -393,6 +393,10 @@ export default function CasesPage() {
   const [requestCards, setRequestCards] = useState<Card[]>([]);
   const [resourceCards, setResourceCards] = useState<Card[]>([]);
   const [reportCards, setReportCards] = useState<Card[]>([]);
+  // Real totals from API (not capped by limit)
+  const [casesTotal, setCasesTotal] = useState(0);
+  const [requestsTotal, setRequestsTotal] = useState(0);
+  const [resourcesTotal, setResourcesTotal] = useState(0);
 
   // Fetch all tab data in parallel
   useEffect(() => {
@@ -416,6 +420,7 @@ export default function CasesPage() {
         const resourcesData = resourcesRes.status === "fulfilled" ? resourcesRes.value : null;
         const reportsData = reportsRes.status === "fulfilled" ? reportsRes.value : null;
         const caseItems: any[] = casesData?.cases ?? (Array.isArray(casesData) ? casesData : []);
+        setCasesTotal(casesData?.total ?? caseItems.length);
         if (caseItems.length > 0) {
           const cards = mapCasesToCards(caseItems);
           setLiveCases(cards);
@@ -423,6 +428,7 @@ export default function CasesPage() {
         }
 
         const requestItems: any[] = requestsData?.requests ?? (Array.isArray(requestsData) ? requestsData : []);
+        setRequestsTotal(requestsData?.total ?? requestItems.length);
         if (requestItems.length > 0) {
           requestItems.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           const cards = liveRequestsToCards(requestItems);
@@ -431,6 +437,7 @@ export default function CasesPage() {
         }
 
         const resourceItems: any[] = resourcesData?.resources ?? (Array.isArray(resourcesData) ? resourcesData : []);
+        setResourcesTotal(resourcesData?.total ?? resourceItems.length);
         if (resourceItems.length > 0) {
           resourceItems.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
           const cards = liveResourcesToCards(resourceItems);
@@ -549,9 +556,9 @@ export default function CasesPage() {
   };
 
   const TABS: { id: TabKey; label: string; count: number }[] = [
-    { id: "cases", label: "Cases", count: caseCards.length },
-    { id: "requests", label: "Requests", count: requestCards.length },
-    { id: "resources", label: "Resources", count: resourceCards.length },
+    { id: "cases", label: "Cases", count: casesTotal },
+    { id: "requests", label: "Requests", count: requestsTotal },
+    { id: "resources", label: "Resources", count: resourcesTotal },
   ];
 
   return (
@@ -565,7 +572,7 @@ export default function CasesPage() {
       )}
       <PageHeader
         title="Cases"
-        subtitle={`${totalOpen} open · ${cards.length} total ${label}s · drag to change stage`}
+        subtitle={`${totalOpen} open · ${tab === 'cases' ? casesTotal : tab === 'requests' ? requestsTotal : resourcesTotal} total ${label}s · drag to change stage`}
         actions={
           <button
             onClick={() => tab === "cases" && setModalOpen(true)}
