@@ -355,8 +355,20 @@ function groupByLayer(features: MapFeature[]): LayeredFeatures {
   return result;
 }
 
+const MAP_VIEWS = [
+  { key: "deployment", label: "Deployment", src: null },
+  { key: "ems", label: "EMS", src: "/maps/ems.html" },
+  { key: "county", label: "County", src: "/maps/county.html" },
+  { key: "state", label: "State", src: "/maps/state.html" },
+  { key: "federal", label: "Federal", src: "/maps/federal.html" },
+  { key: "admin", label: "Admin", src: "/maps/admin.html" },
+] as const;
+
+type MapViewKey = (typeof MAP_VIEWS)[number]["key"];
+
 export default function MapPage() {
   const { orgId } = useAuthContext();
+  const [mapView, setMapView] = useState<MapViewKey>("deployment");
   const [activeCounty, setActive] = useState<string | null>("Buncombe");
   const [layers, setLayers] = useState<LayeredFeatures | null>(null);
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
@@ -387,16 +399,50 @@ export default function MapPage() {
         subtitle="Western North Carolina · live"
         actions={
           <>
-            <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
-              <Filter size={12} /> Filter
-            </button>
-            <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
-              <Plus size={12} /> Drop pin
-            </button>
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-white/8">
+              {MAP_VIEWS.map((v) => {
+                const active = mapView === v.key;
+                return (
+                  <button
+                    key={v.key}
+                    onClick={() => setMapView(v.key)}
+                    className={`h-7 px-2.5 rounded-md text-[12px] font-medium transition border ${
+                      active
+                        ? "bg-white/15 border-white/40 text-white"
+                        : "border-transparent text-white/55 hover:text-white/85"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                );
+              })}
+            </div>
+            {mapView === "deployment" && (
+              <>
+                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
+                  <Filter size={12} /> Filter
+                </button>
+                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
+                  <Plus size={12} /> Drop pin
+                </button>
+              </>
+            )}
           </>
         }
       />
 
+      {mapView !== "deployment" ? (
+        <div className="px-6 pt-6 pb-6">
+          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
+            <iframe
+              key={mapView}
+              src={MAP_VIEWS.find((v) => v.key === mapView)?.src ?? ""}
+              title={MAP_VIEWS.find((v) => v.key === mapView)?.label}
+              className="w-full h-full border-0"
+            />
+          </div>
+        </div>
+      ) : (
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
           <MapboxEmbed
@@ -496,6 +542,7 @@ export default function MapPage() {
           )}
         </aside>
       </div>
+      )}
     </CrmShell>
   );
 }
