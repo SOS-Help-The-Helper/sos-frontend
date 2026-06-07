@@ -106,7 +106,8 @@ function urgencyColor(u: string | undefined) {
 export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDetailCardProps) {
   const c = CFG[type];
   const town = townOnly(p.location_text);
-  const desc = truncateText(p.public_display_text || p.description);
+  // Only show AI-generated summary, NEVER raw user comments
+  const desc = truncateText(p.public_display_text);
 
   const copyLink = () => {
     const url = p.share_url || `https://sosconnect.org/s/${p.id}?type=${type}`;
