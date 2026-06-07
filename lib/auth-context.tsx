@@ -29,6 +29,8 @@ interface AuthContext {
   orgId: string | null;
   orgName: string | null;
   orgType: string | null;
+  /** The signed-in user's person UUID from the persons table. */
+  personId: string | null;
   role: string | null;
   isAdmin: boolean;
   isPartner: boolean;
@@ -54,6 +56,7 @@ const AuthCtx = createContext<AuthContext>({
   orgId: null,
   orgName: null,
   orgType: null,
+  personId: null,
   role: null,
   isAdmin: false,
   isPartner: false,
@@ -74,6 +77,7 @@ export function useAuthContext() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [personId, setPersonId] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPartner, setIsPartner] = useState(false);
@@ -122,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsPartner(false);
         setOrgId(null);
         setOrgName(null);
+        setPersonId(null);
         setUserEmail(null);
         setUserPhone(null);
         setUserName(null);
@@ -132,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const me = (await res.json()) as MeResponse;
       setSignedOut(false);
+      setPersonId((me.person as any)?.id ?? null);
       setUserEmail(me.user?.email ?? null);
       setUserPhone(me.user?.phone ?? null);
       setUserName(me.person?.display_name ?? me.user?.email ?? me.user?.phone ?? null);
@@ -169,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // instead of hanging on an empty state.
       setSignedOut(true);
       setOrgId(null);
+      setPersonId(null);
       setLoading(false);
     }
   }, [resolveOrg]);
@@ -201,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     orgId,
     orgName,
     orgType,
+    personId,
     role,
     isAdmin,
     isPartner,
