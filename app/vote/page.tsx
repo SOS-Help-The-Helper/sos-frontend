@@ -147,33 +147,23 @@ export default function VotePage() {
     }
   }
 
-  // Step 3 — record the vote attestation via sos-write.
+  // Step 3 — record the vote attestation via vote-otp (mode: submit).
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading || !candidate) return;
     setLoading(true);
-    const candidateName =
-      CANDIDATES.find((c) => c.id === candidate)?.name ?? candidate;
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/vote-otp`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          actor: { type: 'citizen', phone },
-          records: [
-            {
-              type: 'report',
-              taxonomy_code: 'CIVIC.VOTE_ATTESTATION',
-              description: `Voted for ${candidateName}`,
-              danger_present: false,
-              metadata: { candidate, election: 'la_mayor_2026' },
-            },
-          ],
-          location: { text: 'Los Angeles, CA', lat: 34.052, lng: -118.244 },
-          context: { channel: 'web', consent_given: true },
+          mode: 'submit',
+          phone,
+          candidate,
+          election: 'la_mayor_2026',
         }),
       });
       const data = await res.json().catch(() => ({}));
