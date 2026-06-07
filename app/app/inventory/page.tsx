@@ -88,6 +88,9 @@ export default function InventoryPage() {
     try {
       await api.inventoryUpdateCondition(itemId, CONDITION_RATING[condition]);
       toast(`Condition updated to ${condition}`);
+      const data = await api.queryInventory({ org_id: orgId }) as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
+      if (data?.inventory?.length) setInventory(data.inventory);
+      if (data?.resources?.length) setResources(data.resources);
     } catch {
       toast.error("Failed to update condition");
     }

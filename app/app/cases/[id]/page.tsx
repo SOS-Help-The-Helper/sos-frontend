@@ -318,9 +318,9 @@ export default function UmbrellaView() {
           }
           actions={
             <>
-              <ActionBtn icon={Phone} label="Call" />
-              <ActionBtn icon={MessageSquare} label="Message" />
-              <ActionBtn icon={Plus} label="Add need" primary />
+              <ActionBtn icon={Phone} label="Call" onClick={() => toast.info("Coming soon")} />
+              <ActionBtn icon={MessageSquare} label="Message" onClick={() => toast.info("Coming soon")} />
+              <ActionBtn icon={Plus} label="Add need" primary onClick={() => toast.info("Coming soon")} />
               <ActionBtn icon={Sparkles} label="Find matches" onClick={() => setActiveTab("matches")} />
               <button
                 onClick={() => setChatOpen(true)}
@@ -648,8 +648,8 @@ function CaseTabs({
             <option value="closed">Closed</option>
           </select>
         </div>
-        <AdminItem icon={FileText} label="Generate report" />
-        <AdminItem icon={AlertTriangle} label="Flag for review" />
+        <AdminItem icon={FileText} label="Generate report" onClick={() => toast.info("Coming soon")} />
+        <AdminItem icon={AlertTriangle} label="Flag for review" onClick={() => toast.info("Coming soon")} />
         {/* Close case */}
         <button
           onClick={handleCloseCase}
@@ -934,9 +934,10 @@ function Kpi({ label, value, accent }: { label: string; value: string | number; 
   );
 }
 
-function AdminItem({ icon: Icon, label, danger }: { icon: typeof Users; label: string; danger?: boolean }) {
+function AdminItem({ icon: Icon, label, danger, onClick }: { icon: typeof Users; label: string; danger?: boolean; onClick?: () => void }) {
   return (
     <button
+      onClick={onClick}
       className={`w-full flex items-center gap-2.5 h-8 px-2 rounded-md text-[12.5px] font-medium transition ${
         danger ? "text-[#EF4E4B] hover:bg-[#EF4E4B]/10" : "text-white/75 hover:text-white hover:bg-white/5"
       }`}

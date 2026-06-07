@@ -92,7 +92,10 @@ export default function ReportsPage() {
         title="Reports"
         subtitle="Field reports from volunteers and partners."
         actions={
-          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
+          <button
+            onClick={() => toast.info("Coming soon")}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition"
+          >
             <Download size={12} /> Export
           </button>
         }
