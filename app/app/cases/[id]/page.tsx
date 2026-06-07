@@ -165,11 +165,9 @@ export default function UmbrellaView() {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("timeline");
 
-  useEffect(() => {
-    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
-    if (authLoading || !orgId) return;
+  const fetchCaseDetail = useCallback(() => {
     const efParams = isUmbrella ? { person_id: id } : { request_id: id };
-    api.crmCasesDetail(efParams)
+    return api.crmCasesDetail(efParams)
       .then((data: any) => {
         if (!data) return;
         // Map timeline events if present
@@ -241,17 +239,27 @@ export default function UmbrellaView() {
       })
       .catch(() => { setNotFound(true); })
       .finally(() => setLoading(false));
-  }, [id, isUmbrella, orgId, authLoading]);
+  }, [id, isUmbrella]);
 
   useEffect(() => {
-    // Wait for org config to resolve so notes are read from the correct DB.
+    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
     if (authLoading || !orgId) return;
-    api.crmGetCaseNotes(id)
+    fetchCaseDetail();
+  }, [fetchCaseDetail, orgId, authLoading]);
+
+  const fetchCaseNotes = useCallback(() => {
+    return api.crmGetCaseNotes(id)
       .then((data: any) => {
         if (data?.notes && Array.isArray(data.notes)) setCaseNotes(data.notes);
       })
       .catch(() => toast.error("Failed to load case"));
-  }, [id, orgId, authLoading]);
+  }, [id]);
+
+  useEffect(() => {
+    // Wait for org config to resolve so notes are read from the correct DB.
+    if (authLoading || !orgId) return;
+    fetchCaseNotes();
+  }, [fetchCaseNotes, orgId, authLoading]);
 
   const handlePostNote = useCallback(async () => {
     const text = note.trim();
@@ -265,12 +273,13 @@ export default function UmbrellaView() {
         text,
       });
       setNote("");
+      await fetchCaseNotes();
     } catch {
       // fall through — note stays in input so user can retry
     } finally {
       setPostingNote(false);
     }
-  }, [note, id, isUmbrella, childCasesData, orgId]);
+  }, [note, id, isUmbrella, childCasesData, orgId, fetchCaseNotes]);
 
   if (loading) return <LoadingSkeleton />;
   if (notFound) return <CaseNotFound />;
@@ -278,6 +287,9 @@ export default function UmbrellaView() {
   const orgsInvolved = new Set(childCasesData.map((c) => c.org)).size;
   const resolvedCount = childCasesData.filter((c) => c.status === "fulfilled" || c.status === "closed").length;
   const fulfillment = childCasesData.length ? Math.round((resolvedCount / childCasesData.length) * 100) : 0;
+  const daysOpen = umbrellaData.filedAt
+    ? Math.max(0, Math.floor((Date.now() - new Date(umbrellaData.filedAt).getTime()) / 86400000))
+    : 0;
 
   return (
     <CrmShell module="Cases">
@@ -291,7 +303,7 @@ export default function UmbrellaView() {
             <>
               <UrgencyBadge urgency={umbrellaData.urgency} />
               <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#89CFF0]/15 text-[#89CFF0]">
-                {umbrellaData.status}
+                {umbrellaData.status.charAt(0).toUpperCase() + umbrellaData.status.slice(1)}
               </span>
             </>
           }
@@ -330,7 +342,7 @@ export default function UmbrellaView() {
           <Kpi label="Child cases" value={childCasesData.length} />
           <Kpi label="Orgs involved" value={orgsInvolved} />
           <Kpi label="Fulfilled" value={`${fulfillment}%`} accent={fulfillment === 100 ? "#34D399" : "#F5EBD6"} />
-          <Kpi label="Days open" value={3} />
+          <Kpi label="Days open" value={daysOpen} />
         </div>
 
         <DetailLayout
@@ -353,6 +365,7 @@ export default function UmbrellaView() {
                 caseNotes={caseNotes}
                 activeTab={activeTab}
                 onActiveTabChange={setActiveTab}
+                onRefetch={fetchCaseDetail}
               />
             </>
           }
@@ -430,7 +443,7 @@ function candidateToChainData(m: MatchCandidate, umbrellaData: UmbrellaShape): M
 }
 
 function CaseTabs({
-  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange,
+  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange, onRefetch,
 }: {
   sosId: string;
   note: string;
@@ -444,6 +457,7 @@ function CaseTabs({
   caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
   activeTab: string;
   onActiveTabChange: (key: string) => void;
+  onRefetch: () => void;
 }) {
   const allMatchIds = Array.from(new Set(childCases.flatMap(() => Object.keys(matches))));
   const protoMatches = allMatchIds.map((id) => matches[id]).filter(Boolean);
@@ -473,6 +487,7 @@ function CaseTabs({
     try {
       await api.crmCaseAction("close_case", { sos_id: sosId });
       toast.success("Case closed");
+      onRefetch();
     } catch {
       toast.error("Failed to close case");
     } finally {
@@ -488,6 +503,7 @@ function CaseTabs({
       const orgName = availableOrgs.find((o) => o.id === orgId)?.name ?? orgId;
       toast.success(`Assigned to ${orgName}`);
       setSelectedOrg(orgId);
+      onRefetch();
     } catch {
       toast.error("Failed to assign org");
     } finally {
@@ -502,6 +518,7 @@ function CaseTabs({
       await api.crmCaseAction("transition_status", { request_id: firstRequestId, new_status: newStatus });
       toast.success(`Status → ${newStatus}`);
       setSelectedStatus(newStatus);
+      onRefetch();
     } catch {
       toast.error("Failed to change status");
     } finally {
