@@ -338,8 +338,8 @@ export default function VotePage() {
               fontWeight: 300,
             }}
           >
-            These are crowd-sourced attestations from verified voters, not official election results. Official results at lavote.gov.
-            Official election results from{' '}
+            These are crowd-sourced attestations from verified voters, not official election results.
+            Official results from{' '}
             <a
               href="https://www.lavote.gov"
               target="_blank"
