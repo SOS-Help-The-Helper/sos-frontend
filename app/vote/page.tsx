@@ -68,42 +68,25 @@ export default function VotePage() {
 
         <div style={{ maxWidth: 720 }}>
           <p className="label" style={{ color: ACCENT, marginBottom: 20 }}>
-            An experiment by SOS
+            A civic experiment by SOS
           </p>
           <h1 className="serif" style={{ color: '#fff', fontSize: 'clamp(40px, 8vw, 64px)' }}>
             Did Your Vote Count?
           </h1>
           <p
             className="body-lg"
-            style={{ color: 'rgba(255,255,255,0.7)', marginTop: 24, fontSize: 21 }}
+            style={{ color: 'rgba(255,255,255,0.65)', marginTop: 20, fontSize: 18, maxWidth: 480, margin: '20px auto 0' }}
           >
-            Millions of ballots are still being counted in the LA mayor&apos;s race.
-            We&apos;re trying something new — letting verified voters tell us who they
-            voted for, then comparing the crowd-sourced numbers to the official count.
-          </p>
-          <p
-            style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 15,
-              lineHeight: 1.8,
-              maxWidth: 580,
-              margin: '20px auto 0',
-              fontWeight: 300,
-            }}
-          >
-            This isn&apos;t an official election tool. It&apos;s a civic experiment — a new way
-            to get directional data from real, verified voters. We check your identity
-            against the LA County voter file, record your attestation anonymously, and
-            publish only aggregate totals. All individual data is deleted after the
-            election is certified.
+            Tell us who you voted for in the LA mayor&apos;s race.
+            We verify you&apos;re a real voter. You stay anonymous.
           </p>
 
-          <div style={{ marginTop: 40 }}>
+          <div style={{ marginTop: 36 }}>
             <a href="#attest-form" style={ctaButtonStyle}>
               I Voted — Count Me
             </a>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 16 }}>
-              Takes 60 seconds. Phone verification required.
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 14 }}>
+              60 seconds · Phone verified · Data deleted after certification
             </p>
           </div>
         </div>
