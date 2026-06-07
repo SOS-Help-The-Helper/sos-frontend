@@ -40,8 +40,8 @@ export async function GET(
     });
 
     if (error) {
-      console.error('[map-tiles] RPC error:', error.message);
-      return NextResponse.json({ error: 'Tile generation failed' }, { status: 500 });
+      console.error('[map-tiles] RPC error:', error.message, 'code:', error.code, 'details:', error.details);
+      return NextResponse.json({ error: 'Tile generation failed', detail: error.message, code: error.code }, { status: 500 });
     }
 
     // data is base64-encoded MVT
