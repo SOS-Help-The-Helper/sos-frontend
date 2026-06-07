@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MapPin, ShieldCheck, Clock, Phone, Mail, ChevronRight, Users, Share2, Plus, MessageSquare, Pencil, Check, X as XIcon, Archive } from "lucide-react";
@@ -61,13 +61,17 @@ export default function PersonPage() {
   const [editEmail, setEditEmail] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const loadPerson = useCallback(() => {
+    return api.crmGetPerson(id)
+      .then((data: unknown) => setApiData(data as ApiResponse))
+      .catch(() => { setApiData(null); toast.error("Failed to load person"); });
+  }, [id]);
+
   useEffect(() => {
     // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
     if (authLoading || !orgId) return;
-    api.crmGetPerson(id)
-      .then((data: unknown) => setApiData(data as ApiResponse))
-      .catch(() => { setApiData(null); toast.error("Failed to load person"); });
-  }, [id, orgId, authLoading]);
+    loadPerson();
+  }, [orgId, authLoading, loadPerson]);
 
   // Loading state
   if (apiData === undefined) {
@@ -134,10 +138,22 @@ export default function PersonPage() {
       await api.crmUpdatePerson(id, "email", editEmail);
       toast.success("Person updated");
       setEditMode(false);
+      await loadPerson();
     } catch {
       toast.error("Failed to save changes");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Inline-cell commit: persist a single field, then refetch to reflect the change.
+  async function commitField(field: string, value: string) {
+    try {
+      await api.crmUpdatePerson(id, field, value);
+      toast.success("Updated");
+      await loadPerson();
+    } catch {
+      toast.error("Failed to save changes");
     }
   }
 
@@ -201,8 +217,8 @@ export default function PersonPage() {
                 <span className="w-1 h-1 rounded-full" style={{ background: housingTint }} />
                 <EditableSelect
                   value={person.housingStatus}
-                  editable={false}
-                  onCommit={() => {}}
+                  editable={editable}
+                  onCommit={(v) => commitField("housing_status", v)}
                   options={HOUSING_OPTIONS}
                   className="!h-5 !text-[9.5px] uppercase tracking-wider font-mono"
                 />
@@ -224,8 +240,8 @@ export default function PersonPage() {
                 <span className="text-white/35 mx-1">·</span>
                 <EditableCell
                   value={person.role}
-                  editable={false}
-                  onCommit={() => {}}
+                  editable={editable}
+                  onCommit={(v) => commitField("role", v)}
                   className="text-white/65"
                 />
               </MetaChip>
@@ -233,22 +249,22 @@ export default function PersonPage() {
                 <MetaChip icon={Phone}>
                   <EditableCell
                     value={person.phoneMask}
-                    editable={false}
-                    onCommit={() => {}}
+                    editable={editable}
+                    onCommit={(v) => commitField("phone", v)}
                   />
                 </MetaChip>
                 <MetaChip icon={Mail}>
                   <EditableCell
                     value={person.email}
-                    editable={false}
-                    onCommit={() => {}}
+                    editable={editable}
+                    onCommit={(v) => commitField("email", v)}
                   />
                 </MetaChip>
                 <MetaChip icon={MapPin}>
                   <EditableCell
                     value={person.county}
-                    editable={false}
-                    onCommit={() => {}}
+                    editable={editable}
+                    onCommit={(v) => commitField("county", v)}
                   />
                   <span className="ml-1">County</span>
                 </MetaChip>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -54,25 +54,8 @@ export default function RequestPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [finding, setFinding] = useState(false);
 
-  const handleFindMatches = async () => {
-    if (finding) return;
-    setFinding(true);
-    toast.success("Scoring candidates...");
-    try {
-      const result = await api.efCall("match-engine", { mode: "propose", request_id: id });
-      const count = result?.candidates?.length ?? result?.count ?? 0;
-      toast.success(`${count} candidates found`);
-    } catch {
-      toast.error("Match scoring failed");
-    } finally {
-      setFinding(false);
-    }
-  };
-
-  useEffect(() => {
-    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
-    if (authLoading || !orgId) return;
-    api.crmCasesDetail({ request_id: id })
+  const loadRequest = useCallback(() => {
+    return api.crmCasesDetail({ request_id: id })
       .then((data: ReqDetail | null) => {
         if (data) {
           // Normalize response with sensible defaults to prevent crashes
@@ -89,7 +72,31 @@ export default function RequestPage() {
         }
       })
       .catch(() => setR(null));
-  }, [id, orgId, authLoading]);
+  }, [id]);
+
+  const handleFindMatches = async () => {
+    if (finding) return;
+    setFinding(true);
+    toast.success("Scoring candidates...");
+    try {
+      const result = await api.efCall<{ candidates?: unknown[]; count?: number }>(
+        "match-engine", { mode: "propose", request_id: id }
+      );
+      const count = result?.candidates?.length ?? result?.count ?? 0;
+      toast.success(`${count} candidates found`);
+      await loadRequest();
+    } catch {
+      toast.error("Match scoring failed");
+    } finally {
+      setFinding(false);
+    }
+  };
+
+  useEffect(() => {
+    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
+    if (authLoading || !orgId) return;
+    loadRequest();
+  }, [orgId, authLoading, loadRequest]);
 
   if (r === undefined) {
     return (
@@ -229,7 +236,7 @@ export default function RequestPage() {
           </div>
         )}
 
-        <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} />
+        <RequestTabs r={r} cands={cands} delivery={delivery ?? undefined} onRefetch={loadRequest} />
       </main>
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="request" entityId={id} orgId={orgId} />
     </CrmShell>
@@ -237,11 +244,12 @@ export default function RequestPage() {
 }
 
 function RequestTabs({
-  r, cands, delivery,
+  r, cands, delivery, onRefetch,
 }: {
   r: ReqDetail;
   cands: MatchCandidate[];
   delivery?: Delivery;
+  onRefetch?: () => Promise<unknown>;
 }) {
   const relatedCases = r.relatedCases ?? [];
   const ta = delivery ? r.transportAssignment ?? null : null;
@@ -351,7 +359,7 @@ function RequestTabs({
       key: "matches",
       label: "Matches",
       count: cands.length,
-      content: <MatchesList cands={cands} />,
+      content: <MatchesList cands={cands} onRefetch={onRefetch} />,
     },
     {
       key: "files",
@@ -383,15 +391,16 @@ function RequestTabs({
   return <DetailTabs tabs={tabs} defaultKey="activity" />;
 }
 
-function MatchesList({ cands }: { cands: MatchCandidate[] }) {
+function MatchesList({ cands, onRefetch }: { cands: MatchCandidate[]; onRefetch?: () => Promise<unknown> }) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   async function handleApprove(candidateId: string) {
     if (actionLoading) return;
     setActionLoading(candidateId + "-approve");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // placeholder for real API call
+      await api.crmCaseAction("accept_match", { match_id: candidateId });
       toast.success("Match approved");
+      await onRefetch?.();
     } catch {
       toast.error("Failed to approve match");
     } finally {
@@ -403,8 +412,9 @@ function MatchesList({ cands }: { cands: MatchCandidate[] }) {
     if (actionLoading) return;
     setActionLoading(candidateId + "-reject");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // placeholder for real API call
+      await api.crmCaseAction("decline_match", { match_id: candidateId, reason: "Declined by partner" });
       toast.success("Match rejected");
+      await onRefetch?.();
     } catch {
       toast.error("Failed to reject match");
     } finally {
