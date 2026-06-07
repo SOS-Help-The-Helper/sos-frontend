@@ -428,7 +428,7 @@ export default function VotePage() {
             sosconnect.org
           </a>
           &nbsp;&nbsp;·&nbsp;&nbsp;
-          <a href="mailto:hello@sosconnect.org">hello@sosconnect.org</a>
+          <a href="mailto:team@sosconnect.org">team@sosconnect.org</a>
         </p>
         <p className="footer-copy">© 2026 SOS Global Inc.</p>
       </footer>
