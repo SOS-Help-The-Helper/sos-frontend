@@ -124,13 +124,22 @@ export const api = {
     efCall('sitrep-write', data),
 
   // Portal Config (via crm-settings — SOS DB only)
-  getPortalConfig: (orgId: string) =>
-    efCall<{ org: { id: string; name: string; org_type: string; portal_modules: string[]; metadata: Record<string, unknown> }; modules: string[]; metadata: Record<string, unknown> }>(
-      'crm-settings', { action: 'get_settings', org_id: orgId }
-    ),
+  // Transform to match shape callers expect: {org_id, org_name, org_type, portal_config}
+  getPortalConfig: async (orgId: string) => {
+    const res = await efCall<any>('crm-settings', { action: 'get_settings', org_id: orgId });
+    const org = res.org || {};
+    return {
+      org_id: org.id || orgId,
+      org_name: org.name || '',
+      org_type: org.org_type || '',
+      portal_config: org.metadata?.portal_config || org.portal_config || null,
+      portal_modules: res.modules || org.portal_modules || [],
+      metadata: res.metadata || org.metadata || {},
+    };
+  },
 
   updatePortalConfig: (orgId: string, config: Record<string, unknown>, personId?: string) =>
-    efCall('crm-settings', { action: 'update_profile', org_id: orgId, person_id: personId, patch: config }),
+    efCall('crm-settings', { action: 'update_profile', org_id: orgId, ...(personId ? { person_id: personId } : {}), patch: config }),
 
   // Partners
   queryPartner: (orgId: string, queryType: string) =>
@@ -194,11 +203,29 @@ export const api = {
   crmCaseAction: (action: string, data: Record<string, unknown>) =>
     efCall("crm-case-action", { action, ...data }),
 
-  // CRM — Requests and Resources (SOS DB direct reads)
-  crmRequestsList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("crm-cases", { action: "list_requests", org_id: orgId, ...filters }),
-  crmResourcesList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("inventory-query", { query_type: "org_inventory_summary", org_id: orgId, ...filters }),
+  // CRM — Requests and Resources (SOS DB only)
+  // Transform crm-cases response to match the shape callers expect (requests, by_status, total)
+  crmRequestsList: async (orgId: string, filters?: Record<string, unknown>) => {
+    const res = await efCall<any>("crm-cases", { action: "list", org_id: orgId, include_counts: true, ...filters });
+    return {
+      requests: res.cases || [],
+      results: res.cases || [],
+      total: res.total || 0,
+      by_status: res.stage_counts || {},
+      by_taxonomy: {},
+    };
+  },
+  // Transform inventory-query response to match the shape callers expect (resources, total)
+  crmResourcesList: async (orgId: string, filters?: Record<string, unknown>) => {
+    const res = await efCall<any>("inventory-query", { query_type: "org_inventory_summary", org_id: orgId, ...filters });
+    return {
+      resources: res.summary || [],
+      results: res.summary || [],
+      total: (res.summary || []).reduce((sum: number, s: any) => sum + (s.resource_count || 0), 0),
+      by_status: {},
+      by_taxonomy: {},
+    };
+  },
 
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
@@ -289,8 +316,12 @@ export const api = {
     efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
 
   // Transport — list + create (via crm-delivery — SOS DB only)
-  transportList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("crm-delivery", { action: "list", org_id: orgId, ...filters }),
+  // Transform: crm-delivery returns {deliveries: [...]}, callers expect {results: [...]}
+  transportList: async (orgId: string, filters?: Record<string, unknown>) => {
+    const res = await efCall<any>("crm-delivery", { action: "list", ...filters });
+    const deliveries = res.deliveries || [];
+    return { results: deliveries, assignments: deliveries, data: deliveries };
+  },
 
   transportCreate: (data: Record<string, unknown>) =>
     efCall("crm-delivery", { action: "create", ...data }),
@@ -336,9 +367,16 @@ export const api = {
   crmGetCaseNotes: (sosId: string) =>
     efCall("crm-case-action", { action: "get_case_notes", sos_id: sosId }),
 
-  // Detail reads (via inventory-query — SOS DB only)
-  crmResourceDetail: (resourceId: string, orgId?: string) =>
-    efCall("inventory-query", { query_type: "item_search", filters: { resource_id: resourceId }, org_id: orgId }),
+  // Detail reads — direct Supabase read (SOS DB only, RLS-protected)
+  crmResourceDetail: async (resourceId: string, _orgId?: string) => {
+    const { data, error } = await supabaseRead
+      .from('resources')
+      .select('*, organizations:org_id(name), facilities:facility_id(name, location_text), persons:person_id(display_name, phone)')
+      .eq('id', resourceId)
+      .single();
+    if (error) throw new Error(error.message);
+    return { resource: data, ...data };
+  },
   crmReportDetail: (reportId: string) =>
     efCall("crm-reports", { report_type: "report_detail", report_id: reportId }),
 };
