@@ -174,7 +174,7 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8 } });
         map.addLayer({ id: 'requests-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'request'], minzoom: 8,
-          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
+          paint: { 'circle-color': 'rgba(0,0,0,0.01)', 'circle-radius': 22 } });
 
         // === RESOURCES LAYERS (blue) — pins appear at z>=8 ===
         map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
@@ -185,7 +185,7 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 1, 'circle-stroke-color': '#0F1E2B' } });
         map.addLayer({ id: 'resources-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'resource'], minzoom: 8,
-          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
+          paint: { 'circle-color': 'rgba(0,0,0,0.01)', 'circle-radius': 22 } });
 
         // === REPORTS LAYERS (navy w/ white stroke) — z>=8 from PostGIS ===
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
@@ -273,9 +273,11 @@ export default function CitizenMapPage() {
         const clickLayers = ['requests-hit', 'requests-points', 'resources-hit', 'resources-points', 'reports-points'];
         clickLayers.forEach(layer => {
           map.on('click', layer, (e: any) => {
+            console.log('[PIN CLICK]', layer, e.features?.length, 'features');
             if (!e.features?.length) return;
             layerClickedRef.current = true;
             const props = e.features[0].properties;
+            console.log('[PIN CLICK] props:', props.id, props.type, props.category);
             const pinType = props.type || 'request';
             setSelectedPin({ type: pinType, id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
             fetchPinDetail(props.id, pinType).then(full => {
@@ -650,23 +652,27 @@ export default function CitizenMapPage() {
 
             {/* === Part 2: Detail Card === */}
       {selectedPin && !matchMode && (
-        <PinDetailCard
-          type={selectedPin.type as any}
-          properties={selectedPin.properties || {}}
-          onClose={() => { setSelectedPin(null); setDetailMode('card'); }}
-          onMatch={() => {
-            const pinData = { ...selectedPin };
-            setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
-            const matchContext = JSON.stringify({
-              action: 'match',
-              intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
-              type: pinData.type, id: pinData.id,
-              category: pinData.properties?.category, urgency: pinData.properties?.urgency,
-              name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
-            });
-            setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
-          }}
-        />
+        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" onClick={(e) => { if (e.target === e.currentTarget) { setSelectedPin(null); setDetailMode('card'); } }}>
+          <div className="pointer-events-auto">
+            <PinDetailCard
+              type={selectedPin.type as any}
+              properties={selectedPin.properties || {}}
+              onClose={() => { setSelectedPin(null); setDetailMode('card'); }}
+              onMatch={() => {
+                const pinData = { ...selectedPin };
+                setMatchMode(true); setSheetOpen(true); setSelectedPin(null);
+                const matchContext = JSON.stringify({
+                  action: 'match',
+                  intent: pinData.type === 'request' ? 'citizen_wants_to_help' : 'citizen_needs_this',
+                  type: pinData.type, id: pinData.id,
+                  category: pinData.properties?.category, urgency: pinData.properties?.urgency,
+                  name: pinData.properties?.name, details: pinData.properties?.details?.substring(0, 100),
+                });
+                setTimeout(() => { window.dispatchEvent(new CustomEvent('sos-match-message', { detail: matchContext })); }, 500);
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* Results slide-up */}
