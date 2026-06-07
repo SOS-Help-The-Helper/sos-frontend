@@ -6,40 +6,20 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
-// Multi-tenant DB routing
+// SOS DB connection — the one and only database the frontend ever talks to.
 // ---------------------------------------------------------------------------
-// The active org's DB connection is resolved at runtime by the auth context
-// (which calls /api/org-config and then setOrgConfig). Until that resolves we
-// fall back to the env-var DB so server components and first paint keep working.
-//
-// SOS DB ("the coordination layer") is always reachable via the SOS_* consts
-// regardless of which partner org is active — use sosEfCall for cross-partner
-// operations (match-engine propose/commit, etc.).
+// There is exactly one database: SOS. "Which org am I looking at" travels as an
+// `org_id` parameter in the EF body / read filter — never as a different
+// connection string, anon key, or x-partner-key. The connection is pinned to
+// SOS and never reassigned at runtime.
 
-const DEFAULT_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const DEFAULT_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// SOS DB — the routing table / coordination layer. Always points at SOS.
 const SOS_URL =
   process.env.NEXT_PUBLIC_SOS_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const SOS_BASE_URL = `${SOS_URL}/functions/v1`;
 const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Active (per-org) connection — mutated by setOrgConfig at runtime.
-let efBaseUrl = `${DEFAULT_URL}/functions/v1`;
-let efAnonKey = DEFAULT_ANON_KEY;
-
-/**
- * Point all EF calls + direct PostgREST reads at a partner org's database.
- * Called by the auth context once it resolves the org's config from
- * /api/org-config. Passing empty/SOS values restores the default SOS DB.
- */
-export function setOrgConfig(url: string, anonKey: string) {
-  efBaseUrl = `${url || DEFAULT_URL}/functions/v1`;
-  efAnonKey = anonKey || DEFAULT_ANON_KEY;
-  // Rebuild the direct-read client so db.* / crmMatchesList hit the active DB.
-  supabaseRead = createClient(url || DEFAULT_URL, anonKey || DEFAULT_ANON_KEY);
-}
+// Connection is permanently SOS. Org scope is a parameter, not a URL.
+const efBaseUrl = `${SOS_URL}/functions/v1`;
+const efAnonKey = SOS_ANON_KEY;
 
 async function callEf<T = unknown>(
   base: string,
@@ -72,7 +52,7 @@ async function callEf<T = unknown>(
   return res.json() as Promise<T>;
 }
 
-/** Call an edge function on the ACTIVE org's database. */
+/** Call an edge function on the SOS DB. */
 async function efCall<T = unknown>(
   fn: string,
   body?: Record<string, unknown>,
@@ -82,16 +62,10 @@ async function efCall<T = unknown>(
 }
 
 /**
- * Call an edge function on the SOS DB, regardless of the active partner org.
- * Use for cross-partner / coordination ops (match-engine propose & commit).
+ * Backward-compatible alias. Everything points at SOS now, so this is identical
+ * to efCall — kept so existing `api.sosEfCall(...)` callers keep working.
  */
-async function sosEfCall<T = unknown>(
-  fn: string,
-  body?: Record<string, unknown>,
-  options: { method?: 'GET' | 'POST' } = {}
-): Promise<T> {
-  return callEf<T>(SOS_BASE_URL, SOS_ANON_KEY, fn, body, options);
-}
+const sosEfCall = efCall;
 
 // ---------------------------------------------------------------------------
 // GeoJSON types
@@ -372,10 +346,10 @@ export const api = {
 // These replace direct supabase.from() calls in frontend pages.
 // Uses anon key + RLS (same security as before, but centralized).
 
-// Direct PostgREST read client (RLS-protected, anon key). Reassigned by
-// setOrgConfig so reads route to the active org's DB. Closures below reference
-// the variable, so reassignment takes effect at call time.
-let supabaseRead: SupabaseClient = createClient(DEFAULT_URL, DEFAULT_ANON_KEY);
+// Direct PostgREST read client (RLS-protected, anon key). Pinned to SOS and
+// created once — org scope is applied via `.eq('...org_id', ...)` filters in
+// the queries below, never by repointing the connection.
+const supabaseRead: SupabaseClient = createClient(SOS_URL, SOS_ANON_KEY);
 
 // Scoped read-only queries (RLS-protected, anon key)
 export const db = {

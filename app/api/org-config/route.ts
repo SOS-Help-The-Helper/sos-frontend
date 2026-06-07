@@ -3,18 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 /**
- * Org → database routing table.
+ * Org identity lookup (NOT a database routing table).
  *
- * This route ALWAYS runs against the SOS DB — it IS the routing table. The
- * `organizations.db_config` JSONB column holds each partner's own Supabase
- * connection ({ supabase_url, anon_key, service_role_key, project_ref }).
+ * The frontend talks to exactly one database — SOS. Org switching changes the
+ * active `org_id` context only, never the DB connection. This route therefore
+ * returns org identity (id / name / slug) and never surfaces any per-partner
+ * `db_config` connection details.
  *
- * GET /api/org-config?org_id=<uuid>  → resolve one org's client-safe DB config
+ * GET /api/org-config?org_id=<uuid>  → resolve one org's identity
  * GET /api/org-config                → list all orgs (for the admin switcher)
  *
- * SECURITY: the service_role_key from db_config is NEVER returned to the client.
- * Only the partner's public anon_key + url are sent down. When an org has no
- * db_config we fall back to the SOS DB defaults (backward compatible).
+ * supabase_url/anon_key are echoed as the SOS defaults for backward compat with
+ * older callers; they are always SOS values, never partner connections.
  */
 
 // SOS coordination view — synthetic sentinel, not a real org row.
@@ -71,7 +71,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Single org — resolve its DB config.
+  // Single org — resolve identity only. The frontend is pinned to the SOS DB,
+  // so we never read or surface per-partner db_config. supabase_url/anon_key are
+  // echoed as the SOS defaults purely for backward compatibility with callers
+  // that still read those fields; they are always SOS, never partner values.
   const defaults = {
     org_id: orgId,
     org_name: 'SOS',
@@ -82,38 +85,20 @@ export async function GET(request: NextRequest) {
 
   try {
     const res = await fetch(
-      `${SOS_URL}/rest/v1/organizations?id=eq.${orgId}&select=id,name,slug,db_config`,
+      `${SOS_URL}/rest/v1/organizations?id=eq.${orgId}&select=id,name,slug`,
       { headers }
     );
     const rows = (await res.json()) as Array<{
       id: string;
       name: string;
       slug: string;
-      db_config: {
-        supabase_url?: string;
-        anon_key?: string;
-        service_role_key?: string;
-        project_ref?: string;
-      } | null;
     }>;
     const org = Array.isArray(rows) ? rows[0] : undefined;
 
-    // Unknown org or no per-partner DB → SOS DB defaults (backward compatible).
-    if (!org || !org.db_config) {
-      return NextResponse.json({
-        ...defaults,
-        ...(org ? { org_id: org.id, org_name: org.name, slug: org.slug } : {}),
-      });
-    }
-
-    const cfg = org.db_config;
+    // Identity only — supabase_url/anon_key stay pinned to SOS regardless of org.
     return NextResponse.json({
-      org_id: org.id,
-      org_name: org.name,
-      slug: org.slug,
-      // db_config.service_role_key is intentionally omitted — server-side only.
-      supabase_url: cfg.supabase_url || SOS_URL,
-      anon_key: cfg.anon_key || SOS_ANON_KEY,
+      ...defaults,
+      ...(org ? { org_id: org.id, org_name: org.name, slug: org.slug } : {}),
     });
   } catch {
     return NextResponse.json(defaults, { status: 502 });

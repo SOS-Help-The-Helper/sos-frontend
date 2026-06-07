@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { setOrgConfig } from './api';
 import { createSupabaseBrowserClient } from './supabase-auth';
 
 export interface OrgSummary {
@@ -10,10 +9,10 @@ export interface OrgSummary {
   slug: string;
 }
 
-interface OrgConfigResponse extends OrgSummary {
-  supabase_url: string;
-  anon_key: string;
-}
+// The org-config route may still echo supabase_url/anon_key for backward compat,
+// but the frontend is pinned to the SOS DB and ignores them — org switching is a
+// pure org_id context change, not a database connection change.
+type OrgConfigResponse = OrgSummary;
 
 interface MeResponse {
   authenticated: boolean;
@@ -40,13 +39,9 @@ interface AuthContext {
   userEmail: string | null;
   userPhone: string | null;
   userName: string | null;
-  /** Active org's resolved Supabase URL (partner DB or SOS default). */
-  supabaseUrl: string | null;
-  /** Active org's public anon key (safe on the client). */
-  supabaseAnonKey: string | null;
   /** All orgs available to switch between (admin only). */
   allOrgs: OrgSummary[];
-  /** Re-route all API calls to another org's DB. */
+  /** Switch the active org_id context (DB connection is always SOS). */
   switchOrg: (orgId: string) => void;
   /** Sign out + redirect to /login. */
   signOut: () => Promise<void>;
@@ -67,8 +62,6 @@ const AuthCtx = createContext<AuthContext>({
   userEmail: null,
   userPhone: null,
   userName: null,
-  supabaseUrl: null,
-  supabaseAnonKey: null,
   allOrgs: [],
   switchOrg: () => {},
   signOut: async () => {},
@@ -87,8 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
-  const [supabaseUrl, setSupabaseUrl] = useState<string | null>(null);
-  const [supabaseAnonKey, setSupabaseAnonKey] = useState<string | null>(null);
   const [allOrgs, setAllOrgs] = useState<OrgSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [signedOut, setSignedOut] = useState(false);
@@ -98,19 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (!supabaseRef.current) supabaseRef.current = createSupabaseBrowserClient();
   const supabase = supabaseRef.current;
 
-  // Resolve a given org's DB config and re-route all API calls to it.
+  // Resolve a given org's identity (name/slug) and set it as the active org_id
+  // context. The DB connection is always SOS — switching orgs only changes the
+  // org_id parameter that api.* calls pass through.
   const resolveOrg = useCallback(async (targetOrgId: string) => {
     try {
       const res = await fetch(`/api/org-config?org_id=${encodeURIComponent(targetOrgId)}`);
       if (!res.ok) throw new Error(`org-config ${res.status}`);
       const cfg = (await res.json()) as OrgConfigResponse;
-      setOrgConfig(cfg.supabase_url, cfg.anon_key);
       setOrgId(cfg.org_id);
       setOrgName(cfg.org_name);
-      setSupabaseUrl(cfg.supabase_url);
-      setSupabaseAnonKey(cfg.anon_key);
     } catch {
-      // Leave the env-var defaults in place (api.ts falls back automatically).
+      // Identity lookup failed — leave the previous org context in place.
     }
   }, []);
 
@@ -219,8 +209,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userEmail,
     userPhone,
     userName,
-    supabaseUrl,
-    supabaseAnonKey,
     allOrgs,
     switchOrg,
     signOut,
