@@ -26,26 +26,42 @@ function timeAgo(d: string | undefined) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function fmtCategory(p: Record<string, any>) {
+/** Extract top-level category: "HOUSING.TEMPORARY.RV" → "Housing" */
+function topCategory(p: Record<string, any>) {
   const t = p.taxonomy_code || p.category || "";
-  return t.split(".").pop()?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "General";
+  const top = t.split(".")[0] || "General";
+  return top.charAt(0).toUpperCase() + top.slice(1).toLowerCase();
 }
 
-function Badge({ children, className }: { children: React.ReactNode; className: string }) {
-  return <span className={`text-[9px] font-bold uppercase tracking-[0.5px] px-2 py-[3px] rounded-md border ${className}`}>{children}</span>;
+/** Extract city/town only from location_text. "629 Reems Creek Rd, Weaverville, NC 28787" → "Weaverville, NC" */
+function townOnly(loc: string | undefined) {
+  if (!loc) return null;
+  // Try to extract city, state from comma-separated address
+  const parts = loc.split(",").map(s => s.trim());
+  if (parts.length >= 3) {
+    // "629 Reems Creek Rd", "Weaverville", "NC 28787" → "Weaverville, NC"
+    const state = parts[parts.length - 1].replace(/\d{5}(-\d{4})?/, "").trim();
+    return `${parts[parts.length - 2]}, ${state}`.trim().replace(/,\s*$/, "");
+  }
+  if (parts.length === 2) {
+    return loc; // Already "City, ST"
+  }
+  // Single value — just return it, might already be a city
+  return loc;
 }
 
-const urgencyStyle: Record<string, string> = {
-  critical: "bg-red-500/15 text-red-400 border-red-500/25",
-  high: "bg-yellow-500/12 text-yellow-300 border-yellow-500/20",
-  medium: "bg-sky-500/10 text-sky-300 border-sky-500/15",
-  low: "bg-white/[0.06] text-white/40 border-white/[0.08]",
-};
+/** Urgency dot color */
+function urgencyColor(u: string | undefined) {
+  if (!u) return null;
+  const colors: Record<string, string> = { critical: "#EF4E4B", high: "#FCD34D", medium: "#89CFF0", low: "rgba(255,255,255,0.3)" };
+  return colors[u] || null;
+}
 
 export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDetailCardProps) {
   const c = CFG[type];
   const accentStyle = { backgroundColor: c.color };
   const borderColor = type === "report" ? "rgba(255,255,255,0.3)" : c.color;
+  const town = townOnly(p.location_text);
 
   const copyLink = () => {
     const url = p.share_url || `https://sosconnect.org/s/${p.id}?type=${type}`;
@@ -76,35 +92,31 @@ export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDeta
         <button onClick={onClose} className="absolute top-2 right-2.5 w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/40 hover:text-white text-sm flex items-center justify-center transition">×</button>
 
         {/* Type label */}
-        <div className="text-[10px] uppercase tracking-[1px] font-bold mb-1" style={{ color: c.color }}>{c.label}</div>
+        <div className="text-[10px] uppercase tracking-[1px] font-bold mb-0.5" style={{ color: c.color }}>{c.label}</div>
 
-        {/* Title */}
-        <h3 className="font-serif text-lg text-white font-normal leading-tight mb-2">{fmtCategory(p)}</h3>
+        {/* Category title — normalized top-level */}
+        <h3 className="font-serif text-lg text-white font-normal leading-tight mb-3">{topCategory(p)}</h3>
 
-        {/* Badges */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {p.urgency && <Badge className={urgencyStyle[p.urgency] || urgencyStyle.low}>{p.urgency}</Badge>}
-          {p.category && <Badge className="bg-white/[0.06] text-white/50 border-white/[0.08]">{p.category.toLowerCase()}</Badge>}
-          {p.status && <Badge className="bg-white/[0.06] text-white/40 border-white/[0.08]">{p.status}</Badge>}
-          {p.verification_status === "verified" && <Badge className="bg-emerald-500/12 text-emerald-400 border-emerald-500/20">Verified</Badge>}
-        </div>
-
-        {/* Meta row */}
-        <div className="flex gap-4 text-[11px] text-white/40 pb-3 mb-3 border-b border-white/[0.06]">
+        {/* Meta row — includes urgency + status inline */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/40 pb-3 mb-3 border-b border-white/[0.06]">
+          {p.urgency && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: urgencyColor(p.urgency) || 'rgba(255,255,255,0.3)' }} />
+              <span className="capitalize">{p.urgency}</span>
+            </span>
+          )}
+          {p.status && (
+            <span className="capitalize">{p.status}</span>
+          )}
           {p.created_at && <span className="flex items-center gap-1"><ClockIcon />{timeAgo(p.created_at)}</span>}
-          {p.location_text && <span className="flex items-center gap-1 truncate"><PinIcon />{p.location_text}</span>}
+          {town && <span className="flex items-center gap-1"><PinIcon />{town}</span>}
           {type === "request" && p.household_size && <span className="flex items-center gap-1"><UsersIcon />Family of {p.household_size}</span>}
           {type === "resource" && p.org_name && <span className="flex items-center gap-1"><OrgIcon />{p.org_name}</span>}
-          {type === "report" && <span className="flex items-center gap-1"><EyeIcon />Direct observation</span>}
         </div>
 
-        {/* AI Summary */}
+        {/* Description — NO "AI Summary" label */}
         {(p.description || p.public_display_text) && (
           <div className="bg-white/[0.03] border border-white/[0.06] rounded-[10px] p-3 mb-3">
-            <div className="flex items-center gap-1 mb-1.5">
-              <svg viewBox="0 0 16 16" fill="none" className="w-2.5 h-2.5"><circle cx="8" cy="8" r="7" stroke="#89CFF0" strokeWidth="1.5"/><path d="M5 8.5L7 10.5L11 6" stroke="#89CFF0" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <span className="text-[9px] uppercase tracking-[1px] font-bold text-sky-400/60">AI Summary</span>
-            </div>
             <p className="text-xs text-white/55 leading-relaxed">{p.public_display_text || p.description}</p>
           </div>
         )}
@@ -159,7 +171,6 @@ const ClockIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="
 const PinIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M8 0C5.2 0 3 2.2 3 4.9 3 8.4 8 14 8 14s5-5.6 5-9.1C13 2.2 10.8 0 8 0zm0 7a2 2 0 110-4 2 2 0 010 4z"/></svg>;
 const UsersIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M7 1v2H5a2 2 0 00-2 2v1h10V5a2 2 0 00-2-2H9V1H7zM3 7v6a2 2 0 002 2h6a2 2 0 002-2V7H3z"/></svg>;
 const OrgIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 2h6v1H5V7zm0 2h3v1H5V9z"/></svg>;
-const EyeIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 5h2v4H7V5zm0 5h2v2H7v-2z"/></svg>;
 const ShareIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M10 2a2 2 0 110 4 2 2 0 010-4zM4 6a2 2 0 110 4 2 2 0 010-4zM10 10a2 2 0 110 4 2 2 0 010-4zM8.6 4.5L5.4 6.5M5.4 9.5l3.2 2"/></svg>;
 const CopyIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M5 2a1 1 0 00-1 1v8a1 1 0 001 1h6a1 1 0 001-1V3a1 1 0 00-1-1H5zM3 5a1 1 0 00-1 1v7a1 1 0 001 1h6v-1H3V5z"/></svg>;
 const MapIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M1 3l4-2 6 2 4-2v12l-4 2-6-2-4 2V3zm4-.5v10l6 2v-10l-6-2z"/></svg>;
