@@ -54,6 +54,27 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 .feed-item .time{font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px}
 
 #map-area{position:absolute;top:48px;left:280px;right:260px;bottom:0}
+.m-only{display:none}
+.sheet-handle{display:none}
+@media(max-width:640px){
+  .hdr{padding:0 12px;gap:8px}
+  .hdr h1{font-size:15px}
+  .hdr .ultra{display:none}
+  .hdr .sep{display:none}
+  .toolbar{margin-left:auto;gap:4px;overflow-x:auto;flex-wrap:nowrap;max-width:64vw;-webkit-overflow-scrolling:touch}
+  .toolbar::-webkit-scrollbar{display:none}
+  .tb{flex:0 0 auto;min-height:40px;padding:6px 12px;display:inline-flex;align-items:center}
+  .m-only{display:inline-flex!important;align-items:center}
+  #map-area{left:0;right:0}
+  .left-panel,.right-panel{top:auto;bottom:0;left:0;right:0;width:100%;max-height:78vh;height:auto;
+    border:none;border-top:1px solid rgba(255,255,255,0.1);border-radius:18px 18px 0 0;
+    transform:translateY(100%);transition:transform 0.28s ease;z-index:30;padding:0 16px 20px}
+  .left-panel.open,.right-panel.open{transform:translateY(0)}
+  .sheet-handle{display:flex;justify-content:center;align-items:center;height:28px;cursor:pointer}
+  .sheet-handle span{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,0.3)}
+  .toggle{min-height:44px;padding:8px 0}
+  .left-panel .mini-stat{margin-top:6px}
+}
 </style></head><body>
 
 <div class="hdr">
@@ -62,6 +83,8 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
   <span class="ultra">Admin Ultra</span>
   <div class="sep"></div>
   <div class="toolbar">
+    <button class="tb m-only" onclick="openPanel('left')">☰ Layers</button>
+    <button class="tb m-only" onclick="openPanel('right')">≣ Feed</button>
     <button class="tb on" onclick="setMode('pins',this)">Pins</button>
     <button class="tb" onclick="setMode('heat',this)">Heat</button>
     <button class="tb" onclick="setMode('sat',this)">Satellite</button>
@@ -71,6 +94,7 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 </div>
 
 <div class="left-panel">
+  <div class="sheet-handle" onclick="closeSheet(this)"><span></span></div>
   <div class="mini-stat">
     <div class="ms"><div class="n" style="color:#EF4E4B" data-count="requests">—</div><div class="l">Requests</div></div>
     <div class="ms"><div class="n" style="color:#89CFF0" data-count="resources">—</div><div class="l">Resources</div></div>
@@ -104,6 +128,7 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 </div>
 
 <div class="right-panel">
+  <div class="sheet-handle" onclick="closeSheet(this)"><span></span></div>
   <div class="sec">
     <h3>Live Activity Feed</h3>
     <div class="feed-item req">New housing request — Ocala, FL<div class="time">2 min ago</div></div>
@@ -124,6 +149,10 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 </div>
 
 <script>
+function openPanel(which){const lp=document.querySelector('.left-panel'),rp=document.querySelector('.right-panel');
+  if(which==='left'){rp.classList.remove('open');lp.classList.toggle('open')}
+  else{lp.classList.remove('open');rp.classList.toggle('open')}}
+function closeSheet(el){el.parentElement.classList.remove('open')}
 mapboxgl.accessToken='pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
 const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',
   center:[-82.45,29.19],zoom:9,projection:'mercator'});

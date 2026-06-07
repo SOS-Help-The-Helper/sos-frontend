@@ -38,6 +38,21 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff}
   color:rgba(255,255,255,0.5);transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px;border:none;background:none}
 .mt-btn:hover{color:#fff}
 .mt-btn.on{background:rgba(239,78,75,0.15);color:#EF4E4B}
+@media(max-width:640px){
+  .hdr{padding:10px 14px;gap:8px;flex-wrap:nowrap}
+  .hdr h1{font-size:16px}
+  .hdr .sep{display:none}
+  .hdr .right{gap:6px;overflow-x:auto;max-width:54vw;-webkit-overflow-scrolling:touch}
+  .hdr .right::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto}
+  .metrics{top:56px;left:8px;right:8px;gap:8px;overflow-x:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}
+  .metrics::-webkit-scrollbar{display:none}
+  .metric{flex:0 0 128px;padding:12px}
+  .metric .num{font-size:22px}
+  .leg{display:none}
+  .mode-toggle{left:8px;right:8px;bottom:14px;justify-content:center}
+  .mt-btn{min-height:44px;padding:0 16px;display:inline-flex;align-items:center}
+}
 </style></head><body>
 <div id="map"></div>
 

@@ -36,6 +36,18 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff}
   background:rgba(15,30,43,0.85);backdrop-filter:blur(10px);border-radius:10px;padding:10px 14px}
 .li{display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:3px}
 .li:last-child{margin:0}
+@media(max-width:640px){
+  .hdr{padding:10px 14px;gap:10px}
+  .hdr h1{font-size:17px}
+  .hdr .sub{font-size:10px}
+  .panel{top:54px;left:8px;right:8px;width:auto;padding:8px 10px;display:flex;gap:6px;border-radius:14px}
+  .panel h3{display:none}
+  .st{flex:1;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border:none}
+  .st .lb{font-size:10px;gap:5px}
+  .st .v{font-size:17px}
+  .ctrls{bottom:14px;left:8px;right:8px;transform:none;justify-content:center;flex-wrap:wrap;gap:8px}
+  .btn{min-height:44px;padding:0 18px;display:inline-flex;align-items:center;font-size:11px}
+}
 </style></head><body>
 <div id="map"></div>
 <div class="hdr">
