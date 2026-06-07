@@ -138,8 +138,8 @@ export default function VotePage() {
             className="body-lg"
             style={{ color: 'rgba(255,255,255,0.65)', marginTop: 20, fontSize: 18, maxWidth: 480, margin: '20px auto 0' }}
           >
-            Tell us who you voted for in the LA mayor&apos;s race.
-            We verify you&apos;re a real voter. You stay anonymous.
+            Report your vote. We verify you&apos;re a registered voter.
+            Then we compare the crowd&apos;s numbers to the official count — and flag what doesn&apos;t add up.
           </p>
 
           <div style={{ marginTop: 36 }}>
