@@ -9,7 +9,7 @@ const NAVY = '#0F1E2B';
 
 const SUPABASE_URL = 'https://rtduqguwhkczexnoawej.supabase.co';
 const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.VJnROht-R6u8tUN59a7w1E8HTanHjJSgCfkFdLBMySU';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o';
 
 type Candidate = 'bass' | 'pratt' | 'raman' | 'other';
 
@@ -52,29 +52,28 @@ export default function VotePage() {
     async function fetchCounts() {
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/reports?report_type=eq.vote_attestation&select=metadata`,
+          `${SUPABASE_URL}/rest/v1/rpc/vote_attestation_counts`,
           {
+            method: 'POST',
             headers: {
               apikey: SUPABASE_ANON_KEY,
               Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
             },
+            body: JSON.stringify({}),
           }
         );
         if (!res.ok) return;
-        const rows: { metadata: { candidate?: string } | null }[] = await res.json();
+        const data: Partial<Record<Candidate | 'total', number>> = await res.json();
         if (!active) return;
 
-        const tally: VoteCounts = { bass: 0, pratt: 0, raman: 0, other: 0, total: 0 };
-        for (const row of rows) {
-          const c = row.metadata?.candidate;
-          if (c === 'bass' || c === 'pratt' || c === 'raman') {
-            tally[c] += 1;
-          } else {
-            tally.other += 1;
-          }
-          tally.total += 1;
-        }
-        setCounts(tally);
+        setCounts({
+          bass: data.bass ?? 0,
+          pratt: data.pratt ?? 0,
+          raman: data.raman ?? 0,
+          other: data.other ?? 0,
+          total: data.total ?? 0,
+        });
       } catch {
         // Network errors leave the last known counts in place.
       }
