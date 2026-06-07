@@ -150,15 +150,6 @@ export default function VotePage() {
               60 seconds · Phone verified · Data deleted after certification
             </p>
           </div>
-
-          <div style={{ marginTop: 28, padding: '16px 24px', background: 'rgba(137,207,240,0.08)', border: '1px solid rgba(137,207,240,0.2)', borderRadius: 12 }}>
-            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 600, margin: 0 }}>
-              📱 Prefer to text? Send <span style={{ color: ACCENT, fontWeight: 700 }}>VOTE</span> to{' '}
-              <a href="sms:+18284073405?body=VOTE" style={{ color: ACCENT, textDecoration: 'none', fontWeight: 700 }}>
-                (828) 407-3405
-              </a>
-            </p>
-          </div>
         </div>
       </section>
 
