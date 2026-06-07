@@ -101,7 +101,7 @@ export async function GET() {
 
     // 2) Affiliations → orgs + admin role.
     const affRes = await fetch(
-      `${SOS_URL}/rest/v1/affiliations?person_id=eq.${person.id}&select=org_id,role,status`,
+      `${SOS_URL}/rest/v1/affiliations?person_id=eq.${person.id}&select=org_id,role,status&order=created_at.asc`,
       { headers, cache: 'no-store' }
     );
     let affs = (await affRes.json()) as Array<{
