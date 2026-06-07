@@ -175,7 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // Network/parse failure — fail closed to signed-out so the portal gate
-      // (proxy.ts) can take over, but don't hang on the loading spinner.
+      // (proxy.ts) can take over, and pages can show a session-expired message
+      // instead of hanging on an empty state.
+      setSignedOut(true);
+      setOrgId(null);
       setLoading(false);
     }
   }, [resolveOrg]);

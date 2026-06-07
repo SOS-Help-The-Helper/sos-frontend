@@ -63,7 +63,10 @@ async function callEf<T = unknown>(
   });
 
   if (!res.ok) {
-    throw new Error(`EF ${fn} failed: ${res.status} ${res.statusText}`);
+    const body = await res.json().catch(() => null);
+    throw new Error(
+      body?.error || body?.message || `EF ${fn} failed: ${res.status} ${res.statusText}`
+    );
   }
 
   return res.json() as Promise<T>;
