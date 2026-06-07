@@ -409,15 +409,12 @@ export default function CasesPage() {
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
       api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
-      api.efCall("partner-read", { query_type: "org_detail", org_id: orgId }).catch(() => null),
     ])
-      .then(([casesRes, requestsRes, resourcesRes, reportsRes, orgRes]) => {
+      .then(([casesRes, requestsRes, resourcesRes, reportsRes]) => {
         const casesData = casesRes.status === "fulfilled" ? casesRes.value : null;
         const requestsData = requestsRes.status === "fulfilled" ? requestsRes.value : null;
         const resourcesData = resourcesRes.status === "fulfilled" ? resourcesRes.value : null;
         const reportsData = reportsRes.status === "fulfilled" ? reportsRes.value : null;
-        const orgData = orgRes.status === "fulfilled" ? orgRes.value : null;
-        if (orgData?.table_config) setOrgTableConfig(orgData.table_config);
         const caseItems: any[] = casesData?.cases ?? (Array.isArray(casesData) ? casesData : []);
         if (caseItems.length > 0) {
           const cards = mapCasesToCards(caseItems);
