@@ -10,6 +10,7 @@ import { BUCKETS, bucketOf, type RequestStatus, type Bucket } from "@/lib/displa
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { Plus, Link2, AlertTriangle, X } from "lucide-react";
+import { EditableTable, type TableColumn } from "@/components/crm/editable-table";
 
 type TabKey = "cases" | "requests" | "resources";
 
@@ -27,6 +28,10 @@ type Card = {
   orgColor?: string;
   orgName?: string;
   badge?: string;
+  // Raw API fields preserved for the table view
+  taxonomy?: string;
+  description?: string;
+  capacity?: string | number;
 };
 
 // Stage definitions per tab
@@ -55,6 +60,62 @@ const REPORT_COLS: Column[] = [
   { id: "Resolved", label: "Resolved", accent: "#34D399" },
 ];
 
+// Table view column definitions (one set per tab)
+const CASE_TABLE_COLS: TableColumn[] = [
+  { id: 'title', label: 'Name', width: 180, editable: false, type: 'readonly' },
+  { id: 'status', label: 'Status', width: 110, editable: true, type: 'badge', options: [
+    { value: 'active', label: 'Active', color: '#EF4E4B' },
+    { value: 'resolved', label: 'Resolved', color: '#34D399' },
+    { value: 'closed', label: 'Closed', color: '#9CA3AF' },
+  ]},
+  { id: 'category', label: 'Category', width: 150, editable: false, type: 'readonly' },
+  { id: 'urgency', label: 'Urgency', width: 100, editable: true, type: 'badge', options: [
+    { value: 'critical', label: 'Critical', color: '#EF4E4B' },
+    { value: 'high', label: 'High', color: '#F59E0B' },
+    { value: 'medium', label: 'Medium', color: '#89CFF0' },
+    { value: 'low', label: 'Low', color: '#9CA3AF' },
+  ]},
+  { id: 'meta', label: 'Location', width: 180, editable: false, type: 'readonly' },
+  { id: 'sub', label: 'Age', width: 70, editable: false, type: 'readonly' },
+];
+
+const REQUEST_TABLE_COLS: TableColumn[] = [
+  { id: 'title', label: 'Citizen', width: 160, editable: false, type: 'readonly' },
+  { id: 'taxonomy', label: 'Taxonomy', width: 160, editable: false, type: 'readonly' },
+  { id: 'status', label: 'Status', width: 120, editable: true, type: 'badge', options: [
+    { value: 'pending', label: 'Pending', color: '#EF4E4B' },
+    { value: 'active', label: 'Active', color: '#F59E0B' },
+    { value: 'matched', label: 'Matched', color: '#89CFF0' },
+    { value: 'in_progress', label: 'In Progress', color: '#8B5CF6' },
+    { value: 'fulfilled', label: 'Fulfilled', color: '#34D399' },
+    { value: 'closed', label: 'Closed', color: '#9CA3AF' },
+  ]},
+  { id: 'urgency', label: 'Urgency', width: 100, editable: true, type: 'badge', options: [
+    { value: 'critical', label: 'Critical', color: '#EF4E4B' },
+    { value: 'high', label: 'High', color: '#F59E0B' },
+    { value: 'medium', label: 'Medium', color: '#89CFF0' },
+    { value: 'low', label: 'Low', color: '#9CA3AF' },
+  ]},
+  { id: 'description', label: 'Description', width: 220, editable: true, type: 'text' },
+  { id: 'meta', label: 'Location', width: 160, editable: false, type: 'readonly' },
+];
+
+const RESOURCE_TABLE_COLS: TableColumn[] = [
+  { id: 'title', label: 'Provider', width: 160, editable: false, type: 'readonly' },
+  { id: 'taxonomy', label: 'Taxonomy', width: 160, editable: false, type: 'readonly' },
+  { id: 'status', label: 'Status', width: 120, editable: true, type: 'badge', options: [
+    { value: 'pending', label: 'Pending', color: '#EF4E4B' },
+    { value: 'approved', label: 'Approved', color: '#34D399' },
+    { value: 'matched', label: 'Matched', color: '#89CFF0' },
+    { value: 'fulfilled', label: 'Fulfilled', color: '#34D399' },
+    { value: 'closed', label: 'Closed', color: '#9CA3AF' },
+  ]},
+  { id: 'capacity', label: 'Capacity', width: 90, editable: true, type: 'text' },
+  { id: 'description', label: 'Description', width: 220, editable: true, type: 'text' },
+  { id: 'meta', label: 'Location', width: 160, editable: false, type: 'readonly' },
+  { id: 'orgName', label: 'Org', width: 140, editable: false, type: 'readonly' },
+];
+
 // Format taxonomy code for display: "HOUSING.TEMPORARY" → "Housing — Temporary"
 function fmtTaxonomy(code: string | null | undefined): string | undefined {
   if (!code) return undefined;
@@ -77,6 +138,9 @@ function liveToCards(items: any[]): Card[] {
     href: `/app/cases/${c.umbrella_id ?? c.id}`,
     urgency: c.urgency,
     status: c.status,
+    taxonomy: fmtTaxonomy(c.taxonomy_code),
+    description: c.description,
+    capacity: c.capacity_available,
   }));
 }
 
@@ -99,6 +163,8 @@ function liveRequestsToCards(items: any[]): Card[] {
       href: `/app/directory/request/${r.id}`,
       urgency: r.urgency,
       status: r.status ?? "pending",
+      taxonomy: fmtTaxonomy(r.taxonomy_code),
+      description: r.description,
     };
   });
 }
@@ -118,6 +184,9 @@ function liveResourcesToCards(items: any[]): Card[] {
       meta: [category, location].filter(Boolean).join(" · ") || undefined,
       sub: [daysAgo != null ? `${daysAgo}d ago` : null, cap].filter(Boolean).join(" · ") || undefined,
       href: `/app/directory/resource/${r.id}`,
+      taxonomy: fmtTaxonomy(r.taxonomy_code),
+      description: r.description,
+      capacity: r.capacity_available,
     };
   });
 }
@@ -140,6 +209,8 @@ function mapCasesToCards(items: any[]): Card[] {
       meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
       sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
       href: `/app/cases/${s.id}`,
+      taxonomy: fmtTaxonomy(s.taxonomy_code),
+      description: s.description,
     };
   });
 }
@@ -300,6 +371,13 @@ export default function CasesPage() {
   const { orgId } = useAuthContext();
   const [tab, setTab] = useState<TabKey>("cases");
 
+  // Board / table view toggle (persisted to localStorage)
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('sos-view-mode') as any) || 'kanban';
+    return 'kanban';
+  });
+  useEffect(() => { localStorage.setItem('sos-view-mode', viewMode); }, [viewMode]);
+
   // Live data from EFs (null = not yet loaded or EF failed → fall back to prototype)
   const [liveCases, setLiveCases] = useState<Card[] | null>(null);
   const [liveRequests, setLiveRequests] = useState<Card[] | null>(null);
@@ -416,6 +494,19 @@ export default function CasesPage() {
     }
   };
 
+  async function handleTableSave(rowId: string, field: string, value: any) {
+    if (field === 'status' && tab === 'requests') {
+      await api.crmCaseAction('transition_status', { request_id: rowId, new_status: value });
+    } else if (field === 'status' && tab === 'resources') {
+      await api.efCall('partner-update', { action: 'update_resource_condition', resource_id: rowId, status: value });
+    } else if (field === 'description') {
+      await api.efCall('crm-directory', { action: 'update_record', record_type: tab === 'requests' ? 'request' : 'resource', record_id: rowId, field: 'description', value });
+    } else if (field === 'urgency') {
+      await api.efCall('crm-directory', { action: 'update_record', record_type: 'request', record_id: rowId, field: 'urgency', value });
+    }
+    toast.success('Saved');
+  }
+
   const refreshCases = () => {
     setLoading(true);
     api.crmSosesList({ limit: 200 })
@@ -481,6 +572,34 @@ export default function CasesPage() {
         })}
       </div>
 
+      {/* Board / table view toggle */}
+      <div className="px-6 pt-3 flex justify-end">
+        <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
+          {(["kanban", "table"] as const).map((mode) => {
+            const active = viewMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  height: 28,
+                  fontSize: 11,
+                  padding: "0 12px",
+                  background: active ? "#89CFF0" : "transparent",
+                  color: active ? "#0F1E2B" : "rgba(255,255,255,0.6)",
+                  fontWeight: 500,
+                  transition: "background 150ms ease, color 150ms ease",
+                }}
+              >
+                {mode === "kanban" ? "Board" : "Table"}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {viewMode === "kanban" ? (
+        <>
       {/* Mobile column switcher */}
       <div role="tablist" aria-label="Case stages" className="md:hidden flex gap-1.5 px-4 pt-3 pb-1 overflow-x-auto">
         {columns.map((col) => (
@@ -573,6 +692,19 @@ export default function CasesPage() {
               })}
         </div>
       </div>
+        </>
+      ) : (
+        <div className="px-4 pt-4 pb-4">
+          <EditableTable
+            columns={tab === "cases" ? CASE_TABLE_COLS : tab === "requests" ? REQUEST_TABLE_COLS : tab === "resources" ? RESOURCE_TABLE_COLS : CASE_TABLE_COLS}
+            rows={cards}
+            onSave={handleTableSave}
+            onRowClick={(id) => { const card = cards.find((c) => c.id === id); if (card?.href) window.location.href = card.href; }}
+            loading={loading}
+            emptyMessage={"No " + tab + " found"}
+          />
+        </div>
+      )}
     </CrmShell>
   );
 }
