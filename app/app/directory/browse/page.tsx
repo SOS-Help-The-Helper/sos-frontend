@@ -68,7 +68,7 @@ export default function DirectoryPage() {
     if (!addName.trim()) return;
     setAddLoading(true);
     try {
-      await api.efCall("partner-write", { person_name: addName.trim(), phone: addPhone.trim(), email: addEmail.trim(), role: addRole, org_id: orgId, records: [] });
+      await api.submitIntake({ person_name: addName.trim(), phone: addPhone.trim(), email: addEmail.trim(), role: addRole, org_id: orgId, records: [] });
       toast.success("Person added");
       setShowAddForm(false);
       setAddName(""); setAddPhone(""); setAddEmail(""); setAddRole("Survivor");

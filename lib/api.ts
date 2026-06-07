@@ -123,14 +123,14 @@ export const api = {
   submitSitrep: (data: Record<string, unknown>) =>
     efCall('sitrep-write', data),
 
-  // Portal Config
+  // Portal Config (via crm-settings — SOS DB only)
   getPortalConfig: (orgId: string) =>
-    efCall<{ org_id: string; org_name: string; org_type: string; portal_config: Record<string, unknown> }>(
-      'partner-read', { query_type: 'portal_config', org_id: orgId }
+    efCall<{ org: { id: string; name: string; org_type: string; portal_modules: string[]; metadata: Record<string, unknown> }; modules: string[]; metadata: Record<string, unknown> }>(
+      'crm-settings', { action: 'get_settings', org_id: orgId }
     ),
 
-  updatePortalConfig: (orgId: string, config: Record<string, unknown>) =>
-    efCall('partner-update', { update_type: 'update_portal_config', data: { org_id: orgId, config } }),
+  updatePortalConfig: (orgId: string, config: Record<string, unknown>, personId?: string) =>
+    efCall('crm-settings', { action: 'update_profile', org_id: orgId, person_id: personId, patch: config }),
 
   // Partners
   queryPartner: (orgId: string, queryType: string) =>
@@ -194,11 +194,11 @@ export const api = {
   crmCaseAction: (action: string, data: Record<string, unknown>) =>
     efCall("crm-case-action", { action, ...data }),
 
-  // CRM — Requests and Resources (via partner-read)
+  // CRM — Requests and Resources (SOS DB direct reads)
   crmRequestsList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "request_summary", org_id: orgId, ...filters }),
+    efCall("crm-cases", { action: "list_requests", org_id: orgId, ...filters }),
   crmResourcesList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
+    efCall("inventory-query", { query_type: "org_inventory_summary", org_id: orgId, ...filters }),
 
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
@@ -288,25 +288,26 @@ export const api = {
   crmSetModules: (orgId: string, modules: string[]) =>
     efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
 
-  // Transport — list + create
+  // Transport — list + create (via crm-delivery — SOS DB only)
   transportList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "transport_assignments", org_id: orgId, ...filters }),
+    efCall("crm-delivery", { action: "list", org_id: orgId, ...filters }),
 
   transportCreate: (data: Record<string, unknown>) =>
-    efCall("partner-update", { action: "create_transport_assignment", ...data }),
+    efCall("crm-delivery", { action: "create", ...data }),
 
-  // Transport / Driver
+  // Transport / Driver (via crm-delivery — SOS DB only)
   transportUpdateStatus: (assignmentId: string, status: string, data?: Record<string, unknown>) =>
-    efCall("partner-update", { action: "update_transport_status", transport_id: assignmentId, status, ...data }),
+    efCall("crm-delivery", { action: "update_status", delivery_id: assignmentId, status, ...data }),
   transportReportIssue: (assignmentId: string, issueType: string, description: string) =>
-    efCall("partner-update", { action: "report_transport_issue", transport_id: assignmentId, issue_type: issueType, description }),
+    efCall("crm-case-action", { action: "add_note", entity_type: "delivery", entity_id: assignmentId, note_type: "issue", note: `${issueType}: ${description}` }),
   transportUpdateLocation: (assignmentId: string, lat: number, lng: number) =>
-    efCall("partner-update", { action: "update_transport_location", transport_id: assignmentId, latitude: lat, longitude: lng }),
+    efCall("crm-delivery", { action: "update_status", delivery_id: assignmentId, status: "in_transit", latitude: lat, longitude: lng }),
 
+  // Inventory condition + facility moves (via inventory-write — SOS DB only)
   inventoryUpdateCondition: (resourceId: string, condition: number, notes?: string) =>
-    efCall("partner-update", { action: "update_resource_condition", resource_id: resourceId, condition_rating: condition, notes }),
+    efCall("inventory-write", { action: "adjust", resource_id: resourceId, condition_rating: condition, reason: notes }),
   inventoryMoveToFacility: (resourceId: string, facilityId: string) =>
-    efCall("partner-update", { action: "move_to_facility", resource_id: resourceId, facility_id: facilityId }),
+    efCall("inventory-write", { action: "transfer", resource_id: resourceId, facility_id: facilityId }),
 
   // CRM — Map
   crmMapFeatures: (orgId: string, filters?: Record<string, unknown>) =>
@@ -335,9 +336,9 @@ export const api = {
   crmGetCaseNotes: (sosId: string) =>
     efCall("crm-case-action", { action: "get_case_notes", sos_id: sosId }),
 
-  // Detail reads  
+  // Detail reads (via inventory-query — SOS DB only)
   crmResourceDetail: (resourceId: string, orgId?: string) =>
-    efCall("partner-read", { query_type: "resource_detail", resource_id: resourceId, org_id: orgId }),
+    efCall("inventory-query", { query_type: "item_search", filters: { resource_id: resourceId }, org_id: orgId }),
   crmReportDetail: (reportId: string) =>
     efCall("crm-reports", { report_type: "report_detail", report_id: reportId }),
 };

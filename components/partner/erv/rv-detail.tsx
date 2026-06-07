@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Truck, Star, MapPin, Clock, Wrench, FileText } from 'lucide-react';
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const PARTNER_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
+const SB_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 interface RVDetailProps {
   resource: Record<string, any>;
@@ -15,11 +15,11 @@ export function RVDetail({ resource, onClose }: RVDetailProps) {
 
   useEffect(() => {
     if (!resource.id) return;
-    fetch(`${SB_URL}/functions/v1/partner-read`, {
+    fetch(`${SB_URL}/functions/v1/inventory-query`, {
       method: 'POST',
-      headers: { 'x-partner-key': PARTNER_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_type: 'resource_history', filters: { resource_id: resource.id }, limit: 20 }),
-    }).then(r => r.json()).then(d => setEvents(d.results || [])).catch(() => {});
+      headers: { 'Authorization': `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query_type: 'transaction_history', filters: { resource_id: resource.id }, limit: 20 }),
+    }).then(r => r.json()).then(d => setEvents(d.events || d.results || [])).catch(() => {});
   }, [resource.id]);
 
   const r = resource;

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { Home, Truck, Package, Clock } from 'lucide-react';
 
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const PARTNER_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
-const BASE = `${SB_URL}/functions/v1/partner-read`;
+const SB_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const BASE = `${SB_URL}/functions/v1`;
 
 interface DashboardOverlayProps {
   visible: boolean;
@@ -13,21 +13,22 @@ interface DashboardOverlayProps {
 export function DashboardOverlay({ visible }: DashboardOverlayProps) {
   const [stats, setStats] = useState({ deployed: 0, inTransit: 0, available: 0, avgHours: 0 });
 
+  const efPost = (fn: string, body: Record<string, unknown>) =>
+    fetch(`${BASE}/${fn}`, { method: 'POST', headers: { 'Authorization': `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
+
   useEffect(() => {
     if (!visible) return;
     Promise.all([
-      fetch(BASE, { method: 'POST', headers: { 'x-partner-key': PARTNER_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_type: 'resource_summary', filters: { status: 'deployed' }, limit: 1 }) }).then(r => r.json()),
-      fetch(BASE, { method: 'POST', headers: { 'x-partner-key': PARTNER_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_type: 'transport_assignments', filters: { active_only: true }, limit: 500 }) }).then(r => r.json()),
-      fetch(BASE, { method: 'POST', headers: { 'x-partner-key': PARTNER_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_type: 'resource_summary', filters: { status: 'active' }, limit: 1 }) }).then(r => r.json()),
+      efPost('inventory-query', { query_type: 'org_inventory_summary', filters: { status: 'deployed' } }),
+      efPost('crm-delivery', { action: 'list', status: 'in_transit', limit: 500 }),
+      efPost('inventory-query', { query_type: 'org_inventory_summary', filters: { status: 'active' } }),
     ]).then(([deployed, transport, available]) => {
-      const active = (transport.results || []).filter((t: any) => !['completed','cancelled','verified'].includes(t.status));
+      const deliveries = transport.deliveries || transport.results || [];
+      const active = deliveries.filter((t: any) => !['completed','cancelled','confirmed'].includes(t.status));
       setStats({
-        deployed: deployed.count || 0,
+        deployed: deployed.total || deployed.count || 0,
         inTransit: active.length,
-        available: available.count || 0,
+        available: available.total || available.count || 0,
         avgHours: 0,
       });
     });

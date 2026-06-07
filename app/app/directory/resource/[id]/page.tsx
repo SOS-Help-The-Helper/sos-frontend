@@ -58,13 +58,13 @@ export default function ResourcePage() {
   async function saveResource() {
     setSaving(true);
     try {
-      await (api as any).efCall('partner-update', {
-        action: 'update_resource',
+      await api.efCall('inventory-write', {
+        action: 'adjust',
         resource_id: id,
         org_id: orgId,
-        ...(editCapacity !== '' ? { capacity_available: Number(editCapacity) } : {}),
+        ...(editCapacity !== '' ? { quantity: Number(editCapacity) } : {}),
         status: editStatus,
-        category: editCategory,
+        taxonomy_code: editCategory,
       });
       toast.success('Resource updated');
       setEditMode(false);

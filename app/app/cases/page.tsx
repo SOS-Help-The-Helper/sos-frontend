@@ -235,10 +235,10 @@ function CreateCaseModal({
     if (!personName.trim()) return;
     setSubmitting(true);
     try {
-      // Use partner-write — the canonical intake path.
+      // Use sos-write — the canonical intake path (SOS DB only).
       // Handles: taxonomy validation, SOS umbrella find-or-create,
-      // location geocoding, household resolution, sos-sync.
-      await api.efCall("partner-write", {
+      // location geocoding, household resolution.
+      await api.submitIntake({
         person_name: personName.trim(),
         org_id: orgId,
         records: [{
@@ -524,7 +524,7 @@ export default function CasesPage() {
     if (field === 'status' && tab === 'requests') {
       await api.crmCaseAction('transition_status', { request_id: rowId, new_status: value });
     } else if (field === 'status' && tab === 'resources') {
-      await api.efCall('partner-update', { action: 'update_resource_condition', resource_id: rowId, status: value });
+      await api.inventoryUpdateCondition(rowId, value);
     } else if (field === 'description') {
       await api.efCall('crm-directory', { action: 'update_record', record_type: tab === 'requests' ? 'request' : 'resource', record_id: rowId, field: 'description', value });
     } else if (field === 'urgency') {
