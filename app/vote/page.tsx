@@ -1,13 +1,25 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
 import '@/styles/home.css';
 
 const ACCENT = '#89CFF0';
 const NAVY = '#0F1E2B';
 
+const SUPABASE_URL = 'https://rtduqguwhkczexnoawej.supabase.co';
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.VJnROht-R6u8tUN59a7w1E8HTanHjJSgCfkFdLBMySU';
+
 type Candidate = 'bass' | 'pratt' | 'raman' | 'other';
+
+type VoteCounts = {
+  bass: number;
+  pratt: number;
+  raman: number;
+  other: number;
+  total: number;
+};
 
 const CANDIDATES: { id: Candidate; name: string }[] = [
   { id: 'bass', name: 'Karen Bass' },
@@ -25,6 +37,56 @@ export default function VotePage() {
   const [address, setAddress] = useState('');
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [counts, setCounts] = useState<VoteCounts>({
+    bass: 0,
+    pratt: 0,
+    raman: 0,
+    other: 0,
+    total: 0,
+  });
+
+  // Fetch live attestation counts from Supabase, refreshing every 30s.
+  useEffect(() => {
+    let active = true;
+
+    async function fetchCounts() {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/reports?report_type=eq.vote_attestation&select=metadata`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+        if (!res.ok) return;
+        const rows: { metadata: { candidate?: string } | null }[] = await res.json();
+        if (!active) return;
+
+        const tally: VoteCounts = { bass: 0, pratt: 0, raman: 0, other: 0, total: 0 };
+        for (const row of rows) {
+          const c = row.metadata?.candidate;
+          if (c === 'bass' || c === 'pratt' || c === 'raman') {
+            tally[c] += 1;
+          } else {
+            tally.other += 1;
+          }
+          tally.total += 1;
+        }
+        setCounts(tally);
+      } catch {
+        // Network errors leave the last known counts in place.
+      }
+    }
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   function showToast(message: string) {
     setToast(message);
@@ -144,46 +206,58 @@ export default function VotePage() {
           <div className="accent-line accent-line-center" />
 
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {CANDIDATES.map((c) => (
-              <div
-                key={c.id}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 16,
-                  padding: '20px 24px',
-                }}
-              >
+            {CANDIDATES.map((c) => {
+              const count = counts[c.id];
+              const pct = counts.total > 0 ? (count / counts.total) * 100 : 0;
+              return (
                 <div
+                  key={c.id}
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'baseline',
-                    marginBottom: 12,
-                  }}
-                >
-                  <span style={{ color: '#fff', fontSize: 17, fontWeight: 600 }}>
-                    {c.name}
-                  </span>
-                  <span style={{ color: ACCENT, fontSize: 15, fontWeight: 700 }}>
-                    — attestations
-                  </span>
-                </div>
-                {/* Percentage bar — placeholder at 0% until data is wired */}
-                <div
-                  style={{
-                    height: 8,
-                    borderRadius: 4,
-                    background: 'rgba(255,255,255,0.08)',
-                    overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16,
+                    padding: '20px 24px',
                   }}
                 >
                   <div
-                    style={{ height: '100%', width: '0%', background: ACCENT, borderRadius: 4 }}
-                  />
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'baseline',
+                      marginBottom: 12,
+                    }}
+                  >
+                    <span style={{ color: '#fff', fontSize: 17, fontWeight: 600 }}>
+                      {c.name}
+                    </span>
+                    <span style={{ color: ACCENT, fontSize: 15, fontWeight: 700 }}>
+                      {counts.total === 0
+                        ? 'No attestations yet'
+                        : `${count} attestation${count === 1 ? '' : 's'}`}
+                    </span>
+                  </div>
+                  {/* Percentage bar — width reflects share of total attestations */}
+                  <div
+                    style={{
+                      height: 8,
+                      borderRadius: 4,
+                      background: 'rgba(255,255,255,0.08)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${pct}%`,
+                        background: ACCENT,
+                        borderRadius: 4,
+                        transition: 'width 400ms ease',
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <p
