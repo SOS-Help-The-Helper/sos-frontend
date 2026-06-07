@@ -26,8 +26,7 @@ export default function CitizenMapPage() {
   const layerClickedRef = useRef(false);
   const mapInstance = useRef<any>(null);
   const mapboxglRef = useRef<any>(null);
-  const requestFeaturesRef = useRef<any[]>([]);
-  const resourceFeaturesRef = useRef<any[]>([]);
+
 
   const realtimeChannelRef = useRef<any>(null);
 
@@ -127,65 +126,40 @@ export default function CitizenMapPage() {
       map.on('error', (e: any) => console.warn('Mapbox error:', e.error));
 
       map.on('load', async () => {
-        // Load alerts initially with current position
-        try {
-          const alertData = await getAlerts(lat, lng).catch(() => [] as Alert[]);
-          setAlerts(alertData);
-        } catch (err) {
-          console.error('Alert load error:', err);
-        }
-        // === REQUESTS SOURCE (red) ===
-        requestFeaturesRef.current = [];
-        resourceFeaturesRef.current = [];
-
-        map.addSource('requests-source', {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: [] },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
+        // === SOS VECTOR TILES SOURCE ===
+        map.addSource('sos-tiles', {
+          type: 'vector',
+          tiles: [`${window.location.origin}/api/map/tiles/{z}/{x}/{y}`],
+          minzoom: 2,
+          maxzoom: 14,
         });
 
-        // Cluster glow (behind)
-        map.addLayer({ id: 'requests-cluster-glow', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
-        // Cluster circles
-        map.addLayer({ id: 'requests-clusters', type: 'circle', source: 'requests-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-        // Invisible hit target (larger tap area)
-        map.addLayer({ id: 'requests-hit', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
-        // Individual points (visual)
-        map.addLayer({ id: 'requests-points', type: 'circle', source: 'requests-source', filter: ['!', ['has', 'point_count']],
+        // === REQUESTS LAYERS (red) ===
+        map.addLayer({ id: 'requests-cluster-glow', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'request'],
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
+        map.addLayer({ id: 'requests-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'request'],
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
-
-        // === RESOURCES SOURCE (blue) ===
-        map.addSource('resources-source', {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features: [] },
-          cluster: true, clusterMaxZoom: 14, clusterRadius: 50,
-        });
-
-        map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 32, 10, 43, 50, 58], 'circle-opacity': 0.3, 'circle-blur': 1 } });
-        map.addLayer({ id: 'resources-clusters', type: 'circle', source: 'resources-source', filter: ['has', 'point_count'],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32], 'circle-opacity': 0.6, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-        map.addLayer({ id: 'resources-hit', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
+        map.addLayer({ id: 'requests-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'request'],
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
-        map.addLayer({ id: 'resources-points', type: 'circle', source: 'resources-source', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
-        // === REPORTS SOURCE (white) — Mapbox vector tileset ===
-        try {
-          map.addSource('reports-source', {
-            type: 'vector',
-            url: 'mapbox://sosconnect.sos-reports-v2',
-          });
-          map.addLayer({ id: 'reports-cluster-glow', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-            paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 29, 10, 40, 50, 50], 'circle-opacity': 0.2, 'circle-blur': 1 } });
-          map.addLayer({ id: 'reports-clusters', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-            paint: { 'circle-color': '#FFFFFF', 'circle-radius': ['step', ['get', 'point_count'], 16, 10, 22, 50, 28], 'circle-opacity': 0.4, 'circle-stroke-width': 0, 'circle-stroke-color': 'transparent' } });
-          map.addLayer({ id: 'reports-points', type: 'circle', source: 'reports-source', 'source-layer': 'sos-map-v2',
-            paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
-        } catch (e) { console.warn('Reports tileset not available:', e); }
+        // === RESOURCES LAYERS (blue) ===
+        map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'resource'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
+        map.addLayer({ id: 'resources-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'resource'],
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+        map.addLayer({ id: 'resources-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'resource'],
+          paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
+
+        // === REPORTS LAYERS (white) ===
+        map.addLayer({ id: 'reports-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'report'],
+          paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
 
         // Detail fetch on zoom disabled — map-data EF retired May 4.
         // All data loaded upfront from partner-read.
@@ -206,34 +180,35 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#34d399', 'circle-radius': 7, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
 
         // === ALERT GEOMETRIES ===
-        alertData.forEach((alert, i) => {
-          if (!alert.geometry) return;
-          try {
-            const color = alert.severity === 'extreme' || alert.severity === 'severe' ? '#EF4E4B' : '#EDB200';
-            map.addSource(`alert-${i}`, { type: 'geojson', data: alert.geometry });
-            map.addLayer({ id: `alert-fill-${i}`, type: 'fill', source: `alert-${i}`, paint: { 'fill-color': color, 'fill-opacity': 0.12 } });
-            map.addLayer({ id: `alert-line-${i}`, type: 'line', source: `alert-${i}`, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.5 } });
-          } catch (e) { console.warn('Alert geometry error:', e); }
-        });
+        // Load alerts initially with current position
+        try {
+          const alertData = await getAlerts(lat, lng).catch(() => [] as Alert[]);
+          setAlerts(alertData);
+          alertData.forEach((alert, i) => {
+            if (!alert.geometry) return;
+            try {
+              const color = alert.severity === 'extreme' || alert.severity === 'severe' ? '#EF4E4B' : '#EDB200';
+              map.addSource(`alert-${i}`, { type: 'geojson', data: alert.geometry });
+              map.addLayer({ id: `alert-fill-${i}`, type: 'fill', source: `alert-${i}`, paint: { 'fill-color': color, 'fill-opacity': 0.12 } });
+              map.addLayer({ id: `alert-line-${i}`, type: 'line', source: `alert-${i}`, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.5 } });
+            } catch (e) { console.warn('Alert geometry error:', e); }
+          });
+        } catch (err) {
+          console.error('Alert load error:', err);
+        }
 
-        // === CLUSTER GLOW ANIMATION ===
+        // === GLOW ANIMATION ===
         const animateGlow = () => {
           if (destroyed) return;
           try {
             const t = Date.now() / 1000;
             const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
-            const glowLayers = [
-              { id: 'requests-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
-              { id: 'resources-cluster-glow', baseRadius: [32, 43, 58], baseOpacity: 0.3 },
-              { id: 'reports-cluster-glow', baseRadius: [29, 40, 50], baseOpacity: 0.2 },
-            ];
-            glowLayers.forEach(({ id, baseRadius, baseOpacity }) => {
+            ['requests-cluster-glow', 'resources-cluster-glow'].forEach(id => {
               if (!map.getLayer(id)) return;
-              const scale = 1 + pulse * 0.3;
-              map.setPaintProperty(id, 'circle-radius', ['step', ['get', 'point_count'], baseRadius[0] * scale, 10, baseRadius[1] * scale, 50, baseRadius[2] * scale]);
-              map.setPaintProperty(id, 'circle-opacity', baseOpacity * (0.6 + pulse * 0.4));
+              map.setPaintProperty(id, 'circle-opacity', 0.15 + pulse * 0.15);
+              map.setPaintProperty(id, 'circle-radius', 10 + pulse * 4);
             });
-          } catch { /* map destroyed or style changed */ }
+          } catch { /* map destroyed */ }
           glowFrame = requestAnimationFrame(animateGlow);
         };
         animateGlow();
@@ -245,27 +220,13 @@ export default function CitizenMapPage() {
             if (!e.features?.length) return;
             layerClickedRef.current = true;
             const props = e.features[0].properties;
-            const pinType = props.type || (layer.includes('request') ? 'request' : layer.includes('resource') ? 'resource' : 'report');
+            const pinType = props.type || 'request';
             setSelectedPin({ type: pinType, id: props.id, properties: typeof props === 'string' ? JSON.parse(props) : props });
             setDetailMode('card');
             setMatchMode(false);
           });
           map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
           map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
-        });
-
-        // Cluster click → zoom
-        ['requests-clusters', 'resources-clusters', 'reports-clusters'].forEach(layer => {
-          map.on('click', layer, (e: any) => {
-            const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
-            if (!features.length) return;
-            const clusterId = features[0].properties?.cluster_id;
-            const sourceName = layer.replace('-clusters', '-source');
-            (map.getSource(sourceName) as any).getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-              if (err || zoom == null) return;
-              map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
-            });
-          });
         });
 
         // Click empty space → dismiss (skip if a layer click just happened)
@@ -279,7 +240,7 @@ export default function CitizenMapPage() {
         // Safety: reset all filters on load (in case a previous session left filters active)
         ['requests-points', 'resources-points', 'reports-points'].forEach(layer => {
           if (map.getLayer(layer)) {
-            map.setFilter(layer, ['!', ['has', 'point_count']]);
+            map.setFilter(layer, null);
           }
         });
 
@@ -292,18 +253,23 @@ export default function CitizenMapPage() {
         const dlZoom = dlParams.get('zoom');
 
         if (dlPin) {
-          // Find the pin in loaded GeoJSON features and select it
-          const allFeatures = [...requestFeatures, ...resourceFeatures];
-          const match = allFeatures.find((f: any) => f.properties?.id === dlPin);
-          if (match) {
-            const pinType: 'request' | 'resource' = match.properties.type === 'request' ? 'request' : 'resource';
-            const coords = match.geometry.coordinates;
-            map.flyTo({ center: [coords[0], coords[1]], zoom: 14, duration: 1200 });
-            setTimeout(() => {
-              setSelectedPin({ type: pinType, id: match.properties.id, properties: match.properties });
-              setDetailMode('card');
-            }, 1300);
-          }
+          // Fetch pin location from sos-read
+          try {
+            const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+            const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+            const table = dlType === 'resource' ? 'resources' : dlType === 'report' ? 'reports' : 'requests';
+            const res = await fetch(`${SOS_URL}/rest/v1/${table}?id=eq.${dlPin}&select=id,latitude,longitude,category,urgency,status`, {
+              headers: { apikey: SOS_ANON, Authorization: `Bearer ${SOS_ANON}` }
+            });
+            const rows = await res.json();
+            if (rows?.[0]?.latitude && rows?.[0]?.longitude) {
+              map.flyTo({ center: [rows[0].longitude, rows[0].latitude], zoom: 14, duration: 1200 });
+              setTimeout(() => {
+                setSelectedPin({ type: dlType as any, id: dlPin, properties: rows[0] });
+                setDetailMode('card');
+              }, 1300);
+            }
+          } catch { /* ignore */ }
         } else if (dlLat && dlLng) {
           map.flyTo({ center: [parseFloat(dlLng), parseFloat(dlLat)], zoom: dlZoom ? parseFloat(dlZoom) : 13, duration: 1200 });
         }
@@ -311,29 +277,19 @@ export default function CitizenMapPage() {
         // === REALTIME SUBSCRIPTIONS ===
         const channel = supabase
           .channel('map-realtime')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests', filter: 'map_visible=eq.true' }, (payload: any) => {
-            const r = payload.new;
-            if (!r.latitude || !r.longitude) return;
-            const feature = {
-              type: 'Feature' as const,
-              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-              properties: { id: r.id, category: r.category, urgency: r.urgency, status: r.status, created_at: r.created_at, type: 'request' },
-            };
-            requestFeaturesRef.current = [...requestFeaturesRef.current, feature];
-            const src = map.getSource('requests-source') as any;
-            if (src) src.setData({ type: 'FeatureCollection', features: requestFeaturesRef.current });
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests', filter: 'map_visible=eq.true' }, () => {
+            // Force tile reload by adding a cache-busting param
+            const source = map.getSource('sos-tiles');
+            if (source && 'setTiles' in source) {
+              (source as any).setTiles([`${window.location.origin}/api/map/tiles/{z}/{x}/{y}?t=${Date.now()}`]);
+            }
           })
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'resources', filter: 'map_visible=eq.true' }, (payload: any) => {
-            const r = payload.new;
-            if (!r.latitude || !r.longitude) return;
-            const feature = {
-              type: 'Feature' as const,
-              geometry: { type: 'Point' as const, coordinates: [r.longitude, r.latitude] },
-              properties: { id: r.id, category: r.category, status: r.status, capacity_available: r.capacity_available, created_at: r.created_at, type: 'resource' },
-            };
-            resourceFeaturesRef.current = [...resourceFeaturesRef.current, feature];
-            const src = map.getSource('resources-source') as any;
-            if (src) src.setData({ type: 'FeatureCollection', features: resourceFeaturesRef.current });
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'resources', filter: 'map_visible=eq.true' }, () => {
+            // Force tile reload by adding a cache-busting param
+            const source = map.getSource('sos-tiles');
+            if (source && 'setTiles' in source) {
+              (source as any).setTiles([`${window.location.origin}/api/map/tiles/{z}/{x}/{y}?t=${Date.now()}`]);
+            }
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (_payload: any) => {
             // For future use
@@ -349,58 +305,7 @@ export default function CitizenMapPage() {
     return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
-  // Fetch area data when GPS coordinates change
-  useEffect(() => {
-    if (!gpsReady || !mapInstance.current) return;
 
-    const fetchAreaData = async () => {
-      try {
-        const SOS_DB = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
-        const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-        const [alertData, areaRes] = await Promise.all([
-          getAlerts(lat, lng).catch(() => [] as Alert[]),
-          fetch(`${SOS_DB}/functions/v1/sos-read`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${SOS_ANON}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scope: 'area', filters: { lat: String(lat), lng: String(lng), radius: '2000' } }),
-          }).then(r => r.json()).catch(() => ({ type: 'FeatureCollection', features: [] })),
-        ]);
-
-        setAlerts(alertData);
-
-        // Process features
-        let requestFeatures: any[] = [], resourceFeatures: any[] = [];
-        for (const f of (areaRes.features || [])) {
-          const props = f.properties || {};
-          if (props.type === 'request' || props.featureType === 'request') {
-            requestFeatures.push(f);
-          } else if (props.type === 'resource' || props.featureType === 'resource') {
-            resourceFeatures.push(f);
-          }
-        }
-
-        // Update map sources
-        const map = mapInstance.current;
-        requestFeaturesRef.current = requestFeatures;
-        resourceFeaturesRef.current = resourceFeatures;
-
-        const requestSrc = map.getSource('requests-source');
-        const resourceSrc = map.getSource('resources-source');
-
-        if (requestSrc) {
-          (requestSrc as any).setData({ type: 'FeatureCollection', features: requestFeatures });
-        }
-        if (resourceSrc) {
-          (resourceSrc as any).setData({ type: 'FeatureCollection', features: resourceFeatures });
-        }
-      } catch (err) {
-        console.error('Area data fetch error:', err);
-      }
-    };
-
-    fetchAreaData();
-  }, [lat, lng, gpsReady]);
 
   // Map command subscription (for search results)
   useEffect(() => {
@@ -412,7 +317,7 @@ export default function CitizenMapPage() {
         setShowResults(false); setMapResults([]);
         clearMapCategoryFilter(map);
         // Restore all permanent layers
-        const allLayers = ['requests-clusters', 'requests-cluster-glow', 'requests-points', 'resources-clusters', 'resources-cluster-glow', 'resources-points', 'reports-clusters', 'reports-cluster-glow', 'reports-points', 'disasters-points'];
+        const allLayers = ['requests-cluster-glow', 'requests-points', 'resources-cluster-glow', 'resources-points', 'reports-points', 'disasters-points'];
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
         // Clear search results
         if (map.getSource('search-results-source')) {
@@ -420,7 +325,7 @@ export default function CitizenMapPage() {
         }
         // Reset any active filters
         ['requests-points', 'resources-points'].forEach(layer => {
-          if (map.getLayer(layer)) map.setFilter(layer, ['!', ['has', 'point_count']]);
+          if (map.getLayer(layer)) map.setFilter(layer, null);
         });
         return;
       }
@@ -432,7 +337,7 @@ export default function CitizenMapPage() {
 
 
         // Hide all permanent layers — show only search results
-        const allLayers = ['requests-clusters', 'requests-cluster-glow', 'requests-points', 'resources-clusters', 'resources-cluster-glow', 'resources-points', 'reports-clusters', 'reports-cluster-glow', 'reports-points', 'disasters-points'];
+        const allLayers = ['requests-cluster-glow', 'requests-points', 'resources-cluster-glow', 'resources-points', 'reports-points', 'disasters-points'];
         allLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
 
         // Show search results using their natural colors (blue for resources, red for requests)
@@ -493,30 +398,18 @@ export default function CitizenMapPage() {
 
       if (cmd.type === 'focus' && cmd.center) {
         map.flyTo({ center: cmd.center, zoom: cmd.zoom || 14, duration: 800 });
-        // If this is a submission focus, add the new pin to the map
-        const src = map.getSource('requests-source') as any;
-        if (src) {
-          try {
-            const existing = src._data || { type: 'FeatureCollection', features: [] };
-            const features = [...(existing.features || []), {
-              type: 'Feature',
-              geometry: { type: 'Point', coordinates: cmd.center },
-              properties: { id: 'new-submission', category: (cmd as any).category || 'housing', urgency: 'high', status: 'active', type: 'request', details: `${((cmd as any).category || 'housing').replace(/_/g, ' ')} request submitted just now` },
-            }];
-            src.setData({ type: 'FeatureCollection', features });
-          } catch {}
-        }
+        // Vector tiles will automatically show the new submission via realtime subscription
       }
 
-      // P1 Fix 9: Filter existing layers by category
+      // Filter existing layers by category
       if ((cmd as any).type === 'filter' && (cmd as any).category) {
         const cat = (cmd as any).category;
         ['requests-points', 'resources-points'].forEach(layer => {
           if (map.getLayer(layer)) {
-            map.setFilter(layer, ['all', ['!', ['has', 'point_count']], ['==', ['get', 'category'], cat]]);
+            map.setFilter(layer, ['==', ['get', 'category'], cat]);
           }
         });
-        ['requests-clusters', 'requests-cluster-glow', 'resources-clusters', 'resources-cluster-glow'].forEach(layer => {
+        ['requests-cluster-glow', 'resources-cluster-glow'].forEach(layer => {
           if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', 'none');
         });
       }
