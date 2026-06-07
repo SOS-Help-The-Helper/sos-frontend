@@ -29,13 +29,12 @@ const CANDIDATES: { id: Candidate; name: string }[] = [
 ];
 
 export default function VotePage() {
-  // Form is display-only for v1 — no API calls.
-  const [step, setStep] = useState<'phone' | 'code' | 'match' | 'vote'>('phone');
+  const [step, setStep] = useState<'phone' | 'code' | 'vote' | 'done'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
   const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [phoneHash, setPhoneHash] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [counts, setCounts] = useState<VoteCounts>({
     bass: 0,
@@ -92,14 +91,103 @@ export default function VotePage() {
     setTimeout(() => setToast(null), 5000);
   }
 
-  function next(e: React.FormEvent, to: typeof step) {
+  // Step 1 — send a one-time code to the entered phone number.
+  async function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    setStep(to);
+    if (loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/vote-otp`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode: 'send', phone }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data?.error || 'Could not send code. Try again.');
+        return;
+      }
+      setStep('code');
+    } catch {
+      showToast('Could not send code. Try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function submit(e: React.FormEvent) {
+  // Step 2 — verify the code. On success we skip the voter-file match step
+  // (no voter file yet) and go straight to the vote step.
+  async function verifyCode(e: React.FormEvent) {
     e.preventDefault();
-    showToast('VoteVerify launches soon. Join the waitlist.');
+    if (loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/vote-otp`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode: 'verify', phone, code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.verified) {
+        showToast('Invalid or expired code');
+        return;
+      }
+      setPhoneHash(data.phone_hash ?? null);
+      setStep('vote');
+    } catch {
+      showToast('Invalid or expired code');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Step 3 — record the vote attestation via sos-write.
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading || !candidate) return;
+    setLoading(true);
+    const candidateName =
+      CANDIDATES.find((c) => c.id === candidate)?.name ?? candidate;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/sos-write`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          actor: { type: 'citizen', phone },
+          records: [
+            {
+              type: 'report',
+              taxonomy_code: 'CIVIC.VOTE_ATTESTATION',
+              description: `Voted for ${candidateName}`,
+              danger_present: false,
+              metadata: { candidate, election: 'la_mayor_2026' },
+            },
+          ],
+          location: { text: 'Los Angeles, CA', lat: 34.052, lng: -118.244 },
+          context: { channel: 'web', consent_given: true },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data?.error || 'Could not record attestation. Try again.');
+        return;
+      }
+      showToast('Your vote attestation has been recorded!');
+      setStep('done');
+    } catch {
+      showToast('Could not record attestation. Try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -189,7 +277,7 @@ export default function VotePage() {
       </section>
 
       {/* ═══════════════════════════ LIVE RESULTS ═══════════════════════════ */}
-      <section className="bg-navy">
+      <section id="results" className="bg-navy">
         <div className="narrow">
           <p className="label text-center">Live Results</p>
           <h2 className="text-center">Live Attestation Results</h2>
@@ -322,7 +410,7 @@ export default function VotePage() {
               margin: '32px 0',
             }}
           >
-            {(['phone', 'code', 'match', 'vote'] as const).map((s) => (
+            {(['phone', 'code', 'vote'] as const).map((s) => (
               <span
                 key={s}
                 style={{
@@ -330,8 +418,8 @@ export default function VotePage() {
                   height: 4,
                   borderRadius: 2,
                   background:
-                    ['phone', 'code', 'match', 'vote'].indexOf(step) >=
-                    ['phone', 'code', 'match', 'vote'].indexOf(s)
+                    ['phone', 'code', 'vote'].indexOf(step) >=
+                    ['phone', 'code', 'vote'].indexOf(s)
                       ? ACCENT
                       : 'rgba(15,30,43,0.12)',
                 }}
@@ -349,7 +437,7 @@ export default function VotePage() {
             }}
           >
             {step === 'phone' && (
-              <form onSubmit={(e) => next(e, 'code')} style={formStyle}>
+              <form onSubmit={sendCode} style={formStyle}>
                 <label style={labelStyle} htmlFor="v-phone">
                   Phone number
                 </label>
@@ -364,8 +452,12 @@ export default function VotePage() {
                   style={inputStyle}
                   required
                 />
-                <button type="submit" style={primaryBtn}>
-                  Send Code
+                <button
+                  type="submit"
+                  style={loading ? primaryBtnDisabled : primaryBtn}
+                  disabled={loading}
+                >
+                  {loading ? 'Sending…' : 'Send Code'}
                 </button>
                 <p style={hintStyle}>
                   We&apos;ll text a one-time code to confirm your identity.
@@ -374,7 +466,7 @@ export default function VotePage() {
             )}
 
             {step === 'code' && (
-              <form onSubmit={(e) => next(e, 'match')} style={formStyle}>
+              <form onSubmit={verifyCode} style={formStyle}>
                 <label style={labelStyle} htmlFor="v-code">
                   6-digit code
                 </label>
@@ -390,48 +482,20 @@ export default function VotePage() {
                   style={{ ...inputStyle, letterSpacing: '0.4em', textAlign: 'center', fontSize: 22 }}
                   required
                 />
-                <button type="submit" style={primaryBtn}>
-                  Verify Code
+                <button
+                  type="submit"
+                  style={loading ? primaryBtnDisabled : primaryBtn}
+                  disabled={loading}
+                >
+                  {loading ? 'Verifying…' : 'Verify Code'}
                 </button>
-                <button type="button" onClick={() => setStep('phone')} style={linkBtn}>
+                <button
+                  type="button"
+                  onClick={() => setStep('phone')}
+                  style={linkBtn}
+                  disabled={loading}
+                >
                   ← Change number
-                </button>
-              </form>
-            )}
-
-            {step === 'match' && (
-              <form onSubmit={(e) => next(e, 'vote')} style={formStyle}>
-                <p style={{ ...hintStyle, marginBottom: 4 }}>
-                  We&apos;ll match this against the official LA County voter file.
-                </p>
-                <label style={labelStyle} htmlFor="v-name">
-                  Full name
-                </label>
-                <input
-                  id="v-name"
-                  type="text"
-                  autoComplete="name"
-                  placeholder="Jane Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={inputStyle}
-                  required
-                />
-                <label style={labelStyle} htmlFor="v-address">
-                  Registered address
-                </label>
-                <input
-                  id="v-address"
-                  type="text"
-                  autoComplete="street-address"
-                  placeholder="123 Main St, Los Angeles, CA 90012"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  style={inputStyle}
-                  required
-                />
-                <button type="submit" style={primaryBtn}>
-                  Verify Registration
                 </button>
               </form>
             )}
@@ -472,13 +536,48 @@ export default function VotePage() {
                     </label>
                   ))}
                 </div>
-                <button type="submit" style={primaryBtn}>
-                  Submit My Attestation
+                <button
+                  type="submit"
+                  style={loading ? primaryBtnDisabled : primaryBtn}
+                  disabled={loading || !candidate}
+                >
+                  {loading ? 'Submitting…' : 'Submit My Attestation'}
                 </button>
                 <p style={hintStyle}>
                   Your choice is recorded anonymously and deleted after certification.
                 </p>
               </form>
+            )}
+
+            {step === 'done' && (
+              <div style={{ ...formStyle, textAlign: 'center', alignItems: 'center' }}>
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    background: 'rgba(137,207,240,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 28,
+                    color: ACCENT,
+                    marginBottom: 4,
+                  }}
+                >
+                  ✓
+                </div>
+                <h3 style={{ color: NAVY, fontSize: 20, fontWeight: 700, margin: 0 }}>
+                  Thanks! Your attestation is recorded.
+                </h3>
+                <p style={hintStyle}>
+                  Your choice was recorded anonymously and added to the public
+                  aggregate count.
+                </p>
+                <a href="#results" style={{ ...primaryBtn, textDecoration: 'none', display: 'block', textAlign: 'center' }}>
+                  See Live Results
+                </a>
+              </div>
             )}
           </div>
         </div>
@@ -583,6 +682,12 @@ const primaryBtn: CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   marginTop: 4,
+};
+
+const primaryBtnDisabled: CSSProperties = {
+  ...primaryBtn,
+  opacity: 0.6,
+  cursor: 'not-allowed',
 };
 
 const linkBtn: CSSProperties = {
