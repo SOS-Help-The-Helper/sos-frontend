@@ -168,13 +168,13 @@ export default function VotePage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showToast(data?.error || 'Could not record attestation. Try again.');
+        showToast(data?.error || 'Could not record tally. Try again.');
         return;
       }
-      showToast('Your vote attestation has been recorded!');
+      showToast('Your vote tally has been recorded!');
       setStep('done');
     } catch {
-      showToast('Could not record attestation. Try again.');
+      showToast('Could not record tally. Try again.');
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,7 @@ export default function VotePage() {
       <section id="results" className="bg-navy">
         <div className="narrow">
           <p className="label text-center">Live Results</p>
-          <h2 className="text-center">Live Attestation Results</h2>
+          <h2 className="text-center">Live Tally</h2>
           <div className="accent-line accent-line-center" />
 
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -300,8 +300,8 @@ export default function VotePage() {
                     </span>
                     <span style={{ color: ACCENT, fontSize: 15, fontWeight: 700 }}>
                       {counts.total === 0
-                        ? 'No attestations yet'
-                        : `${count} attestation${count === 1 ? '' : 's'}`}
+                        ? 'No tallies yet'
+                        : `${count} tall${count === 1 ? 'y' : 'ies'}`}
                     </span>
                   </div>
                   {/* Percentage bar — width reflects share of total attestations */}
@@ -338,7 +338,7 @@ export default function VotePage() {
               fontWeight: 300,
             }}
           >
-            These are crowd-sourced attestations from verified voters, not official election results.
+            These are crowd-sourced tallies from verified voters, not official election results.
             Official results from{' '}
             <a
               href="https://www.lavote.gov"
@@ -364,11 +364,11 @@ export default function VotePage() {
             {[
               {
                 title: 'Voter File Verified',
-                body: 'Every attestation is matched against the official LA County voter registration file. Non-registered or out-of-district submissions are excluded.',
+                body: 'Every tally is matched against the official LA County voter registration file. Non-registered or out-of-district submissions are excluded.',
               },
               {
                 title: 'Data Deleted After Certification',
-                body: 'Individual attestation records are permanently deleted within 30 days of election certification. Only aggregate statistics are retained.',
+                body: 'Individual tally records are permanently deleted within 30 days of election certification. Only aggregate statistics are retained.',
               },
               {
                 title: 'Open & Nonpartisan',
@@ -387,7 +387,7 @@ export default function VotePage() {
       {/* ════════════════════════════ FORM ════════════════════════════ */}
       <section id="attest-form" className="bg-light">
         <div style={{ maxWidth: 440, margin: '0 auto' }}>
-          <p className="label text-center">Attestation</p>
+          <p className="label text-center">Tally</p>
           <h2 className="text-center">Verify My Vote</h2>
           <div className="accent-line accent-line-center" />
 
@@ -531,7 +531,7 @@ export default function VotePage() {
                   style={loading ? primaryBtnDisabled : primaryBtn}
                   disabled={loading || !candidate}
                 >
-                  {loading ? 'Submitting…' : 'Submit My Attestation'}
+                  {loading ? 'Submitting…' : 'Submit My Tally'}
                 </button>
                 <p style={hintStyle}>
                   Your choice is recorded anonymously and deleted after certification.
@@ -558,7 +558,7 @@ export default function VotePage() {
                   ✓
                 </div>
                 <h3 style={{ color: NAVY, fontSize: 20, fontWeight: 700, margin: 0 }}>
-                  Thanks! Your attestation is recorded.
+                  Thanks! Your tally is recorded.
                 </h3>
                 <p style={hintStyle}>
                   Your choice was recorded anonymously and added to the public
