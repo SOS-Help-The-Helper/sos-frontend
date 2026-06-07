@@ -208,7 +208,7 @@ function mapCasesToCards(items: any[]): Card[] {
       title: name || "Anonymous",
       meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
       sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
-      href: `/app/cases/${s.persons?.id || s.id}?sos=1`,
+      href: `/app/cases/${s.persons?.id || s.id}`,
       taxonomy: fmtTaxonomy(s.taxonomy_code),
       description: s.description,
     };

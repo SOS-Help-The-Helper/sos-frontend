@@ -174,9 +174,7 @@ function LoadingSkeleton() {
 export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
-  // Treat as umbrella (person-level view) if URL has ?sos=1 flag or starts with "U-"
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const isUmbrella = (id ?? "").startsWith("U-") || searchParams.get('sos') === '1';
+  const [isUmbrella, setIsUmbrella] = useState(false);
   const { orgId, loading: authLoading } = useAuthContext();
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
@@ -193,8 +191,17 @@ export default function UmbrellaView() {
   const [activeTab, setActiveTab] = useState("timeline");
 
   const fetchCaseDetail = useCallback(() => {
-    const efParams = isUmbrella ? { person_id: id } : { request_id: id };
-    return api.crmCasesDetail(efParams)
+    // Try person_id first (SOS umbrella view), fall back to request_id
+    return api.crmCasesDetail({ person_id: id })
+      .then((data: any) => {
+        if (!data?.person) throw new Error('not_person');
+        setIsUmbrella(true);
+        return data;
+      })
+      .catch(() => {
+        setIsUmbrella(false);
+        return api.crmCasesDetail({ request_id: id });
+      })
       .then((data: any) => {
         if (!data) return;
         setRawUmbrella(data);
@@ -290,7 +297,7 @@ export default function UmbrellaView() {
       })
       .catch(() => { setNotFound(true); })
       .finally(() => setLoading(false));
-  }, [id, isUmbrella]);
+  }, [id]);
 
   useEffect(() => {
     // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
