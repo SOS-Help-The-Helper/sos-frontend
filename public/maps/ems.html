@@ -46,9 +46,9 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff}
 
 <div class="panel">
   <h3>Situation Board</h3>
-  <div class="st"><span class="lb"><span class="dot" style="background:#EF4E4B"></span>Requests</span><span class="v" style="color:#EF4E4B">—</span></div>
-  <div class="st"><span class="lb"><span class="dot" style="background:#89CFF0"></span>Resources</span><span class="v" style="color:#89CFF0">—</span></div>
-  <div class="st"><span class="lb"><span class="dot" style="background:#0F1E2B;border:1.5px solid rgba(255,255,255,0.3)"></span>Reports</span><span class="v" style="color:rgba(255,255,255,0.7)">—</span></div>
+  <div class="st"><span class="lb"><span class="dot" style="background:#EF4E4B"></span>Requests</span><span class="v" style="color:#EF4E4B" data-count="requests">—</span></div>
+  <div class="st"><span class="lb"><span class="dot" style="background:#89CFF0"></span>Resources</span><span class="v" style="color:#89CFF0" data-count="resources">—</span></div>
+  <div class="st"><span class="lb"><span class="dot" style="background:#0F1E2B;border:1.5px solid rgba(255,255,255,0.3)"></span>Reports</span><span class="v" style="color:rgba(255,255,255,0.7)" data-count="reports">—</span></div>
 </div>
 
 <div class="ctrls">
@@ -107,4 +107,4 @@ function setMode(m,b){document.querySelectorAll('.ctrls .btn').forEach(x=>x.clas
 function toggle3D(b){t3d=!t3d;b.classList.toggle('on',t3d);
   if(t3d){map.setTerrain({source:'dem',exaggeration:1.5});map.easeTo({pitch:55,duration:1000})}
   else{map.setTerrain(null);map.easeTo({pitch:0,duration:1000})}}
-</script></body></html>
+</script><script>fetch("https://rtduqguwhkczexnoawej.supabase.co/rest/v1/rpc/map_counts",{method:"POST",headers:{"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Content-Type":"application/json"}}).then(r=>r.json()).then(d=>{document.querySelectorAll("[data-count]").forEach(el=>{const k=el.dataset.count;if(d[k]!=null)el.textContent=d[k].toLocaleString()})}).catch(()=>{})</script></body></html>

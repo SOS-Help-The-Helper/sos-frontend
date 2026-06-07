@@ -63,9 +63,9 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff}
 <div class="sidebar">
   <h2>County Overview</h2>
   <div class="stat-row">
-    <div class="stat-box"><div class="num" style="color:#EF4E4B">—</div><div class="lbl">Requests</div></div>
-    <div class="stat-box"><div class="num" style="color:#89CFF0">—</div><div class="lbl">Resources</div></div>
-    <div class="stat-box"><div class="num" style="color:rgba(255,255,255,0.6)">—</div><div class="lbl">Reports</div></div>
+    <div class="stat-box"><div class="num" style="color:#EF4E4B" data-count="requests">—</div><div class="lbl">Requests</div></div>
+    <div class="stat-box"><div class="num" style="color:#89CFF0" data-count="resources">—</div><div class="lbl">Resources</div></div>
+    <div class="stat-box"><div class="num" style="color:rgba(255,255,255,0.6)" data-count="reports">—</div><div class="lbl">Reports</div></div>
   </div>
 
   <h3>Recent Requests</h3>
@@ -106,4 +106,4 @@ map.on('load',()=>{
   map.addLayer({id:'rep-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'report'],
     paint:{'circle-color':'#0F1E2B','circle-radius':5,'circle-stroke-width':2,'circle-stroke-color':'rgba(15,30,43,0.3)'}});
 });
-</script></body></html>
+</script><script>fetch("https://rtduqguwhkczexnoawej.supabase.co/rest/v1/rpc/map_counts",{method:"POST",headers:{"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Content-Type":"application/json"}}).then(r=>r.json()).then(d=>{document.querySelectorAll("[data-count]").forEach(el=>{const k=el.dataset.count;if(d[k]!=null)el.textContent=d[k].toLocaleString()})}).catch(()=>{})</script></body></html>

@@ -72,10 +72,10 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 
 <div class="left-panel">
   <div class="mini-stat">
-    <div class="ms"><div class="n" style="color:#EF4E4B">—</div><div class="l">Requests</div></div>
-    <div class="ms"><div class="n" style="color:#89CFF0">—</div><div class="l">Resources</div></div>
-    <div class="ms"><div class="n" style="color:rgba(255,255,255,0.5)">—</div><div class="l">Reports</div></div>
-    <div class="ms"><div class="n" style="color:#34d399">—</div><div class="l">Matches</div></div>
+    <div class="ms"><div class="n" style="color:#EF4E4B" data-count="requests">—</div><div class="l">Requests</div></div>
+    <div class="ms"><div class="n" style="color:#89CFF0" data-count="resources">—</div><div class="l">Resources</div></div>
+    <div class="ms"><div class="n" style="color:rgba(255,255,255,0.5)" data-count="reports">—</div><div class="l">Reports</div></div>
+    <div class="ms"><div class="n" style="color:#34d399" data-count="matches">—</div><div class="l">Matches</div></div>
   </div>
 
   <div class="sec">
@@ -212,4 +212,4 @@ function filterCat(cat,el){
   const sw=el.querySelector('.sw');sw.classList.toggle('on');
   // Placeholder — category filtering on vector tile features
 }
-</script></body></html>
+</script><script>fetch("https://rtduqguwhkczexnoawej.supabase.co/rest/v1/rpc/map_counts",{method:"POST",headers:{"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Content-Type":"application/json"}}).then(r=>r.json()).then(d=>{document.querySelectorAll("[data-count]").forEach(el=>{const k=el.dataset.count;if(d[k]!=null)el.textContent=d[k].toLocaleString()})}).catch(()=>{})</script></body></html>
