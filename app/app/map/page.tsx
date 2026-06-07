@@ -5,7 +5,6 @@ import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 const cases: any[] = [];
 import { Filter, Plus, Calendar, Layers } from "lucide-react";
-import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { MapPinCard, type PinLayer, type MapPin } from "@/components/map/map-pin-card";
 
@@ -56,13 +55,11 @@ function MapboxEmbed({
   orgId,
   onPinSelect,
   onPinClear,
-  featuresData,
   onMapReady,
 }: {
   orgId: string;
   onPinSelect: (s: SelectedPin) => void;
   onPinClear: () => void;
-  featuresData?: MapFeature[];
   onMapReady?: (map: any) => void;
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -102,102 +99,79 @@ function MapboxEmbed({
 
       map.on("load", async () => {
         try {
-          // Use prop data instead of fetching again
-          const features: any[] = featuresData ?? [];
+          // Add PostGIS vector tile source
+          map.addSource('sos-tiles', {
+            type: 'vector',
+            tiles: [`${window.location.origin}/api/map/tiles/org/{z}/{x}/{y}?org_id=${orgId}`],
+            minzoom: 2,
+            maxzoom: 14,
+          });
 
-          for (const layer of LAYERS) {
-            const geojson = {
-              type: "FeatureCollection" as const,
-              features: features.filter((f: any) => f.properties?.layer === layer),
-            };
-            const srcId = `${layer}-source`;
+          const typeToLayer: Record<string, PinLayer> = {
+            request: 'case',
+            resource: 'resource', 
+            report: 'event'
+          };
+
+          // Create layers for each type with vector tile filters
+          const activeTypes = ['request', 'resource', 'report'];
+          
+          for (const type of activeTypes) {
+            const layer = typeToLayer[type];
             const color = LAYER_COLORS[layer];
+            const typeFilter = ['==', ['get', 'type'], type];
 
-            map.addSource(srcId, {
-              type: "geojson",
-              data: geojson,
-              cluster: true,
-              clusterMaxZoom: 14,
-              clusterRadius: 50,
-            });
-
-            // Cluster circles — solid, no labels
-            map.addLayer({
-              id: `${layer}-clusters`,
-              type: "circle",
-              source: srcId,
-              filter: ["has", "point_count"],
-              paint: {
-                "circle-color": color,
-                "circle-opacity": 0.75,
-                "circle-radius": ["interpolate", ["linear"], ["get", "point_count"], 10, 14, 50, 22, 200, 32],
-                "circle-blur": 0.15,
-              },
-            });
-
-            // Cluster glow ring
-            map.addLayer({
-              id: `${layer}-cluster-glow`,
-              type: "circle",
-              source: srcId,
-              filter: ["has", "point_count"],
-              paint: {
-                "circle-color": color,
-                "circle-opacity": 0.2,
-                "circle-radius": ["interpolate", ["linear"], ["get", "point_count"], 10, 22, 50, 32, 200, 44],
-              },
-            });
-
-            // Unclustered points
-            map.addLayer({
-              id: `${layer}-unclustered`,
-              type: "circle",
-              source: srcId,
-              filter: ["!", ["has", "point_count"]],
-              paint: {
-                "circle-color": color,
-                "circle-radius": 6,
-                "circle-stroke-width": 2,
-                "circle-stroke-color": "#0F1E2B",
-              },
-            });
-
-            // Unclustered glow
+            // Glow layer (larger, blurred circle, low opacity)
             map.addLayer({
               id: `${layer}-glow`,
-              type: "circle",
-              source: srcId,
-              filter: ["!", ["has", "point_count"]],
+              type: 'circle',
+              source: 'sos-tiles',
+              'source-layer': 'sos',
+              filter: typeFilter,
               paint: {
-                "circle-color": color,
-                "circle-radius": 12,
-                "circle-opacity": 0.2,
-              },
+                'circle-color': color,
+                'circle-radius': 12,
+                'circle-opacity': 0.2
+              }
             });
 
-            // Heatmap layer (hidden by default)
+            // Point layer (standard circle with stroke)
+            map.addLayer({
+              id: `${layer}-unclustered`,
+              type: 'circle',
+              source: 'sos-tiles',
+              'source-layer': 'sos',
+              filter: typeFilter,
+              paint: {
+                'circle-color': color,
+                'circle-radius': 6,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#0F1E2B'
+              }
+            });
+
+            // Heatmap layer (hidden by default, toggled via map commands)
             map.addLayer({
               id: `${layer}-heatmap`,
               type: 'heatmap',
-              source: srcId,
+              source: 'sos-tiles',
+              'source-layer': 'sos',
+              filter: typeFilter,
               layout: { visibility: 'none' },
               paint: {
-                'heatmap-weight': ['interpolate', ['linear'], ['coalesce', ['get', 'point_count'], 1], 0, 0.6, 20, 1],
+                'heatmap-weight': 1,
                 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 12, 2.2],
-                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'transparent', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FCD34D', 1, '#ffffff'],
+                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 
+                  0, 'transparent', 
+                  0.2, '#1a3850', 
+                  0.4, '#89CFF0', 
+                  0.6, '#EF4E4B', 
+                  0.8, '#FCD34D', 
+                  1, '#ffffff'
+                ],
                 'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 6, 14, 12, 42],
                 'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 13, 0],
-              },
-            });
-
-            // Click cluster → zoom in
-            map.on("click", `${layer}-clusters`, (e: any) => {
-              const features = map.queryRenderedFeatures(e.point, { layers: [`${layer}-clusters`] });
-              const clusterId = features[0]?.properties?.cluster_id;
-              if (!clusterId) return;
-              (map.getSource(srcId) as any).getClusterExpansionZoom(clusterId, (_: any, zoom: number) => {
-                map.easeTo({ center: (features[0].geometry as any).coordinates, zoom });
-              });
+              }
             });
 
             // Click unclustered → show MapPinCard overlay
@@ -209,14 +183,17 @@ function MapboxEmbed({
               const title = p.title || p.name || (id ? id.slice(0, 8) : layer);
               const subtitle = p.subtitle || p.county || p.location || p.owner_name || undefined;
               const status = p.status || undefined;
+              const featureType = p.type || '';
+              const mappedLayer = typeToLayer[featureType] || layer;
+              
               onPinSelectRef.current({
                 pin: {
-                  layer: layer as PinLayer,
+                  layer: mappedLayer,
                   id,
                   title,
                   subtitle,
                   status,
-                  href: hrefForPin(layer as PinLayer, id),
+                  href: hrefForPin(mappedLayer, id),
                   urgency: p.urgency || undefined,
                   county: p.county || undefined,
                   taxonomy: p.taxonomy_code || p.taxonomy || undefined,
@@ -236,15 +213,13 @@ function MapboxEmbed({
             });
 
             // Hover cursor
-            map.on("mouseenter", `${layer}-clusters`, () => { map.getCanvas().style.cursor = "pointer"; });
-            map.on("mouseleave", `${layer}-clusters`, () => { map.getCanvas().style.cursor = ""; });
             map.on("mouseenter", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = "pointer"; });
             map.on("mouseleave", `${layer}-unclustered`, () => { map.getCanvas().style.cursor = ""; });
           }
 
           // Click on empty map → clear selected pin
           map.on("click", (e: any) => {
-            const unclusteredLayers = LAYERS.map((l) => `${l}-unclustered`);
+            const unclusteredLayers = activeTypes.map((type) => `${typeToLayer[type]}-unclustered`);
             const hits = map.queryRenderedFeatures(e.point, { layers: unclusteredLayers });
             if (hits.length === 0) onPinClearRef.current();
           });
@@ -276,7 +251,7 @@ function MapboxEmbed({
       } else if (cmd.action === "filter") {
         for (const layer of LAYERS) {
           const vis = Array.isArray(cmd.layers) && cmd.layers.includes(layer) ? "visible" : "none";
-          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow", "-heatmap"]) {
+          for (const suffix of ["-unclustered", "-glow", "-heatmap"]) {
             const layerId = `${layer}${suffix}`;
             if (map.getLayer(layerId)) {
               map.setLayoutProperty(layerId, "visibility", vis);
@@ -286,7 +261,7 @@ function MapboxEmbed({
       } else if (cmd.action === "mapMode") {
         for (const layer of LAYERS) {
           const isPins = cmd.mode === 'pins';
-          for (const suffix of ["-clusters", "-cluster-glow", "-unclustered", "-glow"]) {
+          for (const suffix of ["-unclustered", "-glow"]) {
             const layerId = `${layer}${suffix}`;
             if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", isPins ? "visible" : "none");
           }
@@ -330,54 +305,15 @@ function toSVG(lng: number, lat: number): [number, number] {
   return [x, y];
 }
 
-interface MapFeature {
-  type: 'Feature';
-  geometry: { type: string; coordinates: number[] };
-  properties: Record<string, unknown>;
-}
 
-interface LayeredFeatures {
-  cases: MapFeature[];
-  resources: MapFeature[];
-  facilities: MapFeature[];
-  events: MapFeature[];
-}
-
-function groupByLayer(features: MapFeature[]): LayeredFeatures {
-  const result: LayeredFeatures = { cases: [], resources: [], facilities: [], events: [] };
-  for (const f of features) {
-    const layer = (f.properties.layer as string) ?? (f.properties.type as string) ?? '';
-    if (layer === 'case' || layer === 'request') result.cases.push(f);
-    else if (layer === 'resource') result.resources.push(f);
-    else if (layer === 'facility') result.facilities.push(f);
-    else if (layer === 'event') result.events.push(f);
-  }
-  return result;
-}
 
 export default function MapPage() {
   const { orgId } = useAuthContext();
   const [activeCounty, setActive] = useState<string | null>("Buncombe");
-  const [layers, setLayers] = useState<LayeredFeatures | null>(null);
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
-  const [features, setFeatures] = useState<MapFeature[]>([]);
   const mapRef = useRef<any>(null);
 
-  useEffect(() => {
-    // admin: proceed without org filter
-    api.crmMapFeatures(orgId || '')
-      .then((res: unknown) => {
-        const data = res as { features?: MapFeature[] };
-        const featureList = Array.isArray(data) ? (data as MapFeature[]) : (data?.features ?? []);
-        setFeatures(featureList);
-        if (featureList.length > 0) setLayers(groupByLayer(featureList));
-      })
-      .catch(() => {
-        // fallback to prototype — leave layers null
-      });
-  }, [orgId]);
-
-  const hasRealData = layers !== null;
+  const hasRealData = true; // Always true for vector tiles
   const countyCases = cases.filter((c) => activeCounty == null || c.county === activeCounty);
 
   return (
@@ -400,10 +336,9 @@ export default function MapPage() {
       <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
         <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
           <MapboxEmbed
-            orgId={orgId}
+            orgId={orgId || ''}
             onPinSelect={setSelectedPin}
             onPinClear={() => setSelectedPin(null)}
-            featuresData={features}
             onMapReady={(map) => { mapRef.current = map; }}
           />
           {selectedPin && (
@@ -448,10 +383,10 @@ export default function MapPage() {
           <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Map Layers</p>
           <div className="space-y-3">
             {[
-              { label: "Cases", color: "#EF4E4B", count: layers?.cases?.length ?? 0 },
-              { label: "Resources", color: "#89CFF0", count: layers?.resources?.length ?? 0 },
-              { label: "Facilities", color: "#4ADE80", count: layers?.facilities?.length ?? 0 },
-              { label: "Events", color: "#A855F7", count: layers?.events?.length ?? 0 },
+              { label: "Cases", color: "#EF4E4B", count: "-" },
+              { label: "Resources", color: "#89CFF0", count: "-" },
+              { label: "Facilities", color: "#4ADE80", count: "-" },
+              { label: "Events", color: "#A855F7", count: "-" },
             ].map((l) => (
               <label key={l.label} className="flex items-center justify-between cursor-pointer group">
                 <div className="flex items-center gap-2">
@@ -460,7 +395,7 @@ export default function MapPage() {
                     if (!map) return;
                     const layerKey = l.label.toLowerCase().replace(/s$/, '');
                     const visibility = e.target.checked ? 'visible' : 'none';
-                    [`${layerKey}-clusters`, `${layerKey}-cluster-glow`, `${layerKey}-unclustered`, `${layerKey}-glow`].forEach(id => {
+                    [`${layerKey}-unclustered`, `${layerKey}-glow`].forEach(id => {
                       try {
                         if (map.getLayer(id)) {
                           map.setLayoutProperty(id, 'visibility', visibility);
@@ -473,27 +408,12 @@ export default function MapPage() {
                   </span>
                   <span className="text-[13px] text-white/70 group-hover:text-white/90 transition">{l.label}</span>
                 </div>
-                <span className="font-mono text-[12px] text-white/45">{l.count.toLocaleString()}</span>
+                <span className="font-mono text-[12px] text-white/45">{l.count}</span>
               </label>
             ))}
           </div>
 
-          {hasRealData && (layers?.events?.length ?? 0) > 0 && (
-            <div className="mt-5 pt-4 border-t border-white/10">
-              <p className="font-mono text-xs uppercase tracking-wider text-[#A855F7] mb-3">
-                Upcoming Events
-              </p>
-              {layers?.events?.slice(0, 5).map((f, i) => (
-                <div key={`event-side-${i}`} className="rounded-xl bg-white/5 hover:bg-white/8 p-3 transition cursor-pointer mb-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calendar size={10} className="text-[#A855F7]" />
-                    <span className="font-mono text-xs text-white/45">{f.properties.event_type as string ?? 'event'}</span>
-                  </div>
-                  <p className="text-[12px] font-medium">{f.properties.title as string ?? 'Untitled'}</p>
-                </div>
-              ))}
-            </div>
-          )}
+
         </aside>
       </div>
     </CrmShell>
