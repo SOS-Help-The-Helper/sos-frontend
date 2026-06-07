@@ -80,7 +80,7 @@ export default function RequestPage() {
     toast.success("Scoring candidates...");
     try {
       const result = await api.efCall<{ candidates?: unknown[]; count?: number }>(
-        "match-engine", { mode: "propose", request_id: id }
+        "match-engine", { mode: "propose", request_id: id, limit: 5 }
       );
       const count = result?.candidates?.length ?? result?.count ?? 0;
       toast.success(`${count} candidates found`);
@@ -138,22 +138,32 @@ export default function RequestPage() {
       <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
         <IdentityBand
           avatar={
-            <Link
-              href="#"
-              className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
-              title={`View ${personName}`}
-            >
-              {initials}
-            </Link>
+            r.personId ? (
+              <Link
+                href={`/app/directory/person/${r.personId}`}
+                className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold hover:bg-[#89CFF0]/25 transition"
+                title={`View ${personName}`}
+              >
+                {initials}
+              </Link>
+            ) : (
+              <span className="w-14 h-14 rounded-2xl bg-[#89CFF0]/15 text-[#89CFF0] flex items-center justify-center text-[17px] font-semibold">
+                {initials}
+              </span>
+            )
           }
           pills={<StatusPill tint={urgencyTint}>{r.urgency} · {STATUS_LABEL[r.status as keyof typeof STATUS_LABEL] ?? r.status}</StatusPill>}
           title={r.taxonomy}
           chips={
             <>
               <MetaChip icon={User}>
-                <Link href={`/app/directory/person/${r.personId ?? "#"}`} className="hover:text-white transition">
-                  {personName}
-                </Link>
+                {r.personId ? (
+                  <Link href={`/app/directory/person/${r.personId}`} className="hover:text-white transition">
+                    {personName}
+                  </Link>
+                ) : (
+                  personName
+                )}
               </MetaChip>
               <MetaChip icon={MapPin}>{r.county} County</MetaChip>
               {(r.household_size != null || r.has_children || r.has_elderly || r.has_disabled || r.has_pets) && (
@@ -272,7 +282,7 @@ function RequestTabs({
                 </p>
                 {ta && (
                   <Link
-                    href="#"
+                    href={`/drive/${ta.id}`}
                     className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#89CFF0]/15 hover:bg-[#89CFF0]/25 text-[#89CFF0] text-[11px] font-medium transition"
                   >
                     <ExternalLink size={10} /> Driver page
@@ -369,7 +379,7 @@ function RequestTabs({
           {relatedCases.map((c) => (
             <li key={c.id}>
               <Link
-                href="#"
+                href={`/app/cases/${c.id}`}
                 className="flex items-center gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
               >
                 <GitBranch size={13} className="text-white/40" />
