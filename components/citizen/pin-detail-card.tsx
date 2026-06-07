@@ -1,7 +1,5 @@
 "use client";
 
-import { MapPin, Clock, Users, AlertTriangle, Package, FileText, Heart } from "lucide-react";
-
 export type PinType = "request" | "resource" | "report";
 
 interface PinDetailCardProps {
@@ -11,211 +9,159 @@ interface PinDetailCardProps {
   onMatch?: () => void;
 }
 
-const TYPE_CONFIG = {
-  request: {
-    label: "SOS Request",
-    color: "#EF4E4B",
-    colorFaded: "rgba(239,78,75,",
-    logomark: "/logomark-red.svg",
-    matchLabel: "I Can Help",
-  },
-  resource: {
-    label: "Resource Available",
-    color: "#89CFF0",
-    colorFaded: "rgba(137,207,240,",
-    logomark: "/logomark-blue.svg",
-    matchLabel: "I Need This",
-  },
-  report: {
-    label: "Field Report",
-    color: "#FFFFFF",
-    colorFaded: "rgba(255,255,255,",
-    logomark: "/logomark-white.svg",
-    matchLabel: "Report Update",
-  },
+const CFG: Record<PinType, { label: string; color: string; matchLabel: string }> = {
+  request:  { label: "SOS Request",  color: "#EF4E4B", matchLabel: "Match" },
+  resource: { label: "SOS Resource", color: "#89CFF0", matchLabel: "Match" },
+  report:   { label: "SOS Report",   color: "rgba(255,255,255,0.5)", matchLabel: "Confirm Report" },
 };
 
-const URGENCY_STYLE: Record<string, string> = {
-  critical: "bg-red-500/20 text-red-300 border border-red-500/30",
-  high: "bg-orange-500/20 text-orange-300 border border-orange-500/30",
-  medium: "bg-yellow-500/15 text-yellow-200/80",
-  low: "bg-white/8 text-white/50",
-};
+function timeAgo(d: string | undefined) {
+  if (!d) return null;
+  const ms = Date.now() - new Date(d).getTime();
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
-const CATEGORY_ICONS: Record<string, typeof MapPin> = {
-  housing: Heart,
-  food: Package,
-  health: AlertTriangle,
-  transport: MapPin,
-  supplies: Package,
+function fmtCategory(p: Record<string, any>) {
+  const t = p.taxonomy_code || p.category || "";
+  return t.split(".").pop()?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "General";
+}
+
+function Badge({ children, className }: { children: React.ReactNode; className: string }) {
+  return <span className={`text-[9px] font-bold uppercase tracking-[0.5px] px-2 py-[3px] rounded-md border ${className}`}>{children}</span>;
+}
+
+const urgencyStyle: Record<string, string> = {
+  critical: "bg-red-500/15 text-red-400 border-red-500/25",
+  high: "bg-yellow-500/12 text-yellow-300 border-yellow-500/20",
+  medium: "bg-sky-500/10 text-sky-300 border-sky-500/15",
+  low: "bg-white/[0.06] text-white/40 border-white/[0.08]",
 };
 
 export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDetailCardProps) {
-  const cfg = TYPE_CONFIG[type];
-  const category = (p.category || p.taxonomy_code?.split(".")?.[0] || "").toLowerCase();
-  const CategoryIcon = CATEGORY_ICONS[category] || MapPin;
+  const c = CFG[type];
+  const accentStyle = { backgroundColor: c.color };
+  const borderColor = type === "report" ? "rgba(255,255,255,0.3)" : c.color;
 
-  // Normalize field names across data sources
-  const householdSize = p.household_size || p.household;
-  const urgency = p.urgency;
-  const status = p.status;
-  const description = p.public_display_text || p.description || p.details;
-  const displayName = p.display_name || p.name;
-  const locationText = p.location_text || p.location;
-  const taxonomyCode = p.taxonomy_code;
-  const capacity = p.capacity_available || p.capacity;
+  const copyLink = () => {
+    const url = p.share_url || `https://sosconnect.org/s/${p.id}?type=${type}`;
+    navigator.clipboard?.writeText(url);
+  };
 
   return (
-    <>
-      {/* Backdrop */}
+    <div className="relative max-w-[380px] w-full pointer-events-auto" style={{ marginTop: 20 }}>
+      {/* Floating logomark */}
       <div
-        className="absolute inset-0 z-25 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Centered card */}
-      <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6">
-        <div
-          className="pointer-events-auto w-full max-w-[340px] animate-[cardPop_0.25s_ease-out] relative"
-          style={{
-            background: "rgba(26, 56, 80, 0.92)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "24px",
-            boxShadow: `0 24px 80px rgba(0,0,0,0.5), 0 0 40px ${cfg.colorFaded}0.15)`,
-          }}
-        >
-          {/* Border */}
-          <div
-            className="absolute inset-0 rounded-[24px] pointer-events-none"
-            style={{
-              border: `1.5px solid ${cfg.colorFaded}0.3)`,
-              mask: "linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)",
-              WebkitMask: "linear-gradient(to bottom, transparent 0px, transparent 24px, black 24px)",
-            }}
-          />
-
-          {/* Top logomark */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-7 z-10">
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{
-                background: "rgba(15,30,43,0.95)",
-                boxShadow: `0 0 24px ${cfg.colorFaded}0.4)`,
-                border: `2px solid ${cfg.colorFaded}0.4)`,
-              }}
-            >
-              <img src={cfg.logomark} alt="SOS" className="w-8 h-8" />
-            </div>
-          </div>
-
-          <div className="px-6 pt-6 pb-5">
-            {/* Close */}
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-4 text-white/30 hover:text-white text-lg transition-colors"
-            >
-              ✕
-            </button>
-
-            {/* Type label */}
-            <p
-              className="text-center text-[11px] font-bold uppercase tracking-[0.2em] mb-1"
-              style={{ color: cfg.color }}
-            >
-              {cfg.label}
-            </p>
-
-            {/* Taxonomy / category */}
-            {taxonomyCode && (
-              <p className="text-center text-[10px] text-white/40 uppercase tracking-wider mb-3">
-                {taxonomyCode.replace(/\./g, " · ")}
-              </p>
-            )}
-
-            {/* Display name */}
-            {displayName && (
-              <p className="text-center text-xs font-semibold text-white/90 mb-1">{displayName}</p>
-            )}
-
-            {/* Description */}
-            {description && (
-              <p className="text-center text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
-                {description}
-              </p>
-            )}
-            {!description && (
-              <p className="text-center text-sm text-white/50 leading-relaxed mb-4 italic">
-                {category.replace(/_/g, " ")} {type}
-              </p>
-            )}
-
-            {/* Location */}
-            {locationText && (
-              <div className="flex items-center justify-center gap-1.5 mb-3">
-                <MapPin size={12} className="text-white/40 shrink-0" />
-                <p className="text-[12px] text-white/50 truncate max-w-[240px]">{locationText}</p>
-              </div>
-            )}
-
-            {/* Metadata pills */}
-            <div className="flex items-center justify-center gap-1.5 flex-wrap mb-5">
-              {/* Status */}
-              {status && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60 capitalize">
-                  {status}
-                </span>
-              )}
-
-              {/* Request-specific */}
-              {type === "request" && urgency && (
-                <span
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${URGENCY_STYLE[urgency] || URGENCY_STYLE.medium}`}
-                >
-                  {urgency}
-                </span>
-              )}
-              {type === "request" && householdSize && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60 flex items-center gap-1">
-                  <Users size={10} /> {householdSize}
-                </span>
-              )}
-
-              {/* Resource-specific */}
-              {type === "resource" && capacity != null && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/60">
-                  Capacity: {capacity}
-                </span>
-              )}
-
-              {/* Category pill */}
-              {category && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/8 text-white/50 capitalize flex items-center gap-1">
-                  <CategoryIcon size={10} />
-                  {category.replace(/_/g, " ")}
-                </span>
-              )}
-            </div>
-
-            {/* Match button */}
-            {onMatch && (
-              <button
-                onClick={onMatch}
-                className="w-full py-3 rounded-2xl text-white text-xs font-bold tracking-wide active:scale-[0.97] transition-transform"
-                style={{
-                  background: cfg.color,
-                  boxShadow: `0 4px 20px ${cfg.colorFaded}0.3)`,
-                  color: type === "resource" ? "#0F1E2B" : "#FFFFFF",
-                }}
-              >
-                {cfg.matchLabel}
-              </button>
-            )}
-          </div>
-        </div>
+        className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-[#0F1E2B] flex items-center justify-center z-10"
+        style={{ border: `2px solid ${borderColor}`, boxShadow: `0 0 16px ${borderColor}66` }}
+      >
+        <svg viewBox="0 0 40 40" fill="none" className="w-[22px] h-[22px]">
+          <path d="M33.3 34.9L26 27.6c-1.5 1.5-3.4 3.1-5.8 4.7-2.4-1.6-4.3-3.2-5.8-4.7L6.8 35C10.3 38.1 15 40 20 40s9.8-1.9 13.3-5.1z" fill={type === "report" ? "#fff" : c.color} />
+          <path d="M26.8 12.5c-2-0.6-4.2-0.2-5.7 1.3L20.2 14.9l-1-1c-1.5-1.6-3.7-1.9-5.7-1.3L6.3 5.4C9.9 2.1 14.7 0 20 0s10.2 2.1 13.8 5.6L26.8 12.5z" fill={type === "report" ? "#fff" : c.color} />
+          <path d="M6.3 7.8L5.1 6.7C1.9 10.2 0 14.9 0 20s2.1 10.2 5.6 13.8L6.7 32.7C3.6 29.4 1.7 24.9 1.7 20S3.4 11.1 6.2 7.9l.1-.1z" fill={type === "report" ? "#fff" : c.color} />
+          <path d="M33.4 32.5l1.2 1.2C37.9 30.1 40 25.3 40 20s-1.9-9.6-5-13.2L33.9 8C36.7 11.2 38.3 15.4 38.3 20s-1.9 9.2-4.9 12.5z" fill={type === "report" ? "#fff" : c.color} />
+        </svg>
       </div>
 
-      <style>{`@keyframes cardPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }`}</style>
-    </>
+      {/* Card body */}
+      <div className="relative bg-[rgba(26,56,80,0.92)] backdrop-blur-[20px] border-[1.5px] border-white/[0.08] rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] pt-8 px-5 pb-4 overflow-hidden">
+        {/* Accent line */}
+        <div className="absolute top-0 left-5 right-5 h-[2px]" style={accentStyle} />
+
+        {/* Close */}
+        <button onClick={onClose} className="absolute top-2 right-2.5 w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/40 hover:text-white text-sm flex items-center justify-center transition">×</button>
+
+        {/* Type label */}
+        <div className="text-[10px] uppercase tracking-[1px] font-bold mb-1" style={{ color: c.color }}>{c.label}</div>
+
+        {/* Title */}
+        <h3 className="font-serif text-lg text-white font-normal leading-tight mb-2">{fmtCategory(p)}</h3>
+
+        {/* Badges */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {p.urgency && <Badge className={urgencyStyle[p.urgency] || urgencyStyle.low}>{p.urgency}</Badge>}
+          {p.category && <Badge className="bg-white/[0.06] text-white/50 border-white/[0.08]">{p.category.toLowerCase()}</Badge>}
+          {p.status && <Badge className="bg-white/[0.06] text-white/40 border-white/[0.08]">{p.status}</Badge>}
+          {p.verification_status === "verified" && <Badge className="bg-emerald-500/12 text-emerald-400 border-emerald-500/20">Verified</Badge>}
+        </div>
+
+        {/* Meta row */}
+        <div className="flex gap-4 text-[11px] text-white/40 pb-3 mb-3 border-b border-white/[0.06]">
+          {p.created_at && <span className="flex items-center gap-1"><ClockIcon />{timeAgo(p.created_at)}</span>}
+          {p.location_text && <span className="flex items-center gap-1 truncate"><PinIcon />{p.location_text}</span>}
+          {type === "request" && p.household_size && <span className="flex items-center gap-1"><UsersIcon />Family of {p.household_size}</span>}
+          {type === "resource" && p.org_name && <span className="flex items-center gap-1"><OrgIcon />{p.org_name}</span>}
+          {type === "report" && <span className="flex items-center gap-1"><EyeIcon />Direct observation</span>}
+        </div>
+
+        {/* AI Summary */}
+        {(p.description || p.public_display_text) && (
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-[10px] p-3 mb-3">
+            <div className="flex items-center gap-1 mb-1.5">
+              <svg viewBox="0 0 16 16" fill="none" className="w-2.5 h-2.5"><circle cx="8" cy="8" r="7" stroke="#89CFF0" strokeWidth="1.5"/><path d="M5 8.5L7 10.5L11 6" stroke="#89CFF0" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <span className="text-[9px] uppercase tracking-[1px] font-bold text-sky-400/60">AI Summary</span>
+            </div>
+            <p className="text-xs text-white/55 leading-relaxed">{p.public_display_text || p.description}</p>
+          </div>
+        )}
+
+        {/* Capacity bar — resources only */}
+        {type === "resource" && p.capacity_available != null && (
+          <div className="mb-3">
+            <div className="flex justify-between text-[11px] mb-1">
+              <span className="text-white/40">Capacity</span>
+              <span className="text-sky-400 font-bold">{p.capacity_remaining ?? p.capacity_available} / {p.capacity_available} available</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/[0.08]">
+              <div className="h-full rounded-full bg-sky-400" style={{ width: `${Math.min(100, ((p.capacity_remaining ?? p.capacity_available) / p.capacity_available) * 100)}%` }} />
+            </div>
+          </div>
+        )}
+
+        {/* Corroboration — reports only */}
+        {type === "report" && p.corroboration_count != null && p.corroboration_count > 0 && (
+          <div className="bg-white/[0.03] rounded-lg p-2 flex items-center gap-3 mb-3">
+            <span className="font-serif text-lg font-bold text-white/70">{p.corroboration_count}</span>
+            <span className="text-[11px] text-white/40 leading-tight">other reports within 500m<br/>in the last 24 hours</span>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 mb-1">
+          <button
+            onClick={onMatch}
+            className={`flex-1 py-2.5 rounded-[10px] text-xs font-bold text-center transition ${
+              type === "request" ? "bg-[#EF4E4B] text-white hover:bg-red-600" :
+              type === "resource" ? "bg-[#89CFF0] text-[#0F1E2B] hover:bg-sky-300" :
+              "bg-white/15 text-white hover:bg-white/20"
+            }`}
+          >{c.matchLabel}</button>
+          <button className="flex-1 py-2.5 rounded-[10px] text-xs font-bold bg-white/[0.06] text-white/60 border border-white/[0.08] hover:bg-white/10 transition">Comment</button>
+        </div>
+
+        {/* Share row */}
+        <div className="border-t border-white/[0.04] mt-1 pt-2.5 flex justify-center gap-4">
+          <span className="text-[10px] text-white/30 hover:text-sky-400 cursor-pointer flex items-center gap-1"><ShareIcon />Share</span>
+          <span onClick={copyLink} className="text-[10px] text-white/30 hover:text-sky-400 cursor-pointer flex items-center gap-1"><CopyIcon />Copy Link</span>
+          <span className="text-[10px] text-white/30 hover:text-sky-400 cursor-pointer flex items-center gap-1"><MapIcon />View on Map</span>
+        </div>
+      </div>
+    </div>
   );
 }
+
+/* Tiny inline icons — 12px, current color */
+const ClockIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM8.5 4H7v4.5l3.5 2 .75-1.23L8.5 7.5V4z"/></svg>;
+const PinIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M8 0C5.2 0 3 2.2 3 4.9 3 8.4 8 14 8 14s5-5.6 5-9.1C13 2.2 10.8 0 8 0zm0 7a2 2 0 110-4 2 2 0 010 4z"/></svg>;
+const UsersIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M7 1v2H5a2 2 0 00-2 2v1h10V5a2 2 0 00-2-2H9V1H7zM3 7v6a2 2 0 002 2h6a2 2 0 002-2V7H3z"/></svg>;
+const OrgIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 2h6v1H5V7zm0 2h3v1H5V9z"/></svg>;
+const EyeIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 5h2v4H7V5zm0 5h2v2H7v-2z"/></svg>;
+const ShareIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M10 2a2 2 0 110 4 2 2 0 010-4zM4 6a2 2 0 110 4 2 2 0 010-4zM10 10a2 2 0 110 4 2 2 0 010-4zM8.6 4.5L5.4 6.5M5.4 9.5l3.2 2"/></svg>;
+const CopyIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M5 2a1 1 0 00-1 1v8a1 1 0 001 1h6a1 1 0 001-1V3a1 1 0 00-1-1H5zM3 5a1 1 0 00-1 1v7a1 1 0 001 1h6v-1H3V5z"/></svg>;
+const MapIcon = () => <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M1 3l4-2 6 2 4-2v12l-4 2-6-2-4 2V3zm4-.5v10l6 2v-10l-6-2z"/></svg>;
+
+export default PinDetailCard;
