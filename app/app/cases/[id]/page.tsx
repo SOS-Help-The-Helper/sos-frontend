@@ -34,9 +34,8 @@ const EMPTY_UMBRELLA = {
 
 type UmbrellaShape = typeof EMPTY_UMBRELLA;
 
-// placeholder — real data loaded via EF
+// placeholder — real data loaded via EF (orgs is threaded through props from state).
 const cases: any[] = [];
-const orgs: any[] = [];
 const matches: Record<string, any> = {};
 import { UrgencyBadge } from "@/components/crm/pills";
 import { MatchChainView, type MatchChainData } from "@/components/match/match-chain-view";
@@ -156,6 +155,7 @@ export default function UmbrellaView() {
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
   const [childCasesData, setChildCasesData] = useState<any[]>([]);
+  const [orgsData, setOrgsData] = useState<Array<{ id: string; name: string; color?: string }>>([]);
   const [liveMatches, setLiveMatches] = useState<MatchCandidate[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -202,7 +202,30 @@ export default function UmbrellaView() {
             matchCount: r.match_count ?? 0,
           }));
           setChildCasesData(mapped as typeof cases);
+          // FIX 1 — each request IS a need. Drives the AI summary taxonomy list
+          // and the "still unmet" logic, which were dead while needs stayed [].
+          setUmbrellaData((prev) => ({
+            ...prev,
+            needs: data.requests.map((r: any) => ({
+              tag: r.taxonomy_code ?? r.category ?? (Array.isArray(r.taxonomy) ? r.taxonomy[0] : "") ?? "",
+              state: r.status ?? "active",
+            })),
+          }));
         }
+        // FIX 2 — orgs lookup table (name + color) for timeline actor / requests rendering.
+        if (data.orgs && Array.isArray(data.orgs) && data.orgs.length > 0) {
+          setOrgsData(
+            data.orgs.map((o: any) => ({
+              id: o.id ?? o.org_id,
+              name: o.name ?? o.org_name ?? o.slug ?? o.id,
+              // TODO: EF doesn't return a brand color yet — render falls back to cream when absent.
+              color: o.color ?? o.brand_color,
+            }))
+          );
+        }
+        // TODO: when data.orgs is absent the EF doesn't expose org names/colors here;
+        // request.org_id alone has no name/color to render, so we leave orgs empty
+        // rather than guess. Timeline actor + request org labels degrade gracefully.
         // Map matches if present
         if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
           setLiveMatches(
@@ -357,6 +380,7 @@ export default function UmbrellaView() {
                 note={note}
                 setNote={setNote}
                 childCases={childCasesData}
+                orgs={orgsData}
                 umbrellaData={umbrellaData}
                 liveMatches={liveMatches}
                 onPostNote={handlePostNote}
@@ -443,12 +467,13 @@ function candidateToChainData(m: MatchCandidate, umbrellaData: UmbrellaShape): M
 }
 
 function CaseTabs({
-  sosId, note, setNote, childCases, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange, onRefetch,
+  sosId, note, setNote, childCases, orgs, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange, onRefetch,
 }: {
   sosId: string;
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
+  orgs: Array<{ id: string; name: string; color?: string }>;
   umbrellaData: UmbrellaShape;
   liveMatches: MatchCandidate[] | null;
   onPostNote: () => void;
@@ -539,6 +564,7 @@ function CaseTabs({
           note={note}
           setNote={setNote}
           childCases={childCases}
+          orgs={orgs}
           umbrellaData={umbrellaData}
           onPostNote={onPostNote}
           postingNote={postingNote}
@@ -666,11 +692,12 @@ function CaseTabs({
 }
 
 function TimelineTab({
-  note, setNote, childCases, umbrellaData, onPostNote, postingNote,
+  note, setNote, childCases, orgs, umbrellaData, onPostNote, postingNote,
 }: {
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
+  orgs: Array<{ id: string; name: string; color?: string }>;
   umbrellaData: UmbrellaShape;
   onPostNote: () => void;
   postingNote: boolean;
