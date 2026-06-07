@@ -405,7 +405,7 @@ export default function CasesPage() {
     setResourceCards([]);
     setLoading(true);
     Promise.allSettled([
-      api.crmSosesList({ limit: 200 }),
+      api.crmSosesList({ limit: 200, org_id: orgId || undefined }),
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
       api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
@@ -538,7 +538,7 @@ export default function CasesPage() {
 
   const refreshCases = () => {
     setLoading(true);
-    api.crmSosesList({ limit: 200 })
+    api.crmSosesList({ limit: 200, org_id: orgId || undefined })
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
