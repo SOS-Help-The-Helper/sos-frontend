@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set([
   '/home',
   '/home-v25.html',
   '/login',
+  '/vote',
   '/join',
   '/app',
   '/cases',
