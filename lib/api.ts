@@ -215,13 +215,22 @@ export const api = {
       by_taxonomy: {},
     };
   },
-  // Transform inventory-query response to match the shape callers expect (resources, total)
+  // Direct Supabase read for resource rows (SOS DB only, RLS-protected)
   crmResourcesList: async (orgId: string, filters?: Record<string, unknown>) => {
-    const res = await efCall<any>("inventory-query", { query_type: "org_inventory_summary", org_id: orgId, ...filters });
+    const limit = (filters?.limit as number) || 200;
+    let q = supabaseRead
+      .from('resources')
+      .select('id, status, category, taxonomy_code, description, capacity_available, capacity_total, contact_name, location_text, city, state, county, latitude, longitude, org_id, created_at, persons:person_id(display_name, phone)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (orgId) q = q.eq('org_id', orgId);
+    if (filters?.status) q = Array.isArray(filters.status) ? q.in('status', filters.status as string[]) : q.eq('status', filters.status as string);
+    const { data, count, error } = await q;
+    if (error) throw new Error(error.message);
     return {
-      resources: res.summary || [],
-      results: res.summary || [],
-      total: (res.summary || []).reduce((sum: number, s: any) => sum + (s.resource_count || 0), 0),
+      resources: data || [],
+      results: data || [],
+      total: count ?? (data || []).length,
       by_status: {},
       by_taxonomy: {},
     };

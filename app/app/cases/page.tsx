@@ -208,7 +208,7 @@ function mapCasesToCards(items: any[]): Card[] {
       title: name || "Anonymous",
       meta: [plural(reqCount, 'request'), fulCount > 0 ? `${fulCount} fulfilled` : null, region].filter(Boolean).join(' · '),
       sub: [daysAgo != null ? `${daysAgo}d ago` : null, ...badges].filter(Boolean).join(' · ') || undefined,
-      href: `/app/cases/${s.id}`,
+      href: `/app/cases/${s.persons?.id || s.id}?sos=1`,
       taxonomy: fmtTaxonomy(s.taxonomy_code),
       description: s.description,
     };
@@ -406,8 +406,8 @@ export default function CasesPage() {
     setLoading(true);
     Promise.allSettled([
       api.crmSosesList({ limit: 200, org_id: orgId || undefined }),
-      api.crmRequestsList(orgId || ""),
-      api.crmResourcesList(orgId || ""),
+      api.crmRequestsList(orgId || "", { limit: 200 }),
+      api.crmResourcesList(orgId || "", { limit: 500 }),
       api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
     ])
       .then(([casesRes, requestsRes, resourcesRes, reportsRes]) => {

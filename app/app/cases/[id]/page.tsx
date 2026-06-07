@@ -174,7 +174,9 @@ function LoadingSkeleton() {
 export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
-  const isUmbrella = (id ?? "").startsWith("U-");
+  // Treat as umbrella (person-level view) if URL has ?sos=1 flag or starts with "U-"
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const isUmbrella = (id ?? "").startsWith("U-") || searchParams.get('sos') === '1';
   const { orgId, loading: authLoading } = useAuthContext();
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
