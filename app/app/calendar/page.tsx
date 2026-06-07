@@ -28,9 +28,11 @@ const today = new Date();
 const days = Array.from({ length: 7 }, (_, i) => {
   const d = new Date(today);
   d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon–Sun
+  const iso = d.toISOString().slice(0, 10); // YYYY-MM-DD for stable comparison
   return {
     label: d.toLocaleDateString('en', { weekday: 'short' }),
-    date: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    date: iso,
+    display: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
   };
 });
 
@@ -53,7 +55,12 @@ export default function CalendarPage() {
     setLoading(true);
     api.crmEventsList(orgId || '').then((res) => {
       const data = (res as { events?: unknown[] }).events;
-      setItems(Array.isArray(data) ? data as CalEvent[] : []);
+      // Normalize event dates to ISO (YYYY-MM-DD) for stable day-column matching
+      const normalized = Array.isArray(data) ? (data as CalEvent[]).map(e => ({
+        ...e,
+        date: e.date ? new Date(e.date).toISOString().slice(0, 10) : e.date,
+      })) : [];
+      setItems(normalized);
     }).catch(() => {
       toast.error("Failed to load events");
       setItems([]);
@@ -137,7 +144,7 @@ export default function CalendarPage() {
                   ${activeDay === i ? 'bg-white text-[#0F1E2B]' : 'bg-white/5 text-white/60'}`}
               >
                 <span>{d.label}</span>
-                <span className="font-medium">{d.date.split(' ')[1]}</span>
+                <span className="font-medium">{d.display.split(' ')[1]}</span>
               </button>
             ))}
           </div>
@@ -149,7 +156,7 @@ export default function CalendarPage() {
                 <>
                   <div className="p-3 text-center border-b border-white/8">
                     <p className="font-mono text-xs uppercase tracking-wider text-white/45">{d.label}</p>
-                    <p className="text-[15px] font-semibold mt-0.5">{d.date}</p>
+                    <p className="text-[15px] font-semibold mt-0.5">{d.display}</p>
                   </div>
                   <div className="group/day p-2 space-y-2 relative min-h-[340px]">
                     {loading ? (
@@ -227,7 +234,7 @@ export default function CalendarPage() {
             {days.map((d) => (
               <div key={d.label} className="p-3 text-center border-r border-white/5 last:border-r-0">
                 <p className="font-mono text-xs uppercase tracking-wider text-white/45">{d.label}</p>
-                <p className="text-[15px] font-semibold mt-0.5">{d.date.split(" ")[1]}</p>
+                <p className="text-[15px] font-semibold mt-0.5">{d.display.split(' ')[1]}</p>
               </div>
             ))}
           </div>
@@ -487,7 +494,7 @@ function EventFormDrawer({
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full h-9 rounded-md bg-white/6 border border-white/8 px-2 text-[13px] focus:outline-none focus:border-[#89CFF0]"
               >
-                {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.date}</option>)}
+                {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.display}</option>)}
               </select>
             </Field>
             <Field label="Time">
@@ -605,7 +612,7 @@ function InlineEventEdit({
             onChange={(e) => setDate(e.target.value)}
             className="w-full h-8 rounded-md bg-white/6 border border-white/8 px-2 text-[12.5px] focus:outline-none focus:border-[#89CFF0]"
           >
-            {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.date}</option>)}
+            {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.display}</option>)}
           </select>
           <input
             value={time}
