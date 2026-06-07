@@ -59,12 +59,35 @@ function topCategory(p: Record<string, any>) {
 
 function townOnly(loc: string | undefined) {
   if (!loc) return null;
-  let cleaned = loc.replace(/\b\d{5}(-\d{4})?\b/g, "").trim();
+  // Strip zip codes
+  let cleaned = loc.replace(/\b\d{5}(-\d{4})?\b/g, "").trim().replace(/,\s*$/, "");
   const parts = cleaned.split(",").map(s => s.trim()).filter(Boolean);
-  if (parts.length >= 3) return `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+  if (parts.length >= 3) {
+    // "629 Reems Creek Rd, Weaverville, NC" → "Weaverville, NC"
+    return `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+  }
   if (parts.length === 2) {
-    if (/\d/.test(parts[0])) return parts[1];
+    // If first part has a number (street), skip it
+    if (/\d/.test(parts[0])) return parts[1].trim();
     return cleaned;
+  }
+  // Single part — "629 reems creek road weaverville nc"
+  // Try to find state abbreviation at end
+  const stateMatch = cleaned.match(/\b([A-Z]{2})\s*$/i);
+  if (stateMatch) {
+    // Remove state, find city-like word before it
+    const beforeState = cleaned.replace(/\b[A-Z]{2}\s*$/i, "").trim();
+    const words = beforeState.split(/\s+/);
+    // Last non-numeric word is likely the city
+    const cityWords = [];
+    for (let i = words.length - 1; i >= 0 && cityWords.length < 2; i--) {
+      if (!/^\d/.test(words[i])) cityWords.unshift(words[i]);
+      else break;
+    }
+    if (cityWords.length > 0) {
+      const city = cityWords.join(" ");
+      return `${city.charAt(0).toUpperCase()}${city.slice(1)}, ${stateMatch[1].toUpperCase()}`;
+    }
   }
   return cleaned;
 }
@@ -92,17 +115,12 @@ export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDeta
 
   return (
     <div className="relative max-w-[360px] w-full pointer-events-auto" style={{ marginTop: 20 }}>
-      {/* Floating logomark */}
+      {/* Floating logomark — proper SVG from Figma */}
       <div
         className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full flex items-center justify-center z-10"
         style={{ backgroundColor: c.cardBg, border: `2px solid ${c.color}`, boxShadow: `0 0 16px ${c.color}44` }}
       >
-        <svg viewBox="0 0 40 40" fill="none" className="w-[22px] h-[22px]">
-          <path d="M33.3 34.9L26 27.6c-1.5 1.5-3.4 3.1-5.8 4.7-2.4-1.6-4.3-3.2-5.8-4.7L6.8 35C10.3 38.1 15 40 20 40s9.8-1.9 13.3-5.1z" fill={c.color} />
-          <path d="M26.8 12.5c-2-0.6-4.2-0.2-5.7 1.3L20.2 14.9l-1-1c-1.5-1.6-3.7-1.9-5.7-1.3L6.3 5.4C9.9 2.1 14.7 0 20 0s10.2 2.1 13.8 5.6L26.8 12.5z" fill={c.color} />
-          <path d="M6.3 7.8L5.1 6.7C1.9 10.2 0 14.9 0 20s2.1 10.2 5.6 13.8L6.7 32.7C3.6 29.4 1.7 24.9 1.7 20S3.4 11.1 6.2 7.9l.1-.1z" fill={c.color} />
-          <path d="M33.4 32.5l1.2 1.2C37.9 30.1 40 25.3 40 20s-1.9-9.6-5-13.2L33.9 8C36.7 11.2 38.3 15.4 38.3 20s-1.9 9.2-4.9 12.5z" fill={c.color} />
-        </svg>
+        <img src={type === "request" ? "/logomark-red.svg" : type === "resource" ? "/logomark-blue.svg" : "/logomark-white.svg"} alt="SOS" className="w-[22px] h-[22px]" />
       </div>
 
       {/* Card body — themed by type */}
@@ -111,8 +129,8 @@ export function PinDetailCard({ type, properties: p, onClose, onMatch }: PinDeta
         {/* Accent line */}
         <div className="absolute top-0 left-5 right-5 h-[2px]" style={{ backgroundColor: c.color }} />
 
-        {/* Close */}
-        <button onClick={onClose} className="absolute top-2 right-2.5 w-7 h-7 rounded-full bg-white/[0.1] hover:bg-white/[0.2] text-white/60 hover:text-white text-sm flex items-center justify-center transition">×</button>
+        {/* Close — small, subtle */}
+        <button onClick={onClose} className="absolute top-3 right-3 text-white/30 hover:text-white/60 text-xs transition leading-none">✕</button>
 
         {/* Type label */}
         <div className="text-[10px] uppercase tracking-[1px] font-bold mb-0.5" style={{ color: c.color }}>{c.label}</div>
