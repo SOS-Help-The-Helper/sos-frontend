@@ -31,6 +31,7 @@ const PUBLIC_PREFIXES = [
   '/app/',         // partner portal
   '/erv/',         // ERV public pages (impact report, etc.)
   '/case-studies/', // Public case studies
+  '/maps/',         // Map showcase demos
   '/share/',        // Public incident situation reports
   '/drive/',       // driver delivery pages
   '/cases/',       // partner: cases
