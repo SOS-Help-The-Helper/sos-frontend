@@ -112,6 +112,7 @@ export default function DirectoryPage() {
   }, [orgId, refreshKey]);
 
   useEffect(() => {
+    if (!orgId) return;
     setLoading(true);
     api.crmBrowseOrgs(orgId, { limit: 100 })
       .then((res: any) => {
@@ -132,7 +133,7 @@ export default function DirectoryPage() {
       })
       .catch(() => { toast.error("Failed to load organizations"); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [orgId]);
 
   const q = query.trim().toLowerCase();
 

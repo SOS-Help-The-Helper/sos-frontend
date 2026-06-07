@@ -49,7 +49,7 @@ interface ReqDetail {
 
 export default function RequestPage() {
   const { id } = useParams<{ id: string }>();
-  const { orgId } = useAuthContext();
+  const { orgId, loading: authLoading } = useAuthContext();
   const [r, setR] = useState<ReqDetail | null | undefined>(undefined);
   const [chatOpen, setChatOpen] = useState(false);
   const [finding, setFinding] = useState(false);
@@ -70,6 +70,8 @@ export default function RequestPage() {
   };
 
   useEffect(() => {
+    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
+    if (authLoading || !orgId) return;
     api.crmCasesDetail({ request_id: id })
       .then((data: ReqDetail | null) => {
         if (data) {
@@ -87,7 +89,7 @@ export default function RequestPage() {
         }
       })
       .catch(() => setR(null));
-  }, [id]);
+  }, [id, orgId, authLoading]);
 
   if (r === undefined) {
     return (

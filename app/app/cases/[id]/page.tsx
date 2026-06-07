@@ -152,7 +152,7 @@ export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
   const isUmbrella = (id ?? "").startsWith("U-");
-  const { orgId } = useAuthContext();
+  const { orgId, loading: authLoading } = useAuthContext();
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
   const [childCasesData, setChildCasesData] = useState<any[]>([]);
@@ -166,6 +166,8 @@ export default function UmbrellaView() {
   const [activeTab, setActiveTab] = useState("timeline");
 
   useEffect(() => {
+    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
+    if (authLoading || !orgId) return;
     const efParams = isUmbrella ? { person_id: id } : { request_id: id };
     api.crmCasesDetail(efParams)
       .then((data: any) => {
@@ -239,15 +241,17 @@ export default function UmbrellaView() {
       })
       .catch(() => { setNotFound(true); })
       .finally(() => setLoading(false));
-  }, [id, isUmbrella]);
+  }, [id, isUmbrella, orgId, authLoading]);
 
   useEffect(() => {
+    // Wait for org config to resolve so notes are read from the correct DB.
+    if (authLoading || !orgId) return;
     api.crmGetCaseNotes(id)
       .then((data: any) => {
         if (data?.notes && Array.isArray(data.notes)) setCaseNotes(data.notes);
       })
       .catch(() => toast.error("Failed to load case"));
-  }, [id]);
+  }, [id, orgId, authLoading]);
 
   const handlePostNote = useCallback(async () => {
     const text = note.trim();
@@ -462,7 +466,7 @@ function CaseTabs({
         setAvailableOrgs(items.map((o: any) => ({ id: o.id, name: o.name ?? o.slug ?? o.id })));
       })
       .catch(() => toast.error("Failed to load case"));
-  }, []);
+  }, [orgId]);
 
   const handleCloseCase = async () => {
     setClosingCase(true);

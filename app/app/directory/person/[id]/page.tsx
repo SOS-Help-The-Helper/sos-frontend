@@ -52,7 +52,7 @@ const HOUSING_OPTIONS = ["Stable", "Displaced", "At Risk"] as const;
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
-  const { orgId } = useAuthContext();
+  const { orgId, loading: authLoading } = useAuthContext();
   const [apiData, setApiData] = useState<ApiResponse | null | undefined>(undefined);
   const [chatOpen, setChatOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -62,10 +62,12 @@ export default function PersonPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    // Wait for org config to resolve before fetching, so partner orgs hit their own DB.
+    if (authLoading || !orgId) return;
     api.crmGetPerson(id)
       .then((data: unknown) => setApiData(data as ApiResponse))
       .catch(() => { setApiData(null); toast.error("Failed to load person"); });
-  }, [id]);
+  }, [id, orgId, authLoading]);
 
   // Loading state
   if (apiData === undefined) {
