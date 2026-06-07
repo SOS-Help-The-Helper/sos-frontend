@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOS | State Emergency Operations</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff}
+#map{position:absolute;top:0;left:0;right:0;bottom:0}
+.hdr{position:absolute;top:0;left:0;right:0;z-index:10;padding:14px 24px;
+  background:rgba(15,30,43,0.95);border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:14px}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400}
+.hdr .state{color:#89CFF0;font-size:13px;font-weight:600}
+.hdr .sep{width:1px;height:24px;background:rgba(255,255,255,0.1)}
+.hdr .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.chip{padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s}
+.chip:hover{background:rgba(255,255,255,0.08)}
+.chip.on{border-color:#EF4E4B;background:rgba(239,78,75,0.12);color:#EF4E4B}
+.metrics{position:absolute;top:60px;left:16px;right:16px;z-index:10;display:flex;gap:8px;pointer-events:none}
+.metric{flex:1;background:rgba(15,30,43,0.88);backdrop-filter:blur(16px);border-radius:14px;
+  border:1px solid rgba(255,255,255,0.06);padding:16px;pointer-events:auto}
+.metric .num{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400}
+.metric .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:2px}
+.metric .trend{font-size:10px;margin-top:4px}
+.metric .trend.up{color:#EF4E4B}
+.metric .trend.dn{color:#34d399}
+.leg{position:absolute;bottom:16px;left:16px;z-index:10;display:flex;gap:8px}
+.leg-item{background:rgba(15,30,43,0.85);backdrop-filter:blur(10px);border-radius:99px;
+  padding:6px 12px;font-size:10px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.mode-toggle{position:absolute;bottom:16px;right:16px;z-index:10;display:flex;gap:4px;
+  background:rgba(15,30,43,0.85);backdrop-filter:blur(10px);border-radius:10px;padding:4px}
+.mt-btn{padding:6px 14px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;
+  color:rgba(255,255,255,0.5);transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px;border:none;background:none}
+.mt-btn:hover{color:#fff}
+.mt-btn.on{background:rgba(239,78,75,0.15);color:#EF4E4B}
+</style></head><body>
+<div id="map"></div>
+
+<div class="hdr">
+  <svg width="24" height="24" viewBox="0 0 40 40" fill="none"><path d="M33.34 34.91L25.99 27.56C24.47 29.05 22.56 30.63 20.18 32.27C17.78 30.62 15.87 29.04 14.35 27.53L6.83 35.05C10.35 38.13 14.96 40 20 40C25.12 40 29.8 38.07 33.34 34.91Z" fill="#EF4E4B"/><path d="M26.84 12.55C24.88 11.94 22.66 12.3 21.15 13.86L20.18 14.87L19.21 13.86C17.69 12.29 15.45 11.93 13.49 12.56L6.33 5.4C9.9 2.05 14.71 0 20 0C25.37 0 30.24 2.11 33.83 5.55L26.84 12.55Z" fill="#EF4E4B"/><path d="M6.27 7.85L5.09 6.66C1.93 10.2 0 14.88 0 20C0 25.37 2.11 30.24 5.55 33.83L6.73 32.65C3.59 29.36 1.67 24.91 1.67 20C1.67 15.37 3.38 11.14 6.21 7.92L6.27 7.85Z" fill="#EF4E4B"/><path d="M33.42 32.49L34.6 33.67C37.95 30.1 40 25.29 40 20C40 14.96 38.13 10.35 35.05 6.83L33.87 8.01C36.65 11.23 38.33 15.42 38.33 20C38.33 24.83 36.47 29.22 33.42 32.49Z" fill="#EF4E4B"/><path d="M32.69 9.19C35.17 12.1 36.67 15.88 36.67 20C36.67 24.37 34.99 28.34 32.24 31.31L27.2 26.27C28.42 24.9 29.3 23.61 29.9 22.41C31.38 19.47 31.21 17.14 30.38 15.5C29.93 14.62 29.28 13.9 28.51 13.37L32.69 9.19Z" fill="#EF4E4B"/><path d="M7.46 9.03L11.82 13.39C11.07 13.92 10.42 14.63 9.98 15.5C9.15 17.14 8.98 19.47 10.46 22.41C11.06 23.6 11.93 24.89 13.14 26.25L7.91 31.47C5.07 28.49 3.33 24.45 3.33 20C3.33 15.8 4.89 11.96 7.46 9.03Z" fill="#EF4E4B"/></svg>
+  <h1>SOS Connect</h1>
+  <div class="sep"></div>
+  <span class="state">State of Florida</span>
+  <div class="right">
+    <span class="chip on">All Counties</span>
+    <span class="chip">Marion</span>
+    <span class="chip">Alachua</span>
+    <span class="chip">Levy</span>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="metric"><div class="num" style="color:#EF4E4B">—</div><div class="lbl">Active Requests</div><div class="trend up">↑ statewide</div></div>
+  <div class="metric"><div class="num" style="color:#89CFF0">—</div><div class="lbl">Resources Deployed</div><div class="trend dn">↓ stable</div></div>
+  <div class="metric"><div class="num" style="color:rgba(255,255,255,0.7)">—</div><div class="lbl">Field Reports</div><div class="trend up">↑ 24h</div></div>
+  <div class="metric"><div class="num" style="color:#34d399">—</div><div class="lbl">Matches Made</div><div class="trend dn">↑ improving</div></div>
+</div>
+
+<div class="leg">
+  <span class="leg-item"><span class="dot" style="background:#EF4E4B"></span> Requests</span>
+  <span class="leg-item"><span class="dot" style="background:#89CFF0"></span> Resources</span>
+  <span class="leg-item"><span class="dot" style="background:#0F1E2B;border:1.5px solid rgba(255,255,255,0.3)"></span> Reports</span>
+</div>
+
+<div class="mode-toggle">
+  <button class="mt-btn on" onclick="setView('pins',this)">Pins</button>
+  <button class="mt-btn" onclick="setView('heat',this)">Heatmap</button>
+  <button class="mt-btn" onclick="setView('satellite',this)">Satellite</button>
+</div>
+
+<script>
+mapboxgl.accessToken='pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
+const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[-82.0,28.5],zoom:6.5});
+let currentStyle='dark-v11';
+
+map.on('load',()=>{ addLayers(); });
+
+function addLayers(){
+  if(map.getSource('sos')) return;
+  map.addSource('sos',{type:'vector',tiles:[location.origin+'/api/map/tiles/{z}/{x}/{y}'],minzoom:2,maxzoom:14});
+
+  // Requests — SOS Red
+  map.addLayer({id:'req-heat',type:'heatmap',source:'sos','source-layer':'sos',filter:['==',['get','type'],'request'],
+    layout:{visibility:'none'},
+    paint:{'heatmap-weight':['match',['get','urgency'],'critical',1,'high',0.7,'medium',0.4,0.2],
+      'heatmap-intensity':['interpolate',['linear'],['zoom'],0,0.5,9,2.5],
+      'heatmap-color':['interpolate',['linear'],['heatmap-density'],0,'rgba(15,30,43,0)',0.25,'#0F1E2B',0.45,'#89CFF0',0.65,'#EF4E4B',0.85,'#FCD34D',1,'#fff'],
+      'heatmap-radius':['interpolate',['linear'],['zoom'],0,6,10,35],'heatmap-opacity':0.8}});
+
+  map.addLayer({id:'req-glow',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'request'],
+    paint:{'circle-color':'#EF4E4B','circle-radius':12,'circle-opacity':0.2,'circle-blur':0.6}});
+  map.addLayer({id:'req-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'request'],
+    paint:{'circle-color':'#EF4E4B','circle-radius':6,'circle-stroke-width':1.5,'circle-stroke-color':'#fff'}});
+
+  // Resources — SOS Light Blue
+  map.addLayer({id:'res-glow',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'resource'],
+    paint:{'circle-color':'#89CFF0','circle-radius':10,'circle-opacity':0.2}});
+  map.addLayer({id:'res-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'resource'],
+    paint:{'circle-color':'#89CFF0','circle-radius':5,'circle-stroke-width':1.5,'circle-stroke-color':'#fff'}});
+
+  // Reports — SOS Navy
+  map.addLayer({id:'rep-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'report'],
+    paint:{'circle-color':'#0F1E2B','circle-radius':5,'circle-stroke-width':1.5,'circle-stroke-color':'rgba(15,30,43,0.4)'}});
+}
+
+const PL=['req-glow','req-pts','res-glow','res-pts','rep-pts'];
+function setView(v,b){
+  document.querySelectorAll('.mt-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  if(v==='pins'){
+    PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','visible')});
+    if(map.getLayer('req-heat'))map.setLayoutProperty('req-heat','visibility','none');
+    if(currentStyle!=='dark-v11'){map.setStyle('mapbox://styles/mapbox/dark-v11');currentStyle='dark-v11';map.once('style.load',addLayers)}
+  } else if(v==='heat'){
+    PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','none')});
+    if(map.getLayer('req-heat'))map.setLayoutProperty('req-heat','visibility','visible');
+  } else if(v==='satellite'){
+    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');currentStyle='satellite-streets-v12';
+    map.once('style.load',()=>{addLayers();PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','visible')});});
+  }
+}
+</script></body></html>

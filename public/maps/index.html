@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOS | Map Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.logo h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400}
+.sub{font-size:14px;color:#89CFF0;font-weight:600;margin-bottom:40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:960px;width:100%}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;
+  padding:24px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#fff}
+.card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);transform:translateY(-2px)}
+.card h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:6px}
+.card p{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5}
+.card .tag{display:inline-block;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:0.6px;margin-top:12px}
+.card .tag.ems{background:rgba(239,78,75,0.15);color:#EF4E4B}
+.card .tag.county{background:rgba(137,207,240,0.15);color:#89CFF0}
+.card .tag.state{background:rgba(252,211,77,0.15);color:#FCD34D}
+.card .tag.fed{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6)}
+.card .tag.admin{background:linear-gradient(135deg,rgba(239,78,75,0.15),rgba(137,207,240,0.15));color:#fff}
+.features{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.feat{font-size:9px;color:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px;padding:2px 6px}
+</style></head><body>
+
+<div class="logo">
+  <svg width="36" height="36" viewBox="0 0 40 40" fill="none"><path d="M33.34 34.91L25.99 27.56C24.47 29.05 22.56 30.63 20.18 32.27C17.78 30.62 15.87 29.04 14.35 27.53L6.83 35.05C10.35 38.13 14.96 40 20 40C25.12 40 29.8 38.07 33.34 34.91Z" fill="#EF4E4B"/><path d="M26.84 12.55C24.88 11.94 22.66 12.3 21.15 13.86L20.18 14.87L19.21 13.86C17.69 12.29 15.45 11.93 13.49 12.56L6.33 5.4C9.9 2.05 14.71 0 20 0C25.37 0 30.24 2.11 33.83 5.55L26.84 12.55Z" fill="#EF4E4B"/><path d="M6.27 7.85L5.09 6.66C1.93 10.2 0 14.88 0 20C0 25.37 2.11 30.24 5.55 33.83L6.73 32.65C3.59 29.36 1.67 24.91 1.67 20C1.67 15.37 3.38 11.14 6.21 7.92L6.27 7.85Z" fill="#EF4E4B"/><path d="M33.42 32.49L34.6 33.67C37.95 30.1 40 25.29 40 20C40 14.96 38.13 10.35 35.05 6.83L33.87 8.01C36.65 11.23 38.33 15.42 38.33 20C38.33 24.83 36.47 29.22 33.42 32.49Z" fill="#EF4E4B"/><path d="M32.69 9.19C35.17 12.1 36.67 15.88 36.67 20C36.67 24.37 34.99 28.34 32.24 31.31L27.2 26.27C28.42 24.9 29.3 23.61 29.9 22.41C31.38 19.47 31.21 17.14 30.38 15.5C29.93 14.62 29.28 13.9 28.51 13.37L32.69 9.19Z" fill="#EF4E4B"/><path d="M7.46 9.03L11.82 13.39C11.07 13.92 10.42 14.63 9.98 15.5C9.15 17.14 8.98 19.47 10.46 22.41C11.06 23.6 11.93 24.89 13.14 26.25L7.91 31.47C5.07 28.49 3.33 24.45 3.33 20C3.33 15.8 4.89 11.96 7.46 9.03Z" fill="#EF4E4B"/></svg>
+  <h1>SOS Connect</h1>
+</div>
+<div class="sub">Map Showcase — 5 Views, One Platform</div>
+
+<div class="grid">
+  <a class="card" href="ems.html">
+    <h2>EMS Tactical</h2>
+    <p>Field operations view for first responders. Dark theme, urgency-weighted pins, 3D terrain for mountain/flood zones.</p>
+    <span class="tag ems">First Responder</span>
+    <div class="features"><span class="feat">Urgency sizing</span><span class="feat">3D terrain</span><span class="feat">Heatmap</span><span class="feat">Pulse animation</span></div>
+  </a>
+
+  <a class="card" href="county.html">
+    <h2>County EM</h2>
+    <p>County emergency management dashboard. Light theme with sidebar for case management and resource tracking.</p>
+    <span class="tag county">Local Government</span>
+    <div class="features"><span class="feat">Light theme</span><span class="feat">Sidebar list</span><span class="feat">Case cards</span><span class="feat">Resource inventory</span></div>
+  </a>
+
+  <a class="card" href="state.html">
+    <h2>State Operations</h2>
+    <p>Statewide coordination view with KPI metrics, county filtering, and satellite imagery toggle.</p>
+    <span class="tag state">State EOC</span>
+    <div class="features"><span class="feat">KPI metrics</span><span class="feat">County filter</span><span class="feat">Satellite view</span><span class="feat">Heatmap</span></div>
+  </a>
+
+  <a class="card" href="federal.html">
+    <h2>Federal Overview</h2>
+    <p>National coordination view with globe projection, multi-state monitoring, and density visualization.</p>
+    <span class="tag fed">Federal / FEMA</span>
+    <div class="features"><span class="feat">Globe view</span><span class="feat">National scale</span><span class="feat">Density map</span><span class="feat">Atmosphere</span></div>
+  </a>
+
+  <a class="card" href="admin.html">
+    <h2>Admin Ultra</h2>
+    <p>God-mode view with every layer, toggle, overlay, and tool. Full control panel with live activity feed.</p>
+    <span class="tag admin">SOS Admin</span>
+    <div class="features"><span class="feat">All layers</span><span class="feat">3D + Globe</span><span class="feat">Satellite</span><span class="feat">Live feed</span><span class="feat">Category filter</span></div>
+  </a>
+</div>
+
+</body></html>
