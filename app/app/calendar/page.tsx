@@ -7,7 +7,7 @@ import { CrmShell } from "@/components/crm-shell";
 import { PageHeader } from "@/components/crm/manage-tabs";
 // orgs not needed — calendar uses orgId from auth context
 const orgs: Array<{ id: string; color?: string }> = [];
-import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, Check } from "lucide-react";
+import { Plus, Users, X, Calendar as CalIcon, Clock, Building2, Trash2, Pencil, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -24,17 +24,22 @@ type CalEvent = {
   location?: string;
 };
 
-const today = new Date();
-const days = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date(today);
-  d.setDate(today.getDate() - today.getDay() + 1 + i); // Mon–Sun
-  const iso = d.toISOString().slice(0, 10); // YYYY-MM-DD for stable comparison
-  return {
-    label: d.toLocaleDateString('en', { weekday: 'short' }),
-    date: iso,
-    display: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
-  };
-});
+type WeekDay = { label: string; date: string; display: string };
+
+// Build a Mon–Sun week, shifted by `offset` weeks from the current week.
+function buildWeek(offset = 0): WeekDay[] {
+  const base = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() - base.getDay() + 1 + i + offset * 7); // Mon–Sun
+    const iso = d.toISOString().slice(0, 10); // YYYY-MM-DD for stable comparison
+    return {
+      label: d.toLocaleDateString('en', { weekday: 'short' }),
+      date: iso,
+      display: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    };
+  });
+}
 
 export default function CalendarPage() {
   const { orgId } = useAuthContext();
@@ -43,11 +48,13 @@ export default function CalendarPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefillDate, setPrefillDate] = useState<string | null>(null);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [activeDay, setActiveDay] = useState(() => {
     const d = new Date().getDay();
     return d === 0 ? 6 : d - 1; // Mon=0 … Sun=6
   });
 
+  const days = useMemo(() => buildWeek(weekOffset), [weekOffset]);
   const editingEvent = useMemo(() => items.find((s) => s.id === editingId) ?? null, [items, editingId]);
 
   useEffect(() => {
@@ -133,6 +140,33 @@ export default function CalendarPage() {
         }
       />
       <div className="px-4 pt-4 pb-4">
+        {/* Week navigation */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => setWeekOffset((o) => o - 1)}
+            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-[12px] text-white/75 transition"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[12px] text-white/65">{days[0].display} – {days[6].display}</span>
+            {weekOffset !== 0 && (
+              <button
+                onClick={() => setWeekOffset(0)}
+                className="font-mono text-[10px] uppercase tracking-wider text-[#89CFF0] hover:underline"
+              >
+                today
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setWeekOffset((o) => o + 1)}
+            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-[12px] text-white/75 transition"
+          >
+            Next <ChevronRight size={14} />
+          </button>
+        </div>
+
         {/* Mobile: day-picker + single-day column */}
         <div className="md:hidden space-y-3">
           <div className="flex gap-1 overflow-x-auto pb-2">
@@ -207,24 +241,6 @@ export default function CalendarPage() {
                 </>
               );
             })()}
-            {editingId && editingEvent && (
-              <div className="border-t border-white/8 px-4 py-4">
-                <InlineEventEdit
-                  key={editingId}
-                  event={editingEvent}
-                  onClose={() => setEditingId(null)}
-                  onSave={async (patch) => {
-                    await updateEvent(editingId, patch);
-                    toast.success("Event updated");
-                    setEditingId(null);
-                  }}
-                  onDelete={async () => {
-                    await removeEvent(editingId);
-                    setEditingId(null);
-                  }}
-                />
-              </div>
-            )}
           </div>
         </div>
 
@@ -294,31 +310,28 @@ export default function CalendarPage() {
               );
             })}
           </div>
-          {editingId && editingEvent && (
-            <div className="border-t border-white/8 px-4 py-4">
-              <InlineEventEdit
-                key={editingId}
-                event={editingEvent}
-                onClose={() => setEditingId(null)}
-                onSave={async (patch) => {
-                  await updateEvent(editingId, patch);
-                  toast.success("Event updated");
-                  setEditingId(null);
-                }}
-                onDelete={async () => {
-                  await removeEvent(editingId);
-                  setEditingId(null);
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
+
+      {editingId && editingEvent && (
+        <EventDrawer
+          key={editingId}
+          event={editingEvent}
+          days={days}
+          onClose={() => setEditingId(null)}
+          onRemove={async () => {
+            await removeEvent(editingId);
+            setEditingId(null);
+          }}
+          onUpdate={(patch) => updateEvent(editingId, patch)}
+        />
+      )}
 
       {newOpen && (
         <EventFormDrawer
           mode="new"
           defaultDate={prefillDate ?? days[0].date}
+          days={days}
           onClose={() => setNewOpen(false)}
           onSave={addEvent}
         />
@@ -327,7 +340,7 @@ export default function CalendarPage() {
   );
 }
 
-function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; onClose: () => void; onRemove: () => void; onUpdate: (p: Partial<CalEvent>) => void }) {
+function EventDrawer({ event, days, onClose, onRemove, onUpdate }: { event: CalEvent; days: WeekDay[]; onClose: () => void; onRemove: () => void; onUpdate: (p: Partial<CalEvent>) => void }) {
   const [editing, setEditing] = useState(false);
 
   if (editing) {
@@ -336,6 +349,7 @@ function EventDrawer({ event, onClose, onRemove, onUpdate }: { event: CalEvent; 
         mode="edit"
         defaultDate={event.date}
         initial={event}
+        days={days}
         onClose={() => setEditing(false)}
         onSave={(patch) => {
           onUpdate(patch);
@@ -436,12 +450,14 @@ function EventFormDrawer({
   mode,
   defaultDate,
   initial,
+  days,
   onClose,
   onSave,
 }: {
   mode: "new" | "edit";
   defaultDate: string;
   initial?: CalEvent;
+  days: WeekDay[];
   onClose: () => void;
   onSave: (s: Omit<CalEvent, "id" | "filled">) => void;
 }) {
@@ -561,83 +577,6 @@ function EventFormDrawer({
           </div>
         </div>
       </aside>
-    </div>
-  );
-}
-
-function InlineEventEdit({
-  event,
-  onClose,
-  onSave,
-  onDelete,
-}: {
-  event: CalEvent;
-  onClose: () => void;
-  onSave: (patch: { title: string; date: string; time: string }) => Promise<void>;
-  onDelete: () => Promise<void>;
-}) {
-  const [title, setTitle] = useState(event.title);
-  const [date, setDate] = useState(event.date);
-  const [time, setTime] = useState(event.time);
-  const [saving, setSaving] = useState(false);
-
-  async function handleSave() {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    setSaving(true);
-    await onSave({ title: title.trim(), date, time });
-    setSaving(false);
-  }
-
-  async function handleDelete() {
-    if (!window.confirm(`Delete "${event.title}"?`)) return;
-    await onDelete();
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-xs uppercase tracking-wider text-white/45">Edit event</p>
-        <button onClick={onClose} className="p-1 hover:bg-white/8 rounded"><X size={12} /></button>
-      </div>
-      <div className="grid grid-cols-1 gap-2">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className="w-full h-8 rounded-md bg-white/6 border border-white/8 focus:border-[#89CFF0] focus:outline-none px-3 text-[12.5px]"
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full h-8 rounded-md bg-white/6 border border-white/8 px-2 text-[12.5px] focus:outline-none focus:border-[#89CFF0]"
-          >
-            {days.map((d) => <option key={d.date} value={d.date}>{d.label} · {d.display}</option>)}
-          </select>
-          <input
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            placeholder="9a–1p"
-            className="w-full h-8 rounded-md bg-white/6 border border-white/8 focus:border-[#89CFF0] focus:outline-none px-3 text-[12.5px]"
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-50 text-[12px] font-medium transition"
-        >
-          <Check size={11} /> {saving ? "Saving…" : "Save"}
-        </button>
-        <button
-          onClick={handleDelete}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B]/15 hover:bg-[#EF4E4B]/25 text-[#EF4E4B] text-[12px] font-medium transition"
-        >
-          <Trash2 size={11} /> Delete
-        </button>
-        <button onClick={onClose} className="h-8 px-3 rounded-lg bg-white/6 hover:bg-white/12 text-[12px] transition">Cancel</button>
-      </div>
     </div>
   );
 }
