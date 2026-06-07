@@ -225,6 +225,7 @@ export const api = {
 
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
+    if (!orgId) return { matches: [] };
     const { data, error } = await supabaseRead
       .from('matches')
       .select(`
@@ -232,10 +233,10 @@ export const api = {
         requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
         resources!resource_id(taxonomy_code, contact_name, category, description, org_id, organizations:org_id(name))
       `)
+      .eq('provider_org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;
-    // TODO: Add org filtering via .eq('request_org_id', orgId) when available in schema
 
     return {
       matches: (data || []).map((m: any) => ({
