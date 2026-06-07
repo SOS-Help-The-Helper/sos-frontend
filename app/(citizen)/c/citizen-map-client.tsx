@@ -165,7 +165,7 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
         map.addLayer({ id: 'requests-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'request'],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(255,255,255,0.8)' } });
         map.addLayer({ id: 'requests-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'request'],
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
@@ -176,7 +176,7 @@ export default function CitizenMapPage() {
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'resource'],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(255,255,255,0.6)' } });
         map.addLayer({ id: 'resources-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'resource'],
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
@@ -184,7 +184,7 @@ export default function CitizenMapPage() {
         // === REPORTS LAYERS (white) ===
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'report'],
-          paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
+          paint: { 'circle-color': '#0F1E2B', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.35)' } });
 
         // === HEATMAP LAYERS (hidden by default, toggled via button) ===
         map.addLayer({ id: 'requests-heatmap', type: 'heatmap', source: 'sos-tiles', 'source-layer': 'sos',
@@ -635,7 +635,7 @@ export default function CitizenMapPage() {
       <div className="absolute bottom-20 left-3 z-20 flex gap-1.5">
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B]" /> Requests</span>
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#89CFF0]" /> Resources</span>
-        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-white border border-white/50" /> Reports</span>
+        <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#0F1E2B] border border-white/30" /> Reports</span>
       </div>
 
       {/* Alert banner — disabled for now */}
