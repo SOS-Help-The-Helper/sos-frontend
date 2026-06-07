@@ -43,8 +43,8 @@ export default function CitizenMapPage() {
   const [detailMode, setDetailMode] = useState<DetailMode>('card');
   const [matchMode, setMatchMode] = useState(false);
 
-  // Heatmap mode toggle
-  const [heatmapMode, setHeatmapMode] = useState(false);
+  // Map display mode: 'auto' = heatmap at low zoom + pins at high zoom, 'pins' = pins at all zooms
+  const [mapMode, setMapMode] = useState<'auto' | 'pins'>('auto');
 
   // Map command results
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
@@ -63,15 +63,21 @@ export default function CitizenMapPage() {
     } catch { return null; }
   }
 
-  // Heatmap mode toggle effect
+  // Map mode effect — 'auto': heatmap fades out by z=9, pins appear at z>=8.
+  // 'pins': heatmap hidden, pins shown at all zoom levels.
   useEffect(() => {
     const map = mapInstance.current;
     if (!map || !map.isStyleLoaded()) return;
-    const pinLayers = ['requests-cluster-glow', 'requests-points', 'requests-hit', 'resources-cluster-glow', 'resources-points', 'resources-hit', 'reports-points'];
+    const zoomGatedLayers = ['requests-cluster-glow', 'requests-points', 'requests-hit', 'resources-cluster-glow', 'resources-points', 'resources-hit'];
     const heatLayers = ['requests-heatmap', 'resources-heatmap'];
-    pinLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', heatmapMode ? 'none' : 'visible'); });
-    heatLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', heatmapMode ? 'visible' : 'none'); });
-  }, [heatmapMode]);
+    if (mapMode === 'pins') {
+      zoomGatedLayers.forEach(id => { if (map.getLayer(id)) map.setLayerZoomRange(id, 0, 24); });
+      heatLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+    } else {
+      zoomGatedLayers.forEach(id => { if (map.getLayer(id)) map.setLayerZoomRange(id, 8, 24); });
+      heatLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
+    }
+  }, [mapMode]);
 
   // Allow setting personId via URL param for testing: /c?pid=xxx
   useEffect(() => {
@@ -159,56 +165,58 @@ export default function CitizenMapPage() {
           maxzoom: 14,
         });
 
-        // === REQUESTS LAYERS (red) ===
+        // === REQUESTS LAYERS (red) — pins appear at z>=8 ===
         map.addLayer({ id: 'requests-cluster-glow', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'request'],
+          filter: ['==', ['get', 'type'], 'request'], minzoom: 8,
           paint: { 'circle-color': '#EF4E4B', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
         map.addLayer({ id: 'requests-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'request'],
-          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8, 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(255,255,255,0.8)' } });
+          filter: ['==', ['get', 'type'], 'request'], minzoom: 8,
+          paint: { 'circle-color': '#EF4E4B', 'circle-radius': 8 } });
         map.addLayer({ id: 'requests-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'request'],
+          filter: ['==', ['get', 'type'], 'request'], minzoom: 8,
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
 
-        // === RESOURCES LAYERS (blue) ===
+        // === RESOURCES LAYERS (blue) — pins appear at z>=8 ===
         map.addLayer({ id: 'resources-cluster-glow', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'resource'],
+          filter: ['==', ['get', 'type'], 'resource'], minzoom: 8,
           paint: { 'circle-color': '#89CFF0', 'circle-radius': 12, 'circle-opacity': 0.3, 'circle-blur': 1 } });
         map.addLayer({ id: 'resources-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'resource'],
-          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(255,255,255,0.6)' } });
+          filter: ['==', ['get', 'type'], 'resource'], minzoom: 8,
+          paint: { 'circle-color': '#89CFF0', 'circle-radius': 8, 'circle-stroke-width': 1, 'circle-stroke-color': '#0F1E2B' } });
         map.addLayer({ id: 'resources-hit', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
-          filter: ['==', ['get', 'type'], 'resource'],
+          filter: ['==', ['get', 'type'], 'resource'], minzoom: 8,
           paint: { 'circle-color': 'transparent', 'circle-radius': 22 } });
 
-        // === REPORTS LAYERS (white) ===
+        // === REPORTS LAYERS (navy w/ white stroke) — z>=8 from PostGIS ===
         map.addLayer({ id: 'reports-points', type: 'circle', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'report'],
-          paint: { 'circle-color': '#0F1E2B', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.35)' } });
+          paint: { 'circle-color': '#0F1E2B', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
-        // === HEATMAP LAYERS (hidden by default, toggled via button) ===
+        // === HEATMAP LAYERS (visible by default; opacity fades 1.0@z0 → 0@z9) ===
         map.addLayer({ id: 'requests-heatmap', type: 'heatmap', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'request'],
-          layout: { visibility: 'none' },
+          layout: { visibility: 'visible' },
           paint: {
             'heatmap-weight': ['match', ['get', 'urgency'], 'critical', 1, 'high', 0.7, 'medium', 0.4, 0.2],
             'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
+            // SOS red ramp: navy → light blue → red → yellow → white
             'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-              0, 'rgba(15,30,43,0)', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FCD34D', 1, '#ffffff'],
+              0, 'rgba(15,30,43,0)', 0.2, '#0F1E2B', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FCD34D', 1, '#ffffff'],
             'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
-            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 0],
           }
         });
         map.addLayer({ id: 'resources-heatmap', type: 'heatmap', source: 'sos-tiles', 'source-layer': 'sos',
           filter: ['==', ['get', 'type'], 'resource'],
-          layout: { visibility: 'none' },
+          layout: { visibility: 'visible' },
           paint: {
             'heatmap-weight': 1,
             'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
+            // Blue ramp: navy → blue → light blue → white
             'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-              0, 'rgba(15,30,43,0)', 0.2, '#1a3850', 0.4, '#89CFF0', 0.7, '#34d399', 1, '#ffffff'],
+              0, 'rgba(15,30,43,0)', 0.2, '#0F1E2B', 0.5, '#1a5276', 0.8, '#89CFF0', 1, '#ffffff'],
             'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
-            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 0],
           }
         });
 
@@ -619,16 +627,16 @@ export default function CitizenMapPage() {
       {/* Full screen map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
 
-      {/* Heatmap toggle */}
+      {/* Map mode toggle — auto (heatmap+pins) vs pins-only */}
       <button
-        onClick={() => setHeatmapMode(prev => !prev)}
+        onClick={() => setMapMode(prev => (prev === 'auto' ? 'pins' : 'auto'))}
         className={`absolute bottom-20 right-3 z-20 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm font-medium transition ${
-          heatmapMode
+          mapMode === 'auto'
             ? 'bg-[#EF4E4B]/80 text-white'
             : 'bg-black/50 text-white/70 hover:text-white'
         }`}
       >
-        {heatmapMode ? '● Heatmap' : '○ Heatmap'}
+        {mapMode === 'auto' ? '◐ Auto' : '○ Pins only'}
       </button>
 
       {/* Legend */}
