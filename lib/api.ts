@@ -220,7 +220,7 @@ export const api = {
     const limit = (filters?.limit as number) || 200;
     let q = supabaseRead
       .from('resources')
-      .select('id, status, category, taxonomy_code, description, capacity_available, capacity_total, contact_name, location_text, city, state, county, latitude, longitude, org_id, created_at, persons:person_id(display_name, phone)', { count: 'exact' })
+      .select('id, status, category, taxonomy_code, description, capacity_available, contact_name, location_text, city, state, county, latitude, longitude, org_id, created_at, persons:person_id(display_name, phone)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .limit(limit);
     if (orgId) q = q.eq('org_id', orgId);
