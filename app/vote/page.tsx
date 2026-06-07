@@ -68,36 +68,39 @@ export default function VotePage() {
 
         <div style={{ maxWidth: 720 }}>
           <p className="label" style={{ color: ACCENT, marginBottom: 20 }}>
-            VoteVerify by SOS
+            An experiment by SOS
           </p>
           <h1 className="serif" style={{ color: '#fff', fontSize: 'clamp(40px, 8vw, 64px)' }}>
-            Verify Your Vote
+            Did Your Vote Count?
           </h1>
           <p
             className="body-lg"
             style={{ color: 'rgba(255,255,255,0.7)', marginTop: 24, fontSize: 21 }}
           >
-            A free civic tool for registered Los Angeles voters to confirm their vote
-            was counted.
+            Millions of ballots are still being counted in the LA mayor&apos;s race.
+            We&apos;re trying something new — letting verified voters tell us who they
+            voted for, then comparing the crowd-sourced numbers to the official count.
           </p>
           <p
             style={{
               color: 'rgba(255,255,255,0.5)',
               fontSize: 15,
               lineHeight: 1.8,
-              maxWidth: 560,
+              maxWidth: 580,
               margin: '20px auto 0',
               fontWeight: 300,
             }}
           >
-            VoteVerify cross-references your identity against the official LA County
-            voter file. Your attestation is anonymous — only aggregate totals are
-            published. Individual records are deleted after election certification.
+            This isn&apos;t an official election tool. It&apos;s a civic experiment — a new way
+            to get directional data from real, verified voters. We check your identity
+            against the LA County voter file, record your attestation anonymously, and
+            publish only aggregate totals. All individual data is deleted after the
+            election is certified.
           </p>
 
           <div style={{ marginTop: 40 }}>
             <a href="#attest-form" style={ctaButtonStyle}>
-              Verify My Vote
+              I Voted — Count Me
             </a>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 16 }}>
               Takes 60 seconds. Phone verification required.
@@ -110,7 +113,7 @@ export default function VotePage() {
       <section className="bg-light">
         <div className="wide">
           <p className="label text-center">How It Works</p>
-          <h2 className="text-center">Three steps to verify.</h2>
+          <h2 className="text-center">Three steps. One minute.</h2>
           <div className="accent-line accent-line-center" />
 
           <div className="eco-grid" style={{ marginTop: 48 }}>
@@ -201,7 +204,7 @@ export default function VotePage() {
               fontWeight: 300,
             }}
           >
-            Results update in real time. Only verified LA City voters are counted.
+            These are crowd-sourced attestations from verified voters, not official election results. Official results at lavote.gov.
             Official election results from{' '}
             <a
               href="https://www.lavote.gov"
@@ -235,7 +238,7 @@ export default function VotePage() {
               },
               {
                 title: 'Open & Nonpartisan',
-                body: 'VoteVerify is candidate-agnostic. Built by SOS Global, a 501(c)(3) nonprofit focused on civic coordination and community transparency.',
+                body: 'This is a civic experiment, not an official election tool. Built by SOS Global, a 501(c)(3) nonprofit. All candidates are listed equally.',
               },
             ].map((t) => (
               <div className="eco-card" key={t.title}>
@@ -435,7 +438,7 @@ export default function VotePage() {
           </Link>
         </p>
         <p style={{ maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
-          VoteVerify is a project of SOS Global Inc., a 501(c)(3) nonprofit.
+          A civic experiment by SOS Global Inc., a 501(c)(3) nonprofit. This is not an official election tool.
         </p>
         <p style={{ marginTop: 12 }}>
           <a href="https://sosconnect.org" target="_blank" rel="noopener">
