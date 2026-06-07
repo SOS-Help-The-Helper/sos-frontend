@@ -362,8 +362,8 @@ export const api = {
     efCall("crm-case-action", { action: "get_case_notes", sos_id: sosId }),
 
   // Detail reads  
-  crmResourceDetail: (resourceId: string) =>
-    efCall("partner-read", { query_type: "resource_detail", resource_id: resourceId }),
+  crmResourceDetail: (resourceId: string, orgId?: string) =>
+    efCall("partner-read", { query_type: "resource_detail", resource_id: resourceId, org_id: orgId }),
   crmReportDetail: (reportId: string) =>
     efCall("crm-reports", { report_type: "report_detail", report_id: reportId }),
 };

@@ -19,7 +19,6 @@ type ResourceDetail = {
   history: { event: string; date: string }[];
   petFriendly?: boolean; available?: string; county?: string; qty?: number;
 };
-const assetEvents: any[] = [];
 const orgs: Array<{ id: string; name?: string; color?: string }> = [];
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
@@ -44,6 +43,8 @@ export default function InventoryPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [inventory, setInventory] = useState<Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>>([]);
   const [resources, setResources] = useState<ResourceDetail[]>([]);
+  // Client-side activity log — persists for the session (no EF for asset events yet)
+  const [assetEvents, setAssetEvents] = useState<Array<{ id: string; type: string; asset_id: string; description: string; timestamp: string }>>([]);
 
   // Add-item form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -88,6 +89,10 @@ export default function InventoryPage() {
     try {
       await api.inventoryUpdateCondition(itemId, CONDITION_RATING[condition]);
       toast(`Condition updated to ${condition}`);
+      setAssetEvents(prev => [...prev, {
+        id: crypto.randomUUID(), type: "condition", asset_id: itemId,
+        description: `Condition updated to ${condition}`, timestamp: new Date().toISOString(),
+      }]);
       const data = await api.queryInventory({ org_id: orgId }) as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
       if (data?.inventory?.length) setInventory(data.inventory);
       if (data?.resources?.length) setResources(data.resources);
@@ -102,6 +107,10 @@ export default function InventoryPage() {
       await api.inventoryMoveToFacility(itemId, targetFacilityId);
       const fac = facilities.find(f => f.id === targetFacilityId);
       toast(`Moved to ${fac?.name ?? "facility"}`);
+      setAssetEvents(prev => [...prev, {
+        id: crypto.randomUUID(), type: "moved", asset_id: itemId,
+        description: `Moved to ${fac?.name ?? "facility"}`, timestamp: new Date().toISOString(),
+      }]);
       const data = await api.queryInventory({ org_id: orgId }) as { inventory?: Array<{ id: string; item: string; qty: number; threshold: number; location: string; org: string }>; resources?: ResourceDetail[] };
       if (data?.inventory?.length) setInventory(data.inventory);
     } catch {
@@ -316,7 +325,7 @@ export default function InventoryPage() {
               </thead>
               <tbody>
                 {resources.map((r) => {
-                  const lastEvt = assetEvents.filter((e) => e.resourceId === r.id).slice(-1)[0];
+                  const lastEvt = assetEvents.filter((e) => e.asset_id === r.id).slice(-1)[0];
                   return (
                     <tr
                       key={r.id}
@@ -415,7 +424,13 @@ export default function InventoryPage() {
         </section>
       </div>
 
-      {drawerResource && <ResourceDrawer r={drawerResource} onClose={() => setDrawerId(null)} />}
+      {drawerResource && (
+        <ResourceDrawer
+          r={drawerResource}
+          events={assetEvents.filter((e) => e.asset_id === drawerResource.id)}
+          onClose={() => setDrawerId(null)}
+        />
+      )}
     </CrmShell>
   );
 }
@@ -510,8 +525,7 @@ function Stars({ n }: { n: number }) {
   );
 }
 
-function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void }) {
-  const events = assetEvents.filter((e) => e.resourceId === r.id);
+function ResourceDrawer({ r, events, onClose }: { r: ResourceDetail; events: Array<{ id: string; type: string; asset_id: string; description: string; timestamp: string }>; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -544,11 +558,7 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
             ) : (
               <ol className="relative ml-2 space-y-3 border-l border-[var(--hairline)] pl-5">
                 {events.map((e) => {
-                  const color =
-                    e.eventType === "status_change" ? "#89CFF0" :
-                    e.eventType === "location_move" ? "#34D399" :
-                    e.eventType === "condition_update" ? "#F5EBD6" :
-                    e.eventType === "assignment" ? "#EF4E4B" : "white";
+                  const color = e.type === "moved" ? "#34D399" : e.type === "condition" ? "#F5EBD6" : "#89CFF0";
                   return (
                     <li key={e.id} className="relative">
                       <span
@@ -558,17 +568,10 @@ function ResourceDrawer({ r, onClose }: { r: ResourceDetail; onClose: () => void
                         <span className="absolute inset-1 rounded-full" style={{ background: color }} />
                       </span>
                       <p className="font-mono text-[9.5px] uppercase tracking-wider" style={{ color }}>
-                        {e.eventType.replace(/_/g, " ")}
+                        {e.type}
                       </p>
-                      <p className="text-[12.5px] text-white/85 mt-0.5">
-                        {e.fromStatus && e.toStatus ? `${e.fromStatus} → ${e.toStatus}` : ""}
-                        {e.fromLocation && e.toLocation ? `${e.fromLocation} → ${e.toLocation}` : ""}
-                        {e.notes && !e.fromStatus && !e.fromLocation ? e.notes : ""}
-                      </p>
-                      {e.notes && (e.fromStatus || e.fromLocation) && (
-                        <p className="text-[11.5px] text-white/55 mt-0.5">{e.notes}</p>
-                      )}
-                      <p className="font-mono text-[9.5px] text-white/40 mt-1">{e.performedBy} · {e.timestamp}</p>
+                      <p className="text-[12.5px] text-white/85 mt-0.5">{e.description}</p>
+                      <p className="font-mono text-[9.5px] text-white/40 mt-1">{new Date(e.timestamp).toLocaleString()}</p>
                     </li>
                   );
                 })}

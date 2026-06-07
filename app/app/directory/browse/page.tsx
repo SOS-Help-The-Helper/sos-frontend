@@ -31,6 +31,7 @@ type Row = {
   orgType?: string;
   memberCount?: number;
   activeCases?: number;
+  serviceArea?: string;
 };
 
 type SortKey = "name" | "type";
@@ -128,6 +129,7 @@ export default function DirectoryPage() {
             orgType: o.type ?? o.org_type ?? "",
             memberCount: o.member_count ?? 0,
             activeCases: o.active_cases ?? 0,
+            serviceArea: o.service_area ?? o.coverage_area ?? o.county ?? o.state ?? o.domain ?? "",
           })));
         }
       })
@@ -186,6 +188,7 @@ export default function DirectoryPage() {
             orgType: o.type,
             memberCount: o.memberCount,
             activeCases: o.activeCases,
+            serviceArea: o.county,
           }));
 
       for (const o of orgSource) {
@@ -651,7 +654,9 @@ function OrgRow({ row }: { row: Row }) {
       <td className="px-4 py-2.5 font-mono tabular-nums text-white/55 text-[12px]">
         {row.activeCases ?? <span className="text-white/20">—</span>}
       </td>
-      <td className="px-4 py-2.5 text-white/30 text-[12.5px]">—</td>
+      <td className="px-4 py-2.5 text-white/65 text-[12.5px] max-w-[200px] truncate">
+        {row.serviceArea || <span className="text-white/20">—</span>}
+      </td>
     </tr>
   );
 }
