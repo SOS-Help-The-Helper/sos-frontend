@@ -24,7 +24,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="md:hidden on-dark"
+      className="flex md:hidden on-dark"
       aria-label="Primary"
       style={{
         position: "fixed",
@@ -32,7 +32,6 @@ export function MobileBottomNav() {
         right: 0,
         bottom: 0,
         zIndex: 50,
-        display: "flex",
         background: "var(--sos-navy)",
         borderTop: "1px solid rgba(255,255,255,0.08)",
         paddingBottom: "env(safe-area-inset-bottom)",
