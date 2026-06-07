@@ -43,10 +43,23 @@ export default function CitizenMapPage() {
   const [detailMode, setDetailMode] = useState<DetailMode>('card');
   const [matchMode, setMatchMode] = useState(false);
 
+  // Heatmap mode toggle
+  const [heatmapMode, setHeatmapMode] = useState(false);
+
   // Map command results
   const [mapResults, setMapResults] = useState<MapResult[]>([]);
   const [mapResultsQuery, setMapResultsQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+
+  // Heatmap mode toggle effect
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const pinLayers = ['requests-cluster-glow', 'requests-points', 'requests-hit', 'resources-cluster-glow', 'resources-points', 'resources-hit', 'reports-points'];
+    const heatLayers = ['requests-heatmap', 'resources-heatmap'];
+    pinLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', heatmapMode ? 'none' : 'visible'); });
+    heatLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', heatmapMode ? 'visible' : 'none'); });
+  }, [heatmapMode]);
 
   // Allow setting personId via URL param for testing: /c?pid=xxx
   useEffect(() => {
@@ -161,8 +174,31 @@ export default function CitizenMapPage() {
           filter: ['==', ['get', 'type'], 'report'],
           paint: { 'circle-color': '#FFFFFF', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.5)' } });
 
-        // Detail fetch on zoom disabled — map-data EF retired May 4.
-        // All data loaded upfront from partner-read.
+        // === HEATMAP LAYERS (hidden by default, toggled via button) ===
+        map.addLayer({ id: 'requests-heatmap', type: 'heatmap', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'request'],
+          layout: { visibility: 'none' },
+          paint: {
+            'heatmap-weight': ['match', ['get', 'urgency'], 'critical', 1, 'high', 0.7, 'medium', 0.4, 0.2],
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
+            'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+              0, 'rgba(15,30,43,0)', 0.2, '#1a3850', 0.4, '#89CFF0', 0.6, '#EF4E4B', 0.8, '#FCD34D', 1, '#ffffff'],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0],
+          }
+        });
+        map.addLayer({ id: 'resources-heatmap', type: 'heatmap', source: 'sos-tiles', 'source-layer': 'sos',
+          filter: ['==', ['get', 'type'], 'resource'],
+          layout: { visibility: 'none' },
+          paint: {
+            'heatmap-weight': 1,
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 3],
+            'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+              0, 'rgba(15,30,43,0)', 0.2, '#1a3850', 0.4, '#89CFF0', 0.7, '#34d399', 1, '#ffffff'],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 9, 20],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 1, 9, 0],
+          }
+        });
 
         // === DISASTERS SOURCE (navy, empty for now) ===
         map.addSource('disasters-source', {
@@ -564,6 +600,18 @@ export default function CitizenMapPage() {
 
       {/* Full screen map */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#0F1E2B' }} />
+
+      {/* Heatmap toggle */}
+      <button
+        onClick={() => setHeatmapMode(prev => !prev)}
+        className={`absolute bottom-20 right-3 z-20 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm font-medium transition ${
+          heatmapMode
+            ? 'bg-[#EF4E4B]/80 text-white'
+            : 'bg-black/50 text-white/70 hover:text-white'
+        }`}
+      >
+        {heatmapMode ? '● Heatmap' : '○ Heatmap'}
+      </button>
 
       {/* Legend */}
       <div className="absolute bottom-20 left-3 z-20 flex gap-1.5">
