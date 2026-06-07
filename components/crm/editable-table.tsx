@@ -9,7 +9,6 @@ import {
 } from 'react';
 
 const NAVY = '#0F1E2B';
-const ACCENT = '#89CFF0';
 const RED = '#EF4E4B';
 
 const SAVED_HOLD_MS = 1200;
@@ -191,6 +190,7 @@ export function EditableTable({
   // ---- Table ------------------------------------------------------------
   return (
     <div style={styles.scroll}>
+      <style>{rowHoverCss}</style>
       <table style={styles.table}>
         <thead>
           <tr>
@@ -207,6 +207,7 @@ export function EditableTable({
             return (
               <tr
                 key={rid}
+                className="sos-et-row"
                 style={{
                   ...(rowIdx % 2 ? styles.rowAlt : styles.row),
                   cursor: onRowClick ? 'pointer' : 'default',
@@ -225,7 +226,7 @@ export function EditableTable({
                     border: `2px solid ${cellBorder(phase)}`,
                     background:
                       phase === 'editing'
-                        ? 'rgba(255,255,255,0.06)'
+                        ? 'rgba(137,207,240,0.10)'
                         : 'transparent',
                     cursor: editable ? 'text' : 'default',
                   };
@@ -317,14 +318,14 @@ function Badge({
 }) {
   if (value == null || value === '') return <span style={styles.cellText}>—</span>;
   const opt = options?.find((o) => o.value === String(value));
-  const color = opt?.color || ACCENT;
+  const color = opt?.color || NAVY;
   return (
     <span
       style={{
         ...styles.badge,
         color,
-        background: `${color}22`,
-        border: `1px solid ${color}55`,
+        background: `${color}1A`,
+        border: `1px solid ${color}40`,
       }}
     >
       {opt?.label || String(value)}
@@ -339,19 +340,23 @@ const shimmerKeyframes = `
   100% { opacity: 0.35; }
 }`;
 
+const rowHoverCss = `
+.sos-et-row:hover { background: rgba(137,207,240,0.06) !important; }`;
+
 const styles: Record<string, CSSProperties> = {
   scroll: {
     width: '100%',
     overflowX: 'auto',
     WebkitOverflowScrolling: 'touch',
-    background: NAVY,
+    background: '#FFFFFF',
     borderRadius: 8,
+    border: '1px solid #E5E7EB',
   },
   table: {
     width: '100%',
     borderCollapse: 'separate',
     borderSpacing: 0,
-    color: '#fff',
+    color: NAVY,
     fontSize: 13,
     minWidth: 'max-content',
   },
@@ -362,20 +367,20 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'left',
     padding: '0 12px',
     height: 36,
-    background: '#0a1620',
-    color: 'rgba(255,255,255,0.55)',
+    background: '#F8F9FA',
+    color: NAVY,
     fontSize: 11,
     fontWeight: 600,
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
     whiteSpace: 'nowrap',
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    borderBottom: '1px solid #E5E7EB',
   },
   row: {
-    background: 'transparent',
+    background: '#FFFFFF',
   },
   rowAlt: {
-    background: 'rgba(255,255,255,0.025)',
+    background: '#FAFBFC',
   },
   td: {
     height: 36,
@@ -383,10 +388,10 @@ const styles: Record<string, CSSProperties> = {
     whiteSpace: 'nowrap',
     transition: 'border-color 300ms ease, background-color 300ms ease',
     verticalAlign: 'middle',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
+    borderBottom: '1px solid #EEF0F2',
   },
   cellText: {
-    color: 'rgba(255,255,255,0.9)',
+    color: NAVY,
   },
   input: {
     width: '100%',
@@ -394,7 +399,7 @@ const styles: Record<string, CSSProperties> = {
     background: 'transparent',
     border: 'none',
     outline: 'none',
-    color: '#fff',
+    color: NAVY,
     fontSize: 13,
     fontFamily: 'inherit',
     padding: 0,
@@ -402,10 +407,10 @@ const styles: Record<string, CSSProperties> = {
   select: {
     width: '100%',
     boxSizing: 'border-box',
-    background: NAVY,
+    background: '#FFFFFF',
     border: 'none',
     outline: 'none',
-    color: '#fff',
+    color: NAVY,
     fontSize: 13,
     fontFamily: 'inherit',
     padding: 0,
@@ -421,14 +426,14 @@ const styles: Record<string, CSSProperties> = {
   empty: {
     padding: '32px 12px',
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.4)',
+    color: '#6B7280',
     fontSize: 13,
   },
   shimmer: {
     height: 12,
     width: '70%',
     borderRadius: 4,
-    background: 'rgba(255,255,255,0.12)',
+    background: '#EDEFF2',
     animation: 'sos-shimmer 1.4s ease-in-out infinite',
   },
 };

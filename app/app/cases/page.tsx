@@ -396,6 +396,13 @@ export default function CasesPage() {
 
   // Fetch all tab data in parallel
   useEffect(() => {
+    // Clear stale data so a switched org doesn't show the previous org's rows
+    setLiveCases(null);
+    setLiveRequests(null);
+    setLiveResources(null);
+    setCaseCards([]);
+    setRequestCards([]);
+    setResourceCards([]);
     setLoading(true);
     Promise.allSettled([
       api.crmSosesList({ limit: 200 }),
