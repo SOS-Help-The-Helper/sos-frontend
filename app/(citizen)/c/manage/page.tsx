@@ -8,6 +8,7 @@ import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
+import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   housing: '🏠', food_water: '🍞', medical: '🏥', transportation: '🚗',
@@ -30,7 +31,8 @@ interface EditResourceForm {
   capacity_available: number | null;
 }
 
-export default function ManagePage() {
+function ManagePageContent() {
+  const { personId: authPersonId } = useCitizenAuth();
   const [personId, setPersonId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [score, setScore] = useState<SOSScore | null>(null);
@@ -74,7 +76,7 @@ export default function ManagePage() {
   }, []);
 
   useEffect(() => {
-    const pid = getPersonId();
+    const pid = authPersonId || getPersonId();
     setPersonId(pid);
     if (pid) loadData(pid);
 
@@ -590,5 +592,13 @@ function ScoreBar({ label, value, max, color }: { label: string; value: number; 
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
     </div>
+  );
+}
+
+export default function ManagePage() {
+  return (
+    <CitizenAuthGate>
+      <ManagePageContent />
+    </CitizenAuthGate>
   );
 }

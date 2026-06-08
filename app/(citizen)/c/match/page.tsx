@@ -8,6 +8,7 @@ import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
 import { getPersonId } from '@/lib/person-cookie';
+import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
 /**
  * Citizen Match Page — swipe through match PROPOSALS from the matches table.
@@ -66,14 +67,14 @@ function timeSince(dateStr: string): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export default function MatchPage() {
+function MatchPageContent() {
   const [proposals, setProposals] = useState<MatchProposal[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const personId = typeof window !== 'undefined' ? getPersonId() : null;
+  const { personId } = useCitizenAuth();
   const myRequestIdsRef = useRef<string[]>([]);
   const myResourceIdsRef = useRef<string[]>([]);
 
@@ -425,5 +426,13 @@ export default function MatchPage() {
 
       <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" />
     </CitizenShell>
+  );
+}
+
+export default function MatchPage() {
+  return (
+    <CitizenAuthGate>
+      <MatchPageContent />
+    </CitizenAuthGate>
   );
 }
