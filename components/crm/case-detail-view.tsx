@@ -217,13 +217,13 @@ export default function CaseDetailView({
   const adminItems = ['Reassign', 'Flag for Review', 'Close Case', 'Export'];
 
   return (
-    <div className="flex flex-col h-full bg-[#0F1E2B] text-white">
+    <div className="flex flex-col h-full" style={{ color: 'var(--foreground)' }}>
       {/* TOP BAR */}
-      <div className="relative h-14 flex items-center justify-between px-4 sticky top-0 z-40 bg-[#0F1E2B]/95 backdrop-blur-xl border-b border-white/10">
+      <div className="relative h-14 flex items-center justify-between px-4 sticky top-0 z-40 bg-[var(--surface-1)]/95 backdrop-blur-xl border-b border-[var(--hairline)]">
         <div className="flex items-center gap-2 min-w-0">
           <Link
             href="/app/cases"
-            className="p-1 -ml-1 rounded-lg hover:bg-white/10 shrink-0"
+            className="p-1 -ml-1 rounded-lg hover:bg-foreground/5 shrink-0"
           >
             <ChevronLeft size={22} />
           </Link>
@@ -239,13 +239,13 @@ export default function CaseDetailView({
             style={{ backgroundColor: urgencyColor }}
           />
           {sos?.status && (
-            <span className="text-xs rounded-full bg-white/10 px-2 py-0.5">
+            <span className="text-xs rounded-full bg-foreground/5 px-2 py-0.5">
               {sos.status}
             </span>
           )}
           <button
             onClick={() => setAdminOpen((v) => !v)}
-            className="p-1 rounded-lg hover:bg-white/10"
+            className="p-1 rounded-lg hover:bg-foreground/5"
             aria-label="Admin actions"
           >
             <Settings size={18} />
@@ -254,7 +254,7 @@ export default function CaseDetailView({
 
         {/* ADMIN DROPDOWN */}
         {adminOpen && (
-          <div className="absolute right-4 top-14 bg-[#1A3850] border border-white/10 rounded-xl shadow-xl p-2 z-50 w-44">
+          <div className="absolute right-4 top-14 bg-[var(--surface-1)] border border-[var(--hairline)] rounded-xl shadow-xl p-2 z-50 w-44">
             {adminItems.map((item) => (
               <button
                 key={item}
@@ -262,7 +262,7 @@ export default function CaseDetailView({
                   toast('Coming soon');
                   setAdminOpen(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/10 rounded-lg"
+                className="w-full text-left px-3 py-2 text-sm text-[var(--foreground)]/70 hover:bg-foreground/5 rounded-lg"
               >
                 {item}
               </button>
@@ -272,10 +272,10 @@ export default function CaseDetailView({
       </div>
 
       {/* HERO CARD */}
-      <div className="mx-4 mt-3 bg-white/5 border border-white/10 rounded-xl p-4">
+      <div className="mx-4 mt-3 bg-[var(--surface-1)] border border-[var(--hairline)] rounded-xl p-4">
         <div className="flex items-start gap-3">
           <div
-            className="w-10 h-10 shrink-0 bg-white/10 rounded-full flex items-center justify-center text-white font-bold ring-2"
+            className="w-10 h-10 shrink-0 bg-foreground/5 rounded-full flex items-center justify-center text-[var(--foreground)] font-bold ring-2"
             style={{ '--tw-ring-color': urgencyColor } as React.CSSProperties}
           >
             {initial}
@@ -283,10 +283,10 @@ export default function CaseDetailView({
           <div className="min-w-0 flex-1">
             <div className="text-base font-semibold truncate">{displayName}</div>
             {locationLine && (
-              <div className="text-xs text-white/50 truncate">{locationLine}</div>
+              <div className="text-xs text-[var(--foreground)]/50 truncate">{locationLine}</div>
             )}
             {openSince && (
-              <div className="text-xs text-white/30">
+              <div className="text-xs text-[var(--foreground)]/30">
                 Filed {new Date(openSince).toLocaleDateString()}
               </div>
             )}
@@ -302,7 +302,7 @@ export default function CaseDetailView({
           ].map((chip) => (
             <span
               key={chip}
-              className="text-[10px] bg-white/5 rounded-full px-2 py-0.5 text-white/40"
+              className="text-[10px] bg-[var(--surface-1)] rounded-full px-2 py-0.5 text-[var(--foreground)]/40"
             >
               {chip}
             </span>
@@ -313,7 +313,7 @@ export default function CaseDetailView({
       {/* TIMELINE */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {events.length === 0 && (
-          <div className="text-center text-white/30 text-sm py-12">
+          <div className="text-center text-[var(--foreground)]/30 text-sm py-12">
             No activity yet
           </div>
         )}
@@ -328,17 +328,17 @@ export default function CaseDetailView({
                   className="w-3 h-3 rounded-full shrink-0 mt-1.5"
                   style={{ backgroundColor: DOT_COLORS[ev.type] }}
                 />
-                {!isLast && <span className="w-0.5 flex-1 bg-white/10" />}
+                {!isLast && <span className="w-0.5 flex-1 bg-foreground/5" />}
               </div>
 
               {/* Card */}
               <button
                 onClick={() => setExpanded((p) => ({ ...p, [i]: !p[i] }))}
-                className="flex-1 text-left bg-white/[0.03] rounded-lg p-3 mb-3"
+                className="flex-1 text-left bg-[var(--surface-1)]/50 rounded-lg p-3 mb-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-medium">{ev.title}</span>
-                  <span className="text-[10px] text-white/30 shrink-0 mt-0.5">
+                  <span className="text-[10px] text-[var(--foreground)]/30 shrink-0 mt-0.5">
                     {timeAgo(ev.date)}
                   </span>
                 </div>
@@ -346,7 +346,7 @@ export default function CaseDetailView({
                 {ev.desc && (
                   <div
                     className={
-                      'text-xs text-white/50 mt-1 ' +
+                      'text-xs text-[var(--foreground)]/50 mt-1 ' +
                       (isOpen ? '' : 'line-clamp-2')
                     }
                   >
@@ -357,7 +357,7 @@ export default function CaseDetailView({
                 {(ev.status || typeof ev.score === 'number') && (
                   <div className="flex items-center gap-2 mt-2">
                     {ev.status && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/5 text-[var(--foreground)]/60">
                         {ev.status}
                       </span>
                     )}
@@ -370,7 +370,7 @@ export default function CaseDetailView({
                 )}
 
                 {isOpen && (
-                  <div className="text-[10px] text-white/30 mt-2">
+                  <div className="text-[10px] text-[var(--foreground)]/30 mt-2">
                     {new Date(ev.date).toLocaleString()}
                   </div>
                 )}
@@ -388,7 +388,7 @@ export default function CaseDetailView({
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             placeholder="Add a note…"
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm resize-none outline-none focus:border-white/20"
+            className="w-full bg-[var(--surface-1)] border border-[var(--hairline)] rounded-lg p-3 text-sm resize-none outline-none focus:border-white/20"
           />
           <div className="flex justify-end mt-2">
             <button
@@ -403,18 +403,18 @@ export default function CaseDetailView({
       )}
 
       {/* FLOATING ACTION BAR */}
-      <div className="sticky bottom-0 bg-[#0F1E2B]/95 backdrop-blur-xl border-t border-white/10 px-6 py-3">
+      <div className="sticky bottom-0 bg-[var(--surface-1)]/95 backdrop-blur-xl border-t border-[var(--hairline)] px-6 py-3">
         <div className="grid grid-cols-4">
           <button
             onClick={() => toast('Coming soon')}
-            className="flex flex-col items-center gap-1 text-[10px] text-white/50"
+            className="flex flex-col items-center gap-1 text-[10px] text-[var(--foreground)]/50"
           >
             <Phone size={20} />
             Call
           </button>
           <button
             onClick={onChat}
-            className="flex flex-col items-center gap-1 text-[10px] text-white/50"
+            className="flex flex-col items-center gap-1 text-[10px] text-[var(--foreground)]/50"
           >
             <MessageSquare size={20} />
             Chat
@@ -423,7 +423,7 @@ export default function CaseDetailView({
             onClick={() => setNoteMode((v) => !v)}
             className={
               'flex flex-col items-center gap-1 text-[10px] ' +
-              (noteMode ? 'text-white' : 'text-white/50')
+              (noteMode ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]/50')
             }
           >
             <PenLine size={20} color={noteMode ? '#FCD34D' : undefined} />
@@ -431,7 +431,7 @@ export default function CaseDetailView({
           </button>
           <button
             onClick={() => toast('Coming soon')}
-            className="flex flex-col items-center gap-1 text-[10px] text-white/50"
+            className="flex flex-col items-center gap-1 text-[10px] text-[var(--foreground)]/50"
           >
             <Zap size={20} />
             Match
