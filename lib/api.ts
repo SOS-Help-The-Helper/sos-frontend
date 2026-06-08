@@ -239,6 +239,14 @@ export const api = {
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
     if (!orgId) return { matches: [] };
+    // Step 1: Get resource IDs for this org
+    const { data: orgResources } = await supabaseRead
+      .from('resources')
+      .select('id')
+      .eq('org_id', orgId);
+    const resourceIds = (orgResources || []).map((r: any) => r.id);
+    if (resourceIds.length === 0) return { matches: [] };
+    // Step 2: Get matches for those resources
     const { data, error } = await supabaseRead
       .from('matches')
       .select(`
@@ -246,7 +254,7 @@ export const api = {
         requests!request_id(taxonomy_code, category, county, urgency, contact_name, persons:person_id(display_name)),
         resources!resource_id(taxonomy_code, contact_name, category, description, org_id, organizations:org_id(name))
       `)
-      .eq('provider_org_id', orgId)
+      .in('resource_id', resourceIds)
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;
