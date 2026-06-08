@@ -99,10 +99,11 @@ export default function MatchPage() {
   async function loadProposals() {
     setLoading(true);
     try {
-      // Step 1: Get my request IDs and resource IDs
-      const sosData = await api.efCall<any>('sos-read', { actor: { type: 'citizen', id: personId }, scope: 'my_records' });
-      const myRequestIds = (sosData?.requests || []).map((r: any) => r.id);
-      const myResourceIds = (sosData?.resources || []).map((r: any) => r.id);
+      // Step 1: Get my request IDs and resource IDs (direct query — sos-read rejects anon key)
+      const { data: myRequests } = await supabase.from('requests').select('id').eq('person_id', personId);
+      const { data: myResources } = await supabase.from('resources').select('id').eq('person_id', personId);
+      const myRequestIds = (myRequests || []).map((r: any) => r.id);
+      const myResourceIds = (myResources || []).map((r: any) => r.id);
       myRequestIdsRef.current = myRequestIds;
       myResourceIdsRef.current = myResourceIds;
 

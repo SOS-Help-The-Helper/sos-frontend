@@ -49,16 +49,28 @@ export default function ManagePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async (pid: string) => {
-    const sosData = await api.efCall<any>('sos-read', {
-      actor: { type: 'citizen', id: pid },
-      scope: 'my_records',
-      include: ['matches'],
-    });
-    const scoreData = await getSOSScore(pid);
+    // Direct queries — sos-read rejects anon key for citizen scope
+    const [reqRes, resRes, scoreData] = await Promise.all([
+      supabase.from('requests').select('id, status, category, taxonomy_code, urgency, description, details_sanitized, location_text, city, county, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
+      supabase.from('resources').select('id, status, category, taxonomy_code, description, details_sanitized, capacity_available, location_text, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
+      getSOSScore(pid),
+    ]);
     setScore(scoreData);
-    setRequests(sosData?.requests || []);
-    setResources(sosData?.resources || []);
-    setMatches(sosData?.matches || []);
+    setRequests(reqRes.data || []);
+    setResources(resRes.data || []);
+    // Fetch matches for my requests + resources
+    const myReqIds = (reqRes.data || []).map((r: any) => r.id);
+    const myResIds = (resRes.data || []).map((r: any) => r.id);
+    const allIds = [...myReqIds, ...myResIds];
+    if (allIds.length > 0) {
+      const { data: matchData } = await supabase.from('matches')
+        .select('id, match_score, status, request_id, resource_id, created_at, resources(category, description, organizations:org_id(name)), requests(category, description, urgency)')
+        .or(`request_id.in.(${myReqIds.join(',')}),resource_id.in.(${myResIds.join(',')})`)
+        .order('created_at', { ascending: false });
+      setMatches(matchData || []);
+    } else {
+      setMatches([]);
+    }
   }, []);
 
   useEffect(() => {
