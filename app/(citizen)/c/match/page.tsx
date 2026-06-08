@@ -7,7 +7,6 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
-import { getPersonId } from '@/lib/person-cookie';
 import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
 /**
