@@ -135,11 +135,9 @@ export default function CitizenAuthGate({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-[#0F1E2B] text-white flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#EF4E4B] flex items-center justify-center font-bold text-xl mb-4">
-            SOS
-          </div>
-          <h1 className="text-xl font-semibold">Sign in with your phone</h1>
-          <p className="text-sm text-white/50 mt-1 text-center">
+          <img src="/logomark.svg" alt="SOS" className="w-14 h-14 mb-4" />
+          <h1 className="text-xl font-serif">Sign in with your phone</h1>
+          <p className="text-sm text-white/50 mt-2 text-center font-sans">
             {step === "phone"
               ? "We'll text you a 6-digit code."
               : `Enter the code sent to ${toE164(phone)}`}
