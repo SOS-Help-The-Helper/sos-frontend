@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Avatar } from "@/components/directory/Avatar";
 import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
+import CaseDetailView from "@/components/crm/case-detail-view";
 import { AiSummary } from "@/components/crm/ai-summary";
 import CaseTimeline, { type TimelineEvent } from "@/components/crm/case-timeline";
 import {
@@ -364,120 +365,19 @@ export default function UmbrellaView() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/app/cases" backLabel="Cases" />
-
-      <main className="max-w-[1240px] mx-auto px-6 py-7 space-y-5">
-        <IdentityBand
-          avatar={<Avatar name={displayName} size={56} />}
-          eyebrow={<span className="font-mono text-xs uppercase tracking-wider text-white/45">Umbrella · {umbrellaData.id}</span>}
-          pills={
-            <>
-              <UrgencyBadge urgency={umbrellaData.urgency} />
-              <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#89CFF0]/15 text-[#89CFF0]">
-                {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-              </span>
-            </>
-          }
-          title={displayName}
-          chips={
-            <>
-              <MetaChip icon={Phone}>{umbrellaData.citizen.phone}</MetaChip>
-              <MetaChip icon={MapPin}>{umbrellaData.citizen.county} County</MetaChip>
-              {umbrellaData.citizen.household > 1 && (
-                <MetaChip icon={Users}>Household of {umbrellaData.citizen.household}</MetaChip>
-              )}
-              <MetaChip icon={Calendar}>Filed {umbrellaData.filedAt}</MetaChip>
-            </>
-          }
-          actions={
-            <>
-              <ActionBtn icon={Sparkles} label="Find matches" onClick={() => setActiveTab("matches")} />
-              <button
-                onClick={() => setChatOpen(true)}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-white/6 hover:bg-white/10 text-white/85 text-[12px] font-medium transition"
-                aria-label="Open chat"
-              >
-                <MessageSquare size={12} strokeWidth={2} />
-                Chat
-              </button>
-              <button className="w-8 h-8 rounded-md hover:bg-white/8 text-white/55 hover:text-white flex items-center justify-center transition">
-                <MoreHorizontal size={14} />
-              </button>
-            </>
-          }
-        />
-
-        {/* KPI strip */}
-        <div className="grid grid-cols-4 gap-px bg-[var(--hairline)] rounded-xl overflow-hidden">
-          <Kpi label="Days open" value={daysOpen} />
-          <Kpi label="Requests" value={requestCount} />
-          <Kpi label="Matches" value={matchCount} />
-          <Kpi label="Reports" value={reportCount} />
-        </div>
-
-        <DetailLayout
-          main={
-            <>
-              {hasSummaryData ? (
-                <AiSummary
-                  id={umbrellaData.id}
-                  summary={`Umbrella case for ${displayName} (household of ${umbrellaData.citizen.household}, ${umbrellaData.citizen.county} County) filed ${umbrellaData.filedAt}. ${childCasesData.length} child case${childCasesData.length === 1 ? "" : "s"} spanning ${umbrellaData.needs.map((n) => n.tag.split(".")[0].toLowerCase()).join(", ")} across ${orgsInvolved} org${orgsInvolved === 1 ? "" : "s"}. ${fulfillment}% fulfilled${umbrellaData.needs.find((n) => n.state === "unmet") ? `; ${umbrellaData.needs.filter((n) => n.state === "unmet").map((n) => n.tag).join(", ")} still unmet` : ""}. ${umbrellaData.citizen.notes}`}
-                />
-              ) : (
-                <p className="text-[13px] text-white/40 px-1">No AI summary available yet</p>
-              )}
-              <CaseTabs
-                sosId={id}
-                note={note}
-                setNote={setNote}
-                childCases={childCasesData}
-                orgs={orgsData}
-                umbrellaData={umbrellaData}
-                liveMatches={liveMatches}
-                onPostNote={handlePostNote}
-                postingNote={postingNote}
-                orgId={orgId}
-                rawUmbrella={rawUmbrella}
-                caseNotes={caseNotes}
-                onNotesUpdate={setCaseNotes}
-                activeTab={activeTab}
-                onActiveTabChange={setActiveTab}
-                onRefetch={fetchCaseDetail}
-              />
-            </>
-          }
-          rail={
-            <>
-              <ContextCard title="Citizen">
-                <ContextRow label="Name" value={umbrellaData.citizen.name || "—"} />
-                <ContextRow label="Phone" value={umbrellaData.citizen.phone || "—"} />
-                <ContextRow label="County" value={umbrellaData.citizen.county ? `${umbrellaData.citizen.county} County` : "—"} />
-                <ContextRow label="Household" value={umbrellaData.citizen.household} />
-              </ContextCard>
-              <ContextCard title="Case">
-                <ContextRow label="ID" value={<span className="font-mono text-[10.5px] text-white/55">{umbrellaData.id || "—"}</span>} />
-                <ContextRow label="Status" value={<span className="capitalize">{umbrellaData.status}</span>} />
-                <ContextRow label="Urgency" value={<span className="capitalize">{umbrellaData.urgency}</span>} />
-                <ContextRow label="Filed" value={umbrellaData.filedAt || "—"} />
-                <ContextRow label="Requests" value={childCasesData.length} />
-              </ContextCard>
-              {(umbrellaData.citizen.notes || caseNotes.length > 0) && (
-                <ContextCard title="Notes">
-                  {umbrellaData.citizen.notes && (
-                    <p className="text-[12px] text-white/75 leading-snug">{umbrellaData.citizen.notes}</p>
-                  )}
-                  {caseNotes.slice(0, 2).map((n, i) => (
-                    <div key={n.id ?? i} className={`text-[12px] text-white/65 leading-snug ${umbrellaData.citizen.notes || i > 0 ? "border-t border-white/6 pt-2 mt-2" : ""}`}>
-                      <span className="text-white/40 block text-xs mb-0.5">{n.author_name}</span>
-                      {n.content}
-                    </div>
-                  ))}
-                </ContextCard>
-              )}
-            </>
-          }
-        />
-      </main>
+      <CaseDetailView
+        person={rawUmbrella?.person || null}
+        sos={rawUmbrella?.sos || null}
+        requests={rawUmbrella?.requests || []}
+        resources={rawUmbrella?.resources || []}
+        matches={rawUmbrella?.matches || []}
+        notes={caseNotes.length > 0 ? caseNotes.map((n: any) => ({ id: n.id, note_text: n.content || n.note_text || '', note_type: n.note_type || 'manual', author_id: n.author_name || '', created_at: n.created_at })) : (rawUmbrella?.notes || [])}
+        householdMembers={rawUmbrella?.household_members || []}
+        onPostNote={(text: string) => handlePostNote(text)}
+        postingNote={postingNote}
+        onRefetch={fetchCaseDetail}
+        onChat={() => setChatOpen(true)}
+      />
 
       <ChatPanel
         entityType="sos"
