@@ -649,8 +649,8 @@ export default function CasesPage() {
             }}
             className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-medium transition ${
               mobileCol === col.id
-                ? "bg-[var(--sos-navy)] text-white"
-                : "bg-foreground/5 text-[var(--foreground)]/50 hover:text-[var(--foreground)]/80"
+                ? "bg-[#EF4E4B] text-white font-semibold"
+                : "bg-[var(--surface-1)] text-[var(--foreground)]/60 border border-[var(--hairline)]"
             }`}
           >
             {col.label}
