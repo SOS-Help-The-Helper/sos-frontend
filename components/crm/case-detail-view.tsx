@@ -281,7 +281,7 @@ export default function CaseDetailView({
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-base font-semibold truncate">{displayName}</div>
+            <div className="text-base font-serif truncate">{displayName}</div>
             {locationLine && (
               <div className="text-xs text-[var(--foreground)]/50 truncate">{locationLine}</div>
             )}
