@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
+import ResourceDetailView from "@/components/crm/resource-detail-view";
 import { AiSummary } from "@/components/crm/AiSummary";
 import {
   DetailTopBar, IdentityBand, MetaChip,
@@ -239,171 +240,33 @@ export default function ResourcePage() {
 
   return (
     <CrmShell module="Cases">
-      <DetailTopBar backTo="/app/inventory" backLabel="Resources" />
-
-      <main className="max-w-[960px] mx-auto px-4 md:px-6 py-5 md:py-7 space-y-4">
-        <IdentityBand
-          avatar={
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: `${statusColor}22`, color: statusColor }}
-            >
-              <Package size={22} />
-            </div>
+      <ResourceDetailView
+        resource={data?.resource || {}}
+        onRefetch={() => {
+          api.crmResourceDetail(id, orgId)
+            .then((res: any) => setData(res?.resource ? res : null))
+            .catch(() => setData(null));
+        }}
+        onEdit={async (field: string, value: any) => {
+          setSaving(true);
+          try {
+            await api.efCall('inventory-write', {
+              action: 'adjust',
+              resource_id: id,
+              org_id: orgId,
+              [field]: value,
+            });
+            toast.success('Saved');
+            const res: any = await api.crmResourceDetail(id, orgId);
+            if (res?.resource) setData(res);
+          } catch {
+            toast.error('Failed to save');
+          } finally {
+            setSaving(false);
           }
-          pills={<StatusPill tint={statusColor}>{r.status}</StatusPill>}
-          title={r.title}
-          chips={
-            <>
-              <MetaChip icon={MapPin}>{r.location}</MetaChip>
-              <MetaPopover>
-                <MetaChip icon={User}>
-                  <Link href={`/app/directory/person/${(r as any).ownerId ?? "#"}`} className="hover:text-white transition">
-                    {r.ownerName}
-                  </Link>
-                  {r.org && <span className="text-white/40"> · {r.org}</span>}
-                </MetaChip>
-                <MetaChip icon={Calendar}>{r.capacity}</MetaChip>
-                <span className="font-mono text-xs text-white/40">{r.id}</span>
-                <span className="font-mono text-xs text-white/40">{r.taxonomy}</span>
-              </MetaPopover>
-            </>
-          }
-          actions={
-            <>
-              <ActionBtn icon={editMode ? XIcon : Pencil} label={editMode ? "Cancel" : "Edit"} onClick={() => setEditMode(v => !v)} />
-              <ActionBtn icon={MessageSquare} label="Chat" onClick={() => setChatOpen(true)} />
-              <OverflowMenu
-                actions={[
-                  { label: "Share", icon: Share2 },
-                  { label: "Flag issue", icon: Flag, danger: true },
-                  { label: "Retire resource", icon: XCircle, danger: true },
-                ]}
-              />
-            </>
-          }
-        />
-
-        {editMode && (
-          <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
-            <p className="text-[11px] uppercase tracking-widest text-white/45 font-mono mb-1">Edit Resource</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] text-white/50">Capacity Available</label>
-                <input
-                  type="number"
-                  value={editCapacity}
-                  onChange={e => setEditCapacity(e.target.value)}
-                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
-                  placeholder="0"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] text-white/50">Status</label>
-                <select
-                  value={editStatus}
-                  onChange={e => setEditStatus(e.target.value)}
-                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white outline-none focus:border-[#89CFF0]/60"
-                >
-                  {['available','reserved','fulfilled','unavailable'].map(s => (
-                    <option key={s} value={s} className="bg-[#0F1E2B]">{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] text-white/50">Category</label>
-                <input
-                  type="text"
-                  value={editCategory}
-                  onChange={e => setEditCategory(e.target.value)}
-                  className="bg-white/8 border border-white/15 rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 outline-none focus:border-[#89CFF0]/60"
-                  placeholder="taxonomy code"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                onClick={() => setEditMode(false)}
-                className="px-3 py-1.5 rounded-lg text-[12px] text-white/60 border border-white/10 hover:bg-white/5 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveResource}
-                disabled={saving}
-                className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#EF4E4B] text-white hover:bg-[#d94441] transition disabled:opacity-50 flex items-center gap-1.5"
-              >
-                <Check size={12} /> {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <HeroLine
-          primary={
-            <>
-              <span className="font-semibold">{r.capacity}</span>
-              <span className="text-white/55"> capacity · </span>
-              {r.matchedTo ? (
-                <>matched to <span className="font-semibold">{r.matchedTo.personName}</span></>
-              ) : (
-                <span className="text-white/85">available for deployment</span>
-              )}
-            </>
-          }
-          meta={`${r.history.length} events`}
-        />
-
-        <AiSummary
-          id={r.id}
-          tldr={tldr}
-          summary={`${r.title} owned by ${r.ownerName}${r.org ? ` (${r.org})` : ""}, currently ${r.status}${r.matchedTo ? ` and matched to ${r.matchedTo.personName} on ${r.matchedTo.caseId}` : ""}. Staged at ${r.location}. Capacity: ${r.capacity}. ${r.history.length} events in deployment history.`}
-        />
-
-        {r.capacityTotal != null && r.capacityAvailable != null && r.capacityTotal !== 0 && (
-          <HeroPanel>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] uppercase tracking-widest text-white/45 font-mono">Capacity</span>
-              <span className="text-[12px] font-medium text-white/80">
-                {r.capacityAvailable} <span className="text-white/40">/ {r.capacityTotal}</span>
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, (r.capacityAvailable / r.capacityTotal) * 100)}%`,
-                  background: r.capacityAvailable / r.capacityTotal > 0.5 ? '#34D399' : r.capacityAvailable / r.capacityTotal > 0.2 ? '#F5C842' : '#EF4E4B',
-                }}
-              />
-            </div>
-            <p className="text-[10.5px] text-white/35 mt-1.5">
-              {Math.round((r.capacityAvailable / r.capacityTotal) * 100)}% available
-            </p>
-          </HeroPanel>
-        )}
-
-        {staticMapUrl && (
-          <HeroPanel padded={false}>
-            <div className="relative overflow-hidden rounded-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={staticMapUrl}
-                alt={`Map showing location of ${r.title}`}
-                className="w-full object-cover"
-                style={{ height: 180 }}
-              />
-              <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
-                <MapPin size={10} className="text-[#EF4E4B]" />
-                <span className="text-xs text-white/80">{r.location}</span>
-              </div>
-            </div>
-          </HeroPanel>
-        )}
-
-        <DetailTabs tabs={tabs} defaultKey="activity" />
-      </main>
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} entityType="resource" entityId={id} orgId={orgId} />
+        }}
+        saving={saving}
+      />
     </CrmShell>
   );
 }
