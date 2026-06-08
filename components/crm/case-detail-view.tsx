@@ -229,8 +229,8 @@ export default function CaseDetailView({
           </Link>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 text-lg font-medium truncate max-w-[50%] text-center">
-          {displayName}
+        <div className="absolute left-1/2 -translate-x-1/2 text-sm font-mono truncate max-w-[50%] text-center" style={{ color: 'var(--foreground)', opacity: 0.5 }}>
+          SOS-{(sos?.id || person?.id || '').slice(0, 8).toUpperCase()}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
