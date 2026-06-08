@@ -607,7 +607,7 @@ export default function CasesPage() {
 
       {/* Board / table view toggle */}
       <div className="px-6 pt-3 flex justify-end">
-        <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
+        <div className="inline-flex rounded-lg overflow-hidden border border-[var(--hairline)]">
           {(["kanban", "table"] as const).map((mode) => {
             const active = viewMode === mode;
             return (
@@ -618,9 +618,10 @@ export default function CasesPage() {
                   height: 28,
                   fontSize: 11,
                   padding: "0 12px",
-                  background: active ? "#89CFF0" : "transparent",
-                  color: active ? "#0F1E2B" : "rgba(255,255,255,0.6)",
-                  fontWeight: 500,
+                  background: active ? "var(--sos-navy)" : "transparent",
+                  color: active ? "#fff" : "var(--foreground)",
+                  opacity: active ? 1 : 0.5,
+                  fontWeight: active ? 600 : 500,
                   transition: "background 150ms ease, color 150ms ease",
                 }}
               >
@@ -643,12 +644,13 @@ export default function CasesPage() {
             aria-controls={`col-${col.id}`}
             onClick={() => {
               setMobileCol(col.id);
-              document.getElementById(`col-${col.id}`)?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+              const el = document.getElementById(`col-${col.id}`);
+              el?.parentElement?.scrollTo({ left: el.offsetLeft - 16, behavior: 'smooth' });
             }}
             className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-medium transition ${
               mobileCol === col.id
-                ? "bg-white/15 text-white"
-                : "bg-white/5 text-white/50 hover:text-white/80"
+                ? "bg-[var(--sos-navy)] text-white"
+                : "bg-foreground/5 text-[var(--foreground)]/50 hover:text-[var(--foreground)]/80"
             }`}
           >
             {col.label}
@@ -656,7 +658,7 @@ export default function CasesPage() {
         ))}
       </div>
 
-      <p className="text-[10px] text-white/30 text-center mt-1 md:hidden">← swipe columns →</p>
+      <p className="text-[10px] text-[var(--foreground)]/30 text-center mt-1 md:hidden">← swipe columns →</p>
 
       <div className="px-4 pt-4 pb-4">
         <div
