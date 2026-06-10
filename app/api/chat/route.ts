@@ -25,6 +25,9 @@ export async function POST(req: Request) {
   }));
   const personId = req.headers.get('x-person-id') || '';
   const isAuthenticated = req.headers.get('x-authenticated') === 'true';
+  // Org context — routes to org-specific Command Center personas
+  const orgId = req.headers.get('x-org-id') || '';
+  const orgType = req.headers.get('x-org-type') || '';
   // Detect JOIN flow from first message content: [JOIN_SOS]
   let joinFlow = false;
   // Detect ERV flow from first message content: [ERV_INTAKE:survivor:myself]
@@ -54,10 +57,10 @@ export async function POST(req: Request) {
   if (transportId) {
     try {
       // All data from SOS DB — no partner DB calls
-      const transportRes = await fetch(SUPABASE_URL + '/functions/v1/crm-delivery', {
+      const transportRes = await fetch(SUPABASE_URL + '/functions/v1/sos-coordination', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'list', match_id: transportId, limit: 1 }),
+        body: JSON.stringify({ action: 'delivery.list', match_id: transportId, limit: 1 }),
       });
       const transportData = await transportRes.json();
       const transport = (transportData.deliveries || [])[0];
@@ -211,6 +214,28 @@ INTAKE FLOW — ONE question at a time:
 RULES: ONE question at a time. Get vehicle specs if driver. Be enthusiastic. ALWAYS use show_sos_confirmation before submit.${ervFor === 'someone' ? '\nBeing filled out ON BEHALF of the volunteer.' : ''}`,
   };
 
+  // Org-specific Command Center personas (partner command center)
+  const ORG_PROMPTS: Record<string, string> = {
+    '43299807-6229-49be-9a6b-0498c9188178': `You are the SOS coordination agent for Aid Arena (Conversa Corps).
+
+Aid Arena is the 'dispatcher's dispatcher' — 30,000+ vetted disaster response nonprofits in their network. You help coordinators route needs to the right partner, track assignments, and prove impact.
+
+CAPABILITIES:
+1. QUERY — Answer questions about cases, requests, resources, volunteers, impact
+2. INTAKE — Create new needs, resources, volunteers
+3. MATCH — Propose and confirm assignments (needs human approval)
+4. MULTI-ORG — Route needs across the partner network
+5. UPDATE — Change status, add notes, reassign
+6. REPORTS — Impact dashboards, weekly summaries, trend charts
+
+STYLE: Warm, sharp, organized. Lead with substance. Use emoji as visual anchors.
+Never narrate your process — just show results. Max 3 paragraphs per message.
+Use 'assignments' not 'matches', 'volunteers' not 'partners'.
+
+ORG_ID: 43299807-6229-49be-9a6b-0498c9188178
+All queries should be scoped to this org unless asked for network-wide data.`,
+  };
+
   const JOIN_PROMPT = `You are SOS — a community coordination platform that connects people who want to help with the communities that need them. You're having a friendly, conversational chat with someone interested in joining.
 
 GOAL: Understand who they are, what motivates them, what skills or resources they can contribute, and whether they're part of an organization. By the end, you should have their name, phone number, and a clear picture of how they can help.
@@ -240,6 +265,8 @@ DO NOT use tools like show_categories, show_chips, or search_resources. This is 
     ? JOIN_PROMPT
     : ervFlow && ERV_PROMPTS[ervFlow]
     ? ERV_PROMPTS[ervFlow] + authContext + locationContext
+    : orgId && ORG_PROMPTS[orgId]
+    ? ORG_PROMPTS[orgId] + authContext + locationContext
     : SYSTEM_PROMPT + authContext + locationContext;
 
   const result = streamText({
