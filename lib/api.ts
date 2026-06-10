@@ -196,7 +196,7 @@ export const api = {
   crmSosesList: (filters?: { status?: string; limit?: number; offset?: number; org_id?: string }) =>
     efCall("sos-coordination", { action: "cases.list_soses", ...filters }),
 
-  crmCasesDetail: (params: { person_id?: string; request_id?: string }) =>
+  crmCasesDetail: (params: { person_id?: string; request_id?: string; id?: string }) =>
     efCall("sos-coordination", { action: "cases.detail", ...params }),
 
   // CRM — Case Actions (write path)
