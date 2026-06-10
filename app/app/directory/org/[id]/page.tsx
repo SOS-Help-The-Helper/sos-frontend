@@ -43,7 +43,7 @@ export default function OrgPage() {
     if (!id) return;
     api.crmGetOrg(id as string)
       .then((res: any) => {
-        if (res) setOrg(res);
+        if (res) setOrg(res.org ?? res);
         else setError(true);
       })
       .catch(() => {
