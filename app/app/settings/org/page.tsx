@@ -55,7 +55,7 @@ export default function OrgSettings() {
   useEffect(() => {
     if (!orgId) return;
     api.getPortalConfig(orgId).then((res: any) => {
-      const config = res?.portal_config ?? res?.config ?? res;
+      const config = res?.org ?? res?.portal_config ?? res?.config ?? res;
       setOrgData(config);
       if (config) {
         setForm((f) => ({

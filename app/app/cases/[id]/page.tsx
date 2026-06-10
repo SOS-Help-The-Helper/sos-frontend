@@ -387,6 +387,7 @@ export default function UmbrellaView() {
                 postingNote={postingNote}
                 orgId={orgId}
                 caseNotes={caseNotes}
+                onCaseNotesUpdate={setCaseNotes}
                 activeTab={activeTab}
                 onActiveTabChange={setActiveTab}
                 onRefetch={fetchCaseDetail}
@@ -467,7 +468,7 @@ function candidateToChainData(m: MatchCandidate, umbrellaData: UmbrellaShape): M
 }
 
 function CaseTabs({
-  sosId, note, setNote, childCases, orgs, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, activeTab, onActiveTabChange, onRefetch,
+  sosId, note, setNote, childCases, orgs, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, onCaseNotesUpdate, activeTab, onActiveTabChange, onRefetch,
 }: {
   sosId: string;
   note: string;
@@ -480,6 +481,7 @@ function CaseTabs({
   postingNote: boolean;
   orgId: string;
   caseNotes: Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>;
+  onCaseNotesUpdate?: (notes: any[]) => void;
   activeTab: string;
   onActiveTabChange: (key: string) => void;
   onRefetch: () => void;
@@ -623,7 +625,7 @@ function CaseTabs({
       key: "notes",
       label: "Notes",
       count: caseNotes.length || noteEvents.length || undefined,
-      content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} umbrellaData={umbrellaData} orgId={orgId} onNotesUpdate={setCaseNotes} />,
+      content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} umbrellaData={umbrellaData} orgId={orgId} onNotesUpdate={onCaseNotesUpdate} />,
     },
     {
       key: "comms",

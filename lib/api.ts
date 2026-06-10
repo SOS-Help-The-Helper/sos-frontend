@@ -101,16 +101,6 @@ export const api = {
   consentFlow: (data: Record<string, unknown>) =>
     efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: data.match_id as string, action: 'consent', data }),
 
-  // ERV
-  ervQuery: (queryType: string, params: Record<string, unknown>) =>
-    efCall('erv-query', { query_type: queryType, ...params }),
-
-  ervUpdate: (action: string, data: Record<string, unknown>) =>
-    efCall('erv-update', { action, ...data }),
-
-  ervMatchPropose: (data: Record<string, unknown>) =>
-    efCall('erv-match-propose', data),
-
   // Intake
   submitIntake: (data: Record<string, unknown>) =>
     efCall('sos-write', data),
@@ -121,26 +111,26 @@ export const api = {
 
   // Reports
   submitSitrep: (data: Record<string, unknown>) =>
-    efCall('sitrep-write', data),
+    efCall('sos-write', { action: 'sitrep.create', ...data }),
 
   // Portal Config
   getPortalConfig: (orgId: string) =>
-    efCall<{ org_id: string; org_name: string; org_type: string; portal_config: Record<string, unknown> }>(
-      'partner-read', { query_type: 'portal_config', org_id: orgId }
+    efCall<{ org: Record<string, unknown>; modules: Record<string, unknown>; metadata: Record<string, unknown> }>(
+      'sos-read', { action: 'settings.get', org_id: orgId }
     ),
 
-  updatePortalConfig: (orgId: string, config: Record<string, unknown>) =>
-    efCall('partner-update', { update_type: 'update_portal_config', data: { org_id: orgId, config } }),
+  updatePortalConfig: (orgId: string, config: Record<string, unknown>, personId?: string) =>
+    efCall('sos-update', { action: 'settings.update_profile', org_id: orgId, person_id: personId ?? '', patch: config }),
 
   // Partners
   queryPartner: (orgId: string, queryType: string) =>
     efCall('sos-read', { actor: { type: 'partner', id: orgId }, scope: 'org_records', query_type: queryType }),
 
   onboardPartner: (data: Record<string, unknown>) =>
-    efCall('partner-onboard', data),
+    efCall('sos-write', { action: 'onboard.agent_register', ...data }),
 
   partnerReferral: (data: Record<string, unknown>) =>
-    efCall('referral-track', data),
+    efCall('sos-write', { action: 'referral.generate', ...data }),
 
   // Alerts — GET, params forwarded as query string
   getAlerts: (lat: number, lng: number) =>
@@ -162,11 +152,15 @@ export const api = {
     efCall('community-messages', { channel_id: channelId, text }),
 
   // Inventory
-  queryInventory: (params: Record<string, unknown>) =>
-    efCall('inventory-query', params),
+  queryInventory: (params: Record<string, unknown>) => {
+    const { action: invAction, ...rest } = params;
+    return efCall('sos-read', { action: `inventory.${invAction ?? 'query'}`, ...rest });
+  },
 
-  writeInventory: (data: Record<string, unknown>) =>
-    efCall('inventory-write', data),
+  writeInventory: (data: Record<string, unknown>) => {
+    const { action: invAction, ...rest } = data;
+    return efCall('sos-update', { action: `inventory.${invAction ?? 'write'}`, ...rest });
+  },
 
   getNotifications: (orgId: string) =>
     efCall('sos-notify', { org_id: orgId, action: 'list' }),
@@ -182,23 +176,60 @@ export const api = {
 
   // CRM — Cases
   crmCasesList: (orgId: string, filters?: { status?: string; urgency?: string; county?: string; assigned_to?: string; category?: string }) =>
-    efCall("crm-cases", { action: "list", org_id: orgId, ...filters }),
+    efCall('sos-read', { action: 'cases.list', org_id: orgId, ...filters }),
 
   crmSosesList: (filters?: { status?: string; limit?: number; offset?: number; org_id?: string }) =>
-    efCall("crm-cases", { action: "list_soses", ...filters }),
+    efCall('sos-read', { action: 'cases.list_soses', ...filters }),
 
   crmCasesDetail: (params: { person_id?: string; request_id?: string }) =>
-    efCall("crm-cases", { action: "detail", ...params }),
+    efCall('sos-read', { action: 'cases.detail', ...params }),
 
-  // CRM — Case Actions (write path)
-  crmCaseAction: (action: string, data: Record<string, unknown>) =>
-    efCall("crm-case-action", { action, ...data }),
+  // CRM — Case Actions (write path for mutations, read path for note fetches)
+  crmCaseAction: (action: string, data: Record<string, unknown>) => {
+    if (action === 'get_notes') return efCall('sos-read', { action: 'notes.get', ...data });
+    if (action === 'get_case_notes') return efCall('sos-read', { action: 'notes.get_case', ...data });
+    return efCall('sos-update', { action: `case_action.${action}`, ...data });
+  },
 
-  // CRM — Requests and Resources (via partner-read)
-  crmRequestsList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "request_summary", org_id: orgId, ...filters }),
-  crmResourcesList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "resource_summary", org_id: orgId, ...filters }),
+  // CRM — Requests summary (with by_status counts)
+  // Fetches all requests via sos-read cases.list + computes summary client-side
+  crmRequestsList: async (orgId: string, filters?: Record<string, unknown>) => {
+    const res = await efCall<{ cases: any[]; total: number }>('sos-read', {
+      action: 'cases.list', org_id: orgId, limit: 200, ...filters,
+    });
+    const requests = res.cases || [];
+    const total = res.total || requests.length;
+    const by_status: Record<string, number> = {};
+    const by_urgency: Record<string, number> = {};
+    let veteran_count = 0;
+    let first_responder_count = 0;
+    let total_household_members = 0;
+    for (const r of requests) {
+      by_status[r.status] = (by_status[r.status] || 0) + 1;
+      if (r.urgency) by_urgency[r.urgency] = (by_urgency[r.urgency] || 0) + 1;
+      if (r.persons?.is_veteran) veteran_count++;
+      if (r.persons?.is_first_responder) first_responder_count++;
+      total_household_members += r.household_size || 0;
+    }
+    return { total, by_status, by_urgency, veteran_count, first_responder_count, total_household_members, requests };
+  },
+
+  // CRM — Resources summary (with by_status counts)
+  // Fetches resources via sos-read org_records + computes summary client-side
+  crmResourcesList: async (orgId: string, filters?: Record<string, unknown>) => {
+    const res = await efCall<{ resources: any[] }>('sos-read', {
+      actor: { type: 'partner', id: orgId }, scope: 'org_records', ...filters,
+    });
+    const resources = res.resources || [];
+    const total = resources.length;
+    const by_status: Record<string, number> = {};
+    const by_taxonomy: Record<string, number> = {};
+    for (const r of resources) {
+      by_status[r.status] = (by_status[r.status] || 0) + 1;
+      if (r.taxonomy_code) by_taxonomy[r.taxonomy_code] = (by_taxonomy[r.taxonomy_code] || 0) + 1;
+    }
+    return { total, by_status, by_taxonomy, resources };
+  },
 
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
@@ -233,113 +264,168 @@ export const api = {
 
   // CRM — Search
   crmSearch: (query: string, orgId: string, filters?: Record<string, unknown>) =>
-    efCall("crm-search", { query, org_id: orgId, ...filters }),
+    efCall('sos-read', { action: 'search', query, org_id: orgId, ...filters }),
 
   // CRM — Directory
   crmBrowsePersons: (orgId: string, params?: { limit?: number; offset?: number; sort?: string }) =>
-    efCall("crm-directory", { action: "browse_persons", org_id: orgId, ...params }),
+    efCall('sos-read', { action: 'directory.browse_persons', org_id: orgId, ...params }),
 
   crmBrowseOrgs: (orgId: string, params?: { limit?: number; offset?: number }) =>
-    efCall("crm-directory", { action: "browse_orgs", org_id: orgId, ...params }),
+    efCall('sos-read', { action: 'directory.browse_orgs', org_id: orgId, ...params }),
 
   crmOrgMembers: (orgId: string) =>
-    efCall("crm-directory", { action: "list_org_members", org_id: orgId }),
+    efCall('sos-read', { action: 'directory.list_org_members', org_id: orgId }),
 
   // CRM — Events / Calendar
   crmEventsList: (orgId: string, params?: { from?: string; to?: string; event_type?: string }) =>
-    efCall("crm-events", { action: "list", org_id: orgId, ...params }),
+    efCall('sos-read', { action: 'events.list', org_id: orgId, ...params }),
 
   crmEventsCreate: (orgId: string, data: Record<string, unknown>) =>
-    efCall("crm-events", { action: "create", org_id: orgId, ...data }),
+    efCall('sos-update', { action: 'events.create', org_id: orgId, ...data }),
 
   crmEventsUpdate: (eventId: string, data: Record<string, unknown>) =>
-    efCall("crm-events", { action: "update", event_id: eventId, ...data }),
+    efCall('sos-update', { action: 'events.update', event_id: eventId, ...data }),
 
   crmEventsDelete: (eventId: string) =>
-    efCall("crm-events", { action: "delete", event_id: eventId }),
+    efCall('sos-update', { action: 'events.delete', event_id: eventId }),
 
   // CRM — Delivery
   crmDeliveryList: (matchId: string) =>
-    efCall("crm-delivery", { action: "list", match_id: matchId }),
+    efCall('sos-read', { action: 'delivery.list', match_id: matchId }),
 
   crmDeliveryUpdate: (deliveryId: string, status: string, data?: Record<string, unknown>) =>
-    efCall("crm-delivery", { action: "update_status", delivery_id: deliveryId, status, ...data }),
+    efCall('sos-update', { action: 'delivery.update_status', delivery_id: deliveryId, status, ...data }),
 
   // CRM — Volunteers
   crmVolunteersAvailable: (orgId: string, params?: { day?: number; skill?: string; lat?: number; lng?: number; radius?: number }) =>
-    efCall("crm-volunteers", { action: "query_available", org_id: orgId, ...params }),
+    efCall('sos-read', { action: 'volunteers.query_available', org_id: orgId, ...params }),
 
   // CRM — Reports
   crmImpactDashboard: (orgId: string, params?: { disaster_id?: string; days?: number }) =>
-    efCall("crm-reports", { action: "impact_dashboard", org_id: orgId, ...params }),
+    efCall('sos-read', { action: 'reports.impact_dashboard', org_id: orgId, ...params }),
 
   // CRM — Facilities
   crmFacilitiesList: (orgId: string) =>
-    efCall("crm-facilities", { action: "list_by_org", org_id: orgId }),
+    efCall('sos-read', { action: 'facilities.list_by_org', org_id: orgId }),
 
   // CRM — Credentials
   crmCredentialsList: (personId: string) =>
-    efCall("crm-credentials", { action: "list_by_person", person_id: personId }),
+    efCall('sos-read', { action: 'credentials.list_by_person', person_id: personId }),
 
   // CRM — Onboard
   crmOnboardOrg: (data: Record<string, unknown>) =>
-    efCall("crm-onboard", { action: "create_org", ...data }),
+    efCall('sos-write', { action: 'onboard.create_org', ...data }),
 
   crmSetModules: (orgId: string, modules: string[]) =>
-    efCall("crm-onboard", { action: "set_modules", org_id: orgId, modules }),
+    efCall('sos-write', { action: 'onboard.set_modules', org_id: orgId, modules }),
 
-  // Transport — list + create
-  transportList: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("partner-read", { query_type: "transport_assignments", org_id: orgId, ...filters }),
+  // Transport — list transport-chain matches for an org
+  transportList: async (orgId: string, _filters?: Record<string, unknown>) => {
+    // Transport assignments = matches where provider_org_id matches and chain involves TRANSPORT resources
+    const { data, error } = await supabaseRead
+      .from('matches')
+      .select(`
+        id, status, chain_id, created_at, match_score,
+        requests!request_id(id, taxonomy_code, latitude, longitude, location_text, persons:person_id(display_name, phone)),
+        resources!resource_id(id, taxonomy_code, description, latitude, longitude, location_text, persons:person_id(display_name, phone))
+      `)
+      .eq('provider_org_id', orgId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    // Map to transport assignment shape expected by the page
+    return {
+      assignments: (data || []).map((m: any) => ({
+        id: m.id,
+        status: m.status,
+        resource_id: m.resources?.id,
+        resource_name: m.resources?.description,
+        origin_address: m.resources?.location_text || '',
+        destination_address: m.requests?.location_text || '',
+        origin_lat: m.resources?.latitude,
+        origin_lng: m.resources?.longitude,
+        destination_lat: m.requests?.latitude,
+        destination_lng: m.requests?.longitude,
+        driver_name: m.resources?.persons?.display_name || '',
+        driver_phone: m.resources?.persons?.phone || '',
+        created_at: m.created_at,
+      })),
+    };
+  },
 
   transportCreate: (data: Record<string, unknown>) =>
-    efCall("partner-update", { action: "create_transport_assignment", ...data }),
+    efCall('sos-update', { action: 'delivery.create', ...data }),
 
-  // Transport / Driver
-  transportUpdateStatus: (assignmentId: string, status: string, data?: Record<string, unknown>) =>
-    efCall("partner-update", { action: "update_transport_status", transport_id: assignmentId, status, ...data }),
-  transportReportIssue: (assignmentId: string, issueType: string, description: string) =>
-    efCall("partner-update", { action: "report_transport_issue", transport_id: assignmentId, issue_type: issueType, description }),
-  transportUpdateLocation: (assignmentId: string, lat: number, lng: number) =>
-    efCall("partner-update", { action: "update_transport_location", transport_id: assignmentId, latitude: lat, longitude: lng }),
+  // Transport / Driver — update via sos-update (match lifecycle)
+  transportUpdateStatus: (matchId: string, status: string, data?: Record<string, unknown>) =>
+    efCall('sos-update', { actor: { type: 'partner' }, record_type: 'match', record_id: matchId, action: status === 'completed' ? 'deliver' : 'accept', data }),
+  transportReportIssue: (matchId: string, issueType: string, description: string) =>
+    efCall('sos-update', { action: 'case_action.add_note', entity_type: 'match', entity_id: matchId, note: `[${issueType}] ${description}` }),
+  transportUpdateLocation: (_matchId: string, _lat: number, _lng: number) => {
+    // Location updates go through delivery_tracking — no-op until delivery supports it
+    return Promise.resolve({ ok: true });
+  },
 
+  // Inventory — condition update via sos-update on resource
   inventoryUpdateCondition: (resourceId: string, condition: number, notes?: string) =>
-    efCall("partner-update", { action: "update_resource_condition", resource_id: resourceId, condition_rating: condition, notes }),
+    efCall('sos-update', { actor: { type: 'partner' }, record_type: 'resource', record_id: resourceId, action: 'update', data: { condition_rating: condition, ...(notes ? { notes } : {}) } }),
+  // Inventory — facility transfer
   inventoryMoveToFacility: (resourceId: string, facilityId: string) =>
-    efCall("partner-update", { action: "move_to_facility", resource_id: resourceId, facility_id: facilityId }),
+    efCall('sos-update', { action: 'inventory.transfer', resource_id: resourceId, to_facility_id: facilityId, from_facility_id: 'current', quantity: 1 }),
 
   // CRM — Map
   crmMapFeatures: (orgId: string, filters?: Record<string, unknown>) =>
-    efCall("crm-map", { action: "get_features", org_id: orgId, ...filters }),
+    efCall('sos-read', { action: 'map.features', org_id: orgId, ...filters }),
 
   // CRM — Command
   crmCommandIncidents: () =>
-    efCall("crm-command", { action: "list_incidents" }),
+    efCall('sos-read', { action: 'command.list_incidents' }),
 
   crmCommandSummary: (disasterId: string) =>
-    efCall("crm-command", { action: "incident_summary", disaster_id: disasterId }),
+    efCall('sos-read', { action: 'command.incident_summary', disaster_id: disasterId }),
 
   // Person/Org detail
   crmGetOrg: (orgId: string) =>
-    efCall("crm-directory", { action: "get_org", org_id: orgId }),
+    efCall('sos-read', { action: 'directory.get_org', org_id: orgId }),
   crmGetPerson: (personId: string) =>
-    efCall("crm-directory", { action: "get_person", person_id: personId }),
+    efCall('sos-read', { action: 'directory.get_person', person_id: personId }),
   crmUpdatePerson: (personId: string, field: string, value: string) =>
-    efCall("crm-directory", { action: "update_person", person_id: personId, field, value }),
+    efCall('sos-read', { action: 'directory.update_person', person_id: personId, field, value }),
   crmOrgStats: (orgId: string) =>
-    efCall("crm-directory", { action: "org_stats", org_id: orgId }),
+    efCall('sos-read', { action: 'directory.org_stats', org_id: orgId }),
 
   // Notes
   crmGetNotes: (entityType: string, entityId: string) =>
-    efCall("crm-case-action", { action: "get_notes", entity_type: entityType, entity_id: entityId }),
+    efCall('sos-read', { action: 'notes.get', entity_type: entityType, entity_id: entityId }),
   crmGetCaseNotes: (sosId: string) =>
-    efCall("crm-case-action", { action: "get_case_notes", sos_id: sosId }),
+    efCall('sos-read', { action: 'notes.get_case', sos_id: sosId }),
 
-  // Detail reads  
-  crmResourceDetail: (resourceId: string, orgId?: string) =>
-    efCall("partner-read", { query_type: "resource_detail", resource_id: resourceId, org_id: orgId }),
+  // Detail reads
+  // Resource detail: direct Supabase read with joins (same data as partner-read resource_detail)
+  crmResourceDetail: async (resourceId: string, _orgId?: string) => {
+    const { data, error } = await supabaseRead
+      .from('resources')
+      .select(`
+        id, description, taxonomy_code, category, status, capacity_available, capacity_total,
+        latitude, longitude, location_text, city, state, county, org_id, person_id, created_at,
+        persons:person_id(display_name, phone),
+        locations:location_id(street_address, city, state, zip_code, latitude, longitude),
+        organizations:org_id(name)
+      `)
+      .eq('id', resourceId)
+      .single();
+    if (error) throw error;
+    // Fetch related matches
+    const { data: matches } = await supabaseRead
+      .from('matches')
+      .select('id, status, match_score, created_at, requests(id, taxonomy_code, urgency, persons:person_id(display_name))')
+      .eq('resource_id', resourceId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    return { resource: data, matches: matches || [] };
+  },
   crmReportDetail: (reportId: string) =>
-    efCall("crm-reports", { report_type: "report_detail", report_id: reportId }),
+    efCall('sos-read', { action: 'reports.report_detail', report_id: reportId }),
 };
 
 // --- Generic read helpers (server-side via map-data EF or direct reads) ---

@@ -409,7 +409,7 @@ export default function CasesPage() {
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
       api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
-      api.efCall("partner-read", { query_type: "org_detail", org_id: orgId }).catch(() => null),
+      api.efCall("crm-directory", { action: "get_org", org_id: orgId }).catch(() => null),
     ])
       .then(([casesRes, requestsRes, resourcesRes, reportsRes, orgRes]) => {
         const casesData = casesRes.status === "fulfilled" ? casesRes.value : null;
@@ -527,7 +527,7 @@ export default function CasesPage() {
     if (field === 'status' && tab === 'requests') {
       await api.crmCaseAction('transition_status', { request_id: rowId, new_status: value });
     } else if (field === 'status' && tab === 'resources') {
-      await api.efCall('partner-update', { action: 'update_resource_condition', resource_id: rowId, status: value });
+      await api.efCall('inventory-write', { action: 'adjust', resource_id: rowId, status: value });
     } else if (field === 'description') {
       await api.efCall('crm-directory', { action: 'update_record', record_type: tab === 'requests' ? 'request' : 'resource', record_id: rowId, field: 'description', value });
     } else if (field === 'urgency') {
