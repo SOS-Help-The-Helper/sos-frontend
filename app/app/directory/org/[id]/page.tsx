@@ -66,7 +66,7 @@ export default function OrgPage() {
   async function saveOrg() {
     setSaving(true);
     try {
-      await (api as any).efCall('crm-directory', { action: 'update_org', org_id: id, name: editName, email: editEmail, phone: editPhone, website: editWebsite });
+      await (api as any).efCall('sos-coordination', { action: 'directory.update_org', org_id: id, name: editName, email: editEmail, phone: editPhone, website: editWebsite });
       toast.success('Organization updated');
       setEditMode(false);
     } catch {
@@ -80,7 +80,7 @@ export default function OrgPage() {
     if (!inviteEmail.trim()) return;
     setInviteSaving(true);
     try {
-      await (api as any).efCall('crm-directory', { action: 'invite_member', org_id: id, email: inviteEmail, role: 'Volunteer' });
+      await (api as any).efCall('sos-coordination', { action: 'directory.invite_member', org_id: id, email: inviteEmail, role: 'Volunteer' });
       toast.success('Member invited');
       setInviteOpen(false);
       setInviteEmail('');

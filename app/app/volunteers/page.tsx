@@ -97,7 +97,7 @@ export default function VolunteersPage() {
 
   async function handleStatusChange(volId: string, newStatus: string) {
     try {
-      await api.efCall('crm-directory', { action: 'update_person', person_id: volId, field: 'status', value: newStatus });
+      await api.efCall('sos-coordination', { action: 'directory.update_person', person_id: volId, field: 'status', value: newStatus });
       toast.success("Status updated");
       refreshVolunteers();
     } catch {
@@ -109,7 +109,7 @@ export default function VolunteersPage() {
     const inputId = window.prompt("Case/Event ID to assign to:");
     if (!inputId?.trim()) return;
     try {
-      await api.efCall('crm-cases', { action: 'assign_case', sos_id: inputId.trim(), person_id: volId });
+      await api.efCall('sos-coordination', { action: 'cases.assign', sos_id: inputId.trim(), person_id: volId });
       toast.success("Assigned");
     } catch {
       toast.error("Failed to assign");

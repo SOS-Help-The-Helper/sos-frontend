@@ -333,7 +333,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
     setCandidatesLoading(true);
     (async () => {
       try {
-        const res = await api.efCall("match-engine", { mode: "propose", request_id: activeId }) as any;
+        const res = await api.efCall("sos-matching", { action: "propose.run", mode: "propose", request_id: activeId }) as any;
         const raw: unknown[] = res?.candidates ?? [];
         if (!cancelled) {
           setCandidates(

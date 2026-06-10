@@ -408,8 +408,8 @@ export default function CasesPage() {
       api.crmSosesList({ limit: 200, org_id: orgId || undefined }),
       api.crmRequestsList(orgId || ""),
       api.crmResourcesList(orgId || ""),
-      api.efCall("crm-reports", { report_type: "impact_dashboard" }).catch(() => null),
-      api.efCall("crm-directory", { action: "get_org", org_id: orgId }).catch(() => null),
+      api.efCall("sos-intelligence", { action: "reports.impact_dashboard", report_type: "impact_dashboard" }).catch(() => null),
+      api.efCall("sos-coordination", { action: "directory.get_org", org_id: orgId }).catch(() => null),
     ])
       .then(([casesRes, requestsRes, resourcesRes, reportsRes, orgRes]) => {
         const casesData = casesRes.status === "fulfilled" ? casesRes.value : null;
@@ -527,11 +527,11 @@ export default function CasesPage() {
     if (field === 'status' && tab === 'requests') {
       await api.crmCaseAction('transition_status', { request_id: rowId, new_status: value });
     } else if (field === 'status' && tab === 'resources') {
-      await api.efCall('inventory-write', { action: 'adjust', resource_id: rowId, status: value });
+      await api.efCall('sos-inventory', { action: 'write.adjust', resource_id: rowId, status: value });
     } else if (field === 'description') {
-      await api.efCall('crm-directory', { action: 'update_record', record_type: tab === 'requests' ? 'request' : 'resource', record_id: rowId, field: 'description', value });
+      await api.efCall('sos-coordination', { action: 'directory.update_record', record_type: tab === 'requests' ? 'request' : 'resource', record_id: rowId, field: 'description', value });
     } else if (field === 'urgency') {
-      await api.efCall('crm-directory', { action: 'update_record', record_type: 'request', record_id: rowId, field: 'urgency', value });
+      await api.efCall('sos-coordination', { action: 'directory.update_record', record_type: 'request', record_id: rowId, field: 'urgency', value });
     }
     toast.success('Saved');
   }

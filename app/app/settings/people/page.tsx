@@ -56,7 +56,7 @@ export default function PeopleSettings() {
     if (!orgId || !inviteEmail) return;
     setInviting(true);
     try {
-      await api.efCall("crm-directory", { action: "invite_member", org_id: orgId, email: inviteEmail, role: inviteRole });
+      await api.efCall("sos-coordination", { action: "directory.invite_member", org_id: orgId, email: inviteEmail, role: inviteRole });
       toast.success(`Invite sent to ${inviteEmail}`);
       setInviteOpen(false);
       setInviteEmail("");
@@ -72,7 +72,7 @@ export default function PeopleSettings() {
     if (!orgId) return;
     if (!confirm(`Remove ${member.name} from this org?`)) return;
     try {
-      await api.efCall("crm-directory", { action: "remove_member", org_id: orgId, person_id: member.id });
+      await api.efCall("sos-coordination", { action: "directory.remove_member", org_id: orgId, person_id: member.id });
       setMembers((prev) => prev.filter((m) => m.id !== member.id));
       toast.success(`${member.name} removed`);
     } catch {
@@ -85,7 +85,7 @@ export default function PeopleSettings() {
     const prev = members;
     setMembers((ms) => ms.map((m) => m.id === member.id ? { ...m, role } : m));
     try {
-      await api.efCall("crm-directory", { action: "change_role", org_id: orgId, person_id: member.id, role });
+      await api.efCall("sos-coordination", { action: "directory.change_role", org_id: orgId, person_id: member.id, role });
       toast.success(`${member.name} is now ${role}`);
     } catch {
       setMembers(prev);

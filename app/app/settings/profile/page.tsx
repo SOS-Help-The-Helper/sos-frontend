@@ -49,7 +49,7 @@ export default function MyProfile() {
   async function handleSave() {
     setSaving(true);
     try {
-      await api.efCall("crm-settings", { action: "update_profile", name, email, phone });
+      await api.efCall("sos-events", { action: "settings.update_profile", name, email, phone });
       toast.success("Profile saved");
     } catch {
       toast.error("Failed to save profile");

@@ -58,8 +58,8 @@ export default function ResourcePage() {
   async function saveResource() {
     setSaving(true);
     try {
-      await (api as any).efCall('inventory-write', {
-        action: 'adjust',
+      await (api as any).efCall('sos-inventory', {
+        action: 'write.update_condition',
         resource_id: id,
         ...(editCapacity !== '' ? { capacity_available: Number(editCapacity) } : {}),
         status: editStatus,
