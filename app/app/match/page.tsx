@@ -299,7 +299,7 @@ function MatchWorkbench({ orgId }: { orgId: string }) {
     if (!orgId) return;
     (async () => {
       try {
-        const res = await api.crmCasesList(orgId, { status: "active" }) as any;
+        const res = await api.crmCasesList(orgId, {}) as any;
         const raw: unknown[] = res?.cases ?? res?.data ?? [];
         const mapped: CaseItem[] = raw.map((r: any) => ({
           id: r.request_id ?? r.id,
