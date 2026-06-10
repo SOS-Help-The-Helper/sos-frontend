@@ -13,6 +13,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 // connection string, anon key, or x-partner-key. The connection is pinned to
 // SOS and never reassigned at runtime.
 
+// UUID v4 guard — admin view passes orgId="sos" which crashes Supabase UUID columns
+const isUUID = (v: unknown): v is string =>
+  typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
 const SOS_URL =
   process.env.NEXT_PUBLIC_SOS_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -223,7 +227,7 @@ export const api = {
       .select('id, status, category, taxonomy_code, description, capacity_available, contact_name, location_text, city, state, county, latitude, longitude, org_id, created_at, persons:person_id(display_name, phone)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .limit(limit);
-    if (orgId) q = q.eq('org_id', orgId);
+    if (isUUID(orgId)) q = q.eq('org_id', orgId);
     if (filters?.status) q = Array.isArray(filters.status) ? q.in('status', filters.status as string[]) : q.eq('status', filters.status as string);
     const { data, count, error } = await q;
     if (error) throw new Error(error.message);
@@ -238,7 +242,7 @@ export const api = {
 
   // CRM — Matches board (direct Supabase read with joins)
   crmMatchesList: async (orgId: string) => {
-    if (!orgId) return { matches: [] };
+    if (!orgId || !isUUID(orgId)) return { matches: [] };
     // Step 1: Get resource IDs for this org
     const { data: orgResources } = await supabaseRead
       .from('resources')
