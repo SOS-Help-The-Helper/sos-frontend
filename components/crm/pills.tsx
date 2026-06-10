@@ -12,13 +12,13 @@ const URGENCY_COLOR: Record<Urgency, { fg: string; bg: string; pulse?: boolean }
 };
 
 export function UrgencyBadge({ urgency }: { urgency: Urgency }) {
-  const c = URGENCY_COLOR[urgency];
+  const c = URGENCY_COLOR[urgency] ?? { fg: "#374151", bg: "#E5E7EB" };
   return (
     <span
       className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[9px] uppercase tracking-wider ${c.pulse ? "animate-pulse" : ""}`}
       style={{ color: c.fg, background: c.bg }}
     >
-      {urgency}
+      {urgency ?? "unknown"}
     </span>
   );
 }
