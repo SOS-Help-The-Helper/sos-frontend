@@ -406,7 +406,7 @@ export default function CasesPage() {
     setLoading(true);
     Promise.allSettled([
       api.crmSosesList({ limit: 200, org_id: orgId || undefined }),
-      api.crmRequestsList(orgId || ""),
+      api.crmRequestsList(orgId || "", { limit: 200 }),
       api.crmResourcesList(orgId || ""),
       api.efCall("sos-intelligence", { action: "reports.impact_dashboard", report_type: "impact_dashboard" }).catch(() => null),
       api.efCall("sos-coordination", { action: "directory.get_org", org_id: orgId }).catch(() => null),

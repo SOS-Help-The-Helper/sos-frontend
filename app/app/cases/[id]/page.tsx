@@ -150,7 +150,9 @@ function LoadingSkeleton() {
 export default function UmbrellaView() {
   const params = useParams();
   const id = params.id as string;
-  const isUmbrella = (id ?? "").startsWith("U-");
+  // SOS IDs and request IDs are both UUIDs. Try as SOS umbrella first,
+  // fall back to request if no SOS found for this ID.
+  const [isUmbrella, setIsUmbrella] = useState(true);
   const { orgId, loading: authLoading } = useAuthContext();
 
   const [umbrellaData, setUmbrellaData] = useState<UmbrellaShape>(EMPTY_UMBRELLA);
@@ -166,8 +168,16 @@ export default function UmbrellaView() {
   const [activeTab, setActiveTab] = useState("timeline");
 
   const fetchCaseDetail = useCallback(() => {
-    const efParams = isUmbrella ? { person_id: id } : { request_id: id };
-    return api.crmCasesDetail(efParams)
+    // Try as SOS umbrella (sos_id) first. If that returns no data, retry as request_id.
+    return api.crmCasesDetail({ person_id: id })
+      .then((data: any) => {
+        if (!data || (!data.sos && !data.person)) {
+          // Not a valid SOS/person — try as request_id instead
+          setIsUmbrella(false);
+          return api.crmCasesDetail({ request_id: id });
+        }
+        return data;
+      })
       .then((data: any) => {
         if (!data) return;
         // Map timeline events if present
