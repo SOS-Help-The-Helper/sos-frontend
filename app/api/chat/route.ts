@@ -52,29 +52,27 @@ export async function POST(req: Request) {
   const transportId = req.headers.get('x-transport-id') || '';
   let driverSystemPrompt: string | null = null;
   if (transportId) {
-    const ERV_DB = process.env.NEXT_PUBLIC_ERV_SUPABASE_URL || 'https://xbtrtztzaokeodarqvpr.supabase.co';
-    const ERV_ANON = process.env.NEXT_PUBLIC_ERV_ANON_KEY || '';
-    const ERV_KEY = process.env.NEXT_PUBLIC_ERV_PARTNER_KEY || '';
     try {
-      const transportRes = await fetch(ERV_DB + '/functions/v1/partner-read', {
+      // All data from SOS DB — no partner DB calls
+      const transportRes = await fetch(SUPABASE_URL + '/functions/v1/crm-delivery', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + ERV_ANON, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_type: 'transport_assignments', filters: { id: transportId }, limit: 1 }),
+        headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list', match_id: transportId, limit: 1 }),
       });
       const transportData = await transportRes.json();
-      const transport = transportData.results?.[0] || transportData.assignments?.[0];
+      const transport = (transportData.deliveries || [])[0];
       if (transport) {
         // Fetch resource details for the delivery description
         let resourceDesc = 'Delivery item';
         if (transport.resource_id) {
           try {
-            const resRes = await fetch(ERV_DB + '/functions/v1/partner-read', {
+            const resRes = await fetch(SUPABASE_URL + '/functions/v1/inventory-query', {
               method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + ERV_ANON, 'x-partner-key': ERV_KEY, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query_type: 'resource_lookup', filters: { id: transport.resource_id } }),
+              headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query_type: 'item_search', filters: { resource_id: transport.resource_id } }),
             });
             const resData = await resRes.json();
-            const resource = resData.resource || resData.results?.[0];
+            const resource = resData.items?.[0] || resData.results?.[0];
             if (resource) {
               resourceDesc = [resource.year, resource.make, resource.model].filter(Boolean).join(' ') || resource.description || 'RV';
             }

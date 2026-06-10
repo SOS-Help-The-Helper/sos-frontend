@@ -8,6 +8,7 @@ import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
+import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   housing: '🏠', food_water: '🍞', medical: '🏥', transportation: '🚗',
@@ -30,7 +31,8 @@ interface EditResourceForm {
   capacity_available: number | null;
 }
 
-export default function ManagePage() {
+function ManagePageContent() {
+  const { personId: authPersonId } = useCitizenAuth();
   const [personId, setPersonId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [score, setScore] = useState<SOSScore | null>(null);
@@ -49,20 +51,32 @@ export default function ManagePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async (pid: string) => {
-    const sosData = await api.efCall<any>('sos-read', {
-      actor: { type: 'citizen', id: pid },
-      scope: 'my_records',
-      include: ['matches'],
-    });
-    const scoreData = await getSOSScore(pid);
+    // Direct queries — sos-read rejects anon key for citizen scope
+    const [reqRes, resRes, scoreData] = await Promise.all([
+      supabase.from('requests').select('id, status, category, taxonomy_code, urgency, description, details_sanitized, location_text, city, county, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
+      supabase.from('resources').select('id, status, category, taxonomy_code, description, details_sanitized, capacity_available, location_text, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
+      getSOSScore(pid),
+    ]);
     setScore(scoreData);
-    setRequests(sosData?.requests || []);
-    setResources(sosData?.resources || []);
-    setMatches(sosData?.matches || []);
+    setRequests(reqRes.data || []);
+    setResources(resRes.data || []);
+    // Fetch matches for my requests + resources
+    const myReqIds = (reqRes.data || []).map((r: any) => r.id);
+    const myResIds = (resRes.data || []).map((r: any) => r.id);
+    const allIds = [...myReqIds, ...myResIds];
+    if (allIds.length > 0) {
+      const { data: matchData } = await supabase.from('matches')
+        .select('id, match_score, status, request_id, resource_id, created_at, resources(category, description, organizations:org_id(name)), requests(category, description, urgency)')
+        .or(`request_id.in.(${myReqIds.join(',')}),resource_id.in.(${myResIds.join(',')})`)
+        .order('created_at', { ascending: false });
+      setMatches(matchData || []);
+    } else {
+      setMatches([]);
+    }
   }, []);
 
   useEffect(() => {
-    const pid = getPersonId();
+    const pid = authPersonId || getPersonId();
     setPersonId(pid);
     if (pid) loadData(pid);
 
@@ -578,5 +592,13 @@ function ScoreBar({ label, value, max, color }: { label: string; value: number; 
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
     </div>
+  );
+}
+
+export default function ManagePage() {
+  return (
+    <CitizenAuthGate>
+      <ManagePageContent />
+    </CitizenAuthGate>
   );
 }

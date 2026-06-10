@@ -316,7 +316,7 @@ export default function CitizenMapPage() {
         if (dlPin) {
           // Fetch pin location from sos-read
           try {
-            const SOS_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
+            const SOS_URL = process.env.NEXT_PUBLIC_SOS_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rtduqguwhkczexnoawej.supabase.co';
             const SOS_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
             const table = dlType === 'resource' ? 'resources' : dlType === 'report' ? 'reports' : 'requests';
             const res = await fetch(`${SOS_URL}/rest/v1/${table}?id=eq.${dlPin}&select=id,latitude,longitude,category,urgency,status`, {

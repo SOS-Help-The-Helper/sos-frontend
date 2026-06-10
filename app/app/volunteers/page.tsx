@@ -77,7 +77,7 @@ export default function VolunteersPage() {
     if (!addName.trim()) return;
     setAddBusy(true);
     try {
-      await api.efCall('partner-write', {
+      await api.submitIntake({
         person_name: addName.trim(),
         email: addEmail.trim(),
         phone: addPhone.trim(),

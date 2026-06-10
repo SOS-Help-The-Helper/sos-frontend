@@ -35,7 +35,7 @@ export function CitizenShell({ children, onSOSTap, hideSOSButton }: CitizenShell
       {/* Floating SOS Button — REMOVED: agent trigger is now the pulsing logomark in header */}
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#1A3850] border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#0F1E2B] border-t border-white/20 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
           {TABS.map(tab => {
             const Icon = tab.icon;
@@ -43,10 +43,10 @@ export function CitizenShell({ children, onSOSTap, hideSOSButton }: CitizenShell
             return (
               <Link key={tab.path} href={tab.path}
                 className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-                  active ? 'text-sos-red-400' : 'text-white/40'
+                  active ? 'text-[#EF4E4B]' : 'text-white/60'
                 }`}>
-                <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 1.8} />
+                <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
               </Link>
             );
           })}

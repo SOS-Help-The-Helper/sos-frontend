@@ -7,7 +7,7 @@ import { CitizenShell } from '@/components/citizen-shell';
 import { SwipeCard } from '@/components/swipe-card';
 import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
-import { getPersonId } from '@/lib/person-cookie';
+import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
 /**
  * Citizen Match Page — swipe through match PROPOSALS from the matches table.
@@ -66,14 +66,14 @@ function timeSince(dateStr: string): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export default function MatchPage() {
+function MatchPageContent() {
   const [proposals, setProposals] = useState<MatchProposal[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [acceptedMatches, setAcceptedMatches] = useState<MatchProposal[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const personId = typeof window !== 'undefined' ? getPersonId() : null;
+  const { personId } = useCitizenAuth();
   const myRequestIdsRef = useRef<string[]>([]);
   const myResourceIdsRef = useRef<string[]>([]);
 
@@ -99,10 +99,11 @@ export default function MatchPage() {
   async function loadProposals() {
     setLoading(true);
     try {
-      // Step 1: Get my request IDs and resource IDs
-      const sosData = await api.efCall<any>('sos-read', { actor: { type: 'citizen', id: personId }, scope: 'my_records' });
-      const myRequestIds = (sosData?.requests || []).map((r: any) => r.id);
-      const myResourceIds = (sosData?.resources || []).map((r: any) => r.id);
+      // Step 1: Get my request IDs and resource IDs (direct query — sos-read rejects anon key)
+      const { data: myRequests } = await supabase.from('requests').select('id').eq('person_id', personId);
+      const { data: myResources } = await supabase.from('resources').select('id').eq('person_id', personId);
+      const myRequestIds = (myRequests || []).map((r: any) => r.id);
+      const myResourceIds = (myResources || []).map((r: any) => r.id);
       myRequestIdsRef.current = myRequestIds;
       myResourceIdsRef.current = myResourceIds;
 
@@ -424,5 +425,13 @@ export default function MatchPage() {
 
       <SOSBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} context="map" />
     </CitizenShell>
+  );
+}
+
+export default function MatchPage() {
+  return (
+    <CitizenAuthGate>
+      <MatchPageContent />
+    </CitizenAuthGate>
   );
 }

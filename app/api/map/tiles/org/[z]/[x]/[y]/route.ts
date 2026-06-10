@@ -4,10 +4,10 @@ const SOS_URL = 'https://rtduqguwhkczexnoawej.supabase.co';
 const SOS_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o';
 
 /**
- * Serves MVT vector tiles from PostGIS via Supabase RPC.
- * Without org_id: calls map_tiles_public (all data, no PII).
- * With org_id: calls map_tiles_org (org-scoped data).
- * GET /api/map/tiles/{z}/{x}/{y}[?org_id=UUID]
+ * Serves org-scoped MVT vector tiles from PostGIS via Supabase RPC.
+ * Calls map_tiles_org(p_org_id, x, y, z) — same single 'sos' source-layer as the
+ * public endpoint, but filtered to a single org's data (no PII in tiles).
+ * GET /api/map/tiles/org/{z}/{x}/{y}?org_id=UUID
  */
 export async function GET(
   req: NextRequest,
@@ -23,26 +23,24 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid tile coordinates' }, { status: 400 });
   }
 
-  // Choose RPC function based on whether org_id is provided
-  const rpcFn = orgId ? 'map_tiles_org' : 'map_tiles_public';
-  const rpcBody = orgId
-    ? { z: zInt, x: xInt, y: yInt, p_org_id: orgId }
-    : { z: zInt, x: xInt, y: yInt };
+  if (!orgId) {
+    return NextResponse.json({ error: 'Missing org_id' }, { status: 400 });
+  }
 
   try {
-    const res = await fetch(`${SOS_URL}/rest/v1/rpc/${rpcFn}`, {
+    const res = await fetch(`${SOS_URL}/rest/v1/rpc/map_tiles_org`, {
       method: 'POST',
       headers: {
         'apikey': SOS_ANON,
         'Authorization': `Bearer ${SOS_ANON}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(rpcBody),
+      body: JSON.stringify({ z: zInt, x: xInt, y: yInt, p_org_id: orgId }),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error('[map-tiles] RPC error:', res.status, errText);
+      console.error('[map-tiles-org] RPC error:', res.status, errText);
       return NextResponse.json({ error: 'Tile generation failed', status: res.status }, { status: 500 });
     }
 
@@ -72,7 +70,7 @@ export async function GET(
       },
     });
   } catch (err: any) {
-    console.error('[map-tiles] Unexpected error:', err?.message || err);
+    console.error('[map-tiles-org] Unexpected error:', err?.message || err);
     return NextResponse.json({ error: 'Internal server error', detail: err?.message }, { status: 500 });
   }
 }
