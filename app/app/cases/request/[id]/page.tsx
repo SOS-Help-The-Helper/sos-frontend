@@ -150,26 +150,31 @@ export default function RequestView() {
   const fetchRequestDetail = useCallback(() => {
     // Request detail — pass the explicit request_id, no generic resolver.
     return api.crmCasesDetail({ request_id: id })
-      .then((data: any) => {
-        if (!data) return;
+      .then((raw: any) => {
+        if (!raw) return;
+        // EF returns { request, person, sos, matches, candidates, ... }
+        const req = raw.request || raw;
+        const person = raw.person || {};
+        const sos = raw.sos || {};
+        const data = { ...req, person, sos };
         setRequestData((prev) => ({
           ...prev,
-          id: data.id || data.request_id || id,
-          status: data.status || "active",
-          urgency: data.urgency || data.priority || "medium",
-          taxonomy: Array.isArray(data.taxonomy)
-            ? data.taxonomy
-            : [data.taxonomy_code ?? data.category ?? ""].filter(Boolean),
-          description: data.description || data.summary || "",
-          filedAt: data.filed_at || data.created_at || "",
-          umbrellaId: data.umbrella_id ?? data.sos_id ?? null,
+          id: req.id || id,
+          status: req.status || "active",
+          urgency: req.urgency || req.priority || "medium",
+          taxonomy: Array.isArray(req.taxonomy)
+            ? req.taxonomy
+            : [req.taxonomy_code ?? req.category ?? ""].filter(Boolean),
+          description: req.description || req.summary || "",
+          filedAt: req.filed_at || req.created_at || "",
+          umbrellaId: req.sos_id ?? sos.id ?? null,
           citizen: {
-            id: data.person_id || data.citizen?.id || "",
-            name: data.display_name || data.citizen?.name || data.person_name || "",
-            phone: data.phone || data.citizen?.phone || "",
-            county: data.county || data.citizen?.county || "",
-            household: data.household_size || data.citizen?.household || 1,
-            notes: data.notes || data.citizen?.notes || "",
+            id: person.id || req.person_id || "",
+            name: person.display_name || person.first_name || req.contact_name || req.person_name || "",
+            phone: person.phone || req.contact_phone || "",
+            county: person.home_region || req.county || "",
+            household: req.household_size || 1,
+            notes: "",
           },
           timeline:
             data.timeline && Array.isArray(data.timeline)
@@ -184,7 +189,7 @@ export default function RequestView() {
               : prev.timeline,
         }));
 
-        if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
+        if ((raw.matches || data.matches) && Array.isArray(raw.matches || data.matches) && data.matches.length > 0) {
           setLiveMatches(
             data.matches.map((m: any): MatchCandidate => ({
               id: m.id ?? m.match_id,

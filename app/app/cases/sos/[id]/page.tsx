@@ -241,21 +241,23 @@ export default function UmbrellaView() {
           );
         }
 
-        // Map citizen/case-level fields from the response
+        // Map citizen/case-level fields — EF returns { person, sos, requests, resources, ... }
         if (data) {
+          const person = data.person || {};
+          const sos = data.sos || {};
           setUmbrellaData((prev) => ({
             ...prev,
-            id: data.id || data.sos_id || id,
-            status: data.status || "active",
-            urgency: data.urgency || data.priority || "medium",
-            filedAt: data.filed_at || data.created_at || "",
+            id: sos.id || data.id || id,
+            status: sos.status || data.status || "active",
+            urgency: sos.urgency || data.urgency || "medium",
+            filedAt: sos.created_at || data.created_at || "",
             citizen: {
-              id: data.person_id || data.citizen?.id || "",
-              name: data.display_name || data.citizen?.name || data.person_name || "",
-              phone: data.phone || data.citizen?.phone || "",
-              county: data.county || data.citizen?.county || "",
-              household: data.household_size || data.citizen?.household || 1,
-              notes: data.summary || data.notes || data.citizen?.notes || "",
+              id: person.id || sos.person_id || "",
+              name: person.display_name || [person.first_name, person.last_name].filter(Boolean).join(" ") || "",
+              phone: person.phone || "",
+              county: person.home_region || "",
+              household: sos.household_size || data.household_members?.length || 1,
+              notes: sos.outcome_summary || "",
             },
           }));
         }
