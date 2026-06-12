@@ -39,7 +39,7 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
         db.from('matches').select('id', { count: 'exact', head: true }),
         db.from('organizations').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         db.from('matches').select('id', { count: 'exact', head: true }).eq('status', 'fulfilled'),
-        db.from('system_learnings').select('pattern, confidence, domain').order('confidence', { ascending: false }).limit(5),
+        db.from('system_learnings').select('pattern, confidence, category').order('confidence', { ascending: false }).limit(5),
       ]);
 
       lines.push(`[SYSTEM CONTEXT — Live data from Supabase]`);
@@ -51,7 +51,7 @@ async function buildContext(orgId: string | null, viewType: string): Promise<str
       if (learnings.data?.length) {
         lines.push(`\nTop system learnings:`);
         for (const l of learnings.data) {
-          lines.push(`- [${l.domain}] ${l.pattern} (confidence: ${l.confidence})`);
+          lines.push(`- [${l.category ?? "general"}] ${l.pattern} (confidence: ${l.confidence})`);
         }
       }
 

@@ -189,7 +189,7 @@ export default function RequestView() {
               : prev.timeline,
         }));
 
-        if ((raw.matches || data.matches) && Array.isArray(raw.matches || data.matches) && data.matches.length > 0) {
+        if (Array.isArray(data.matches) && data.matches.length > 0) {
           setLiveMatches(
             data.matches.map((m: any): MatchCandidate => ({
               id: m.id ?? m.match_id,
