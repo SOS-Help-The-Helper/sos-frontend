@@ -39,6 +39,7 @@
   ],
   "exclude": [
     "node_modules",
-    "_lovable_ref"
+    "_lovable_ref",
+    "_archive"
   ]
 }

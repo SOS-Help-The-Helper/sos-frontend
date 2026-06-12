@@ -6,7 +6,6 @@ import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import { CitizenHeader } from '@/components/citizen-header';
 import { getSOSScore, type SOSScore } from '@/lib/citizen-api';
 import { api } from '@/lib/api';
-import { supabase } from '@/lib/supabase-client';
 import { getPersonId } from '@/lib/person-cookie';
 import CitizenAuthGate, { useCitizenAuth } from '@/components/citizen/auth-gate';
 
@@ -51,28 +50,36 @@ function ManagePageContent() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadData = useCallback(async (pid: string) => {
-    // Direct queries — sos-read rejects anon key for citizen scope
-    const [reqRes, resRes, scoreData] = await Promise.all([
-      supabase.from('requests').select('id, status, category, taxonomy_code, urgency, description, details_sanitized, location_text, city, county, household_size, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
-      supabase.from('resources').select('id, status, category, taxonomy_code, description, details_sanitized, capacity_available, location_text, created_at').eq('person_id', pid).order('created_at', { ascending: false }),
+    // Authenticated read via sos-read `my_records` (citizen session token).
+    // Flatten the nested sos_records → flat requests/resources/matches arrays
+    // the rest of this component renders. Score is a separate intelligence call.
+    const [recordsRes, scoreData] = await Promise.all([
+      api.queryMyRecords(['matches']).catch(() => null) as Promise<{ sos_records?: any[] } | null>,
       getSOSScore(pid),
     ]);
     setScore(scoreData);
-    setRequests(reqRes.data || []);
-    setResources(resRes.data || []);
-    // Fetch matches for my requests + resources
-    const myReqIds = (reqRes.data || []).map((r: any) => r.id);
-    const myResIds = (resRes.data || []).map((r: any) => r.id);
-    const allIds = [...myReqIds, ...myResIds];
-    if (allIds.length > 0) {
-      const { data: matchData } = await supabase.from('matches')
-        .select('id, match_score, status, request_id, resource_id, created_at, resources(category, description, organizations:org_id(name)), requests(category, description, urgency)')
-        .or(`request_id.in.(${myReqIds.join(',')}),resource_id.in.(${myResIds.join(',')})`)
-        .order('created_at', { ascending: false });
-      setMatches(matchData || []);
-    } else {
-      setMatches([]);
+
+    const sosRecords = recordsRes?.sos_records || [];
+    const flatRequests: any[] = [];
+    const flatResources: any[] = [];
+    const matchById = new Map<string, any>();
+    for (const sos of sosRecords) {
+      for (const req of (sos.requests || [])) {
+        flatRequests.push(req);
+        for (const m of (req.matches || [])) matchById.set(m.id, m);
+      }
+      for (const res of (sos.resources || [])) {
+        flatResources.push(res);
+        for (const m of (res.matches || [])) matchById.set(m.id, m);
+      }
     }
+    setRequests(flatRequests);
+    setResources(flatResources);
+    setMatches(
+      Array.from(matchById.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+    );
   }, []);
 
   useEffect(() => {
@@ -80,18 +87,11 @@ function ManagePageContent() {
     setPersonId(pid);
     if (pid) loadData(pid);
 
+    // Refresh on focus. (Realtime channels removed in Wave 2 — anon-key
+    // postgres_changes subscriptions stop working once RLS is locked down,
+    // and citizens have no realtime grant; focus-refetch covers the UX.)
     const onFocus = () => { if (pid) loadData(pid); };
     window.addEventListener('focus', onFocus);
-
-    if (pid) {
-      const channel = supabase
-        .channel('manage-matches')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
-          if (pid) loadData(pid);
-        })
-        .subscribe();
-      return () => { window.removeEventListener('focus', onFocus); supabase.removeChannel(channel); };
-    }
     return () => { window.removeEventListener('focus', onFocus); };
   }, [loadData]);
 
@@ -105,11 +105,16 @@ function ManagePageContent() {
     setTimeout(() => setErrorId(null), 3000);
   }
 
+  // Map the UI status pill to the EF lifecycle verb (the EF, not the client,
+  // owns the status string — 'paused'→pause, 'active'→resume, 'closed'→cancel).
+  const STATUS_ACTION: Record<string, string> = { paused: 'pause', active: 'resume', closed: 'cancel' };
+
   async function updateStatus(table: 'requests' | 'resources', id: string, newStatus: string) {
     setUpdatingId(id);
     setErrorId(null);
     try {
-      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: table === 'requests' ? 'request' : 'resource', record_id: id, action: 'update', data: { status: newStatus } });
+      const action = STATUS_ACTION[newStatus] ?? 'update';
+      await api.updateMyRecord(table === 'requests' ? 'request' : 'resource', id, action);
       showFlash(id);
       if (personId) loadData(personId);
     } catch {
@@ -122,7 +127,11 @@ function ManagePageContent() {
     if (!editingRequest) return;
     setSaving(true);
     try {
-      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: 'request', record_id: editingRequest.id, action: 'update', data: { details_sanitized: editingRequest.details_sanitized, urgency: editingRequest.urgency, household_size: editingRequest.household_size } });
+      await api.updateMyRecord('request', editingRequest.id, 'update', {
+        details_sanitized: editingRequest.details_sanitized,
+        urgency: editingRequest.urgency,
+        household_size: editingRequest.household_size,
+      });
       showFlash(editingRequest.id);
       setEditingRequest(null);
       if (personId) loadData(personId);
@@ -136,7 +145,10 @@ function ManagePageContent() {
     if (!editingResource) return;
     setSaving(true);
     try {
-      await api.efCall('sos-update', { actor: { type: 'citizen', id: personId }, record_type: 'resource', record_id: editingResource.id, action: 'update', data: { details_sanitized: editingResource.details_sanitized, capacity_available: editingResource.capacity_available } });
+      await api.updateMyRecord('resource', editingResource.id, 'update', {
+        details_sanitized: editingResource.details_sanitized,
+        capacity_available: editingResource.capacity_available,
+      });
       showFlash(editingResource.id);
       setEditingResource(null);
       if (personId) loadData(personId);
@@ -430,19 +442,27 @@ function ManagePageContent() {
                         <div className="flex gap-2 pt-2">
                           <button
                             onClick={async () => {
-                              await api.respondMatch(m.id, 'accept', { actor: { citizen: true, id: personId } });
-                              setExpandedId(null);
-                              if (personId) loadData(personId);
+                              try {
+                                await api.respondMatch(m.id, 'accept');
+                                setExpandedId(null);
+                                if (personId) loadData(personId);
+                              } catch {
+                                showError(m.id);
+                              }
                             }}
                             className="flex-1 py-2 rounded-xl bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30"
                           >
-                            ✓ Accept Match
+                            {errorId === m.id ? '⚠ Try again' : '✓ Accept Match'}
                           </button>
                           <button
                             onClick={async () => {
-                              await api.respondMatch(m.id, 'decline', { actor: { citizen: true, id: personId } });
-                              setExpandedId(null);
-                              if (personId) loadData(personId);
+                              try {
+                                await api.respondMatch(m.id, 'decline');
+                                setExpandedId(null);
+                                if (personId) loadData(personId);
+                              } catch {
+                                showError(m.id);
+                              }
                             }}
                             className="flex-1 py-2 rounded-xl bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30"
                           >

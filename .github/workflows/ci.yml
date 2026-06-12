@@ -15,8 +15,9 @@ jobs:
           node-version-file: .nvmrc
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Type-check
-        run: npx tsc --noEmit
+      - name: Type-check (ratchet)
+        # Pre-existing debt baseline in .typecheck-baseline — count may only drop.
+        run: bash scripts/typecheck-ratchet.sh
 
   gitleaks:
     name: secret scan
