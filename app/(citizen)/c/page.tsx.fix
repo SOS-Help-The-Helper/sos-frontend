@@ -1,5 +1,0 @@
-// Replace the static import with a dynamic one
-// Old:
-//   import mapboxgl from 'mapbox-gl';
-//   import 'mapbox-gl/dist/mapbox-gl.css';
-// New: load dynamically inside useEffect

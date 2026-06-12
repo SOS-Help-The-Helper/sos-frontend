@@ -107,7 +107,7 @@ function ManagePageContent() {
 
   // Map the UI status pill to the EF lifecycle verb (the EF, not the client,
   // owns the status string — 'paused'→pause, 'active'→resume, 'closed'→cancel).
-  const STATUS_ACTION: Record<string, string> = { paused: 'pause', active: 'resume', closed: 'cancel' };
+  const STATUS_ACTION: Record<string, 'pause' | 'resume' | 'cancel'> = { paused: 'pause', active: 'resume', closed: 'cancel' };
 
   async function updateStatus(table: 'requests' | 'resources', id: string, newStatus: string) {
     setUpdatingId(id);

@@ -4,6 +4,12 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type {
+  MyRecordsResponse,
+  UpdateDetails,
+  UpdateResponse,
+  CitizenAction,
+} from '@/types/api';
 
 // ---------------------------------------------------------------------------
 // SOS DB connection — the one and only database the frontend ever talks to.
@@ -141,24 +147,24 @@ const citizenAuth = () => ({ auth: { citizenToken: getCitizenToken() ?? undefine
 export const api = {
   // Matching
   queryMatches: (data: Record<string, unknown> = {}) =>
-    efCall('sos-read', { scope: 'my_records', include: ['matches'], ...data }, citizenAuth()),
+    efCall<MyRecordsResponse>('sos-read', { scope: 'my_records', include: ['matches'], ...data }, citizenAuth()),
 
   // All of a citizen's records (SOS umbrellas → requests/resources/reports + matches).
   queryMyRecords: (include: string[] = ['matches']) =>
-    efCall('sos-read', { scope: 'my_records', include }, citizenAuth()),
+    efCall<MyRecordsResponse>('sos-read', { scope: 'my_records', include }, citizenAuth()),
 
   respondMatch: (matchId: string, response: 'accept' | 'decline', reason?: string) =>
-    efCall('sos-update', { record_type: 'match', record_id: matchId, action: response, ...(reason ? { details: { reason } } : {}) }, citizenAuth()),
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: matchId, action: response, ...(reason ? { details: { reason } } : {}) }, citizenAuth()),
 
-  fulfillMatch: (matchId: string, details: Record<string, unknown>) =>
-    efCall('sos-update', { record_type: 'match', record_id: matchId, action: 'deliver', details }, citizenAuth()),
+  fulfillMatch: (matchId: string, details: UpdateDetails) =>
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: matchId, action: 'deliver', details }, citizenAuth()),
 
   consentFlow: (data: Record<string, unknown>) =>
-    efCall('sos-update', { record_type: 'match', record_id: data.match_id as string, action: 'consent', details: data }, citizenAuth()),
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: data.match_id as string, action: 'consent', details: data }, citizenAuth()),
 
   // Citizen self-edit of a request/resource (status toggle or field edit).
-  updateMyRecord: (recordType: 'request' | 'resource', recordId: string, action: string, details?: Record<string, unknown>) =>
-    efCall('sos-update', { record_type: recordType, record_id: recordId, action, ...(details ? { details } : {}) }, citizenAuth()),
+  updateMyRecord: (recordType: 'request' | 'resource', recordId: string, action: CitizenAction, details?: UpdateDetails) =>
+    efCall<UpdateResponse>('sos-update', { record_type: recordType, record_id: recordId, action, ...(details ? { details } : {}) }, citizenAuth()),
 
   // ERV
   ervQuery: (queryType: string, params: Record<string, unknown>) =>
