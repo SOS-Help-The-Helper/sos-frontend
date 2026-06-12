@@ -13,9 +13,7 @@ useDefault = true
 [allowlist]
 description = "Known pre-2026-06-12 hardcoded anon JWTs pending env-var migration"
 paths = [
-  '''app/vote/page\.tsx''',
-  '''app/api/pin/\[id\]/route\.ts''',
-  '''app/api/map/tiles/.*route\.ts''',
+  # app/vote, app/api/pin, app/api/map/tiles scrubbed 2026-06-12 (env vars now).
   '''public/maps/.*\.html''',
   '''_lovable_ref/.*''',
   '''_archive/.*''',
