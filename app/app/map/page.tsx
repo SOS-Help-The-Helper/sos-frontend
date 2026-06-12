@@ -7,7 +7,8 @@ const cases: any[] = [];
 import { Filter, Plus, Calendar, Layers } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { MapPinCard, type PinLayer, type MapPin } from "@/components/map/map-pin-card";
+import { type PinLayer, type MapPin } from "@/components/map/map-pin-card";
+import { PinDetailCard, type PinType } from "@/components/citizen/pin-detail-card";
 
 const LAYER_COLORS: Record<string, string> = {
   case: "#EF4E4B", resource: "#89CFF0", facility: "#4ADE80", event: "#A855F7",
@@ -66,6 +67,14 @@ interface SelectedPin {
   x: number;
   y: number;
 }
+
+// CRM layer → PinDetailCard type (request/resource/report)
+const PIN_TYPE_FOR_LAYER: Record<PinLayer, PinType> = {
+  case: "request",
+  resource: "resource",
+  facility: "resource",
+  event: "report",
+};
 
 function hrefForPin(layer: PinLayer, id: string): string {
   if (layer === 'case') return `/app/cases/${id}`;
@@ -211,6 +220,15 @@ function MapboxEmbed({
                   slots: p.slots != null ? Number(p.slots) : p.capacity != null ? Number(p.capacity) : undefined,
                   type: p.type || p.facility_type || undefined,
                   description: p.description || undefined,
+                  location_text: p.location_text || p.location || undefined,
+                  public_display_text: p.public_display_text || p.description || undefined,
+                  household_size: p.household_size || undefined,
+                  org_name: p.org_name || undefined,
+                  created_at: p.created_at || undefined,
+                  capacity_remaining: p.capacity_remaining || undefined,
+                  corroboration_count: p.corroboration_count || undefined,
+                  category: p.category || undefined,
+                  taxonomy_code: p.taxonomy_code || p.taxonomy || undefined,
                 },
                 x: e.point.x,
                 y: e.point.y,
@@ -365,10 +383,13 @@ export default function MapPage() {
             onMapReady={(map) => { mapRef.current = map; }}
           />
           {selectedPin && (
-            <MapPinCard
-              pin={selectedPin.pin}
-              onClose={() => setSelectedPin(null)}
-            />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex justify-center w-full px-4 pointer-events-none">
+              <PinDetailCard
+                type={PIN_TYPE_FOR_LAYER[selectedPin.pin.layer]}
+                properties={selectedPin.pin as Record<string, any>}
+                onClose={() => setSelectedPin(null)}
+              />
+            </div>
           )}
 
           <div className="absolute bottom-3 left-3 flex gap-1.5">
