@@ -25,12 +25,38 @@ const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const efBaseUrl = `${SOS_URL}/functions/v1`;
 const efAnonKey = SOS_ANON_KEY;
 
+/**
+ * Per-call auth options.
+ *
+ * `citizenToken` is the opaque session token issued by the citizen-auth EF
+ * (localStorage 'sos-citizen-token'). It is NOT a JWT, so it cannot replace
+ * the Bearer token once verify_jwt is enforced at the EF gateway — it travels
+ * in the `x-citizen-token` header while `Authorization: Bearer <anon>` keeps
+ * satisfying the gateway. Server-side, requireCitizen() validates it against
+ * citizen_sessions and asserts the personId.
+ */
+export interface EfAuthOptions {
+  citizenToken?: string;
+}
+
+const CITIZEN_TOKEN_KEY = 'sos-citizen-token';
+
+/** Read the citizen session token (set by CitizenAuthGate). Null on the server or when signed out. */
+export function getCitizenToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(CITIZEN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 async function callEf<T = unknown>(
   base: string,
   authKey: string,
   fn: string,
   body?: Record<string, unknown>,
-  options: { method?: 'GET' | 'POST' } = {}
+  options: { method?: 'GET' | 'POST'; auth?: EfAuthOptions } = {}
 ): Promise<T> {
   const method = options.method ?? (body === undefined ? 'GET' : 'POST');
   const url = method === 'GET' && body
@@ -42,6 +68,7 @@ async function callEf<T = unknown>(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${authKey}`,
+      ...(options.auth?.citizenToken ? { 'x-citizen-token': options.auth.citizenToken } : {}),
     },
     ...(method === 'POST' && body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
@@ -60,7 +87,7 @@ async function callEf<T = unknown>(
 async function efCall<T = unknown>(
   fn: string,
   body?: Record<string, unknown>,
-  options: { method?: 'GET' | 'POST' } = {}
+  options: { method?: 'GET' | 'POST'; auth?: EfAuthOptions } = {}
 ): Promise<T> {
   return callEf<T>(efBaseUrl, efAnonKey, fn, body, options);
 }
