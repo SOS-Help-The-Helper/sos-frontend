@@ -44,22 +44,15 @@ export function NotificationBell({ personId }: { personId: string | null }) {
     if (!personId) return;
     loadNotifications();
 
-    // Realtime subscription
-    const channel = supabase
-      .channel('citizen-notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `recipient_id=eq.${personId}`,
-      }, (payload) => {
-        const n = payload.new as Notification;
-        setNotifications(prev => [n, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    // Wave 3: poll instead of a realtime channel (anon postgres_changes dies
+    // with the Wave 4 read lockdown). 60s + refresh-on-focus covers the UX.
+    const timer = setInterval(loadNotifications, 60_000);
+    const onFocus = () => loadNotifications();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [personId]);
 
   async function loadNotifications() {

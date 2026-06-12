@@ -335,35 +335,24 @@ export default function CitizenMapPage() {
           map.flyTo({ center: [parseFloat(dlLng), parseFloat(dlLat)], zoom: dlZoom ? parseFloat(dlZoom) : 13, duration: 1200 });
         }
 
-        // === REALTIME SUBSCRIPTIONS ===
-        const channel = supabase
-          .channel('map-realtime')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests', filter: 'map_visible=eq.true' }, () => {
-            // Force tile reload by adding a cache-busting param
-            const source = map.getSource('sos-tiles');
-            if (source && 'setTiles' in source) {
-              (source as any).setTiles([`${window.location.origin}/api/map/tiles/{z}/{x}/{y}?t=${Date.now()}`]);
-            }
-          })
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'resources', filter: 'map_visible=eq.true' }, () => {
-            // Force tile reload by adding a cache-busting param
-            const source = map.getSource('sos-tiles');
-            if (source && 'setTiles' in source) {
-              (source as any).setTiles([`${window.location.origin}/api/map/tiles/{z}/{x}/{y}?t=${Date.now()}`]);
-            }
-          })
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (_payload: any) => {
-            // For future use
-          })
-          .subscribe();
-        realtimeChannelRef.current = channel;
+        // === LIVE REFRESH ===
+        // Wave 3: realtime channel replaced with a periodic tile cache-bust
+        // (anon postgres_changes dies with the Wave 4 read lockdown; tiles are
+        // served by the public /api/map/tiles routes and cached ~5 min anyway).
+        const tileRefresh = setInterval(() => {
+          const source = map.getSource('sos-tiles');
+          if (source && 'setTiles' in source) {
+            (source as any).setTiles([`${window.location.origin}/api/map/tiles/{z}/{x}/{y}?t=${Date.now()}`]);
+          }
+        }, 120_000);
+        realtimeChannelRef.current = { unsubscribe: () => clearInterval(tileRefresh) } as any;
       });
 
       setLoading(false);
     };
 
     initMap();
-    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { supabase.removeChannel(realtimeChannelRef.current); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+    return () => { destroyed = true; cancelAnimationFrame(glowFrame); if (realtimeChannelRef.current) { realtimeChannelRef.current.unsubscribe?.(); realtimeChannelRef.current = null; } if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
 

@@ -83,12 +83,28 @@ async function callEf<T = unknown>(
   return res.json() as Promise<T>;
 }
 
-/** Call an edge function on the SOS DB. */
+/**
+ * Call an edge function on the SOS DB.
+ *
+ * Routing (Wave 3):
+ *  - Partner portal in the browser (/app/*) → the session-gated /api/ef proxy,
+ *    which holds the service key server-side. The portal session cookie is the
+ *    credential; the Bearer anon key sent along is ignored by the proxy.
+ *  - Citizen calls (options.auth.citizenToken) and everything else → direct to
+ *    Supabase; app-level auth (x-citizen-token / requireCitizen) applies.
+ */
 async function efCall<T = unknown>(
   fn: string,
   body?: Record<string, unknown>,
   options: { method?: 'GET' | 'POST'; auth?: EfAuthOptions } = {}
 ): Promise<T> {
+  const viaProxy =
+    typeof window !== 'undefined' &&
+    window.location.pathname.startsWith('/app') &&
+    !options.auth?.citizenToken;
+  if (viaProxy) {
+    return callEf<T>(`${window.location.origin}/api/ef`, efAnonKey, fn, body, options);
+  }
   return callEf<T>(efBaseUrl, efAnonKey, fn, body, options);
 }
 
@@ -438,10 +454,17 @@ export const api = {
 // These replace direct supabase.from() calls in frontend pages.
 // Uses anon key + RLS (same security as before, but centralized).
 
-// Direct PostgREST read client (RLS-protected, anon key). Pinned to SOS and
-// created once — org scope is applied via `.eq('...org_id', ...)` filters in
-// the queries below, never by repointing the connection.
-const supabaseRead: SupabaseClient = createClient(SOS_URL, SOS_ANON_KEY);
+// PostgREST read client. Pinned to SOS and created once — org scope is
+// applied via `.eq('...org_id', ...)` filters in the queries below, never by
+// repointing the connection. Wave 3: portal browsers route through the
+// session-gated /api/db proxy (service-key-backed, table-allowlisted) so the
+// anon key can lose its broad SELECT grants in Wave 4.
+const isPortalBrowser =
+  typeof window !== 'undefined' && window.location.pathname.startsWith('/app');
+const supabaseRead: SupabaseClient = createClient(
+  isPortalBrowser ? `${window.location.origin}/api/db` : SOS_URL,
+  SOS_ANON_KEY,
+);
 
 // Scoped read-only queries (RLS-protected, anon key)
 export const db = {
