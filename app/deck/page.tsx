@@ -93,8 +93,21 @@ export default function DeckPage() {
             opacity: 0,
             y: 28,
             duration: 0.6,
-            stagger: 0.12,
+            stagger: parseFloat(group.dataset.stagger || '') || 0.12,
             ease: 'power2.out',
+          });
+        });
+
+        // Timeline dots pop in sequentially (scale 0 → 1, stagger 0.2s).
+        scroller.querySelectorAll<HTMLElement>('.ds-timeline').forEach((tl) => {
+          const dots = tl.querySelectorAll<HTMLElement>('.ds-tl-dot');
+          gsap.from(dots, {
+            scrollTrigger: { trigger: tl, start: 'top 85%' },
+            scale: 0,
+            transformOrigin: 'center center',
+            duration: 0.5,
+            stagger: 0.2,
+            ease: 'back.out(1.7)',
           });
         });
 
@@ -167,7 +180,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 02 · THE SAFETY NET IS SHRINKING ──────────────────── */}
-        <section className="deck-section ds-navy">
+        <section className="deck-section ds-navy ds-blend ds-blend--navy-cream">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">01</p>
             <h2 className="ds-h2 ds-fade">The Safety Net Is Shrinking</h2>
@@ -176,7 +189,7 @@ export default function DeckPage() {
               Communities are on their own.
             </p>
 
-            <blockquote className="ds-quote ds-fade">
+            <blockquote className="ds-quote ds-quote--fema ds-fade">
               <p>&ldquo;It is time to close the chapter on FEMA.&rdquo;</p>
               <cite>— FEMA Review Council Final Report, May 7, 2026</cite>
             </blockquote>
@@ -230,7 +243,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 03 · EVERYONE IS A HELPER ─────────────────────────── */}
-        <section className="deck-section ds-cream">
+        <section className="deck-section ds-cream ds-blend ds-blend--cream-navy">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">02</p>
             <h2 className="ds-h2 ds-fade">Everyone Is a Helper</h2>
@@ -264,7 +277,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 04 · COORDINATION AS INFRASTRUCTURE ───────────────── */}
-        <section className="deck-section ds-navy">
+        <section className="deck-section ds-navy ds-blend ds-blend--navy-light">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">03</p>
             <h2 className="ds-h2 ds-fade">Coordination as Infrastructure</h2>
@@ -272,7 +285,7 @@ export default function DeckPage() {
               Connect the need to the help. Trace the outcome.
             </p>
 
-            <div className="ds-flow ds-stagger">
+            <div className="ds-flow ds-stagger" data-stagger="0.15">
               <div className="ds-flow-step">
                 <span className="ds-flow-k">01</span>
                 <span className="ds-flow-name">Intake</span>
@@ -293,7 +306,19 @@ export default function DeckPage() {
                 <span className="ds-flow-name">Learning</span>
               </div>
               <span className="ds-flow-loop" aria-hidden="true">
-                ↻ feeds back into intake
+                <svg
+                  className="ds-flow-loop-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                  <polyline points="21 3 21 6 18 6" />
+                </svg>
+                feeds back into intake
               </span>
             </div>
 
@@ -316,7 +341,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 05 · WHY NOW ──────────────────────────────────────── */}
-        <section className="deck-section ds-light">
+        <section className="deck-section ds-light ds-blend ds-blend--light-navy">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">04</p>
             <h2 className="ds-h2 ds-fade">Why Now</h2>
@@ -354,7 +379,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 06 · INTELLIGENCE THAT COMPOUNDS ──────────────────── */}
-        <section className="deck-section ds-navy">
+        <section className="deck-section ds-navy ds-blend ds-blend--navy-white">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">05</p>
             <h2 className="ds-h2 ds-fade">Intelligence That Compounds</h2>
@@ -397,7 +422,7 @@ export default function DeckPage() {
         </section>
 
         {/* ── 07 · THE OPPORTUNITY ──────────────────────────────── */}
-        <section className="deck-section ds-white">
+        <section className="deck-section ds-white ds-blend ds-blend--white-navy">
           <div className="ds-inner">
             <p className="ds-num-label ds-fade">06</p>
             <h2 className="ds-h2 ds-fade">The Opportunity</h2>
@@ -553,7 +578,7 @@ const deckCss = `
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 32px;
+  padding: 120px 32px;
   overflow: hidden;
 }
 .ds-inner { position: relative; z-index: 2; width: 100%; max-width: 920px; margin: 0 auto; }
@@ -564,6 +589,18 @@ const deckCss = `
 .ds-white { background: #ffffff; color: #0F1E2B; }
 .ds-light { background: #f8f9fa; color: #0F1E2B; }
 .ds-cream { background: #F5EBD6; color: #0F1E2B; }
+
+/* ── Section-to-section gradient blends ── */
+.ds-blend::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 60px; z-index: 1; pointer-events: none;
+}
+.ds-blend--navy-cream::after { background: linear-gradient(to bottom, #0F1E2B, #F5EBD6); }
+.ds-blend--cream-navy::after { background: linear-gradient(to bottom, #F5EBD6, #0F1E2B); }
+.ds-blend--navy-light::after { background: linear-gradient(to bottom, #0F1E2B, #f8f9fa); }
+.ds-blend--light-navy::after { background: linear-gradient(to bottom, #f8f9fa, #0F1E2B); }
+.ds-blend--navy-white::after { background: linear-gradient(to bottom, #0F1E2B, #ffffff); }
+.ds-blend--white-navy::after { background: linear-gradient(to bottom, #ffffff, #0F1E2B); }
 
 /* ── Grain overlay (same recipe as homepage) ── */
 .grain-overlay {
@@ -582,11 +619,11 @@ const deckCss = `
 .ds-h2 {
   font-family: 'DM Serif Display', Georgia, serif;
   font-weight: 400; font-size: clamp(32px, 5vw, 48px); line-height: 1.1;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .ds-sub {
   font-size: clamp(17px, 2.2vw, 21px); font-weight: 300; line-height: 1.55;
-  max-width: 680px; margin-bottom: 36px;
+  max-width: 680px; margin-bottom: 40px;
 }
 .ds-navy .ds-sub { color: rgba(255,255,255,0.6); }
 .ds-white .ds-sub, .ds-light .ds-sub, .ds-cream .ds-sub { color: #555; }
@@ -646,13 +683,31 @@ const deckCss = `
 }
 .ds-quote--blue { border-left-color: #89CFF0; }
 
+/* FEMA quote — heavier visual weight (02) */
+.ds-quote--fema {
+  border-left-width: 4px;
+  background: linear-gradient(135deg, rgba(239,78,75,0.06) 0%, transparent 60%);
+  border-radius: 0 12px 12px 0;
+  padding: 32px;
+}
+.ds-quote--fema p { font-size: clamp(24px, 4vw, 36px); }
+.ds-quote--fema cite {
+  font-size: 12px; font-style: italic; margin-top: 22px;
+}
+
 /* ── Stat grid (02) ── */
 .ds-stat-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 8px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 8px;
 }
 .ds-stat {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px; padding: 22px 18px;
+  background: rgba(255,255,255,0.04);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 22px 18px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.ds-stat:hover {
+  transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 .ds-stat-num {
   font-family: 'DM Serif Display', Georgia, serif;
@@ -666,6 +721,14 @@ const deckCss = `
 .ds-bigstat {
   display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;
   margin: 8px 0 32px;
+  background: rgba(255,255,255,0.04);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(15,30,43,0.06);
+  border-radius: 16px; padding: 32px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.ds-bigstat:hover {
+  transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 .ds-bigstat-num {
   font-family: 'DM Serif Display', Georgia, serif;
@@ -677,21 +740,39 @@ const deckCss = `
 
 /* ── Flow diagram (04) ── */
 .ds-flow {
+  position: relative;
   display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
   margin: 8px 0 36px;
 }
+/* Connecting line running underneath the four boxes */
+.ds-flow::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 41px; height: 2px;
+  background: rgba(137,207,240,0.2); z-index: 0;
+}
 .ds-flow-step {
+  position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   background: rgba(255,255,255,0.05); border: 1px solid rgba(137,207,240,0.25);
   border-radius: 14px; padding: 20px 22px; min-width: 120px;
 }
 .ds-flow-k { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; color: #89CFF0; }
 .ds-flow-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 19px; color: #fff; }
-.ds-flow-arrow { color: #89CFF0; font-size: 22px; opacity: 0.7; }
+.ds-flow-arrow {
+  position: relative; z-index: 1;
+  color: #89CFF0; font-size: 22px;
+  animation: ds-arrow-pulse 2.2s ease-in-out infinite;
+}
+@keyframes ds-arrow-pulse {
+  0%, 100% { opacity: 0.55; text-shadow: 0 0 4px rgba(137,207,240,0.25); }
+  50%      { opacity: 1;    text-shadow: 0 0 14px rgba(137,207,240,0.85); }
+}
 .ds-flow-loop {
-  flex-basis: 100%; margin-top: 6px; font-size: 13px; font-weight: 600;
+  flex-basis: 100%; margin-top: 10px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600;
   letter-spacing: 0.08em; color: #89CFF0; opacity: 0.8;
 }
+.ds-flow-loop-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
 /* ── Callout box ── */
 .ds-callout {
@@ -713,14 +794,28 @@ const deckCss = `
 /* ── Moat cards (06) ── */
 .ds-moat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 8px 0 36px; }
 .ds-moat {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px; padding: 26px 24px; border-top: 3px solid transparent;
+  background: rgba(255,255,255,0.04);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid transparent;
+  border-radius: 16px; padding: 26px 24px;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
 .ds-moat h3 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; font-size: 21px; color: #fff; margin-bottom: 12px; }
 .ds-moat p { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.6); font-weight: 300; }
-.ds-moat--red   { border-top-color: #EF4E4B; }
-.ds-moat--blue  { border-top-color: #89CFF0; }
-.ds-moat--cream { border-top-color: #F5EBD6; }
+.ds-moat--red   { border-left-color: #EF4E4B; }
+.ds-moat--blue  { border-left-color: #89CFF0; }
+.ds-moat--cream { border-left-color: #F5EBD6; }
+.ds-moat:hover { transform: translateY(-3px); }
+.ds-moat--red:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(239,78,75,0.28);
+}
+.ds-moat--blue:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(137,207,240,0.3);
+}
+.ds-moat--cream:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(245,235,214,0.28);
+}
 
 .ds-pullquote {
   font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
@@ -743,19 +838,26 @@ const deckCss = `
 
 /* ── Timeline (08) ── */
 .ds-timeline {
-  display: flex; justify-content: space-between; gap: 12px;
+  display: flex; justify-content: space-between; gap: 28px;
   margin: 16px 0 48px; position: relative;
 }
 .ds-timeline::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 1.5px;
+  content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 2px;
   background: rgba(137,207,240,0.2);
 }
 .ds-tl-item { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; position: relative; }
 .ds-tl-dot {
-  width: 13px; height: 13px; border-radius: 50%; background: #89CFF0;
+  width: 14px; height: 14px; border-radius: 50%; background: #89CFF0;
   box-shadow: 0 0 0 4px rgba(137,207,240,0.15); margin-bottom: 14px;
 }
-.ds-tl-year { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; color: #89CFF0; margin-bottom: 6px; }
+.ds-tl-item:first-child .ds-tl-dot {
+  background: #EF4E4B; box-shadow: 0 0 0 4px rgba(239,78,75,0.18);
+}
+.ds-tl-year {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 16px; font-weight: 400; letter-spacing: 0.04em;
+  color: #89CFF0; margin-bottom: 6px;
+}
 .ds-tl-label { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.45; }
 
 /* ── Closing (08) ── */
@@ -772,17 +874,20 @@ const deckCss = `
 
 /* ── Mobile ── */
 @media (max-width: 760px) {
-  .deck-section { padding: 64px 20px; }
+  .deck-section { padding: 60px 20px; }
   .ds-stat-grid { grid-template-columns: 1fr 1fr; }
   .ds-cols { grid-template-columns: 1fr; gap: 20px; }
   .ds-moat-grid { grid-template-columns: 1fr; }
   .ds-flow { flex-direction: column; align-items: stretch; }
+  .ds-flow::before { display: none; }
   .ds-flow-step { width: 100%; flex-direction: row; justify-content: space-between; }
   .ds-flow-arrow { transform: rotate(90deg); align-self: center; }
+  .ds-flow-loop { justify-content: center; }
   .ds-timeline { flex-direction: column; gap: 18px; }
-  .ds-timeline::before { left: 6px; right: auto; top: 0; bottom: 0; width: 1.5px; height: auto; }
+  .ds-timeline::before { left: 6px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; }
   .ds-tl-item { flex-direction: row; align-items: center; gap: 12px; text-align: left; padding-left: 4px; }
   .ds-tl-dot { margin-bottom: 0; flex-shrink: 0; }
-  .ds-bigstat { gap: 8px; }
+  .ds-bigstat { gap: 8px; padding: 24px; }
+  .ds-quote--fema { padding: 24px; }
 }
 `;
