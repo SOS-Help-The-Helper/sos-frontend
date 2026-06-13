@@ -173,6 +173,16 @@ export default function DeckPage() {
           <span className="scroll-hint" aria-hidden="true">↓</span>
         </section>
 
+        {/* ── BRIDGE: THE PROBLEM ─────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 5vw, 52px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.2, maxWidth: '700px' }}>
+              The safety net is shrinking.
+            </h2>
+          </div>
+        </section>
+
         {/* ──────────────────────────────────────────────────────────
             02 · THE QUOTE
         ────────────────────────────────────────────────────────── */}
@@ -240,6 +250,17 @@ export default function DeckPage() {
           </div>
         </section>
 
+        {/* ── BRIDGE: THE RESPONSE ────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '720px' }}>
+              The response isn&rsquo;t disappearing.<br />
+              <span style={{ color: '#89CFF0' }}>It&rsquo;s happening where the systems can&rsquo;t see.</span>
+            </h2>
+          </div>
+        </section>
+
         {/* ──────────────────────────────────────────────────────────
             05 · EVERYONE IS A HELPER
         ────────────────────────────────────────────────────────── */}
@@ -272,6 +293,16 @@ export default function DeckPage() {
               <p style={{ paddingLeft: '5.4rem' }}>Every offer.</p>
               <p style={{ paddingLeft: '7.2rem' }}>Every outcome.</p>
             </div>
+          </div>
+        </section>
+
+        {/* ── BRIDGE: THE INFRASTRUCTURE ──────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '700px' }}>
+              What if the infrastructure existed?
+            </h2>
           </div>
         </section>
 
@@ -328,6 +359,17 @@ export default function DeckPage() {
               Compliance is a byproduct. NIMS records, audit trails, FEMA reporting —
               generated automatically at every step.
             </p>
+          </div>
+        </section>
+
+        {/* ── BRIDGE: THE MOAT ────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '720px' }}>
+              A system that gets smarter<br />
+              <span style={{ color: '#89CFF0' }}>with every match.</span>
+            </h2>
           </div>
         </section>
 
