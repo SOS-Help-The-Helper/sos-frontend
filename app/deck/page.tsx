@@ -198,9 +198,10 @@ export default function DeckPage() {
             <div className="float-stat">
               <span
                 className="float-num ds-count"
-                data-count="16"
-              >16</span>
-              <span className="float-desc">fewer federal disaster declarations per year</span>
+                data-count="29"
+                data-suffix="%"
+              >29%</span>
+              <span className="float-desc">of previously declared disasters would no longer qualify for federal aid</span>
             </div>
             <div className="float-stat">
               <span
