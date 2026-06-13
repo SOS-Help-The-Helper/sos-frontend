@@ -173,22 +173,13 @@ export default function DeckPage() {
           <span className="scroll-hint" aria-hidden="true">↓</span>
         </section>
 
-        {/* ── BRIDGE: THE PROBLEM ─────────────────────────────────── */}
-        <section className="deck-section s-navy">
-          <div className="grain" />
-          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 5vw, 52px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.2, maxWidth: '700px' }}>
-              The safety net is shrinking.
-            </h2>
-          </div>
-        </section>
-
         {/* ──────────────────────────────────────────────────────────
             02 · THE QUOTE
         ────────────────────────────────────────────────────────── */}
         <section className="deck-section s-navy">
           <div className="grain" />
           <div className="inner ds-fade">
+            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', textTransform: 'uppercase' as const, fontWeight: 700, marginBottom: '24px' }}>The federal government is stepping back from disaster response.</p>
             <div className="quote-wrap">
               <div className="quote-accent-line" />
               <blockquote className="quote-huge">
@@ -237,27 +228,43 @@ export default function DeckPage() {
         ────────────────────────────────────────────────────────── */}
         <section className="deck-section s-navy">
           <div className="inner center ds-fade">
-            <p className="sec-label">The Gap</p>
             <div
               className="gap-num ds-count"
               data-count="85"
               data-suffix="%"
             >85%</div>
-            <p className="gap-desc">
-              of state emergency agencies cite infrastructure as their primary barrier.
-            </p>
-            <p className="gap-source">Deloitte-NEMA State Emergency Management Survey, 2025</p>
+            <p style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: 'rgba(255,255,255,0.5)', maxWidth: '600px', lineHeight: 1.6, marginTop: '16px' }}>of state emergency management agencies cite infrastructure as their primary barrier to coordination technology. Zero currently have it.</p>
           </div>
         </section>
 
-        {/* ── BRIDGE: THE RESPONSE ────────────────────────────────── */}
+        {/* ── WHY NOW ─────────────────────────────────────────────── */}
         <section className="deck-section s-navy">
           <div className="grain" />
-          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '720px' }}>
-              The response isn&rsquo;t disappearing.<br />
-              <span style={{ color: '#89CFF0' }}>It&rsquo;s happening where the systems can&rsquo;t see.</span>
-            </h2>
+          <div className="inner">
+            <p className="sec-label ds-fade">WHY NOW</p>
+            <div className="ds-stagger" data-stagger="0.2" style={{ display: 'flex', flexDirection: 'column' as const, gap: '40px' }}>
+              <div>
+                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(26px, 4vw, 40px)', color: '#fff', lineHeight: 1.2, marginBottom: '12px' }}>The federal vacuum</p>
+                <p style={{ fontSize: 'clamp(16px, 1.8vw, 19px)', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '640px' }}>Higher declaration thresholds can be enacted by executive action. States that relied on federal coordination are losing it this year.</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(26px, 4vw, 40px)', color: '#fff', lineHeight: 1.2, marginBottom: '12px' }}>The demand signal</p>
+                <p style={{ fontSize: 'clamp(16px, 1.8vw, 19px)', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '640px' }}>211 handled 19 million referrals in 2025. Zero closed-loop data on whether help was delivered.</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(26px, 4vw, 40px)', color: '#fff', lineHeight: 1.2, marginBottom: '12px' }}>The technology inflection</p>
+                <p style={{ fontSize: 'clamp(16px, 1.8vw, 19px)', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '640px' }}>AI coordination agents were not feasible at this cost two years ago. They are now.</p>
+              </div>
+            </div>
+            <p className="ds-fade" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.28)', marginTop: '48px', letterSpacing: '0.04em' }}>Sources: FEMA Review Council 2026. United Way 211 2025. Deloitte-NEMA 2025.</p>
+          </div>
+        </section>
+
+        {/* ── THESIS ──────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner center ds-fade">
+            <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 5vw, 48px)', color: '#fff', textAlign: 'center' as const, lineHeight: 1.25, maxWidth: '720px', margin: '0 auto' }}>Communities have to own their own coordination.</h2>
           </div>
         </section>
 
@@ -277,6 +284,7 @@ export default function DeckPage() {
               <p>The church leader running food distribution needs housing for her own family.</p>
             </div>
             <p className="eyah-close ds-fade">SOS sees the whole person.</p>
+            <p style={{ fontSize: '17px', color: 'rgba(0,0,0,0.5)', maxWidth: '580px', lineHeight: 1.7, marginTop: '20px' }}>No existing system tracks the same person as both someone who needs help and someone who gives it. SOS does.</p>
           </div>
         </section>
 
@@ -293,16 +301,6 @@ export default function DeckPage() {
               <p style={{ paddingLeft: '5.4rem' }}>Every offer.</p>
               <p style={{ paddingLeft: '7.2rem' }}>Every outcome.</p>
             </div>
-          </div>
-        </section>
-
-        {/* ── BRIDGE: THE INFRASTRUCTURE ──────────────────────────── */}
-        <section className="deck-section s-navy">
-          <div className="grain" />
-          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '700px' }}>
-              What if the infrastructure existed?
-            </h2>
           </div>
         </section>
 
@@ -349,27 +347,12 @@ export default function DeckPage() {
           <div className="grain" />
           <div className="inner loop-section">
             <p className="sec-label ds-fade">Learning</p>
-            <h2 className="loop-title ds-fade">
-              Every decision traced. Every outcome recorded. Every failure rewrites the playbook.
-            </h2>
             <p className="loop-body ds-fade">
-              The system that coordinated Helene knows what works next time.
+              Every decision traced with reasoning and outcome. Which partners responded fastest. Which resources ran dry. Which areas had gaps. That intelligence feeds the next event.
             </p>
             <p className="loop-compliance ds-fade">
-              Compliance is a byproduct. NIMS records, audit trails, FEMA reporting —
-              generated automatically at every step.
+              Compliance documentation — NIMS, audit trails, FEMA reporting — generated automatically at every step.
             </p>
-          </div>
-        </section>
-
-        {/* ── BRIDGE: THE MOAT ────────────────────────────────────── */}
-        <section className="deck-section s-navy">
-          <div className="grain" />
-          <div className="inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <h2 className="ds-fade" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4.5vw, 46px)', color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const, lineHeight: 1.3, maxWidth: '720px' }}>
-              A system that gets smarter<br />
-              <span style={{ color: '#89CFF0' }}>with every match.</span>
-            </h2>
           </div>
         </section>
 
@@ -398,31 +381,31 @@ export default function DeckPage() {
           <div className="inner">
             <p className="sec-label sec-label--dark ds-fade">12</p>
             <h2 className="opp-headline ds-fade">
-              $46 billion flows through disaster communities every year.
+              $6 billion flows through disaster communities every year.
             </h2>
             <p className="opp-sub ds-fade">
-              Almost none funds the coordination that makes recovery work.
+              Restoration contractors, insurance adjusters, equipment suppliers — an economy that activates every disaster season. The people doing the actual coordination operate on zero infrastructure.
             </p>
             <ul className="rev-list ds-stagger" data-stagger="0.12">
               <li>
-                <strong>Vetted contractor marketplace</strong>
-                {' '}— connect homeowners with insurance payouts to trusted local pros.
+                <strong>Government SaaS</strong>
+                {' '}— State EM agencies, counties, 211 systems. Compliance they&rsquo;re legally required to produce.
               </li>
               <li>
-                <strong>Partner SaaS</strong>
-                {' '}— coordination tooling for NGOs, agencies, and emergency managers.
+                <strong>Vendor marketplace</strong>
+                {' '}— Contractors access verified, pre-qualified needs.
               </li>
               <li>
-                <strong>Data &amp; insights</strong>
-                {' '}— anonymized demand signals for funders, insurers, and planners.
+                <strong>SDOH data</strong>
+                {' '}— Health plans subscribe to coordination outcomes.
               </li>
               <li>
-                <strong>Logistics &amp; fulfillment</strong>
-                {' '}— take-rate on coordinated transport, supplies, and services.
+                <strong>Insurance</strong>
+                {' '}— FNOL, fraud prevention, community resilience portals.
               </li>
               <li>
-                <strong>Philanthropic &amp; public funding</strong>
-                {' '}— grants and contracts for the open coordination layer itself.
+                <strong>Training</strong>
+                {' '}— Real-event simulation from actual deployment data.
               </li>
             </ul>
             <p className="opp-close ds-fade">
