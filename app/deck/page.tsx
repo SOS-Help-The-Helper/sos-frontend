@@ -377,36 +377,20 @@ export default function DeckPage() {
         {/* ──────────────────────────────────────────────────────────
             12 · THE OPPORTUNITY
         ────────────────────────────────────────────────────────── */}
-        <section className="deck-section s-white">
+        <section className="deck-section s-white" style={{ scrollSnapAlign: 'start', minHeight: 'auto', padding: '80px 32px' }}>
           <div className="inner">
-            <p className="sec-label sec-label--dark ds-fade">12</p>
             <h2 className="opp-headline ds-fade">
-              $6 billion flows through disaster communities every year.
+              $46 billion flows through disaster communities every year.
             </h2>
-            <p className="opp-sub ds-fade">
-              Restoration contractors, insurance adjusters, equipment suppliers — an economy that activates every disaster season. The people doing the actual coordination operate on zero infrastructure.
+            <p className="opp-sub ds-fade" style={{ marginBottom: '28px' }}>
+              Almost none funds the coordination that makes recovery work.
             </p>
-            <ul className="rev-list ds-stagger" data-stagger="0.12">
-              <li>
-                <strong>Government SaaS</strong>
-                {' '}— State EM agencies, counties, 211 systems. Compliance they&rsquo;re legally required to produce.
-              </li>
-              <li>
-                <strong>Vendor marketplace</strong>
-                {' '}— Contractors access verified, pre-qualified needs.
-              </li>
-              <li>
-                <strong>SDOH data</strong>
-                {' '}— Health plans subscribe to coordination outcomes.
-              </li>
-              <li>
-                <strong>Insurance</strong>
-                {' '}— FNOL, fraud prevention, community resilience portals.
-              </li>
-              <li>
-                <strong>Training</strong>
-                {' '}— Real-event simulation from actual deployment data.
-              </li>
+            <ul className="rev-list ds-stagger" data-stagger="0.1" style={{ marginBottom: '24px' }}>
+              <li><strong>Government SaaS</strong> — Compliance they&rsquo;re legally required to produce.</li>
+              <li><strong>Vendor marketplace</strong> — Pre-qualified needs in the $46B restoration market.</li>
+              <li><strong>SDOH data</strong> — Health plans subscribe to coordination outcomes.</li>
+              <li><strong>Insurance</strong> — FNOL, fraud prevention, resilience portals.</li>
+              <li><strong>Training</strong> — Real-event simulation from deployment data.</li>
             </ul>
             <p className="opp-close ds-fade">
               The humanitarian economy should fund the communities it serves.
