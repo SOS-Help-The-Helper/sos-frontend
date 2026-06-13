@@ -12,6 +12,7 @@ const PUBLIC_PATHS = new Set([
   '/vote',
   '/join',
   '/app',
+  '/deck',
 ]);
 
 const PUBLIC_PREFIXES = [
