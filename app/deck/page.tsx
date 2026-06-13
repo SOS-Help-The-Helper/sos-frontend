@@ -2,28 +2,27 @@
 
 import { useEffect, useRef } from 'react';
 
-/**
- * /deck — scroll-based presentation page for SOS.
- *
- * Design contract (do not break):
- *  - NO blocking animation sequences. Every section's content is fully visible
- *    on scroll-into-view. GSAP only adds entrance polish (a quick fade / a
- *    counter tween). If GSAP never loads, the page is still complete and
- *    readable — nothing is hidden behind JS. A busy reader can scroll the whole
- *    deck in ~60 seconds.
- *  - Matches the homepage aesthetic: DM Serif Display + Nunito Sans, navy
- *    #0F1E2B, red #EF4E4B, blue #89CFF0, cream #F5EBD6, subtle grain overlay.
- *  - Full-viewport scroll-snap sections, keyboard nav, top progress bar.
- */
 export default function DeckPage() {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+
+  // Inject Google Fonts
+  useEffect(() => {
+    const existing = document.getElementById('deck-fonts');
+    if (existing) return;
+    const link = document.createElement('link');
+    link.id = 'deck-fonts';
+    link.rel = 'stylesheet';
+    link.href =
+      'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito+Sans:wght@300;400;600;700;800&display=swap';
+    document.head.appendChild(link);
+  }, []);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
 
-    // ── Progress bar (cheap, always works regardless of GSAP) ──
+    // ── Progress bar ──────────────────────────────────────────────────
     const onScroll = () => {
       const max = scroller.scrollHeight - scroller.clientHeight;
       const pct = max > 0 ? (scroller.scrollTop / max) * 100 : 0;
@@ -32,7 +31,7 @@ export default function DeckPage() {
     scroller.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
 
-    // ── Keyboard navigation (Arrow keys + Space) ──
+    // ── Keyboard nav ──────────────────────────────────────────────────
     const sections = Array.from(
       scroller.querySelectorAll<HTMLElement>('.deck-section')
     );
@@ -60,7 +59,7 @@ export default function DeckPage() {
     };
     window.addEventListener('keydown', onKey);
 
-    // ── GSAP polish (loaded lazily; the page is complete without it) ──
+    // ── GSAP polish (non-blocking) ────────────────────────────────────
     let cleanupGsap: (() => void) | undefined;
     const reduceMotion =
       typeof window !== 'undefined' &&
@@ -74,44 +73,28 @@ export default function DeckPage() {
         gsap.registerPlugin(ScrollTrigger);
         ScrollTrigger.defaults({ scroller });
 
-        // Entrance fades — content starts visible in CSS, gsap.from animates IN.
         scroller.querySelectorAll<HTMLElement>('.ds-fade').forEach((el) => {
           gsap.from(el, {
             scrollTrigger: { trigger: el, start: 'top 88%' },
             opacity: 0,
-            y: 24,
-            duration: 0.7,
+            y: 28,
+            duration: 0.75,
             ease: 'power2.out',
           });
         });
 
-        // Staggered groups (stat rows, flow steps, cards, timeline)
         scroller.querySelectorAll<HTMLElement>('.ds-stagger').forEach((group) => {
           const kids = group.querySelectorAll<HTMLElement>(':scope > *');
           gsap.from(kids, {
             scrollTrigger: { trigger: group, start: 'top 85%' },
             opacity: 0,
-            y: 28,
-            duration: 0.6,
-            stagger: parseFloat(group.dataset.stagger || '') || 0.12,
+            y: 32,
+            duration: 0.65,
+            stagger: parseFloat(group.dataset.stagger || '') || 0.15,
             ease: 'power2.out',
           });
         });
 
-        // Timeline dots pop in sequentially (scale 0 → 1, stagger 0.2s).
-        scroller.querySelectorAll<HTMLElement>('.ds-timeline').forEach((tl) => {
-          const dots = tl.querySelectorAll<HTMLElement>('.ds-tl-dot');
-          gsap.from(dots, {
-            scrollTrigger: { trigger: tl, start: 'top 85%' },
-            scale: 0,
-            transformOrigin: 'center center',
-            duration: 0.5,
-            stagger: 0.2,
-            ease: 'back.out(1.7)',
-          });
-        });
-
-        // Animated counters (0 → value). Final value is in the DOM already.
         scroller.querySelectorAll<HTMLElement>('.ds-count').forEach((el) => {
           const target = parseFloat(el.dataset.count || '0');
           const prefix = el.dataset.prefix || '';
@@ -120,14 +103,14 @@ export default function DeckPage() {
           let done = false;
           ScrollTrigger.create({
             trigger: el,
-            start: 'top 85%',
+            start: 'top 88%',
             onEnter: () => {
               if (done) return;
               done = true;
               const obj = { val: 0 };
               gsap.to(obj, {
                 val: target,
-                duration: 1.6,
+                duration: 1.8,
                 ease: 'power2.out',
                 onUpdate: () => {
                   el.textContent = prefix + obj.val.toFixed(decimals) + suffix;
@@ -137,10 +120,23 @@ export default function DeckPage() {
           });
         });
 
+        scroller.querySelectorAll<HTMLElement>('.ds-tl-dot').forEach((dot, i) => {
+          const parent = dot.closest('.ds-timeline');
+          if (!parent) return;
+          gsap.from(dot, {
+            scrollTrigger: { trigger: parent, start: 'top 85%' },
+            scale: 0,
+            transformOrigin: 'center center',
+            duration: 0.45,
+            delay: i * 0.18,
+            ease: 'back.out(1.7)',
+          });
+        });
+
         ScrollTrigger.refresh();
         cleanupGsap = () => ScrollTrigger.getAll().forEach((t) => t.kill());
       } catch {
-        /* GSAP unavailable — page remains fully visible & functional. */
+        /* graceful degradation — page is fully visible without GSAP */
       }
     };
     initGSAP();
@@ -154,346 +150,255 @@ export default function DeckPage() {
 
   return (
     <>
-      {/* Same Google Fonts as the homepage */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700;800&display=swap"
-        rel="stylesheet"
-      />
       <style dangerouslySetInnerHTML={{ __html: deckCss }} />
 
-      {/* Top scroll-progress indicator */}
-      <div className="deck-progress-track">
-        <div className="deck-progress-bar" ref={progressRef} />
+      {/* Thin red progress bar */}
+      <div className="d-progress-track">
+        <div className="d-progress-bar" ref={progressRef} />
       </div>
 
       <div className="deck" ref={scrollerRef}>
-        {/* ── 01 · HERO ─────────────────────────────────────────── */}
-        <section className="deck-section ds-navy ds-hero">
-          <div className="grain-overlay" />
-          <div className="ds-inner ds-center ds-fade">
-            <img src="/logomark-red.svg" alt="SOS" className="ds-hero-logo" />
-            <h1 className="ds-hero-title">SOS</h1>
-            <p className="ds-hero-sub">Coordination infrastructure for communities.</p>
-            <p className="ds-hero-url">sosconnect.org</p>
+
+        {/* ──────────────────────────────────────────────────────────
+            01 · HERO
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy s-hero">
+          <div className="grain" />
+          <div className="inner center ds-fade">
+            <img src="/logomark-red.svg" alt="SOS logomark" className="hero-logo" />
+            <h1 className="hero-title">SOS</h1>
+            <p className="hero-sub">Coordination infrastructure for communities.</p>
+            <p className="hero-url">sosconnect.org</p>
           </div>
-          <div className="ds-scroll-hint" aria-hidden="true">↓</div>
+          <span className="scroll-hint" aria-hidden="true">↓</span>
         </section>
 
-        {/* ── 02 · THE SAFETY NET IS SHRINKING ──────────────────── */}
-        <section className="deck-section ds-navy ds-blend ds-blend--navy-cream">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">01</p>
-            <h2 className="ds-h2 ds-fade">The Safety Net Is Shrinking</h2>
-            <p className="ds-sub ds-fade">
-              Federal disaster infrastructure is being deliberately dismantled.
-              Communities are on their own.
-            </p>
-
-            <blockquote className="ds-quote ds-quote--fema ds-fade">
-              <p>&ldquo;It is time to close the chapter on FEMA.&rdquo;</p>
-              <cite>— FEMA Review Council Final Report, May 7, 2026</cite>
-            </blockquote>
-
-            <div className="ds-stat-grid ds-stagger">
-              <div className="ds-stat">
-                <div className="ds-stat-num ds-count" data-count="16">16</div>
-                <div className="ds-stat-desc">fewer federal declarations per year</div>
-              </div>
-              <div className="ds-stat">
-                <div
-                  className="ds-stat-num ds-count"
-                  data-count="54.8"
-                  data-prefix="$"
-                  data-suffix="B"
-                  data-decimals="1"
-                >
-                  $54.8B
-                </div>
-                <div className="ds-stat-desc">stuck in unliquidated obligations</div>
-              </div>
-              <div className="ds-stat">
-                <div
-                  className="ds-stat-num ds-count"
-                  data-count="25"
-                  data-suffix="¢"
-                >
-                  25¢
-                </div>
-                <div className="ds-stat-desc">of every dollar goes to admin</div>
-              </div>
-              <div className="ds-stat">
-                <div
-                  className="ds-stat-num ds-count"
-                  data-count="85"
-                  data-suffix="%"
-                >
-                  85%
-                </div>
-                <div className="ds-stat-desc">
-                  of state EM agencies cite infrastructure as a barrier
-                </div>
-              </div>
-            </div>
-
-            <p className="ds-footnote ds-fade">
-              Sources: FEMA Review Council Final Report (2026); GAO disaster
-              obligation reviews; Deloitte state emergency management survey.
-            </p>
-          </div>
-        </section>
-
-        {/* ── 03 · EVERYONE IS A HELPER ─────────────────────────── */}
-        <section className="deck-section ds-cream ds-blend ds-blend--cream-navy">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">02</p>
-            <h2 className="ds-h2 ds-fade">Everyone Is a Helper</h2>
-            <p className="ds-sub ds-fade">
-              The line between who needs help and who gives it doesn&apos;t exist.
-            </p>
-
-            <div className="ds-bigstat ds-fade">
-              <span className="ds-bigstat-num ds-count" data-count="76" data-suffix="%">
-                76%
-              </span>
-              <span className="ds-bigstat-desc">
-                of survivors turn to neighbors before any agency
-              </span>
-            </div>
-
-            <div className="ds-body ds-fade">
-              <p>
-                The firefighter whose own home flooded still pulls neighbors from
-                the water. The contractor donating a week of labor needs a tarp by
-                Friday. The church leader running a shelter is also looking for a
-                ride to dialysis. People move in and out of need and capacity —
-                often on the same day.
-              </p>
-            </div>
-
-            <p className="ds-bold-line ds-fade">
-              SOS sees the whole person. One lifetime record.
-            </p>
-          </div>
-        </section>
-
-        {/* ── 04 · COORDINATION AS INFRASTRUCTURE ───────────────── */}
-        <section className="deck-section ds-navy ds-blend ds-blend--navy-light">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">03</p>
-            <h2 className="ds-h2 ds-fade">Coordination as Infrastructure</h2>
-            <p className="ds-sub ds-fade">
-              Connect the need to the help. Trace the outcome.
-            </p>
-
-            <div className="ds-flow ds-stagger" data-stagger="0.15">
-              <div className="ds-flow-step">
-                <span className="ds-flow-k">01</span>
-                <span className="ds-flow-name">Intake</span>
-              </div>
-              <span className="ds-flow-arrow" aria-hidden="true">→</span>
-              <div className="ds-flow-step">
-                <span className="ds-flow-k">02</span>
-                <span className="ds-flow-name">Matching</span>
-              </div>
-              <span className="ds-flow-arrow" aria-hidden="true">→</span>
-              <div className="ds-flow-step">
-                <span className="ds-flow-k">03</span>
-                <span className="ds-flow-name">Fulfillment</span>
-              </div>
-              <span className="ds-flow-arrow" aria-hidden="true">→</span>
-              <div className="ds-flow-step">
-                <span className="ds-flow-k">04</span>
-                <span className="ds-flow-name">Learning</span>
-              </div>
-              <span className="ds-flow-loop" aria-hidden="true">
-                <svg
-                  className="ds-flow-loop-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-                  <polyline points="21 3 21 6 18 6" />
-                </svg>
-                feeds back into intake
-              </span>
-            </div>
-
-            <div className="ds-callout ds-callout--blue ds-fade">
-              <p>
-                Compliance is a byproduct, not a task. Because every match, dollar,
-                and outcome is recorded as it happens, reporting writes itself —
-                no one stops responding in order to document.
-              </p>
-            </div>
-
-            <blockquote className="ds-quote ds-quote--blue ds-fade">
-              <p>
-                &ldquo;A mandatory national inventory of disaster resources is
-                essential to closing the coordination gap.&rdquo;
-              </p>
-              <cite>— FEMA Review Council Final Report, May 7, 2026</cite>
-            </blockquote>
-          </div>
-        </section>
-
-        {/* ── 05 · WHY NOW ──────────────────────────────────────── */}
-        <section className="deck-section ds-light ds-blend ds-blend--light-navy">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">04</p>
-            <h2 className="ds-h2 ds-fade">Why Now</h2>
-            <p className="ds-sub ds-fade">
-              Federal vacuum. Proven demand. AI that finally makes it possible.
-            </p>
-
-            <div className="ds-cols ds-stagger">
-              <div className="ds-col">
-                <h3 className="ds-col-title ds-col-title--red">The Vacuum</h3>
-                <p>
-                  Disaster-declaration thresholds are rising and recovery programs
-                  are being defunded by executive action. The federal backstop
-                  communities relied on is quietly disappearing.
-                </p>
-              </div>
-              <div className="ds-col">
-                <h3 className="ds-col-title ds-col-title--navy">The Demand</h3>
-                <p>
-                  19 million 211 referrals a year already route people to help by
-                  hand. $9.2B in social-determinant-of-health spending is searching
-                  for coordination it can&apos;t find.
-                </p>
-              </div>
-              <div className="ds-col">
-                <h3 className="ds-col-title ds-col-title--blue">The Technology</h3>
-                <p>
-                  AI coordination agents can now do conversational intake, real-time
-                  matching, and multi-channel orchestration at scale. None of this
-                  was possible two years ago.
-                </p>
-              </div>
+        {/* ──────────────────────────────────────────────────────────
+            02 · THE QUOTE
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner ds-fade">
+            <div className="quote-wrap">
+              <div className="quote-accent-line" />
+              <blockquote className="quote-huge">
+                <p>&ldquo;It is time to close the chapter on FEMA.&rdquo;</p>
+                <cite>— FEMA Review Council Final Report, May 7, 2026</cite>
+              </blockquote>
             </div>
           </div>
         </section>
 
-        {/* ── 06 · INTELLIGENCE THAT COMPOUNDS ──────────────────── */}
-        <section className="deck-section ds-navy ds-blend ds-blend--navy-white">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">05</p>
-            <h2 className="ds-h2 ds-fade">Intelligence That Compounds</h2>
-            <p className="ds-sub ds-fade">
-              Open the engine. Keep the learning. Every match makes the next one
-              smarter.
-            </p>
-
-            <div className="ds-moat-grid ds-stagger">
-              <div className="ds-moat ds-moat--red">
-                <h3>Compounding intelligence</h3>
-                <p>
-                  Every resolved need trains the matching engine. The graph of who
-                  helped whom, with what, and how well — that data can&apos;t be
-                  bought or copied. It only accrues to the network that does the work.
-                </p>
-              </div>
-              <div className="ds-moat ds-moat--blue">
-                <h3>Free for citizens &amp; NGOs</h3>
-                <p>
-                  The people in crisis and the groups serving them never pay. Free
-                  access drives adoption, and adoption is what makes the
-                  intelligence compound.
-                </p>
-              </div>
-              <div className="ds-moat ds-moat--cream">
-                <h3>The connection graph</h3>
-                <p>
-                  Relationships between people, organizations, resources, and
-                  outcomes form a living map of a community&apos;s real response
-                  capacity — the asset no single agency could ever assemble alone.
-                </p>
-              </div>
+        {/* ──────────────────────────────────────────────────────────
+            03 · THE NUMBERS
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="inner ds-stagger" data-stagger="0.22">
+            <div className="float-stat">
+              <span
+                className="float-num ds-count"
+                data-count="16"
+              >16</span>
+              <span className="float-desc">fewer federal disaster declarations per year</span>
             </div>
+            <div className="float-stat">
+              <span
+                className="float-num ds-count"
+                data-count="54.8"
+                data-prefix="$"
+                data-suffix="B"
+                data-decimals="1"
+              >$54.8B</span>
+              <span className="float-desc">stuck in unliquidated obligations</span>
+            </div>
+            <div className="float-stat">
+              <span
+                className="float-num ds-count"
+                data-count="25"
+                data-suffix="¢"
+              >25¢</span>
+              <span className="float-desc">of every dollar lost to administration</span>
+            </div>
+          </div>
+        </section>
 
-            <p className="ds-pullquote ds-fade">
+        {/* ──────────────────────────────────────────────────────────
+            04 · THE GAP
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="inner center ds-fade">
+            <p className="sec-label">The Gap</p>
+            <div
+              className="gap-num ds-count"
+              data-count="85"
+              data-suffix="%"
+            >85%</div>
+            <p className="gap-desc">
+              of state emergency agencies cite infrastructure as their primary barrier.
+            </p>
+            <p className="gap-source">Deloitte-NEMA State Emergency Management Survey, 2025</p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            05 · EVERYONE IS A HELPER
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-cream">
+          <div className="inner">
+            <p className="sec-label sec-label--dark ds-fade">05</p>
+            <h2 className="eyah-headline ds-fade">Everyone is a helper.</h2>
+            <p className="eyah-stat ds-fade">
+              <strong>76%</strong> of survivors turn to neighbors before any agency.
+            </p>
+            <div className="eyah-stories ds-stagger" data-stagger="0.2">
+              <p>The firefighter who lost her home is both survivor and first responder.</p>
+              <p>The contractor who donates his RV volunteers to install generators.</p>
+              <p>The church leader running food distribution needs housing for her own family.</p>
+            </div>
+            <p className="eyah-close ds-fade">SOS sees the whole person.</p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            06 · ONE RECORD
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-white">
+          <div className="inner">
+            <p className="sec-label sec-label--dark ds-fade">06</p>
+            <div className="one-record ds-stagger" data-stagger="0.14">
+              <p style={{ paddingLeft: '0' }}>One person.</p>
+              <p style={{ paddingLeft: '1.8rem' }}>One lifetime record.</p>
+              <p style={{ paddingLeft: '3.6rem' }}>Every need.</p>
+              <p style={{ paddingLeft: '5.4rem' }}>Every offer.</p>
+              <p style={{ paddingLeft: '7.2rem' }}>Every outcome.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            07 · INTAKE
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner loop-section ds-fade">
+            <p className="sec-label">Intake</p>
+            <h2 className="loop-title">A citizen texts a number.</h2>
+            <p className="loop-body">AI parses the need. No app. No account. Any phone.</p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            08 · MATCHING
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy-alt">
+          <div className="grain" />
+          <div className="inner loop-section ds-fade">
+            <p className="sec-label">Matching</p>
+            <h2 className="loop-title">The engine scores by capability, proximity, capacity, and trust.</h2>
+            <p className="loop-body">No match exists until a human confirms.</p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            09 · FULFILLMENT
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner loop-section ds-fade">
+            <p className="sec-label">Fulfillment</p>
+            <h2 className="loop-title">Three levels: partner delivers. Citizen confirms. Citizen rates.</h2>
+            <p className="loop-body">Trust is earned from real outcomes.</p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            10 · LEARNING
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="grain" />
+          <div className="inner loop-section">
+            <p className="sec-label ds-fade">Learning</p>
+            <h2 className="loop-title ds-fade">
+              Every decision traced. Every outcome recorded. Every failure rewrites the playbook.
+            </h2>
+            <p className="loop-body ds-fade">
+              The system that coordinated Helene knows what works next time.
+            </p>
+            <p className="loop-compliance ds-fade">
+              Compliance is a byproduct. NIMS records, audit trails, FEMA reporting —
+              generated automatically at every step.
+            </p>
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            11 · THE MOAT
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="inner">
+            <p className="sec-label ds-fade">11</p>
+            <h2 className="moat-title ds-fade">Intelligence That Compounds</h2>
+            <div className="moat-lines ds-stagger" data-stagger="0.18">
+              <p>Every match teaches the next match.</p>
+              <p>Free for citizens and NGOs. Forever.</p>
+              <p>The connection graph grows with every coordination.</p>
+            </div>
+            <p className="moat-protocol ds-fade">
               &ldquo;Be the protocol, not the monopoly.&rdquo;
             </p>
           </div>
         </section>
 
-        {/* ── 07 · THE OPPORTUNITY ──────────────────────────────── */}
-        <section className="deck-section ds-white ds-blend ds-blend--white-navy">
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">06</p>
-            <h2 className="ds-h2 ds-fade">The Opportunity</h2>
-            <p className="ds-sub ds-fade">
-              $46 billion flows through disaster communities every year. Almost
-              none of it funds the coordination.
+        {/* ──────────────────────────────────────────────────────────
+            12 · THE OPPORTUNITY
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-white">
+          <div className="inner">
+            <p className="sec-label sec-label--dark ds-fade">12</p>
+            <h2 className="opp-headline ds-fade">
+              $46 billion flows through disaster communities every year.
+            </h2>
+            <p className="opp-sub ds-fade">
+              Almost none funds the coordination that makes recovery work.
             </p>
-
-            <div className="ds-body ds-fade">
-              <p>
-                Today that money is extracted: out-of-town contractors, claims
-                middlemen, and consultants capture the value while the local
-                response runs on spreadsheets and goodwill. SOS re-routes a sliver
-                of that flow back into the infrastructure that makes the whole
-                system work — and uses it to keep coordination free for the people
-                who need it.
-              </p>
-            </div>
-
-            <ul className="ds-revenue ds-stagger">
+            <ul className="rev-list ds-stagger" data-stagger="0.12">
               <li>
-                <span className="ds-rev-name">Vetted contractor marketplace</span>
-                <span className="ds-rev-desc">
-                  — connect homeowners with insurance payouts to trusted local pros.
-                </span>
+                <strong>Vetted contractor marketplace</strong>
+                {' '}— connect homeowners with insurance payouts to trusted local pros.
               </li>
               <li>
-                <span className="ds-rev-name">Partner SaaS</span>
-                <span className="ds-rev-desc">
-                  — coordination tooling for NGOs, agencies, and emergency managers.
-                </span>
+                <strong>Partner SaaS</strong>
+                {' '}— coordination tooling for NGOs, agencies, and emergency managers.
               </li>
               <li>
-                <span className="ds-rev-name">Data &amp; insights</span>
-                <span className="ds-rev-desc">
-                  — anonymized demand signals for funders, insurers, and planners.
-                </span>
+                <strong>Data &amp; insights</strong>
+                {' '}— anonymized demand signals for funders, insurers, and planners.
               </li>
               <li>
-                <span className="ds-rev-name">Logistics &amp; fulfillment</span>
-                <span className="ds-rev-desc">
-                  — take-rate on coordinated transport, supplies, and services.
-                </span>
+                <strong>Logistics &amp; fulfillment</strong>
+                {' '}— take-rate on coordinated transport, supplies, and services.
               </li>
               <li>
-                <span className="ds-rev-name">Philanthropic &amp; public funding</span>
-                <span className="ds-rev-desc">
-                  — grants and contracts for the open coordination layer itself.
-                </span>
+                <strong>Philanthropic &amp; public funding</strong>
+                {' '}— grants and contracts for the open coordination layer itself.
               </li>
             </ul>
-
-            <p className="ds-bold-line ds-fade">
-              A dual structure: a nonprofit protocol for the commons, funded by a
-              for-profit marketplace on top of it.
+            <p className="opp-close ds-fade">
+              The humanitarian economy should fund the communities it serves.
             </p>
           </div>
         </section>
 
-        {/* ── 08 · BEYOND DISASTERS ─────────────────────────────── */}
-        <section className="deck-section ds-navy ds-final">
-          <div className="grain-overlay" />
-          <div className="ds-inner">
-            <p className="ds-num-label ds-fade">07</p>
-            <h2 className="ds-h2 ds-fade">Beyond Disasters</h2>
-            <p className="ds-sub ds-fade">
-              Disaster coordination is where we start. Community infrastructure is
-              where this goes.
-            </p>
-
-            <div className="ds-timeline ds-stagger">
+        {/* ──────────────────────────────────────────────────────────
+            13 · THE ARC
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-navy">
+          <div className="inner">
+            <p className="sec-label ds-fade">Beyond Disasters</p>
+            <h2 className="arc-title ds-fade">
+              The arc of this work extends far past a single storm.
+            </h2>
+            <div className="ds-timeline ds-stagger" data-stagger="0.15">
               <div className="ds-tl-item">
                 <span className="ds-tl-dot" />
                 <span className="ds-tl-year">Today</span>
@@ -520,374 +425,398 @@ export default function DeckPage() {
                 <span className="ds-tl-label">The coordination layer for communities</span>
               </div>
             </div>
-
-            <div className="ds-closing ds-fade">
-              <p className="ds-closing-line">Everyone is a helper.</p>
-              <p className="ds-closing-line ds-closing-glow">We help the helpers.</p>
-            </div>
-
-            <p className="ds-hero-url ds-final-url ds-fade">sosconnect.org</p>
           </div>
         </section>
+
+        {/* ──────────────────────────────────────────────────────────
+            14 · CLOSING
+        ────────────────────────────────────────────────────────── */}
+        <section className="deck-section s-closing">
+          <div className="grain" />
+          <div className="inner center ds-fade">
+            <p className="closing-main">Everyone is a helper.</p>
+            <p className="closing-glow">We help the helpers.</p>
+            <p className="closing-url">sosconnect.org</p>
+          </div>
+        </section>
+
       </div>
     </>
   );
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Styles — scoped under .deck (+ progress bar). Mirrors the homepage
-   palette and type. Content is visible by default; GSAP only adds
-   entrance polish, so nothing here hides content behind opacity:0.
-   ════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   STYLES — all CSS lives here. Content is visible by default.
+   GSAP only adds entrance polish; nothing is hidden behind JS.
+═══════════════════════════════════════════════════════════════════ */
 const deckCss = `
-.deck, .deck * { box-sizing: border-box; }
+/* ── Reset / base ────────────────────────────────────────────── */
+.deck, .deck * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .deck {
-  position: fixed;
-  inset: 0;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  position: fixed; inset: 0;
+  overflow-y: scroll; overflow-x: hidden;
   scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
   font-family: 'Nunito Sans', -apple-system, sans-serif;
-  font-weight: 400;
-  line-height: 1.7;
-  background: #0F1E2B;
-  color: #fff;
+  font-weight: 400; line-height: 1.8;
+  background: #0F1E2B; color: #fff;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Progress bar ── */
-.deck-progress-track {
+/* ── Progress bar ─────────────────────────────────────────────── */
+.d-progress-track {
   position: fixed; top: 0; left: 0; right: 0; height: 3px;
   background: rgba(255,255,255,0.06); z-index: 9999;
 }
-.deck-progress-bar {
+.d-progress-bar {
   height: 100%; width: 0%;
   background: #EF4E4B;
-  box-shadow: 0 0 8px rgba(239,78,75,0.5);
+  box-shadow: 0 0 10px rgba(239,78,75,0.55);
   transition: width 0.1s linear;
 }
 
-/* ── Sections ── */
+/* ── Sections ─────────────────────────────────────────────────── */
 .deck-section {
   position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100vh; min-height: 100dvh;
   scroll-snap-align: start;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 120px 32px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 100px 48px;
   overflow: hidden;
 }
-.ds-inner { position: relative; z-index: 2; width: 100%; max-width: 920px; margin: 0 auto; }
-.ds-center { text-align: center; }
-
-/* ── Backgrounds ── */
-.ds-navy  { background: #0F1E2B; color: #fff; }
-.ds-white { background: #ffffff; color: #0F1E2B; }
-.ds-light { background: #f8f9fa; color: #0F1E2B; }
-.ds-cream { background: #F5EBD6; color: #0F1E2B; }
-
-/* ── Section-to-section gradient blends ── */
-.ds-blend::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
-  height: 60px; z-index: 1; pointer-events: none;
+.inner {
+  position: relative; z-index: 2;
+  width: 100%; max-width: 800px; margin: 0 auto;
 }
-.ds-blend--navy-cream::after { background: linear-gradient(to bottom, #0F1E2B, #F5EBD6); }
-.ds-blend--cream-navy::after { background: linear-gradient(to bottom, #F5EBD6, #0F1E2B); }
-.ds-blend--navy-light::after { background: linear-gradient(to bottom, #0F1E2B, #f8f9fa); }
-.ds-blend--light-navy::after { background: linear-gradient(to bottom, #f8f9fa, #0F1E2B); }
-.ds-blend--navy-white::after { background: linear-gradient(to bottom, #0F1E2B, #ffffff); }
-.ds-blend--white-navy::after { background: linear-gradient(to bottom, #ffffff, #0F1E2B); }
+.center { text-align: center; }
 
-/* ── Grain overlay (same recipe as homepage) ── */
-.grain-overlay {
+/* ── Backgrounds ──────────────────────────────────────────────── */
+.s-navy    { background: #0F1E2B; color: #fff; }
+.s-navy-alt { background: #111f2e; color: #fff; }
+.s-cream   { background: #F5EBD6; color: #0F1E2B; }
+.s-white   { background: #ffffff; color: #0F1E2B; }
+.s-closing { background: #08131c; color: #fff; }
+
+/* ── Grain overlay ────────────────────────────────────────────── */
+.grain {
   position: absolute; inset: 0; z-index: 1;
-  opacity: 0.02; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.025; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat; background-size: 256px 256px;
 }
 
-/* ── Shared typography ── */
-.ds-num-label {
+/* ── Section label ────────────────────────────────────────────── */
+.sec-label {
   font-family: 'Nunito Sans', sans-serif;
-  font-size: 13px; font-weight: 800; letter-spacing: 0.25em;
-  color: #EF4E4B; margin-bottom: 18px;
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: #EF4E4B; margin-bottom: 24px; display: block;
 }
-.ds-h2 {
+.sec-label--dark { color: #EF4E4B; }
+
+/* ══════════════════════════════════════════════════════════════
+   01 · HERO
+══════════════════════════════════════════════════════════════ */
+.s-hero { justify-content: center; }
+.hero-logo { height: 60px; margin: 0 auto 32px; display: block; }
+.hero-title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-weight: 400; font-size: clamp(32px, 5vw, 48px); line-height: 1.1;
-  margin-bottom: 12px;
+  font-weight: 400; font-size: clamp(80px, 18vw, 148px);
+  line-height: 1; color: #fff; letter-spacing: 0.03em;
 }
-.ds-sub {
-  font-size: clamp(17px, 2.2vw, 21px); font-weight: 300; line-height: 1.55;
-  max-width: 680px; margin-bottom: 40px;
+.hero-sub {
+  font-size: clamp(18px, 2.4vw, 24px); font-weight: 300;
+  color: rgba(255,255,255,0.65); margin-top: 24px; line-height: 1.5;
 }
-.ds-navy .ds-sub { color: rgba(255,255,255,0.6); }
-.ds-white .ds-sub, .ds-light .ds-sub, .ds-cream .ds-sub { color: #555; }
+.hero-url {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.28em;
+  text-transform: uppercase; color: #89CFF0; margin-top: 36px; display: block;
+}
+.scroll-hint {
+  position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+  z-index: 3; font-size: 28px; color: rgba(255,255,255,0.25);
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%       { transform: translate(-50%, 9px); }
+}
 
-.ds-body { max-width: 680px; margin: 0 0 28px; }
-.ds-body p { font-size: 17px; font-weight: 300; line-height: 1.8; }
-.ds-navy .ds-body p { color: rgba(255,255,255,0.7); }
-.ds-white .ds-body p, .ds-light .ds-body p, .ds-cream .ds-body p { color: #3d4852; }
-
-.ds-bold-line {
+/* ══════════════════════════════════════════════════════════════
+   02 · THE QUOTE
+══════════════════════════════════════════════════════════════ */
+.quote-wrap {
+  display: flex; align-items: flex-start; gap: 40px;
+  max-width: 780px;
+}
+.quote-accent-line {
+  flex-shrink: 0;
+  width: 4px; background: #EF4E4B;
+  border-radius: 2px;
+  align-self: stretch;
+  min-height: 100%;
+}
+.quote-huge p {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(20px, 3vw, 28px); line-height: 1.4; margin-top: 8px;
+  font-style: italic; font-weight: 400;
+  font-size: clamp(30px, 5.5vw, 56px);
+  line-height: 1.2; color: #fff;
 }
-.ds-navy .ds-bold-line { color: #fff; }
-.ds-cream .ds-bold-line, .ds-white .ds-bold-line { color: #0F1E2B; }
-
-.ds-footnote {
-  margin-top: 32px; font-size: 12px; font-weight: 300;
-  color: rgba(255,255,255,0.35); max-width: 680px; line-height: 1.6;
-}
-
-/* ── Hero (01) ── */
-.ds-hero-logo { height: 64px; margin: 0 auto 28px; display: block; }
-.ds-hero-title {
-  font-family: 'DM Serif Display', Georgia, serif; font-weight: 400;
-  font-size: clamp(72px, 16vw, 140px); line-height: 1; color: #fff;
-  letter-spacing: 0.04em;
-}
-.ds-hero-sub {
-  font-size: clamp(18px, 2.6vw, 24px); font-weight: 300;
-  color: rgba(255,255,255,0.7); margin-top: 22px;
-}
-.ds-hero-url {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.22em;
-  text-transform: uppercase; color: #89CFF0; margin-top: 28px;
-}
-.ds-scroll-hint {
-  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-  z-index: 2; font-size: 26px; color: rgba(255,255,255,0.3);
-  animation: ds-bounce 1.8s ease-in-out infinite;
-}
-@keyframes ds-bounce { 0%,100% { transform: translate(-50%,0); } 50% { transform: translate(-50%,8px); } }
-
-/* ── Blockquotes ── */
-.ds-quote {
-  border-left: 3px solid #EF4E4B; padding: 4px 0 4px 24px;
-  margin: 32px 0; max-width: 680px;
-}
-.ds-quote p {
-  font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
-  font-size: clamp(22px, 3.4vw, 30px); line-height: 1.35; color: #fff;
-}
-.ds-quote cite {
-  display: block; margin-top: 14px; font-style: normal;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
-  color: rgba(255,255,255,0.45);
-}
-.ds-quote--blue { border-left-color: #89CFF0; }
-
-/* FEMA quote — heavier visual weight (02) */
-.ds-quote--fema {
-  border-left-width: 4px;
-  background: linear-gradient(135deg, rgba(239,78,75,0.06) 0%, transparent 60%);
-  border-radius: 0 12px 12px 0;
-  padding: 32px;
-}
-.ds-quote--fema p { font-size: clamp(24px, 4vw, 36px); }
-.ds-quote--fema cite {
-  font-size: 12px; font-style: italic; margin-top: 22px;
+.quote-huge cite {
+  display: block; margin-top: 24px;
+  font-style: normal; font-size: 13px; font-weight: 300;
+  letter-spacing: 0.04em; color: rgba(255,255,255,0.4);
 }
 
-/* ── Stat grid (02) ── */
-.ds-stat-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 8px;
+/* ══════════════════════════════════════════════════════════════
+   03 · THE NUMBERS
+══════════════════════════════════════════════════════════════ */
+.float-stat {
+  display: flex; align-items: baseline; gap: 28px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.ds-stat {
-  background: rgba(255,255,255,0.04);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px; padding: 22px 18px;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.ds-stat:hover {
-  transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-}
-.ds-stat-num {
+.float-stat:last-child { border-bottom: none; }
+.float-num {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(34px, 4.4vw, 48px); line-height: 1; color: #fff;
+  font-size: clamp(72px, 13vw, 120px);
+  line-height: 1; color: #fff; flex-shrink: 0;
+  min-width: 220px;
 }
-.ds-stat-desc {
-  font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 10px; line-height: 1.5;
+.float-desc {
+  font-size: clamp(16px, 1.8vw, 20px); font-weight: 300;
+  color: rgba(255,255,255,0.45); line-height: 1.5; max-width: 320px;
 }
 
-/* ── Big stat (03) ── */
-.ds-bigstat {
-  display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;
-  margin: 8px 0 32px;
-  background: rgba(255,255,255,0.04);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border: 1px solid rgba(15,30,43,0.06);
-  border-radius: 16px; padding: 32px;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.ds-bigstat:hover {
-  transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-}
-.ds-bigstat-num {
+/* ══════════════════════════════════════════════════════════════
+   04 · THE GAP
+══════════════════════════════════════════════════════════════ */
+.gap-num {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(72px, 13vw, 120px); line-height: 0.95; color: #EF4E4B;
+  font-size: clamp(100px, 22vw, 180px);
+  line-height: 1; color: #EF4E4B;
+  margin: 8px auto 0;
+  display: block;
+  text-shadow: 0 0 60px rgba(239,78,75,0.18);
 }
-.ds-bigstat-desc {
-  font-size: clamp(16px, 2vw, 20px); font-weight: 300; color: #555; max-width: 360px;
+.gap-desc {
+  font-size: clamp(20px, 3vw, 28px); font-weight: 300;
+  color: rgba(255,255,255,0.7); max-width: 640px;
+  margin: 24px auto 0; line-height: 1.55;
 }
-
-/* ── Flow diagram (04) ── */
-.ds-flow {
-  position: relative;
-  display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
-  margin: 8px 0 36px;
-}
-/* Connecting line running underneath the four boxes */
-.ds-flow::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 41px; height: 2px;
-  background: rgba(137,207,240,0.2); z-index: 0;
-}
-.ds-flow-step {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(137,207,240,0.25);
-  border-radius: 14px; padding: 20px 22px; min-width: 120px;
-}
-.ds-flow-k { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; color: #89CFF0; }
-.ds-flow-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 19px; color: #fff; }
-.ds-flow-arrow {
-  position: relative; z-index: 1;
-  color: #89CFF0; font-size: 22px;
-  animation: ds-arrow-pulse 2.2s ease-in-out infinite;
-}
-@keyframes ds-arrow-pulse {
-  0%, 100% { opacity: 0.55; text-shadow: 0 0 4px rgba(137,207,240,0.25); }
-  50%      { opacity: 1;    text-shadow: 0 0 14px rgba(137,207,240,0.85); }
-}
-.ds-flow-loop {
-  flex-basis: 100%; margin-top: 10px;
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600;
-  letter-spacing: 0.08em; color: #89CFF0; opacity: 0.8;
-}
-.ds-flow-loop-icon { width: 18px; height: 18px; flex-shrink: 0; }
-
-/* ── Callout box ── */
-.ds-callout {
-  border-left: 4px solid #89CFF0; background: rgba(137,207,240,0.07);
-  border-radius: 0 12px 12px 0; padding: 22px 26px; max-width: 720px; margin: 0 0 28px;
-}
-.ds-callout p { font-size: 16px; font-weight: 300; line-height: 1.7; color: rgba(255,255,255,0.8); }
-
-/* ── Why now columns (05) ── */
-.ds-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 8px; }
-.ds-col p { font-size: 15px; line-height: 1.75; color: #555; font-weight: 300; }
-.ds-col-title {
-  font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; margin-bottom: 12px;
-}
-.ds-col-title--red  { color: #EF4E4B; }
-.ds-col-title--navy { color: #0F1E2B; }
-.ds-col-title--blue { color: #4a9fd4; }
-
-/* ── Moat cards (06) ── */
-.ds-moat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 8px 0 36px; }
-.ds-moat {
-  background: rgba(255,255,255,0.04);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-left: 3px solid transparent;
-  border-radius: 16px; padding: 26px 24px;
-  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-}
-.ds-moat h3 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; font-size: 21px; color: #fff; margin-bottom: 12px; }
-.ds-moat p { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.6); font-weight: 300; }
-.ds-moat--red   { border-left-color: #EF4E4B; }
-.ds-moat--blue  { border-left-color: #89CFF0; }
-.ds-moat--cream { border-left-color: #F5EBD6; }
-.ds-moat:hover { transform: translateY(-3px); }
-.ds-moat--red:hover {
-  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(239,78,75,0.28);
-}
-.ds-moat--blue:hover {
-  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(137,207,240,0.3);
-}
-.ds-moat--cream:hover {
-  box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 0 22px rgba(245,235,214,0.28);
+.gap-source {
+  font-size: 12px; font-weight: 300; letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.28); margin-top: 20px;
 }
 
-.ds-pullquote {
-  font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
-  font-size: clamp(24px, 3.6vw, 34px); color: #89CFF0; text-align: center;
-  text-shadow: 0 0 30px rgba(137,207,240,0.2);
+/* ══════════════════════════════════════════════════════════════
+   05 · EVERYONE IS A HELPER
+══════════════════════════════════════════════════════════════ */
+.eyah-headline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(44px, 8vw, 72px);
+  line-height: 1.1; color: #0F1E2B; margin-bottom: 28px;
 }
-
-/* ── Revenue list (07) ── */
-.ds-revenue { list-style: none; margin: 8px 0 28px; max-width: 760px; }
-.ds-revenue li {
-  position: relative; padding: 12px 0 12px 26px; font-size: 16px; line-height: 1.6;
+.eyah-stat {
+  font-size: clamp(20px, 3vw, 28px); font-weight: 300;
+  color: #3d4852; margin-bottom: 40px; line-height: 1.5;
+}
+.eyah-stat strong {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.4em; color: #EF4E4B; font-weight: 400;
+}
+.eyah-stories > p {
+  font-size: clamp(17px, 2vw, 20px); font-weight: 300;
+  color: #555; line-height: 1.7; padding: 14px 0;
   border-bottom: 1px solid rgba(15,30,43,0.08);
 }
-.ds-revenue li::before {
-  content: ''; position: absolute; left: 4px; top: 20px;
-  width: 8px; height: 8px; border-radius: 50%; background: #EF4E4B;
+.eyah-stories > p:first-child { border-top: 1px solid rgba(15,30,43,0.08); }
+.eyah-close {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(24px, 3.5vw, 36px); font-weight: 400;
+  color: #0F1E2B; margin-top: 40px;
 }
-.ds-rev-name { font-weight: 700; color: #0F1E2B; }
-.ds-rev-desc { color: #555; font-weight: 300; }
 
-/* ── Timeline (08) ── */
+/* ══════════════════════════════════════════════════════════════
+   06 · ONE RECORD
+══════════════════════════════════════════════════════════════ */
+.one-record > p {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(32px, 5.5vw, 56px); font-weight: 400;
+  line-height: 1.25; color: #0F1E2B;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   07 – 10 · THE LOOP SECTIONS
+══════════════════════════════════════════════════════════════ */
+.loop-section { max-width: 720px; }
+.loop-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(34px, 5.5vw, 56px);
+  line-height: 1.15; color: #fff; margin-bottom: 24px;
+}
+.loop-body {
+  font-size: clamp(18px, 2.2vw, 22px); font-weight: 300;
+  color: rgba(255,255,255,0.55); line-height: 1.7; max-width: 560px;
+}
+.loop-compliance {
+  margin-top: 40px; padding: 20px 24px;
+  border-left: 3px solid #89CFF0;
+  background: rgba(137,207,240,0.06);
+  border-radius: 0 10px 10px 0;
+  font-size: 15px; font-weight: 300; line-height: 1.75;
+  color: rgba(255,255,255,0.65); max-width: 640px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   11 · THE MOAT
+══════════════════════════════════════════════════════════════ */
+.moat-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.1; color: #fff; margin-bottom: 48px;
+}
+.moat-lines > p {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(22px, 3.2vw, 34px); font-weight: 400;
+  color: rgba(255,255,255,0.7); line-height: 1.4;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.moat-lines > p:first-child { border-top: 1px solid rgba(255,255,255,0.06); }
+.moat-protocol {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-style: italic; font-size: clamp(22px, 3.2vw, 32px);
+  color: #89CFF0; margin-top: 48px;
+  text-shadow: 0 0 40px rgba(137,207,240,0.25);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   12 · THE OPPORTUNITY
+══════════════════════════════════════════════════════════════ */
+.opp-headline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(32px, 5.5vw, 56px);
+  line-height: 1.15; color: #0F1E2B; margin-bottom: 16px;
+}
+.opp-sub {
+  font-size: clamp(17px, 2vw, 20px); font-weight: 300;
+  color: #555; margin-bottom: 40px; line-height: 1.65;
+}
+.rev-list {
+  list-style: none;
+  margin-bottom: 40px;
+}
+.rev-list li {
+  font-size: clamp(15px, 1.8vw, 18px); font-weight: 300;
+  color: #3d4852; line-height: 1.7;
+  padding: 14px 0 14px 20px; position: relative;
+  border-bottom: 1px solid rgba(15,30,43,0.07);
+}
+.rev-list li:first-child { border-top: 1px solid rgba(15,30,43,0.07); }
+.rev-list li::before {
+  content: ''; position: absolute; left: 0; top: 24px;
+  width: 7px; height: 7px; border-radius: 50%; background: #EF4E4B;
+}
+.rev-list li strong { color: #0F1E2B; font-weight: 700; }
+.opp-close {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 2.8vw, 28px); color: #0F1E2B; line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   13 · THE ARC — timeline
+══════════════════════════════════════════════════════════════ */
+.arc-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.2; color: #fff; margin-bottom: 56px; max-width: 680px;
+}
 .ds-timeline {
-  display: flex; justify-content: space-between; gap: 28px;
-  margin: 16px 0 48px; position: relative;
+  display: flex; justify-content: space-between;
+  gap: 16px; position: relative; margin-bottom: 12px;
 }
 .ds-timeline::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 2px;
-  background: rgba(137,207,240,0.2);
+  content: ''; position: absolute;
+  left: 7px; right: 7px; top: 6px; height: 2px;
+  background: rgba(137,207,240,0.18);
 }
-.ds-tl-item { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; position: relative; }
+.ds-tl-item {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; flex: 1; position: relative;
+}
 .ds-tl-dot {
-  width: 14px; height: 14px; border-radius: 50%; background: #89CFF0;
-  box-shadow: 0 0 0 4px rgba(137,207,240,0.15); margin-bottom: 14px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #89CFF0; flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(137,207,240,0.12);
+  margin-bottom: 16px; position: relative; z-index: 1;
 }
 .ds-tl-item:first-child .ds-tl-dot {
-  background: #EF4E4B; box-shadow: 0 0 0 4px rgba(239,78,75,0.18);
+  background: #EF4E4B;
+  box-shadow: 0 0 0 4px rgba(239,78,75,0.15);
 }
 .ds-tl-year {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 16px; font-weight: 400; letter-spacing: 0.04em;
-  color: #89CFF0; margin-bottom: 6px;
+  font-size: 15px; color: #89CFF0; margin-bottom: 6px;
+  display: block;
 }
-.ds-tl-label { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.45; }
+.ds-tl-label {
+  font-size: 12px; font-weight: 300;
+  color: rgba(255,255,255,0.5); line-height: 1.5;
+}
 
-/* ── Closing (08) ── */
-.ds-closing { text-align: center; margin: 8px 0 28px; }
-.ds-closing-line {
+/* ══════════════════════════════════════════════════════════════
+   14 · CLOSING
+══════════════════════════════════════════════════════════════ */
+.closing-main {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(30px, 6vw, 56px); line-height: 1.15; color: #fff;
+  font-weight: 400; font-size: clamp(40px, 8vw, 80px);
+  line-height: 1.1; color: #F5EBD6; margin-bottom: 16px;
 }
-.ds-closing-glow {
-  color: #89CFF0;
-  text-shadow: 0 0 30px rgba(137,207,240,0.5), 0 0 70px rgba(137,207,240,0.3), 0 0 120px rgba(137,207,240,0.15);
+.closing-glow {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400; font-size: clamp(32px, 6vw, 60px);
+  line-height: 1.1; color: #89CFF0;
+  text-shadow:
+    0 0 30px rgba(137,207,240,0.55),
+    0 0 80px rgba(137,207,240,0.3),
+    0 0 140px rgba(137,207,240,0.15);
 }
-.ds-final-url { text-align: center; }
+.closing-url {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.28em;
+  text-transform: uppercase; color: rgba(137,207,240,0.55);
+  margin-top: 48px; display: block;
+}
 
-/* ── Mobile ── */
-@media (max-width: 760px) {
-  .deck-section { padding: 60px 20px; }
-  .ds-stat-grid { grid-template-columns: 1fr 1fr; }
-  .ds-cols { grid-template-columns: 1fr; gap: 20px; }
-  .ds-moat-grid { grid-template-columns: 1fr; }
-  .ds-flow { flex-direction: column; align-items: stretch; }
-  .ds-flow::before { display: none; }
-  .ds-flow-step { width: 100%; flex-direction: row; justify-content: space-between; }
-  .ds-flow-arrow { transform: rotate(90deg); align-self: center; }
-  .ds-flow-loop { justify-content: center; }
-  .ds-timeline { flex-direction: column; gap: 18px; }
-  .ds-timeline::before { left: 6px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; }
-  .ds-tl-item { flex-direction: row; align-items: center; gap: 12px; text-align: left; padding-left: 4px; }
-  .ds-tl-dot { margin-bottom: 0; flex-shrink: 0; }
-  .ds-bigstat { gap: 8px; padding: 24px; }
-  .ds-quote--fema { padding: 24px; }
+/* ══════════════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 680px) {
+  .deck-section { padding: 80px 24px; }
+
+  .float-stat { flex-direction: column; gap: 6px; }
+  .float-num  { min-width: unset; font-size: clamp(64px, 18vw, 96px); }
+  .float-desc { max-width: 100%; font-size: 15px; }
+
+  .one-record > p { padding-left: 0 !important; font-size: clamp(26px, 7vw, 40px); }
+
+  .ds-timeline { flex-direction: column; gap: 20px; }
+  .ds-timeline::before {
+    left: 6px; right: auto; top: 0; bottom: 0;
+    width: 2px; height: auto;
+  }
+  .ds-tl-item {
+    flex-direction: row; align-items: flex-start;
+    text-align: left; gap: 16px;
+  }
+  .ds-tl-dot { margin-bottom: 0; margin-top: 2px; flex-shrink: 0; }
+
+  .quote-wrap { gap: 20px; }
+  .quote-accent-line { display: none; }
+
+  .loop-body { font-size: 16px; }
+  .moat-lines > p { font-size: 20px; }
+  .eyah-stories > p { font-size: 16px; }
 }
 `;
