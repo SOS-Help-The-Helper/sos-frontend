@@ -21,23 +21,39 @@ export function subscribeToMatches(
   orgId: string,
   onNotification: (data: MatchNotification) => void,
 ): () => void {
-  const channel = supabase
-    .channel(`org-matches-${orgId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'matches' },
-      (payload) => {
-        const match = payload.new as Record<string, string>;
+  // Wave 3: polling instead of a realtime channel — anon postgres_changes
+  // subscriptions stop working once anon SELECT is removed (Wave 4), and the
+  // portal data plane now runs through the /api/db proxy, which realtime
+  // websockets can't traverse. Poll the proposed-match feed every 60s and
+  // notify on new ids.
+  const seen = new Set<string>();
+  let primed = false;
+
+  const poll = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('id, match_reasoning')
+      .eq('status', 'proposed')
+      .order('created_at', { ascending: false })
+      .limit(25);
+    if (error || !data) return;
+    for (const match of data as { id: string; match_reasoning: string | null }[]) {
+      if (seen.has(match.id)) continue;
+      seen.add(match.id);
+      if (primed) {
         onNotification({
           id: match.id,
           match_id: match.id,
           message_text: match.match_reasoning || 'A new match has been found for your organization.',
         });
-      },
-    )
-    .subscribe();
+      }
+    }
+    primed = true;
+  };
 
-  return () => { supabase.removeChannel(channel); };
+  void poll();
+  const timer = setInterval(poll, 60_000);
+  return () => clearInterval(timer);
 }
 
 export function showBrowserNotification(title: string, body: string, link?: string): void {

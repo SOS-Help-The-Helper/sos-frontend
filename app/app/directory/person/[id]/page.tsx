@@ -268,7 +268,7 @@ export default function PersonPage() {
                   />
                   <span className="ml-1">County</span>
                 </MetaChip>
-                {person.household && (
+                {Array.isArray(person.household?.members) && (
                   <MetaChip icon={Users}>Household of {person.household.members.length}</MetaChip>
                 )}
                 <span className="font-mono text-xs text-white/40">{person.id}</span>
@@ -393,8 +393,8 @@ export default function PersonPage() {
 
         <AiSummary
           id={person.id}
-          tldr={`${person.role} at ${person.org.name} · ${person.housingStatus.toLowerCase()} · SOS ${person.sosScore}.`}
-          summary={`${person.name} is a ${person.role.toLowerCase()} at ${person.org.name}, based in ${person.county} County. Currently ${person.housingStatus.toLowerCase()}. SOS score ${person.sosScore} (Community ${person.scoreBreakdown.community}, Impact ${person.scoreBreakdown.impact}, Readiness ${person.scoreBreakdown.readiness}). Holds ${person.credentials.length} credential${person.credentials.length === 1 ? "" : "s"} and ${person.skills.length} tracked skill${person.skills.length === 1 ? "" : "s"}.`}
+          tldr={`${person.role} at ${person.org.name} · ${(person.housingStatus ?? "unknown").toLowerCase()} · SOS ${person.sosScore}.`}
+          summary={`${person.name} is a ${(person.role ?? "member").toLowerCase()} at ${person.org.name}, based in ${person.county} County. Currently ${(person.housingStatus ?? "unknown").toLowerCase()}. SOS score ${person.sosScore} (Community ${person.scoreBreakdown.community}, Impact ${person.scoreBreakdown.impact}, Readiness ${person.scoreBreakdown.readiness}). Holds ${person.credentials.length} credential${person.credentials.length === 1 ? "" : "s"} and ${person.skills.length} tracked skill${person.skills.length === 1 ? "" : "s"}.`}
         />
 
         <DetailTabs tabs={tabs} defaultKey="activity" />
@@ -483,7 +483,7 @@ function SkillsTab({ person }: { person: any }) {
         <div className="px-4 py-3.5 bg-white/[0.02]">
           <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-2">Household · {person.household.address}</p>
           <div className="space-y-2">
-            {person.household.members.map((m) => (
+            {(person.household.members ?? []).map((m) => (
               <div key={m.name} className="flex items-center gap-3">
                 <Avatar name={m.name} size={28} />
                 <span className="flex-1 text-[13px]">{m.name}</span>

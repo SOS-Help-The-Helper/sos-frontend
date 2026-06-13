@@ -1,0 +1,18 @@
+# Gitleaks config — sos-frontend.
+#
+# The allowlisted paths below contain hardcoded Supabase anon-key JWTs that were
+# already committed before 2026-06-12 and are pending env-var migration + key
+# rotation (Wave 1.5 of the remediation plan; see
+# sos-core/AUDIT_2026-06-12_FABLE.md §6.9). The anon key is public by design,
+# but hardcoding it breaks rotation. Remove each entry as the file is scrubbed.
+# New leaks anywhere else fail CI.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known pre-2026-06-12 hardcoded anon JWTs pending env-var migration"
+paths = [
+  # app/vote, app/api/pin, app/api/map/tiles scrubbed 2026-06-12 (env vars now).
+  '''public/maps/.*\.html''',
+]

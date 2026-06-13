@@ -12,18 +12,6 @@ const PUBLIC_PATHS = new Set([
   '/vote',
   '/join',
   '/app',
-  '/cases',
-  '/directory',
-  '/transport',
-  '/map',
-  '/match',
-  '/command',
-  '/calendar',
-  '/inventory',
-  '/onboard',
-  '/reports',
-  '/settings',
-  '/volunteers',
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -36,18 +24,10 @@ const PUBLIC_PREFIXES = [
   '/api/pin/',      // Pin detail API (public)
   '/share/',        // Public incident situation reports
   '/drive/',       // driver delivery pages
-  '/cases/',       // partner: cases
-  '/directory/',   // partner: directory + detail pages (person, org, etc)
-  '/transport/',   // partner: transport
-  '/map/',         // partner: map
-  '/match/',       // partner: match
-  '/command/',     // partner: command
-  '/calendar/',    // partner: calendar
-  '/inventory/',   // partner: inventory
-  '/onboard/',     // partner: onboard
-  '/reports/',     // partner: reports
-  '/settings/',    // partner: settings
-  '/volunteers/',  // partner: volunteers
+  // (Wave 3) the bare partner prefixes — /cases/, /directory/, /match/, … —
+  // were removed: no top-level routes exist for them (partner pages live
+  // under /app/*, which is session-gated below), so they were pure latent
+  // bypass surface in front of the /app auth gate.
   '/_next/',       // Next.js assets
   '/api/',         // API routes
   '/logomark',     // brand assets

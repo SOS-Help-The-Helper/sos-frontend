@@ -36,11 +36,13 @@ Spec: `product/specs/PARTNER_PORTAL_V2_SPEC.md` (COMPLETE reference — read it 
 - Cards: `bg-white/5 rounded-lg p-3` with `border border-white/10`
 
 ## Known Gotchas
-1. `proxy.ts` blocks new routes — add to PUBLIC_PATHS/PUBLIC_PREFIXES
+1. `proxy.ts` blocks new routes — add to PUBLIC_PATHS/PUBLIC_PREFIXES. The bare
+   partner prefixes (/cases/, /match/, …) were REMOVED in Wave 3 — partner pages
+   live only under the session-gated /app/*; do not re-add them
 2. Next.js 16 params are Promises — must `await params` in server components
 3. Clerk imports crash with proxy.ts — use client-side hooks only
 4. Match engine is on SOS DB, not ERV DB
-5. Dynamic routes return 404 on Vercel — use static routes only
+5. ~~Dynamic routes return 404 on Vercel~~ FALSE (13 dynamic routes live, incl. /api/ef/[fn], /api/db/[...path], /drive/[id]) — gotcha removed 2026-06-12
 6. Git author: do NOT override the developer's configured git identity. Use `info@sos-help.org` only when the actual human committer is that shared org account (e.g. automation under the SOS bot). Otherwise let the local `user.email` / `user.name` stand so commits reflect the real author.
 
 ## Coding Standards
@@ -55,7 +57,8 @@ Spec: `product/specs/PARTNER_PORTAL_V2_SPEC.md` (COMPLETE reference — read it 
 - Run `next build` (no node_modules in this env)
 - Deploy edge functions (we deploy manually after audit)
 - Touch proxy.ts allowlist without explicit instruction
-- Hardcode API keys or tokens
+- Hardcode API keys or tokens (gitleaks CI enforces this; HEAD is secret-free
+  as of 2026-06-12)
 
 ## Phase 1 Acceptance Criteria
 - [ ] PartnerShell tabs: Map | Match | Manage (routes: /app, /app/match, /app/manage)
@@ -142,3 +145,16 @@ interface PartnerContext {
   "current_lng": null
 }
 ```
+
+## Post-remediation notes (2026-06-12)
+- Citizen data: `api.queryMyRecords()` / `api.updateMyRecord()` /
+  `api.respondMatch()` — citizen session token in `x-citizen-token`
+  (typed in types/api.ts). Never send a body actor; the EF asserts identity.
+- Portal data: efCall + supabase-client route through the session-gated
+  `/api/ef` and `/api/db` server proxies on /app/* — the browser never needs
+  broad anon-key DB access. Requires SUPABASE_SERVICE_ROLE_KEY in Vercel env.
+- Realtime channels were replaced with polling (anon postgres_changes dies at
+  the Wave 4b lockdown).
+- CI: tsc ratchet (.typecheck-baseline) + gitleaks; error count may only drop.
+- Backend lockdown activation after this branch deploys:
+  sos-core/WAVE4_ACTIVATION.md.

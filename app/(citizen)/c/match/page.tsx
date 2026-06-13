@@ -1,6 +1,5 @@
 'use client';
 import { api } from '@/lib/api';
-import { supabase } from '@/lib/supabase-client';
 
 import { useState, useEffect, useRef } from 'react';
 import { CitizenShell } from '@/components/citizen-shell';
@@ -80,131 +79,76 @@ function MatchPageContent() {
   useEffect(() => {
     if (personId) loadProposals();
     else setLoading(false);
+    // Refresh on focus (realtime channel removed in Wave 2 — see /c/manage note).
+    const onFocus = () => { if (personId) loadProposals(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, [personId]);
 
-  useEffect(() => {
-    if (!personId) return;
-    const channel = supabase
-      .channel('matches-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matches' }, (payload: any) => {
-        const row = payload.new;
-        if (myRequestIdsRef.current.includes(row.request_id) || myResourceIdsRef.current.includes(row.resource_id)) {
-          loadProposals();
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [personId]);
+  // Map a my_records nested match (direction known by which side it hangs off)
+  // into the flat shape the swipe cards consume.
+  function toProposal(m: any, direction: 'i_need_help' | 'i_can_help'): any {
+    return {
+      id: m.id,
+      status: m.status,
+      created_at: m.created_at,
+      match_score: m.match_score,
+      match_summary_masked: m.match_summary_masked,
+      direction,
+      resource_category: m.resources?.category,
+      resource_description: m.resources?.details_sanitized || m.resources?.description,
+      resource_location: m.resources?.location_text,
+      resource_lat: m.resources?.latitude,
+      resource_lng: m.resources?.longitude,
+      resource_capacity: m.resources?.capacity_available,
+      resource_org_name: m.resources?.organizations?.name ?? m.partner_name,
+      request_category: m.requests?.category,
+      request_description: m.requests?.details_sanitized,
+      request_urgency: m.requests?.urgency,
+      request_location: m.requests?.location_text,
+      request_lat: m.requests?.latitude,
+      request_lng: m.requests?.longitude,
+    };
+  }
 
   async function loadProposals() {
     setLoading(true);
     try {
-      // Step 1: Get my request IDs and resource IDs (direct query — sos-read rejects anon key)
-      const { data: myRequests } = await supabase.from('requests').select('id').eq('person_id', personId);
-      const { data: myResources } = await supabase.from('resources').select('id').eq('person_id', personId);
-      const myRequestIds = (myRequests || []).map((r: any) => r.id);
-      const myResourceIds = (myResources || []).map((r: any) => r.id);
-      myRequestIdsRef.current = myRequestIds;
-      myResourceIdsRef.current = myResourceIds;
+      // Authenticated read via sos-read my_records (citizen session token).
+      // matches nested under my requests = resources offered to me (i_need_help);
+      // under my resources = requests I could help with (i_can_help).
+      const res = (await api.queryMyRecords(['matches'])) as { sos_records?: any[] };
+      const proposalsAcc: any[] = [];
+      const acceptedAcc: any[] = [];
+      const seenProposal = new Set<string>();
+      const seenAccepted = new Set<string>();
+      const reqIds: string[] = [];
+      const resIds: string[] = [];
 
-      if (myRequestIds.length === 0 && myResourceIds.length === 0) {
-        setProposals([]);
-        setLoading(false);
-        return;
+      for (const sos of (res.sos_records || [])) {
+        for (const req of (sos.requests || [])) {
+          reqIds.push(req.id);
+          for (const m of (req.matches || [])) {
+            if (m.status === 'proposed' && !seenProposal.has(m.id)) { seenProposal.add(m.id); proposalsAcc.push(toProposal(m, 'i_need_help')); }
+            else if (['accepted', 'connected', 'fulfilled'].includes(m.status) && !seenAccepted.has(m.id)) { seenAccepted.add(m.id); acceptedAcc.push(toProposal(m, 'i_need_help')); }
+          }
+        }
+        for (const r of (sos.resources || [])) {
+          resIds.push(r.id);
+          for (const m of (r.matches || [])) {
+            if (m.status === 'proposed' && !seenProposal.has(m.id)) { seenProposal.add(m.id); proposalsAcc.push(toProposal(m, 'i_can_help')); }
+            else if (['accepted', 'connected', 'fulfilled'].includes(m.status) && !seenAccepted.has(m.id)) { seenAccepted.add(m.id); acceptedAcc.push(toProposal(m, 'i_can_help')); }
+          }
+        }
       }
+      myRequestIdsRef.current = reqIds;
+      myResourceIdsRef.current = resIds;
 
-      // Step 2: Query matches referencing my requests (resources offered TO me)
-      let requestMatches: any[] = [];
-      if (myRequestIds.length > 0) {
-        const { data } = await supabase
-          .from('matches')
-          .select('id, match_score, match_summary_masked, match_reasoning, status, created_at, request_id, resource_id, resources(category, details_sanitized, location_text, latitude, longitude, capacity_available, organizations(name)), requests(category, details_sanitized, urgency, location_text, latitude, longitude)')
-          .in('request_id', myRequestIds)
-          .eq('status', 'proposed')
-          .order('match_score', { ascending: false });
-        requestMatches = (data || []).map((m: any) => ({
-          ...m,
-          direction: 'i_need_help' as const,
-          resource_category: m.resources?.category,
-          resource_description: m.resources?.details_sanitized,
-          resource_location: m.resources?.location_text,
-          resource_lat: m.resources?.latitude,
-          resource_lng: m.resources?.longitude,
-          resource_capacity: m.resources?.capacity_available,
-          resource_org_name: m.resources?.organizations?.name,
-          request_category: m.requests?.category,
-          request_description: m.requests?.details_sanitized,
-          request_urgency: m.requests?.urgency,
-          request_location: m.requests?.location_text,
-          request_lat: m.requests?.latitude,
-          request_lng: m.requests?.longitude,
-        }));
-      }
-
-      // Step 3: Query matches referencing my resources (requests I could help with)
-      let resourceMatches: any[] = [];
-      if (myResourceIds.length > 0) {
-        const { data } = await supabase
-          .from('matches')
-          .select('id, match_score, match_summary_masked, match_reasoning, status, created_at, request_id, resource_id, resources(category, details_sanitized, location_text, latitude, longitude, capacity_available, organizations(name)), requests(category, details_sanitized, urgency, location_text, latitude, longitude)')
-          .in('resource_id', myResourceIds)
-          .eq('status', 'proposed')
-          .order('match_score', { ascending: false });
-        resourceMatches = (data || []).map((m: any) => ({
-          ...m,
-          direction: 'i_can_help' as const,
-          resource_category: m.resources?.category,
-          resource_description: m.resources?.details_sanitized,
-          resource_location: m.resources?.location_text,
-          resource_lat: m.resources?.latitude,
-          resource_lng: m.resources?.longitude,
-          resource_capacity: m.resources?.capacity_available,
-          resource_org_name: m.resources?.organizations?.name,
-          request_category: m.requests?.category,
-          request_description: m.requests?.details_sanitized,
-          request_urgency: m.requests?.urgency,
-          request_location: m.requests?.location_text,
-          request_lat: m.requests?.latitude,
-          request_lng: m.requests?.longitude,
-        }));
-      }
-
-      // Step 4: Deduplicate and merge (a match could appear in both if citizen has both request & resource)
-      const all = [...requestMatches, ...resourceMatches];
-      const unique = Array.from(new Map(all.map(m => [m.id, m])).values());
-      unique.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
-
-      setProposals(unique);
+      proposalsAcc.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+      setProposals(proposalsAcc);
       setCurrentIndex(0);
-
-      // Also load accepted/connected matches for the bottom section
-      const acceptedIds = [...myRequestIds, ...myResourceIds];
-      if (acceptedIds.length > 0) {
-        // Two queries for accepted matches
-        const results: any[] = [];
-        if (myRequestIds.length > 0) {
-          const { data } = await supabase
-            .from('matches')
-            .select('id, match_score, match_summary_masked, status, created_at, request_id, resource_id, resources(category, details_sanitized, organizations(name)), requests(category)')
-            .in('request_id', myRequestIds)
-            .in('status', ['accepted', 'connected', 'fulfilled'])
-            .order('created_at', { ascending: false })
-            .limit(5);
-          results.push(...(data || []));
-        }
-        if (myResourceIds.length > 0) {
-          const { data } = await supabase
-            .from('matches')
-            .select('id, match_score, match_summary_masked, status, created_at, request_id, resource_id, resources(category, details_sanitized, organizations(name)), requests(category)')
-            .in('resource_id', myResourceIds)
-            .in('status', ['accepted', 'connected', 'fulfilled'])
-            .order('created_at', { ascending: false })
-            .limit(5);
-          results.push(...(data || []));
-        }
-        const uniqueAccepted = Array.from(new Map(results.map(m => [m.id, m])).values());
-        setAcceptedMatches(uniqueAccepted.slice(0, 10) as any);
-      }
+      acceptedAcc.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setAcceptedMatches(acceptedAcc.slice(0, 10) as any);
     } catch (err) {
       console.error('Failed to load match proposals:', err);
     }
@@ -216,7 +160,6 @@ function MatchPageContent() {
     if (!proposal) return;
 
     if (action === 'accept') {
-      // Call match-respond via api.respondMatch
       try {
         await api.respondMatch(proposal.id, 'accept');
         // Only advance to next card if accept succeeds
@@ -228,8 +171,16 @@ function MatchPageContent() {
         return;
       }
     } else {
-      // For skip, advance immediately (no API call needed)
-      setCurrentIndex(prev => prev + 1);
+      // Skip = decline. Persist it (Wave 2 fix — previously the swipe advanced
+      // the card without ever calling the API, so declines were never recorded).
+      try {
+        await api.respondMatch(proposal.id, 'decline');
+        setCurrentIndex(prev => prev + 1);
+      } catch (err) {
+        console.error('Match decline failed:', err);
+        import('sonner').then(({ toast }) => toast.error('Failed to record your choice'));
+        return;
+      }
     }
   }
 

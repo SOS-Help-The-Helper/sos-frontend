@@ -4,6 +4,12 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type {
+  MyRecordsResponse,
+  UpdateDetails,
+  UpdateResponse,
+  CitizenAction,
+} from '@/types/api';
 
 // ---------------------------------------------------------------------------
 // SOS DB connection — the one and only database the frontend ever talks to.
@@ -25,12 +31,38 @@ const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const efBaseUrl = `${SOS_URL}/functions/v1`;
 const efAnonKey = SOS_ANON_KEY;
 
+/**
+ * Per-call auth options.
+ *
+ * `citizenToken` is the opaque session token issued by the citizen-auth EF
+ * (localStorage 'sos-citizen-token'). It is NOT a JWT, so it cannot replace
+ * the Bearer token once verify_jwt is enforced at the EF gateway — it travels
+ * in the `x-citizen-token` header while `Authorization: Bearer <anon>` keeps
+ * satisfying the gateway. Server-side, requireCitizen() validates it against
+ * citizen_sessions and asserts the personId.
+ */
+export interface EfAuthOptions {
+  citizenToken?: string;
+}
+
+const CITIZEN_TOKEN_KEY = 'sos-citizen-token';
+
+/** Read the citizen session token (set by CitizenAuthGate). Null on the server or when signed out. */
+export function getCitizenToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(CITIZEN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 async function callEf<T = unknown>(
   base: string,
   authKey: string,
   fn: string,
   body?: Record<string, unknown>,
-  options: { method?: 'GET' | 'POST' } = {}
+  options: { method?: 'GET' | 'POST'; auth?: EfAuthOptions } = {}
 ): Promise<T> {
   const method = options.method ?? (body === undefined ? 'GET' : 'POST');
   const url = method === 'GET' && body
@@ -42,6 +74,7 @@ async function callEf<T = unknown>(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${authKey}`,
+      ...(options.auth?.citizenToken ? { 'x-citizen-token': options.auth.citizenToken } : {}),
     },
     ...(method === 'POST' && body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
@@ -56,12 +89,28 @@ async function callEf<T = unknown>(
   return res.json() as Promise<T>;
 }
 
-/** Call an edge function on the SOS DB. */
+/**
+ * Call an edge function on the SOS DB.
+ *
+ * Routing (Wave 3):
+ *  - Partner portal in the browser (/app/*) → the session-gated /api/ef proxy,
+ *    which holds the service key server-side. The portal session cookie is the
+ *    credential; the Bearer anon key sent along is ignored by the proxy.
+ *  - Citizen calls (options.auth.citizenToken) and everything else → direct to
+ *    Supabase; app-level auth (x-citizen-token / requireCitizen) applies.
+ */
 async function efCall<T = unknown>(
   fn: string,
   body?: Record<string, unknown>,
-  options: { method?: 'GET' | 'POST' } = {}
+  options: { method?: 'GET' | 'POST'; auth?: EfAuthOptions } = {}
 ): Promise<T> {
+  const viaProxy =
+    typeof window !== 'undefined' &&
+    window.location.pathname.startsWith('/app') &&
+    !options.auth?.citizenToken;
+  if (viaProxy) {
+    return callEf<T>(`${window.location.origin}/api/ef`, efAnonKey, fn, body, options);
+  }
   return callEf<T>(efBaseUrl, efAnonKey, fn, body, options);
 }
 
@@ -91,19 +140,31 @@ export interface MapFeatures {
 // Typed API surface
 // ---------------------------------------------------------------------------
 
+// Helper: citizen-authed EF options. The actor is asserted server-side from
+// the session token (requireCitizen), so the body no longer carries actor.id.
+const citizenAuth = () => ({ auth: { citizenToken: getCitizenToken() ?? undefined } });
+
 export const api = {
   // Matching
-  queryMatches: (data: Record<string, unknown>) =>
-    efCall('sos-read', { actor: { type: 'citizen' }, scope: 'my_records', include: ['matches'], ...data }),
+  queryMatches: (data: Record<string, unknown> = {}) =>
+    efCall<MyRecordsResponse>('sos-read', { scope: 'my_records', include: ['matches'], ...data }, citizenAuth()),
 
-  respondMatch: (matchId: string, response: 'accept' | 'decline', note?: string) =>
-    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: matchId, action: response, ...(note ? { data: { reason: note } } : {}) }),
+  // All of a citizen's records (SOS umbrellas → requests/resources/reports + matches).
+  queryMyRecords: (include: string[] = ['matches']) =>
+    efCall<MyRecordsResponse>('sos-read', { scope: 'my_records', include }, citizenAuth()),
 
-  fulfillMatch: (matchId: string, data: Record<string, unknown>) =>
-    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: matchId, action: 'deliver', data }),
+  respondMatch: (matchId: string, response: 'accept' | 'decline', reason?: string) =>
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: matchId, action: response, ...(reason ? { details: { reason } } : {}) }, citizenAuth()),
+
+  fulfillMatch: (matchId: string, details: UpdateDetails) =>
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: matchId, action: 'deliver', details }, citizenAuth()),
 
   consentFlow: (data: Record<string, unknown>) =>
-    efCall('sos-update', { actor: { type: 'citizen' }, record_type: 'match', record_id: data.match_id as string, action: 'consent', data }),
+    efCall<UpdateResponse>('sos-update', { record_type: 'match', record_id: data.match_id as string, action: 'consent', details: data }, citizenAuth()),
+
+  // Citizen self-edit of a request/resource (status toggle or field edit).
+  updateMyRecord: (recordType: 'request' | 'resource', recordId: string, action: CitizenAction, details?: UpdateDetails) =>
+    efCall<UpdateResponse>('sos-update', { record_type: recordType, record_id: recordId, action, ...(details ? { details } : {}) }, citizenAuth()),
 
   // ERV
   ervQuery: (queryType: string, params: Record<string, unknown>) =>
@@ -399,10 +460,17 @@ export const api = {
 // These replace direct supabase.from() calls in frontend pages.
 // Uses anon key + RLS (same security as before, but centralized).
 
-// Direct PostgREST read client (RLS-protected, anon key). Pinned to SOS and
-// created once — org scope is applied via `.eq('...org_id', ...)` filters in
-// the queries below, never by repointing the connection.
-const supabaseRead: SupabaseClient = createClient(SOS_URL, SOS_ANON_KEY);
+// PostgREST read client. Pinned to SOS and created once — org scope is
+// applied via `.eq('...org_id', ...)` filters in the queries below, never by
+// repointing the connection. Wave 3: portal browsers route through the
+// session-gated /api/db proxy (service-key-backed, table-allowlisted) so the
+// anon key can lose its broad SELECT grants in Wave 4.
+const isPortalBrowser =
+  typeof window !== 'undefined' && window.location.pathname.startsWith('/app');
+const supabaseRead: SupabaseClient = createClient(
+  isPortalBrowser ? `${window.location.origin}/api/db` : SOS_URL,
+  SOS_ANON_KEY,
+);
 
 // Scoped read-only queries (RLS-protected, anon key)
 export const db = {
