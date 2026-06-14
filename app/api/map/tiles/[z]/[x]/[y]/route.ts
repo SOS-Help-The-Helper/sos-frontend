@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const SOS_URL =
   process.env.NEXT_PUBLIC_SOS_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-// Server-side route: prefer the service key so the map_tiles_* RPCs can lose
-// their anon EXECUTE grant; anon fallback keeps previews working.
-const SOS_ANON =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Server-side route: prefer the service key; fall back to anon (map_tiles_public is anon-executable).
+const SOS_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SOS_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const SOS_ANON = SOS_SERVICE_KEY || SOS_ANON_KEY;
 
 /**
  * Serves MVT vector tiles from PostGIS via Supabase RPC.
@@ -45,6 +45,29 @@ export async function GET(
     });
 
     if (!res.ok) {
+      // Retry with anon key if service key failed (e.g. stale env var)
+      if (res.status === 401 && SOS_ANON_KEY && SOS_ANON !== SOS_ANON_KEY) {
+        const retry = await fetch(`${SOS_URL}/rest/v1/rpc/${rpcFn}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SOS_ANON_KEY,
+            'Authorization': `Bearer ${SOS_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rpcBody),
+        });
+        if (retry.ok) {
+          const buf = await retry.arrayBuffer();
+          return new NextResponse(buf, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/x-protobuf',
+              'Cache-Control': 'public, max-age=300',
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+        }
+      }
       const errText = await res.text();
       console.error('[map-tiles] RPC error:', res.status, errText);
       return NextResponse.json({ error: 'Tile generation failed', status: res.status }, { status: 500 });
