@@ -7,6 +7,7 @@ import { SOSBottomSheet } from '@/components/sos-bottom-sheet';
 import type { SOSScore } from '@/lib/citizen-api';
 import { api } from '@/lib/api';
 import { getPersonId, clearPersonId } from '@/lib/person-cookie';
+import { NotificationSettings } from '@/components/notification-settings';
 
 const READINESS_ITEMS = [
   { id: 'contact1', icon: '📱', label: 'Emergency Contact #1', points: 10 },
@@ -143,6 +144,13 @@ export default function ProfilePage() {
                 <p className="text-xl font-bold text-white">{reportCount}</p>
                 <p className="text-[10px] text-white/40">My Reports</p>
               </div>
+            </div>
+
+            {/* Notification settings */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <p className="text-xs font-bold text-white mb-1">🔔 Notifications</p>
+              <p className="text-[11px] text-white/45 mb-2">How SOS reaches you about matches and alerts.</p>
+              <NotificationSettings scope="citizen" recipientId={personId} />
             </div>
 
             {/* Links */}

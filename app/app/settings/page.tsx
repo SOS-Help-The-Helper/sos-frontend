@@ -8,6 +8,7 @@ import { useAuthContext } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { usePortalConfig, ALL_MODULES, MODULE_META, type ModuleId } from '@/lib/use-portal-config';
+import { NotificationSettings } from '@/components/notification-settings';
 
 const FALLBACK_ORG = { name: 'Organization', county: '', email: '' };
 
@@ -95,6 +96,12 @@ export default function SettingsPage() {
             <Field label="Primary county" value={org.county} />
             <Field label="Contact email" value={org.email} />
           </div>
+        </section>
+
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="text-[15px] font-semibold mb-1">Notifications</h2>
+          <p className="text-[12px] text-white/55 mb-3">How your org gets alerted about matches and updates.</p>
+          <NotificationSettings scope="org" recipientId={orgId} />
         </section>
 
         <section className="rounded-2xl bg-white/5 border border-white/10 p-5">

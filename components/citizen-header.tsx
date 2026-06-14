@@ -1,6 +1,6 @@
 'use client';
 
-import { NotificationBell } from '@/components/notification-panel';
+import { NotificationBell } from '@/components/notification-bell';
 import { getPersonId } from '@/lib/person-cookie';
 
 const STATUS_MAP: Record<string, { emoji: string; label: string }> = {
@@ -57,7 +57,7 @@ export function CitizenHeader({ onAgentTap, locationName, status, agentOpen = fa
 
           {/* Right: notification bell */}
           <div className="relative">
-            <NotificationBell personId={typeof window !== 'undefined' ? getPersonId() : null} />
+            <NotificationBell recipientType="citizen" recipientId={typeof window !== 'undefined' ? getPersonId() : null} />
           </div>
         </div>
       </div>

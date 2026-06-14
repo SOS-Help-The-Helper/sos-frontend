@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Building2, Check } from "lucide-react";
+import { ChevronDown, Building2, Check } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
-import { toast } from "sonner";
+import { NotificationBell } from "@/components/notification-bell";
 import {
   Briefcase, GitBranch, Map as MapIcon, Truck, Package, Users, Calendar,
   BarChart3, Radio, Network as NetworkIcon,
@@ -201,9 +201,7 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
           {/* Org switcher — admin only */}
           <OrgSwitcher />
           <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-            <button style={iconBtn} aria-label="Notifications" className="inline-flex" onClick={() => toast("No new notifications")}>
-              <Bell size={16} />
-            </button>
+            <NotificationBell recipientType="org" recipientId={orgId} />
             {/* Avatar pill with dropdown — all viewports */}
             <div ref={avatarRef} style={{ position: "relative" }} className="block">
               <button
@@ -288,12 +286,6 @@ export function TopNav({ enabledModules, labels, onOpenAgent, settingsTo = "/app
     </header>
   );
 }
-
-const iconBtn: React.CSSProperties = {
-  minWidth: 40, minHeight: 40, width: 40, height: 40, borderRadius: 8,
-  background: "transparent", border: "none", alignItems: "center", justifyContent: "center",
-  color: "rgba(255,255,255,0.8)", cursor: "pointer",
-};
 
 /**
  * Admin-only org switcher. Lists every org from the auth context and re-routes
