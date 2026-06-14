@@ -381,6 +381,21 @@ export default function CasesPage() {
   // Org-customizable table column config (keyed by tab)
   const [orgTableConfig, setOrgTableConfig] = useState<Record<string, any>>({});
 
+  // Multi-disaster filter ("" = all disasters)
+  const [disasters, setDisasters] = useState<{ id: string; name: string; start_date?: string }[]>([]);
+  const [disasterId, setDisasterId] = useState<string>("");
+
+  // Fetch the disaster list once — ordered by start_date desc for the dropdown
+  useEffect(() => {
+    api.crmDisastersList()
+      .then((res: any) => {
+        const list: any[] = res?.disasters ?? (Array.isArray(res) ? res : []);
+        list.sort((a, b) => new Date(b.start_date || 0).getTime() - new Date(a.start_date || 0).getTime());
+        setDisasters(list);
+      })
+      .catch(() => {/* dropdown just shows "All Disasters" if this fails */});
+  }, []);
+
   // Live data from EFs (null = not yet loaded or EF failed → fall back to prototype)
   const [liveCases, setLiveCases] = useState<Card[] | null>(null);
   const [liveRequests, setLiveRequests] = useState<Card[] | null>(null);
@@ -405,8 +420,8 @@ export default function CasesPage() {
     setResourceCards([]);
     setLoading(true);
     Promise.allSettled([
-      api.crmSosesList({ limit: 500, org_id: orgId || undefined }),
-      api.crmRequestsList(orgId || "", { limit: 200 }),
+      api.crmSosesList({ limit: 500, org_id: orgId || undefined, disaster_id: disasterId || undefined }),
+      api.crmRequestsList(orgId || "", { limit: 200, ...(disasterId ? { disaster_id: disasterId } : {}) }),
       api.crmResourcesList(orgId || ""),
       api.efCall("sos-intelligence", { action: "reports.impact_dashboard", report_type: "impact_dashboard" }).catch(() => null),
       api.efCall("sos-coordination", { action: "directory.get_org", org_id: orgId }).catch(() => null),
@@ -458,7 +473,7 @@ export default function CasesPage() {
       })
       .catch(() => toast.error("Failed to load cases"))
       .finally(() => setLoading(false));
-  }, [orgId]);
+  }, [orgId, disasterId]);
 
   const { cards, setCards, columns, label } = useMemo(() => {
     switch (tab) {
@@ -538,7 +553,7 @@ export default function CasesPage() {
 
   const refreshCases = () => {
     setLoading(true);
-    api.crmSosesList({ limit: 500, org_id: orgId || undefined })
+    api.crmSosesList({ limit: 500, org_id: orgId || undefined, disaster_id: disasterId || undefined })
       .then((data: any) => {
         const items: any[] = data?.cases ?? (Array.isArray(data) ? data : []);
         if (items.length > 0) {
@@ -601,8 +616,19 @@ export default function CasesPage() {
         })}
       </div>
 
-      {/* Board / table view toggle */}
-      <div className="px-6 pt-3 flex justify-end">
+      {/* Disaster filter + board/table view toggle */}
+      <div className="px-6 pt-3 flex items-center justify-between gap-3">
+        <select
+          value={disasterId}
+          onChange={(e) => setDisasterId(e.target.value)}
+          aria-label="Filter by disaster"
+          className="h-7 max-w-[240px] rounded-lg bg-white/5 border border-white/10 px-2.5 text-[11px] text-white focus:outline-none focus:border-white/25 appearance-none"
+        >
+          <option value="">All Disasters</option>
+          {disasters.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
         <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
           {(["kanban", "table"] as const).map((mode) => {
             const active = viewMode === mode;

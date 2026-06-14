@@ -258,7 +258,7 @@ export const api = {
   crmCasesList: (orgId: string, filters?: { status?: string; urgency?: string; county?: string; assigned_to?: string; category?: string }) =>
     efCall("sos-coordination", { action: "cases.list", org_id: orgId, ...filters }),
 
-  crmSosesList: (filters?: { status?: string; limit?: number; offset?: number; org_id?: string }) =>
+  crmSosesList: (filters?: { status?: string; limit?: number; offset?: number; org_id?: string; disaster_id?: string }) =>
     efCall("sos-coordination", { action: "cases.list_soses", ...filters }),
 
   crmCasesDetail: (params: { person_id?: string; request_id?: string; sos_id?: string; id?: string }) =>
@@ -418,6 +418,10 @@ export const api = {
   // CRM — Map
   crmMapFeatures: (orgId: string, filters?: Record<string, unknown>) =>
     efCall("sos-intelligence", { action: "map.features", org_id: orgId, ...filters }),
+
+  // CRM — Disasters (for filtering cases/requests by disaster scope)
+  crmDisastersList: () =>
+    efCall("sos-coordination", { action: "disasters.list" }),
 
   // CRM — Command
   crmCommandIncidents: () =>
