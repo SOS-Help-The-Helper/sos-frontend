@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOS | Admin Ultra View</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow:hidden}
+#map{position:absolute;top:0;left:0;right:0;bottom:0}
+.hdr{position:absolute;top:0;left:0;right:0;z-index:10;height:48px;
+  background:rgba(15,30,43,0.95);border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;padding:0 20px;gap:12px}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400}
+.hdr .ultra{background:linear-gradient(135deg,#EF4E4B,#89CFF0);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.hdr .sep{width:1px;height:20px;background:rgba(255,255,255,0.08)}
+.toolbar{margin-left:auto;display:flex;gap:4px}
+.tb{padding:5px 12px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;
+  color:rgba(255,255,255,0.5);border:1px solid transparent;transition:all 0.15s;background:none}
+.tb:hover{color:#fff;background:rgba(255,255,255,0.06)}
+.tb.on{color:#EF4E4B;border-color:rgba(239,78,75,0.3);background:rgba(239,78,75,0.08)}
+
+.left-panel{position:absolute;top:48px;left:0;bottom:0;width:280px;z-index:10;
+  background:rgba(15,30,43,0.97);border-right:1px solid rgba(255,255,255,0.06);
+  overflow-y:auto;padding:16px}
+.sec{margin-bottom:20px}
+.sec h3{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.25);
+  margin-bottom:10px;font-weight:700}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer}
+.toggle .name{font-size:12px;color:rgba(255,255,255,0.65);display:flex;align-items:center;gap:8px}
+.toggle .sw{width:28px;height:16px;border-radius:8px;background:rgba(255,255,255,0.12);
+  position:relative;transition:all 0.2s}
+.toggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;
+  border-radius:50%;background:#fff;transition:all 0.2s}
+.toggle .sw.on{background:#EF4E4B}
+.toggle .sw.on::after{left:14px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+.mini-stat{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+.ms{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center}
+.ms .n{font-family:'DM Serif Display',serif;font-size:20px}
+.ms .l{font-size:8px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.3);margin-top:2px}
+
+.right-panel{position:absolute;top:48px;right:0;bottom:0;width:260px;z-index:10;
+  background:rgba(15,30,43,0.97);border-left:1px solid rgba(255,255,255,0.06);
+  overflow-y:auto;padding:16px}
+.feed-item{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.03);
+  margin-bottom:4px;font-size:11px;color:rgba(255,255,255,0.6);border-left:3px solid transparent}
+.feed-item.req{border-color:#EF4E4B}
+.feed-item.res{border-color:#89CFF0}
+.feed-item.rep{border-color:#0F1E2B}
+.feed-item .time{font-size:9px;color:rgba(255,255,255,0.25);margin-top:2px}
+
+#map-area{position:absolute;top:48px;left:280px;right:260px;bottom:0}
+.m-only{display:none}
+.sheet-handle{display:none}
+@media(max-width:640px){
+  .hdr{padding:0 12px;gap:8px}
+  .hdr h1{font-size:15px}
+  .hdr .ultra{display:none}
+  .hdr .sep{display:none}
+  .toolbar{margin-left:auto;gap:4px;overflow-x:auto;flex-wrap:nowrap;max-width:64vw;-webkit-overflow-scrolling:touch}
+  .toolbar::-webkit-scrollbar{display:none}
+  .tb{flex:0 0 auto;min-height:40px;padding:6px 12px;display:inline-flex;align-items:center}
+  .m-only{display:inline-flex!important;align-items:center}
+  #map-area{left:0;right:0}
+  .left-panel,.right-panel{top:auto;bottom:0;left:0;right:0;width:100%;max-height:78vh;height:auto;
+    border:none;border-top:1px solid rgba(255,255,255,0.1);border-radius:18px 18px 0 0;
+    transform:translateY(100%);transition:transform 0.28s ease;z-index:30;padding:0 16px 20px}
+  .left-panel.open,.right-panel.open{transform:translateY(0)}
+  .sheet-handle{display:flex;justify-content:center;align-items:center;height:28px;cursor:pointer}
+  .sheet-handle span{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,0.3)}
+  .toggle{min-height:44px;padding:8px 0}
+  .left-panel .mini-stat{margin-top:6px}
+}
+</style></head><body>
+
+<div class="hdr">
+  <svg width="22" height="22" viewBox="0 0 40 40" fill="none"><path d="M33.34 34.91L25.99 27.56C24.47 29.05 22.56 30.63 20.18 32.27C17.78 30.62 15.87 29.04 14.35 27.53L6.83 35.05C10.35 38.13 14.96 40 20 40C25.12 40 29.8 38.07 33.34 34.91Z" fill="#EF4E4B"/><path d="M26.84 12.55C24.88 11.94 22.66 12.3 21.15 13.86L20.18 14.87L19.21 13.86C17.69 12.29 15.45 11.93 13.49 12.56L6.33 5.4C9.9 2.05 14.71 0 20 0C25.37 0 30.24 2.11 33.83 5.55L26.84 12.55Z" fill="#EF4E4B"/><path d="M6.27 7.85L5.09 6.66C1.93 10.2 0 14.88 0 20C0 25.37 2.11 30.24 5.55 33.83L6.73 32.65C3.59 29.36 1.67 24.91 1.67 20C1.67 15.37 3.38 11.14 6.21 7.92L6.27 7.85Z" fill="#EF4E4B"/><path d="M33.42 32.49L34.6 33.67C37.95 30.1 40 25.29 40 20C40 14.96 38.13 10.35 35.05 6.83L33.87 8.01C36.65 11.23 38.33 15.42 38.33 20C38.33 24.83 36.47 29.22 33.42 32.49Z" fill="#EF4E4B"/><path d="M32.69 9.19C35.17 12.1 36.67 15.88 36.67 20C36.67 24.37 34.99 28.34 32.24 31.31L27.2 26.27C28.42 24.9 29.3 23.61 29.9 22.41C31.38 19.47 31.21 17.14 30.38 15.5C29.93 14.62 29.28 13.9 28.51 13.37L32.69 9.19Z" fill="#EF4E4B"/><path d="M7.46 9.03L11.82 13.39C11.07 13.92 10.42 14.63 9.98 15.5C9.15 17.14 8.98 19.47 10.46 22.41C11.06 23.6 11.93 24.89 13.14 26.25L7.91 31.47C5.07 28.49 3.33 24.45 3.33 20C3.33 15.8 4.89 11.96 7.46 9.03Z" fill="#EF4E4B"/></svg>
+  <h1>SOS Connect</h1>
+  <span class="ultra">Admin Ultra</span>
+  <div class="sep"></div>
+  <div class="toolbar">
+    <button class="tb m-only" onclick="openPanel('left')">☰ Layers</button>
+    <button class="tb m-only" onclick="openPanel('right')">≣ Feed</button>
+    <button class="tb on" onclick="setMode('pins',this)">Pins</button>
+    <button class="tb" onclick="setMode('heat',this)">Heat</button>
+    <button class="tb" onclick="setMode('sat',this)">Satellite</button>
+    <button class="tb" onclick="toggle3D(this)">3D</button>
+    <button class="tb" onclick="toggleGlobe(this)">Globe</button>
+  </div>
+</div>
+
+<div class="left-panel">
+  <div class="sheet-handle" onclick="closeSheet(this)"><span></span></div>
+  <div class="mini-stat">
+    <div class="ms"><div class="n" style="color:#EF4E4B" data-count="requests">—</div><div class="l">Requests</div></div>
+    <div class="ms"><div class="n" style="color:#89CFF0" data-count="resources">—</div><div class="l">Resources</div></div>
+    <div class="ms"><div class="n" style="color:rgba(255,255,255,0.5)" data-count="reports">—</div><div class="l">Reports</div></div>
+    <div class="ms"><div class="n" style="color:#34d399" data-count="matches">—</div><div class="l">Matches</div></div>
+  </div>
+
+  <div class="sec">
+    <h3>Data Layers</h3>
+    <div class="toggle" onclick="toggleLayer('req',this)"><span class="name"><span class="dot" style="background:#EF4E4B"></span>Requests</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="toggleLayer('res',this)"><span class="name"><span class="dot" style="background:#89CFF0"></span>Resources</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="toggleLayer('rep',this)"><span class="name"><span class="dot" style="background:#0F1E2B;border:1.5px solid rgba(255,255,255,0.3)"></span>Reports</span><span class="sw on"></span></div>
+  </div>
+
+  <div class="sec">
+    <h3>Overlays</h3>
+    <div class="toggle" onclick="toggleOverlay('terrain',this)"><span class="name">🏔 Terrain</span><span class="sw"></span></div>
+    <div class="toggle" onclick="toggleOverlay('weather',this)"><span class="name">🌧 Weather Alerts</span><span class="sw"></span></div>
+    <div class="toggle" onclick="toggleOverlay('fema',this)"><span class="name">🏛 FEMA Zones</span><span class="sw"></span></div>
+    <div class="toggle" onclick="toggleOverlay('coverage',this)"><span class="name">📡 Coverage Gaps</span><span class="sw"></span></div>
+  </div>
+
+  <div class="sec">
+    <h3>Filter by Category</h3>
+    <div class="toggle" onclick="filterCat('HOUSING',this)"><span class="name">🏠 Housing</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="filterCat('FOOD',this)"><span class="name">🍽 Food</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="filterCat('MEDICAL',this)"><span class="name">🏥 Medical</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="filterCat('TRANSPORT',this)"><span class="name">🚗 Transport</span><span class="sw on"></span></div>
+    <div class="toggle" onclick="filterCat('UTILITIES',this)"><span class="name">⚡ Utilities</span><span class="sw on"></span></div>
+  </div>
+</div>
+
+<div class="right-panel">
+  <div class="sheet-handle" onclick="closeSheet(this)"><span></span></div>
+  <div class="sec">
+    <h3>Maria García · Activity Log</h3>
+    <div class="feed-item req">Case created via iMessage — family of 4 displaced, home flooded in Helene<div class="time">Jun 9 · Asheville, NC</div></div>
+    <div class="feed-item rep">Housing request auto-classified <b style="color:#EF4E4B">CRITICAL</b> — SOS Global<div class="time">Jun 9</div></div>
+    <div class="feed-item res">Match proposed: ERV RV-0447 → housing request <b style="color:#34d399">(score 91)</b><div class="time">Jun 9 · ERV</div></div>
+    <div class="feed-item rep">First-responder status verified with Asheville VFD<div class="time">Jun 10 · SOS Global</div></div>
+    <div class="feed-item res">RV-0447 staged at Biltmore lot, ready for delivery<div class="time">Jun 11 · ERV</div></div>
+    <div class="feed-item res">Match confirmed — ERV coordinator preparing RV-0447<div class="time">Jun 11 · ERV</div></div>
+    <div class="feed-item res"><b style="color:#34d399">Delivered.</b> Family moved in. Maria signed receipt.<div class="time">Jun 12 · ERV</div></div>
+    <div class="feed-item req">Childcare match proposed — Grace Community Church weekday program<div class="time">Jun 13 · Grace Community Church</div></div>
+    <div class="feed-item rep">Maria deployed to Henderson County swift-water rescue team<div class="time">Jun 15 · Asheville VFD</div></div>
+  </div>
+</div>
+
+<div id="map-area">
+  <div id="map" style="width:100%;height:100%"></div>
+</div>
+
+<script>
+function openPanel(which){const lp=document.querySelector('.left-panel'),rp=document.querySelector('.right-panel');
+  if(which==='left'){rp.classList.remove('open');lp.classList.toggle('open')}
+  else{lp.classList.remove('open');rp.classList.toggle('open')}}
+function closeSheet(el){el.parentElement.classList.remove('open')}
+mapboxgl.accessToken='pk.eyJ1Ijoic29zY29ubmVjdCIsImEiOiJjbWxlNmwxMHUxN3hhM2Vwd2R0a2RjNWttIn0.Re0ubam0-wA5O5wkAHzyAw';
+const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',
+  center:[-82.551,35.595],zoom:11,projection:'mercator'});
+let curStyle='dark-v11',t3d=false;
+
+map.on('load',()=>{ buildLayers(); startPulse(); });
+
+function buildLayers(){
+  if(map.getSource('sos'))return;
+  map.addSource('sos',{type:'vector',tiles:[location.origin+'/api/map/tiles/{z}/{x}/{y}'],minzoom:2,maxzoom:14});
+  map.addSource('dem',{type:'raster-dem',url:'mapbox://mapbox.mapbox-terrain-dem-v1',tileSize:512});
+
+  // Heatmap
+  map.addLayer({id:'heat',type:'heatmap',source:'sos','source-layer':'sos',
+    filter:['==',['get','type'],'request'],layout:{visibility:'none'},
+    paint:{'heatmap-weight':['match',['get','urgency'],'critical',1,'high',0.7,'medium',0.4,0.2],
+      'heatmap-intensity':['interpolate',['linear'],['zoom'],0,1,9,3],
+      'heatmap-color':['interpolate',['linear'],['heatmap-density'],0,'rgba(15,30,43,0)',0.25,'#0F1E2B',0.45,'#89CFF0',0.65,'#EF4E4B',0.85,'#FCD34D',1,'#fff'],
+      'heatmap-radius':['interpolate',['linear'],['zoom'],0,4,12,30],'heatmap-opacity':0.85}});
+
+  // Requests — SOS Red
+  map.addLayer({id:'req-glow',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'request'],
+    paint:{'circle-color':'#EF4E4B','circle-radius':14,'circle-opacity':0.2,'circle-blur':0.7}});
+  map.addLayer({id:'req-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'request'],
+    paint:{'circle-color':'#EF4E4B','circle-radius':7,'circle-stroke-width':2,'circle-stroke-color':'#fff'}});
+
+  // Resources — SOS Light Blue
+  map.addLayer({id:'res-glow',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'resource'],
+    paint:{'circle-color':'#89CFF0','circle-radius':12,'circle-opacity':0.15}});
+  map.addLayer({id:'res-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'resource'],
+    paint:{'circle-color':'#89CFF0','circle-radius':6,'circle-stroke-width':2,'circle-stroke-color':'#fff'}});
+
+  // Reports — SOS Navy
+  map.addLayer({id:'rep-pts',type:'circle',source:'sos','source-layer':'sos',filter:['==',['get','type'],'report'],
+    paint:{'circle-color':'#0F1E2B','circle-radius':6,'circle-stroke-width':2,'circle-stroke-color':'rgba(255,255,255,0.35)'}});
+
+  map.setFog({'color':'#0F1E2B','high-color':'#0F1E2B','horizon-blend':0.06,'space-color':'#000','star-intensity':0.12});
+}
+
+function startPulse(){
+  (function f(){const p=0.5+0.5*Math.sin(Date.now()/700);
+    ['req-glow','res-glow'].forEach(id=>{if(map.getLayer(id)){
+      map.setPaintProperty(id,'circle-opacity',0.12+p*0.15);
+      map.setPaintProperty(id,'circle-radius',id==='req-glow'?12+p*4:10+p*3)}});
+    requestAnimationFrame(f)})();
+}
+
+const PL=['req-glow','req-pts','res-glow','res-pts','rep-pts'];
+function setMode(m,b){
+  document.querySelectorAll('.toolbar .tb').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  if(m==='pins'){
+    PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','visible')});
+    if(map.getLayer('heat'))map.setLayoutProperty('heat','visibility','none');
+    if(curStyle!=='dark-v11'){map.setStyle('mapbox://styles/mapbox/dark-v11');curStyle='dark-v11';map.once('style.load',()=>{buildLayers();startPulse()})}
+  }else if(m==='heat'){
+    PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','none')});
+    if(map.getLayer('heat'))map.setLayoutProperty('heat','visibility','visible');
+  }else if(m==='sat'){
+    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');curStyle='satellite-streets-v12';
+    map.once('style.load',()=>{buildLayers();startPulse()});
+  }
+}
+
+function toggle3D(b){t3d=!t3d;b.classList.toggle('on',t3d);
+  if(t3d){map.setTerrain({source:'dem',exaggeration:1.5});map.easeTo({pitch:55,duration:1000})}
+  else{map.setTerrain(null);map.easeTo({pitch:0,duration:1000})}}
+
+function toggleGlobe(b){b.classList.toggle('on');
+  const isGlobe=map.getProjection().type==='globe';
+  map.setProjection(isGlobe?'mercator':'globe');
+  if(!isGlobe)map.easeTo({zoom:2.5,pitch:20,duration:1500})}
+
+function toggleLayer(key,el){
+  const sw=el.querySelector('.sw');sw.classList.toggle('on');
+  const vis=sw.classList.contains('on')?'visible':'none';
+  const layers={req:['req-glow','req-pts'],res:['res-glow','res-pts'],rep:['rep-pts']};
+  (layers[key]||[]).forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',vis)});
+}
+
+function toggleOverlay(key,el){
+  const sw=el.querySelector('.sw');sw.classList.toggle('on');
+  // Placeholder — overlays would connect to real data
+}
+
+function filterCat(cat,el){
+  const sw=el.querySelector('.sw');sw.classList.toggle('on');
+  // Placeholder — category filtering on vector tile features
+}
+</script><script>fetch("https://rtduqguwhkczexnoawej.supabase.co/rest/v1/rpc/map_counts",{method:"POST",headers:{"apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZHVxZ3V3aGtjemV4bm9hd2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2Njg1ODAsImV4cCI6MjA2NzI0NDU4MH0.1QZ5ofS-ND_OI71igPlxxMTyZJJRlATSSC0djccWR8o","Content-Type":"application/json"}}).then(r=>r.json()).then(d=>{document.querySelectorAll("[data-count]").forEach(el=>{const k=el.dataset.count;if(d[k]!=null)el.textContent=d[k].toLocaleString()})}).catch(()=>{})</script></body></html>
