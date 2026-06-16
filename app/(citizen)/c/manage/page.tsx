@@ -167,7 +167,7 @@ function ManagePageContent() {
 
   return (
     <CitizenShell>
-      <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
+      <div className="on-dark flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
         {/* Header */}
         <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName="United States" status="safe" />
         {/* Spacer for absolutely-positioned header */}
@@ -480,7 +480,7 @@ function ManagePageContent() {
 
         {/* Edit Request Modal */}
         {editingRequest && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={() => setEditingRequest(null)}>
+          <div className="on-dark fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={() => setEditingRequest(null)}>
             <div className="bg-[#1A3850] w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5 space-y-4" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-white">Edit Request</span>
@@ -545,7 +545,7 @@ function ManagePageContent() {
 
         {/* Edit Resource Modal */}
         {editingResource && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={() => setEditingResource(null)}>
+          <div className="on-dark fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60" onClick={() => setEditingResource(null)}>
             <div className="bg-[#1A3850] w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5 space-y-4" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-white">Edit Resource</span>

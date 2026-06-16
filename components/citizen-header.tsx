@@ -36,7 +36,7 @@ export function CitizenHeader({ onAgentTap, locationName, status, agentOpen = fa
           100% { transform: scale(0); opacity: 0; }
         }
       ` }} />
-      <div className="absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
+      <div className="on-dark absolute top-0 left-0 right-0 z-[60] pt-[env(safe-area-inset-top,0px)]">
         <div className="flex items-center justify-between px-5 py-4 pb-12 bg-gradient-to-b from-[#1A3850] via-[#1A3850]/80 via-60% to-transparent">
           {/* Left: logomark — hidden when agent is open */}
           <button
