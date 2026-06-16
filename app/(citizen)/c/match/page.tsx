@@ -216,7 +216,7 @@ function MatchPageContent() {
 
   return (
     <CitizenShell>
-      <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
+      <div className="on-dark flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))] bg-[#0F1E2B]">
         {/* Header */}
         <CitizenHeader onAgentTap={() => setSheetOpen(true)} locationName="United States" status="safe" />
         {/* Spacer for absolutely-positioned header */}

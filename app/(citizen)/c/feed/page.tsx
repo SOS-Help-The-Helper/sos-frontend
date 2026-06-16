@@ -68,7 +68,7 @@ export default function FeedPage() {
 
   return (
     <CitizenShell onSOSTap={() => setSheetOpen(true)} hideSOSButton={sheetOpen}>
-      <div className="flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
+      <div className="on-dark flex flex-col h-full pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
         {/* Header */}
         <div className="bg-[#1A3850] px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
           <h1 className="text-sm font-bold text-white">📋 Feed</h1>

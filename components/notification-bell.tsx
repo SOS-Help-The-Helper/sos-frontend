@@ -138,7 +138,7 @@ export function NotificationBell({ recipientType, recipientId }: NotificationBel
       <button
         onClick={() => { setOpen((o) => !o); if (!open) void load(); }}
         aria-label="Notifications"
-        className="w-9 h-9 rounded-lg bg-black/20 hover:bg-white/10 flex items-center justify-center relative transition-colors"
+        className="on-dark w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center relative transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />

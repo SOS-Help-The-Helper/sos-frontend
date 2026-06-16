@@ -621,7 +621,7 @@ export default function CitizenMapPage() {
       {/* Map mode toggle — auto (heatmap+pins) vs pins-only */}
       <button
         onClick={() => setMapMode(prev => (prev === 'auto' ? 'pins' : 'auto'))}
-        className={`absolute bottom-20 right-3 z-20 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm font-medium transition ${
+        className={`on-dark absolute bottom-20 right-3 z-20 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm font-medium transition ${
           mapMode === 'auto'
             ? 'bg-[#EF4E4B]/80 text-white'
             : 'bg-black/50 text-white/70 hover:text-white'
@@ -631,7 +631,7 @@ export default function CitizenMapPage() {
       </button>
 
       {/* Legend */}
-      <div className="absolute bottom-20 left-3 z-20 flex gap-1.5">
+      <div className="on-dark absolute bottom-20 left-3 z-20 flex gap-1.5">
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B]" /> Requests</span>
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#89CFF0]" /> Resources</span>
         <span className="text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#0F1E2B] border border-white/30" /> Reports</span>

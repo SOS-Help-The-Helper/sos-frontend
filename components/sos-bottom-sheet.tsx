@@ -172,7 +172,7 @@ export function SOSBottomSheet({ open, onClose, context, userLat = 35.5951, user
     <div className="fixed left-0 right-0 z-50 max-w-lg mx-auto transition-all duration-300"
       style={{ bottom: `${bottomOffset}px`, height: sheetHeight, maxWidth: '100vw' }}>
       {sheetState !== 'collapsed' && <div className="fixed inset-0 -z-10 bg-black/20 backdrop-blur-[1px]" onClick={onClose} />}
-      <div className="h-full flex flex-col overflow-hidden relative"
+      <div className="on-dark h-full flex flex-col overflow-hidden relative"
         style={{
           background: 'rgba(26, 56, 80, 0.92)',
           backdropFilter: 'blur(20px)',
