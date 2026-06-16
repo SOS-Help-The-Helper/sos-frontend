@@ -88,7 +88,12 @@ export default function ReportsPage() {
   const protoTaxList: TaxEntry[] = Object.entries(protoTaxCounts).sort((a, b) => b[1] - a[1]);
 
   const { data: dashboard, loading, error, refetch } = useApiFetch(
-    () => api.crmImpactDashboard(orgId || '').then((res) => {
+    () => {
+      // Wait for the org context to resolve before fetching. Firing with an
+      // empty orgId returns the global (all-partners) dataset, which would
+      // briefly render the wrong numbers before the scoped fetch lands.
+      if (!orgId) return Promise.resolve(null);
+      return api.crmImpactDashboard(orgId).then((res) => {
       const d = (res as Record<string, unknown>)?.data ?? res;
       return {
         kpis: mapDashboardToKpis(d),
@@ -97,7 +102,8 @@ export default function ReportsPage() {
         severity: mapDashboardToSeverity(d),
         trend: mapDashboardToTrend(d),
       };
-    }),
+    });
+    },
     "Failed to load reports",
     [orgId]
   );
