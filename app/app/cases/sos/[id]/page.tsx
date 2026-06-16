@@ -164,6 +164,7 @@ export default function UmbrellaView() {
   const [caseNotes, setCaseNotes] = useState<Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>>([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("timeline");
+  const [resourcesData, setResourcesData] = useState<any[]>([]);
 
   const fetchCaseDetail = useCallback(() => {
     // SOS umbrella detail — pass the explicit sos_id, no generic resolver.
@@ -241,6 +242,10 @@ export default function UmbrellaView() {
           );
         }
 
+        // Map resources the person offers — EF returns them by person_id.
+        if (data.resources && Array.isArray(data.resources)) {
+          setResourcesData(data.resources);
+        }
         // Map citizen/case-level fields — EF returns { person, sos, requests, resources, ... }
         if (data) {
           const person = data.person || {};
@@ -383,6 +388,7 @@ export default function UmbrellaView() {
                 setNote={setNote}
                 childCases={childCasesData}
                 orgs={orgsData}
+                resources={resourcesData}
                 umbrellaData={umbrellaData}
                 liveMatches={liveMatches}
                 onPostNote={handlePostNote}
@@ -470,13 +476,14 @@ function candidateToChainData(m: MatchCandidate, umbrellaData: UmbrellaShape): M
 }
 
 function CaseTabs({
-  sosId, note, setNote, childCases, orgs, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, onCaseNotesUpdate, activeTab, onActiveTabChange, onRefetch,
+  sosId, note, setNote, childCases, orgs, resources, umbrellaData, liveMatches, onPostNote, postingNote, orgId, caseNotes, onCaseNotesUpdate, activeTab, onActiveTabChange, onRefetch,
 }: {
   sosId: string;
   note: string;
   setNote: (v: string) => void;
   childCases: typeof cases;
   orgs: Array<{ id: string; name: string; color?: string }>;
+  resources: any[];
   umbrellaData: UmbrellaShape;
   liveMatches: MatchCandidate[] | null;
   onPostNote: () => void;
@@ -607,7 +614,8 @@ function CaseTabs({
     {
       key: "resources",
       label: "Resources",
-      content: <EmptyTab label="No resources matched yet." />,
+      count: resources.length || undefined,
+      content: <ResourcesTab resources={resources} orgs={orgs} />,
     },
     {
       key: "matches",
@@ -980,6 +988,49 @@ function AdminItem({ icon: Icon, label, danger, onClick }: { icon: typeof Users;
   );
 }
 
+function ResourcesTab({ resources, orgs }: { resources: any[]; orgs: Array<{ id: string; name: string; color?: string }> }) {
+  if (!resources || resources.length === 0) {
+    return <EmptyTab label="No resources offered yet." />;
+  }
+  const label = (r: any) =>
+    r.capability_slug || r.taxonomy_code || r.category || "Resource";
+  const place = (r: any) =>
+    r.location_text || [r.city, r.state].filter(Boolean).join(", ") || r.county || "";
+  return (
+    <ul className="space-y-1">
+      {resources.map((r: any, i: number) => {
+        const org = orgs.find((o) => o.id === (r.org_id ?? r.org));
+        const cap =
+          r.capacity_available != null
+            ? `${r.capacity_available}${r.capacity_unit ? ` ${r.capacity_unit}` : ""}`
+            : null;
+        return (
+          <li
+            key={r.id ?? i}
+            className="flex items-start gap-2.5 py-2 px-2 -mx-2 rounded-md hover:bg-white/5 transition"
+          >
+            <span className="font-mono text-[10.5px] text-emerald-300/70 w-12 shrink-0 pt-0.5">offer</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-[10.5px] text-white/80 truncate">{label(r)}</p>
+              {r.description && (
+                <p className="text-[11px] text-white/55 leading-snug mt-0.5">{r.description}</p>
+              )}
+              <div className="flex items-center gap-2 mt-0.5">
+                {place(r) && <span className="text-[10.5px] text-white/40">{place(r)}</span>}
+                {cap && <span className="text-[10.5px] text-white/40">· {cap}</span>}
+                {org && <span className="text-[11px]" style={{ color: org.color }}>{org.name}</span>}
+              </div>
+            </div>
+            <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/8 text-white/65 shrink-0">
+              {r.status ?? "offered"}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: string }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -1038,7 +1089,7 @@ function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: st
                 className="bg-white/5 rounded-lg p-3 border border-white/10"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-medium text-white/70">{m.org_name ?? m.author ?? "Unknown"}</span>
+                  <span className="text-[11px] font-medium text-white/70">{m.author_name ?? m.org_name ?? m.author ?? "Unknown"}</span>
                   <span className="font-mono text-xs text-white/35">{m.created_at ?? m.timestamp ?? ""}</span>
                 </div>
                 <p className={`text-[13px] leading-snug ${isSystem ? "italic text-white/45" : "text-white/85"}`}>

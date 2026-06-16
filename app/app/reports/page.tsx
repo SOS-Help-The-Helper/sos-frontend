@@ -54,6 +54,27 @@ function mapDashboardToTaxList(data: unknown): TaxEntry[] {
     .sort((a, b) => b[1] - a[1]);
 }
 
+type SeverityEntry = { severity: string; count: number };
+
+function mapDashboardToSeverity(data: unknown): SeverityEntry[] {
+  if (!data || typeof data !== "object") return [];
+  const d = data as Record<string, unknown>;
+  const bySev = d.by_severity;
+  if (!Array.isArray(bySev)) return [];
+  return (bySev as Record<string, unknown>[]).map((b) => ({
+    severity: String(b.severity ?? "unknown"),
+    count: Number(b.count ?? 0),
+  }));
+}
+
+function mapDashboardToTrend(data: unknown): number[] {
+  if (!data || typeof data !== "object") return [];
+  const d = data as Record<string, unknown>;
+  const trend = d.trend_14d;
+  if (!Array.isArray(trend)) return [];
+  return (trend as Record<string, unknown>[]).map((t) => Number(t.count ?? 0));
+}
+
 export default function ReportsPage() {
   const { orgId } = useAuthContext();
 
@@ -73,6 +94,8 @@ export default function ReportsPage() {
         kpis: mapDashboardToKpis(d),
         byOrg: mapDashboardToOrgBars(d),
         taxList: mapDashboardToTaxList(d),
+        severity: mapDashboardToSeverity(d),
+        trend: mapDashboardToTrend(d),
       };
     }),
     "Failed to load reports",
@@ -82,6 +105,8 @@ export default function ReportsPage() {
   const kpis = useMemo(() => dashboard?.kpis?.length ? dashboard.kpis : protoKpis, [dashboard]);
   const byOrg = useMemo(() => dashboard?.byOrg?.length ? dashboard.byOrg : protoByOrg, [dashboard]);
   const taxList = useMemo(() => dashboard?.taxList?.length ? dashboard.taxList : protoTaxList, [dashboard]);
+  const severity = useMemo(() => dashboard?.severity ?? [], [dashboard]);
+  const trend = useMemo(() => dashboard?.trend ?? [], [dashboard]);
 
   const max = Math.max(...byOrg.map((b) => b.count), 1);
   const taxMax = Math.max(...taxList.map(([, n]) => n), 1);
@@ -135,11 +160,11 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
             <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Severity distribution</p>
-            <SeverityDonut kpis={kpis} />
+            <SeverityDonut severity={severity} />
           </div>
           <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-5">
             <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">14-day trend</p>
-            <TrendSparkline />
+            <TrendSparkline data={trend} />
           </div>
         </div>
 
@@ -185,18 +210,71 @@ export default function ReportsPage() {
   );
 }
 
-function SeverityDonut({ kpis }: { kpis: Kpi[] }) {
-  // Severity data not available in dashboard API yet - show placeholder
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: "#F87171",
+  high: "#FB923C",
+  medium: "#FBBF24",
+  low: "#34D399",
+  unknown: "#6B7280",
+};
+
+function SeverityDonut({ severity }: { severity: SeverityEntry[] }) {
+  const total = severity.reduce((sum, s) => sum + s.count, 0);
+  if (total === 0) {
+    return (
+      <div className="flex items-center justify-center h-24">
+        <p className="text-sm text-white/40">No severity data yet</p>
+      </div>
+    );
+  }
+  const r = 38, cx = 50, cy = 50, circ = 2 * Math.PI * r;
+  let offset = 0;
+  const segments = severity.map((s) => {
+    const frac = s.count / total;
+    const seg = {
+      key: s.severity,
+      color: SEVERITY_COLORS[s.severity.toLowerCase()] ?? "#89CFF0",
+      dash: frac * circ,
+      gap: circ - frac * circ,
+      offset: -offset * circ,
+    };
+    offset += frac;
+    return seg;
+  });
   return (
-    <div className="flex items-center justify-center h-24">
-      <p className="text-sm text-white/40">Severity data not yet available</p>
+    <div className="flex items-center gap-5">
+      <svg width="100" height="100" viewBox="0 0 100 100" className="shrink-0">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={12} />
+        {segments.map((seg) => (
+          <circle
+            key={seg.key}
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={12}
+            strokeDasharray={`${seg.dash} ${seg.gap}`}
+            strokeDashoffset={seg.offset}
+            transform={`rotate(-90 ${cx} ${cy})`}
+          />
+        ))}
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" className="fill-white" style={{ fontSize: 18, fontWeight: 600 }}>{total}</text>
+      </svg>
+      <div className="space-y-1.5">
+        {severity.map((s) => (
+          <div key={s.severity} className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: SEVERITY_COLORS[s.severity.toLowerCase()] ?? "#89CFF0" }} />
+            <span className="text-[12px] capitalize text-white/75 w-16">{s.severity}</span>
+            <span className="font-mono text-[11px] tabular-nums text-white/55">{s.count}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function TrendSparkline() {
-  // No trend data available from the dashboard API yet
-  const data: number[] = [];
+function TrendSparkline({ data }: { data: number[] }) {
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-20">
