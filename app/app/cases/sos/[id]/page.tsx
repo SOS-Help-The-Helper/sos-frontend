@@ -904,7 +904,7 @@ function NotesTimeline({
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/75 font-medium">
                         {item.author}
                       </span>
-                      <span className="font-mono text-xs text-white/35">{item.timestamp}</span>
+                      <span className="text-xs text-white/35">{fmtNoteTime(item.timestamp)}</span>
                       {item.type !== "note" && (
                         <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/6 text-white/45">
                           {item.type}
@@ -1031,6 +1031,18 @@ function ResourcesTab({ resources, orgs }: { resources: any[]; orgs: Array<{ id:
   );
 }
 
+function fmtNoteTime(raw: string | undefined): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: string }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -1089,8 +1101,8 @@ function CommunicationTab({ umbrellaId, orgId }: { umbrellaId: string; orgId: st
                 className="bg-white/5 rounded-lg p-3 border border-white/10"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-medium text-white/70">{m.author_name ?? m.org_name ?? m.author ?? "Unknown"}</span>
-                  <span className="font-mono text-xs text-white/35">{m.created_at ?? m.timestamp ?? ""}</span>
+                  <span className="text-[11px] font-medium text-white/70">{m.author_name ?? m.org_name ?? m.author ?? (isSystem ? "System" : "SOS")}</span>
+                  <span className="text-xs text-white/35">{fmtNoteTime(m.created_at ?? m.timestamp)}</span>
                 </div>
                 <p className={`text-[13px] leading-snug ${isSystem ? "italic text-white/45" : "text-white/85"}`}>
                   {m.note_text ?? m.text ?? m.message ?? ""}
