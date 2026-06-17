@@ -14,6 +14,10 @@ const PUBLIC_PATHS = new Set([
   '/partners',
   '/app',
   '/deck',
+  '/what-is-sos',   // public marketing page (static rewrite) — was 404ing
+  '/the-problem',   // homepage-linked marketing page (Website Copy June 2026)
+  '/the-sos-story', // homepage-linked marketing page (Website Copy June 2026)
+  '/donate',        // homepage-linked donate page (Website Copy June 2026)
 ]);
 
 const PUBLIC_PREFIXES = [
