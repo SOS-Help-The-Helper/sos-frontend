@@ -30,6 +30,18 @@ const nextConfig: NextConfig = {
         destination: '/what-is-sos.html',
       },
       {
+        source: '/the-problem',
+        destination: '/the-problem.html',
+      },
+      {
+        source: '/the-sos-story',
+        destination: '/the-sos-story.html',
+      },
+      {
+        source: '/donate',
+        destination: '/donate.html',
+      },
+      {
         source: '/case-studies/garden-grove-hazmat',
         destination: '/case-studies/garden-grove-hazmat.html',
       },
