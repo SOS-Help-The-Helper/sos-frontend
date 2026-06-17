@@ -38,6 +38,29 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 .toggle .sw.on::after{left:14px}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 
+/* Pin detail card */
+.pin-card{position:absolute;z-index:40;min-width:240px;max-width:300px;
+  background:rgba(15,30,43,0.98);border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;padding:14px 16px;box-shadow:0 12px 40px rgba(0,0,0,0.5);
+  backdrop-filter:blur(12px);transform:translate(-50%,calc(-100% - 16px));
+  pointer-events:auto;animation:pinpop 0.18s ease}
+@keyframes pinpop{from{opacity:0;transform:translate(-50%,calc(-100% - 8px))}to{opacity:1;transform:translate(-50%,calc(-100% - 16px))}}
+.pin-card .pc-type{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.pin-card .pc-type .pc-dot{width:8px;height:8px;border-radius:50%}
+.pin-card .pc-title{font-family:'DM Serif Display',serif;font-size:17px;line-height:1.2;margin-bottom:4px}
+.pin-card .pc-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:8px}
+.pin-card .pc-row{display:flex;justify-content:space-between;font-size:11px;
+  padding:4px 0;border-top:1px solid rgba(255,255,255,0.06)}
+.pin-card .pc-row .pc-k{color:rgba(255,255,255,0.4)}
+.pin-card .pc-row .pc-v{color:rgba(255,255,255,0.85);text-align:right;max-width:60%}
+.pin-card .pc-close{position:absolute;top:10px;right:12px;cursor:pointer;
+  color:rgba(255,255,255,0.4);font-size:16px;line-height:1;background:none;border:none}
+.pin-card .pc-close:hover{color:#fff}
+.pin-card .pc-link{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;
+  color:#89CFF0;text-decoration:none}
+.pin-card .pc-link:hover{text-decoration:underline}
+
 .mini-stat{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
 .ms{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center}
 .ms .n{font-family:'DM Serif Display',serif;font-size:20px}
@@ -79,7 +102,7 @@ body{font-family:'Nunito Sans',sans-serif;background:#0F1E2B;color:#fff;overflow
 
 <div class="hdr">
   <svg width="22" height="22" viewBox="0 0 40 40" fill="none"><path d="M33.34 34.91L25.99 27.56C24.47 29.05 22.56 30.63 20.18 32.27C17.78 30.62 15.87 29.04 14.35 27.53L6.83 35.05C10.35 38.13 14.96 40 20 40C25.12 40 29.8 38.07 33.34 34.91Z" fill="#EF4E4B"/><path d="M26.84 12.55C24.88 11.94 22.66 12.3 21.15 13.86L20.18 14.87L19.21 13.86C17.69 12.29 15.45 11.93 13.49 12.56L6.33 5.4C9.9 2.05 14.71 0 20 0C25.37 0 30.24 2.11 33.83 5.55L26.84 12.55Z" fill="#EF4E4B"/><path d="M6.27 7.85L5.09 6.66C1.93 10.2 0 14.88 0 20C0 25.37 2.11 30.24 5.55 33.83L6.73 32.65C3.59 29.36 1.67 24.91 1.67 20C1.67 15.37 3.38 11.14 6.21 7.92L6.27 7.85Z" fill="#EF4E4B"/><path d="M33.42 32.49L34.6 33.67C37.95 30.1 40 25.29 40 20C40 14.96 38.13 10.35 35.05 6.83L33.87 8.01C36.65 11.23 38.33 15.42 38.33 20C38.33 24.83 36.47 29.22 33.42 32.49Z" fill="#EF4E4B"/><path d="M32.69 9.19C35.17 12.1 36.67 15.88 36.67 20C36.67 24.37 34.99 28.34 32.24 31.31L27.2 26.27C28.42 24.9 29.3 23.61 29.9 22.41C31.38 19.47 31.21 17.14 30.38 15.5C29.93 14.62 29.28 13.9 28.51 13.37L32.69 9.19Z" fill="#EF4E4B"/><path d="M7.46 9.03L11.82 13.39C11.07 13.92 10.42 14.63 9.98 15.5C9.15 17.14 8.98 19.47 10.46 22.41C11.06 23.6 11.93 24.89 13.14 26.25L7.91 31.47C5.07 28.49 3.33 24.45 3.33 20C3.33 15.8 4.89 11.96 7.46 9.03Z" fill="#EF4E4B"/></svg>
-  <h1>SOS Connect</h1>
+  <h1>SOS</h1>
   <span class="ultra">Admin Ultra</span>
   <div class="sep"></div>
   <div class="toolbar">
@@ -158,7 +181,61 @@ const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v
   center:[-82.45,29.19],zoom:9,projection:'mercator'});
 let curStyle='dark-v11',t3d=false;
 
-map.on('load',()=>{ buildLayers(); startPulse(); });
+map.on('load',()=>{ buildLayers(); startPulse(); wirePinClicks(); });
+
+const PIN_META={
+  request:{label:'Request',color:'#EF4E4B',href:id=>'/app/cases/'+id},
+  resource:{label:'Resource',color:'#89CFF0',href:id=>'/app/directory/resource/'+id},
+  report:{label:'Report',color:'rgba(255,255,255,0.6)',href:id=>'/app/calendar#'+id},
+};
+let pinCardEl=null;
+function closePinCard(){if(pinCardEl){pinCardEl.remove();pinCardEl=null;}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showPinCard(feat,pt){
+  closePinCard();
+  const p=feat.properties||{};
+  const t=p.type||'request';
+  const meta=PIN_META[t]||PIN_META.request;
+  const id=String(p.id||p.uuid||'');
+  const title=p.title||p.name||p.public_display_text||p.description||(id?id.slice(0,8):meta.label);
+  const sub=p.subtitle||p.county||p.location_text||p.location||p.org_name||'';
+  const rows=[];
+  if(p.status)rows.push(['Status',p.status]);
+  if(p.urgency)rows.push(['Urgency',p.urgency]);
+  if(p.category||p.taxonomy_code||p.taxonomy)rows.push(['Category',p.category||p.taxonomy_code||p.taxonomy]);
+  if(p.capacity_remaining!=null)rows.push(['Capacity left',p.capacity_remaining]);
+  if(p.matched_to)rows.push(['Matched',p.matched_to]);
+  if(p.corroboration_count!=null)rows.push(['Corroborations',p.corroboration_count]);
+  const card=document.createElement('div');
+  card.className='pin-card';
+  card.innerHTML=
+    '<button class="pc-close" onclick="closePinCard()">\u00d7</button>'+
+    '<div class="pc-type" style="color:'+meta.color+'"><span class="pc-dot" style="background:'+meta.color+'"></span>'+meta.label+'</div>'+
+    '<div class="pc-title">'+esc(title)+'</div>'+
+    (sub?'<div class="pc-sub">'+esc(sub)+'</div>':'')+
+    rows.map(r=>'<div class="pc-row"><span class="pc-k">'+esc(r[0])+'</span><span class="pc-v">'+esc(r[1])+'</span></div>').join('')+
+    (id?'<a class="pc-link" href="'+meta.href(id)+'" target="_top">Open \u2192</a>':'');
+  document.getElementById('map-area').appendChild(card);
+  card.style.left=pt.x+'px';
+  card.style.top=pt.y+'px';
+  pinCardEl=card;
+}
+function wirePinClicks(){
+  const clickable=['req-pts','res-pts','rep-pts'];
+  clickable.forEach(id=>{
+    map.on('click',id,e=>{
+      const f=e.features&&e.features[0];
+      if(f)showPinCard(f,e.point);
+    });
+    map.on('mouseenter',id,()=>{map.getCanvas().style.cursor='pointer';});
+    map.on('mouseleave',id,()=>{map.getCanvas().style.cursor='';});
+  });
+  // Click empty map → close card
+  map.on('click',e=>{
+    const hits=map.queryRenderedFeatures(e.point,{layers:clickable.filter(id=>map.getLayer(id))});
+    if(!hits.length)closePinCard();
+  });
+}
 
 function buildLayers(){
   if(map.getSource('sos'))return;
@@ -206,13 +283,13 @@ function setMode(m,b){
   if(m==='pins'){
     PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','visible')});
     if(map.getLayer('heat'))map.setLayoutProperty('heat','visibility','none');
-    if(curStyle!=='dark-v11'){map.setStyle('mapbox://styles/mapbox/dark-v11');curStyle='dark-v11';map.once('style.load',()=>{buildLayers();startPulse()})}
+    if(curStyle!=='dark-v11'){map.setStyle('mapbox://styles/mapbox/dark-v11');curStyle='dark-v11';map.once('style.load',()=>{buildLayers();startPulse();wirePinClicks()})}
   }else if(m==='heat'){
     PL.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility','none')});
     if(map.getLayer('heat'))map.setLayoutProperty('heat','visibility','visible');
   }else if(m==='sat'){
     map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');curStyle='satellite-streets-v12';
-    map.once('style.load',()=>{buildLayers();startPulse()});
+    map.once('style.load',()=>{buildLayers();startPulse();wirePinClicks()});
   }
 }
 

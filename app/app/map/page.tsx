@@ -306,19 +306,19 @@ function MapboxEmbed({
 }
 
 const MAP_VIEWS = [
+  { key: "admin", label: "Admin", src: "/maps/admin.html" },
   { key: "deployment", label: "Deployment", src: null },
   { key: "ems", label: "EMS", src: "/maps/ems.html" },
   { key: "county", label: "County", src: "/maps/county.html" },
   { key: "state", label: "State", src: "/maps/state.html" },
   { key: "federal", label: "Federal", src: "/maps/federal.html" },
-  { key: "admin", label: "Admin", src: "/maps/admin.html" },
 ] as const;
 
 type MapViewKey = (typeof MAP_VIEWS)[number]["key"];
 
 export default function MapPage() {
   const { orgId } = useAuthContext();
-  const [mapView, setMapView] = useState<MapViewKey>("deployment");
+  const [mapView, setMapView] = useState<MapViewKey>("admin");
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   const mapRef = useRef<any>(null);
 
