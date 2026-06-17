@@ -95,8 +95,8 @@ export default function PartnersPage() {
     <div className="min-h-dvh bg-[var(--sos-navy)] on-dark text-white">
       <header className="h-14 px-5 md:px-10 flex items-center justify-between border-b border-white/10">
         <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition">
-          <img src="/logomark-white.svg" alt="SOS Connect" width={24} height={24} />
-          <span className="text-[13px] font-semibold tracking-tight">SOS Connect</span>
+          <img src="/logomark-white.svg" alt="SOS" width={24} height={24} />
+          <span className="text-[13px] font-semibold tracking-tight">SOS</span>
         </Link>
         <a href="#waitlist" className="text-[12px] text-white/70 hover:text-white transition">
           Join waitlist →
@@ -106,23 +106,18 @@ export default function PartnersPage() {
       <main className="max-w-6xl mx-auto px-5 md:px-10 py-12 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-start">
         {/* Left: pitch */}
         <section>
-          <span className="inline-block font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
-            For partner organizations
-          </span>
-          <h1 className="font-serif text-[44px] md:text-[60px] leading-[1.02] tracking-tight mt-4">
-            Community
-            <br />
-            Coordination
+          <h1 className="font-serif text-[44px] md:text-[60px] leading-[1.02] tracking-tight">
+            Community Coordination
           </h1>
           <p className="text-white/65 mt-5 text-[16px] md:text-[17px] leading-relaxed max-w-md">
-            SOS Connect is the operating system for humanitarian response — one shared workspace for
-            coordinators, responders, and the people they serve.
+            SOS is the operating system for humanitarian response. We provide one shared workspace
+            for coordinators, responders, and the people they serve.
           </p>
 
           <ul className="mt-10 space-y-4">
-            <Feature icon={Map} color="#89CFF0" title="See the whole picture" body="Live map of requests, resources, facilities, and events across your region." />
-            <Feature icon={Heart} color="#EF4E4B" title="Match faster" body="Pair needs to nearby organizations and volunteers — without spreadsheets." />
-            <Feature icon={Layers} color="#34D399" title="Manage one system" body="Directory, cases, intake, and reporting — connected, not duplicated." />
+            <Feature icon={Map} color="#89CFF0" title="Whole picture" body="Live map of requests, resources, facilities, and events across your region." />
+            <Feature icon={Heart} color="#EF4E4B" title="Match faster" body="Pair needs to nearby organizations and volunteers without spreadsheets." />
+            <Feature icon={Layers} color="#34D399" title="One system" body="Connect directories, cases, intake, and reporting without duplication." />
           </ul>
         </section>
 
@@ -220,7 +215,7 @@ export default function PartnersPage() {
 
       <footer className="border-t border-white/10 mt-10">
         <div className="max-w-6xl mx-auto px-5 md:px-10 py-6 flex items-center justify-between text-[12px] text-white/45">
-          <span>© {new Date().getFullYear()} SOS Connect</span>
+          <span>© {new Date().getFullYear()} SOS</span>
           <Link href="/" className="hover:text-white/70 transition">
             Home
           </Link>
