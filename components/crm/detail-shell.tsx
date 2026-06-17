@@ -9,6 +9,7 @@ export type DetailTab = {
   label: string;
   count?: number;
   content: ReactNode;
+  hidden?: boolean; // not shown in the tab bar, but still selectable via activeKey (e.g. from a kebab menu)
 };
 
 export function DetailTabs({ tabs, defaultKey, activeKey, onActiveChange }: { tabs: DetailTab[]; defaultKey?: string; activeKey?: string; onActiveChange?: (key: string) => void }) {
@@ -22,7 +23,7 @@ export function DetailTabs({ tabs, defaultKey, activeKey, onActiveChange }: { ta
         className="flex items-center gap-1 px-2 border-b border-[var(--hairline)] overflow-x-auto"
         role="tablist"
       >
-        {tabs.map((t) => {
+        {tabs.filter((t) => !t.hidden).map((t) => {
           const isActive = t.key === current?.key;
           return (
             <button

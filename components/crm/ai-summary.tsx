@@ -9,9 +9,11 @@ export function AiSummary({ id, summary }: { id: string; summary: string }) {
         <div className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[#89CFF0]">
           <Sparkles size={11} /> AI summary
         </div>
-        <span className="font-mono text-[10px] text-white/55 px-1.5 py-0.5 rounded bg-white/8">
-          {id}
-        </span>
+        {id && (
+          <span className="font-mono text-[10px] text-white/45 px-1.5 py-0.5 rounded bg-white/8" title={id}>
+            {id.length > 10 ? `${id.slice(0, 8)}…` : id}
+          </span>
+        )}
       </div>
       <p className="text-[13px] text-white/85 leading-relaxed">{summary}</p>
     </div>

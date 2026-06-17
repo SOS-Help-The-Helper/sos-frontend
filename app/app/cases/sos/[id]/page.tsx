@@ -163,6 +163,7 @@ export default function UmbrellaView() {
   const [postingNote, setPostingNote] = useState(false);
   const [caseNotes, setCaseNotes] = useState<Array<{ id: string; content: string; created_at: string; author_name: string; note_type: string }>>([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("timeline");
   const [resourcesData, setResourcesData] = useState<any[]>([]);
 
@@ -348,32 +349,35 @@ export default function UmbrellaView() {
           }
           actions={
             <>
-              <ActionBtn icon={Phone} label="Call" onClick={() => toast.info("Coming soon")} />
-              <ActionBtn icon={MessageSquare} label="Message" onClick={() => toast.info("Coming soon")} />
               <ActionBtn icon={Plus} label="Add need" primary onClick={() => toast.info("Coming soon")} />
               <ActionBtn icon={Sparkles} label="Find matches" onClick={() => setActiveTab("matches")} />
-              <button
-                onClick={() => setChatOpen(true)}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-white/6 hover:bg-white/10 text-white/85 text-[12px] font-medium transition"
-                aria-label="Open chat"
-              >
-                <MessageSquare size={12} strokeWidth={2} />
-                Chat
-              </button>
-              <button className="w-8 h-8 rounded-md hover:bg-white/8 text-white/55 hover:text-white flex items-center justify-center transition">
-                <MoreHorizontal size={14} />
-              </button>
+              <ContactMenu onChat={() => setChatOpen(true)} />
+              <div className="relative">
+                <button
+                  onClick={() => setHeaderMenuOpen((v) => !v)}
+                  onBlur={() => setTimeout(() => setHeaderMenuOpen(false), 120)}
+                  className="w-8 h-8 rounded-md hover:bg-white/8 text-white/55 hover:text-white flex items-center justify-center transition"
+                  aria-label="More actions"
+                >
+                  <MoreHorizontal size={14} />
+                </button>
+                {headerMenuOpen && (
+                  <div className="absolute right-0 top-9 z-40 w-40 bg-[var(--surface-2,#16242f)] border border-white/10 rounded-lg p-1 shadow-xl">
+                    <button onMouseDown={() => setActiveTab("reports")} className="w-full flex items-center gap-2 h-8 px-2 rounded-md text-[12.5px] text-white/80 hover:bg-white/8 transition">
+                      <FileText size={12.5} /> Reports
+                    </button>
+                    <button onMouseDown={() => navigator.clipboard?.writeText(umbrellaData.id)} className="w-full flex items-center gap-2 h-8 px-2 rounded-md text-[12.5px] text-white/80 hover:bg-white/8 transition">
+                      <ExternalLink size={12.5} /> Copy case ID
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           }
         />
 
-        {/* KPI strip */}
-        <div className="grid grid-cols-4 gap-px bg-[var(--hairline)] rounded-xl overflow-hidden">
-          <Kpi label="Child cases" value={childCasesData.length} />
-          <Kpi label="Orgs involved" value={orgsInvolved} />
-          <Kpi label="Fulfilled" value={`${fulfillment}%`} accent={fulfillment === 100 ? "#34D399" : "#F5EBD6"} />
-          <Kpi label="Days open" value={daysOpen} />
-        </div>
+        {/* Single fulfillment indicator (replaces 4-tile KPI band) */}
+        <FulfillmentBar resolved={resolvedCount} total={childCasesData.length} daysOpen={daysOpen} orgs={orgsInvolved} />
 
         <DetailLayout
           main={
@@ -404,32 +408,30 @@ export default function UmbrellaView() {
           }
           rail={
             <>
-              <ContextCard title="Citizen">
-                <ContextRow label="Name" value={umbrellaData.citizen.name || "—"} />
-                <ContextRow label="Phone" value={umbrellaData.citizen.phone || "—"} />
-                <ContextRow label="County" value={umbrellaData.citizen.county ? `${umbrellaData.citizen.county} County` : "—"} />
-                <ContextRow label="Household" value={umbrellaData.citizen.household} />
-              </ContextCard>
-              <ContextCard title="Case">
-                <ContextRow label="ID" value={<span className="font-mono text-[10.5px] text-white/55">{umbrellaData.id || "—"}</span>} />
-                <ContextRow label="Status" value={<span className="capitalize">{umbrellaData.status}</span>} />
-                <ContextRow label="Urgency" value={<span className="capitalize">{umbrellaData.urgency}</span>} />
-                <ContextRow label="Filed" value={umbrellaData.filedAt || "—"} />
-                <ContextRow label="Requests" value={childCasesData.length} />
-              </ContextCard>
-              {(umbrellaData.citizen.notes || caseNotes.length > 0) && (
-                <ContextCard title="Notes">
-                  {umbrellaData.citizen.notes && (
-                    <p className="text-[12px] text-white/75 leading-snug">{umbrellaData.citizen.notes}</p>
-                  )}
-                  {caseNotes.slice(0, 2).map((n, i) => (
-                    <div key={n.id ?? i} className={`text-[12px] text-white/65 leading-snug ${umbrellaData.citizen.notes || i > 0 ? "border-t border-white/6 pt-2 mt-2" : ""}`}>
-                      <span className="text-white/40 block text-xs mb-0.5">{n.author_name}</span>
-                      {n.content}
+              {/* Coordinator panel — open needs that require action (does work, not an echo of the header) */}
+              <ContextCard title="Needs attention">
+                {(() => {
+                  const open = childCasesData.filter((c) => c.status !== "fulfilled" && c.status !== "closed");
+                  if (open.length === 0) return <p className="text-[12px] text-white/45">All needs resolved.</p>;
+                  return (
+                    <div className="space-y-1">
+                      {open.slice(0, 5).map((c) => (
+                        <Link key={c.id} href={`/app/directory/request/${c.id}`} className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-md hover:bg-white/5 transition">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#F5B544] shrink-0" />
+                          <span className="font-mono text-[11px] text-white/80 truncate flex-1">{c.taxonomy?.join(" · ") || c.id}</span>
+                          <ChevronRight size={12} className="text-white/30 shrink-0" />
+                        </Link>
+                      ))}
+                      {open.length > 5 && <p className="text-[11px] text-white/40 px-2 pt-1">+{open.length - 5} more</p>}
                     </div>
-                  ))}
-                </ContextCard>
-              )}
+                  );
+                })()}
+              </ContextCard>
+              <ContextCard title="Case details">
+                <ContextRow label="Status" value={<span className="capitalize">{umbrellaData.status}</span>} />
+                <ContextRow label="Filed" value={umbrellaData.filedAt || "—"} />
+                <ContextRow label="ID" value={<button onClick={() => { navigator.clipboard?.writeText(umbrellaData.id); toast.success("Case ID copied"); }} className="font-mono text-[10.5px] text-white/55 hover:text-white/80 inline-flex items-center gap-1 transition">{umbrellaData.id ? `${umbrellaData.id.slice(0, 8)}…` : "—"}<ExternalLink size={10} /></button>} />
+              </ContextCard>
             </>
           }
         />
@@ -568,18 +570,24 @@ function CaseTabs({
   const tabs: DetailTab[] = [
     {
       key: "timeline",
-      label: "Timeline",
+      label: "Activity",
       count: umbrellaData.timeline.length,
       content: (
-        <TimelineTab
-          note={note}
-          setNote={setNote}
-          childCases={childCases}
-          orgs={orgs}
-          umbrellaData={umbrellaData}
-          onPostNote={onPostNote}
-          postingNote={postingNote}
-        />
+        <div className="space-y-6">
+          <TimelineTab
+            note={note}
+            setNote={setNote}
+            childCases={childCases}
+            orgs={orgs}
+            umbrellaData={umbrellaData}
+            onPostNote={onPostNote}
+            postingNote={postingNote}
+          />
+          <div className="pt-2 border-t border-[var(--hairline)]">
+            <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/40 mb-3">Communication</p>
+            <CommunicationTab umbrellaId={umbrellaData.id} orgId={orgId} />
+          </div>
+        </div>
       ),
     },
     {
@@ -638,13 +646,9 @@ function CaseTabs({
       content: <NotesTimeline caseNotes={caseNotes} noteEvents={noteEvents} umbrellaData={umbrellaData} orgId={orgId} onNotesUpdate={onCaseNotesUpdate} />,
     },
     {
-      key: "comms",
-      label: "Communication",
-      content: <CommunicationTab umbrellaId={umbrellaData.id} orgId={orgId} />,
-    },
-    {
       key: "reports",
       label: "Reports",
+      hidden: true,
       content: <EmptyTab label="No reports linked to this case." />,
     },
   ];
@@ -969,6 +973,62 @@ function Kpi({ label, value, accent }: { label: string; value: string | number; 
       <p className="text-[20px] font-semibold tabular-nums mt-0.5" style={{ color: accent ?? "var(--cream)" }}>
         {value}
       </p>
+    </div>
+  );
+}
+
+// Single prominent fulfillment indicator — replaces the 4-tile KPI band.
+function FulfillmentBar({ resolved, total, daysOpen, orgs }: { resolved: number; total: number; daysOpen: number; orgs: number }) {
+  const pct = total ? Math.round((resolved / total) * 100) : 0;
+  const color = pct === 100 ? "#34D399" : pct > 0 ? "#F5B544" : "#9AA4AE";
+  return (
+    <div className="bg-[var(--surface-1)] border border-[var(--hairline)] rounded-xl px-4 py-3.5">
+      <div className="flex items-baseline justify-between gap-3 mb-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[15px] font-semibold text-white">{resolved} of {total}</span>
+          <span className="text-[12px] text-white/55">need{total === 1 ? "" : "s"} fulfilled</span>
+        </div>
+        <span className="text-[15px] font-semibold tabular-nums" style={{ color }}>{pct}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-white/8 overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <div className="flex items-center gap-3 mt-2.5 text-[11px] text-white/45">
+        <span>{orgs} org{orgs === 1 ? "" : "s"} involved</span>
+        <span className="w-px h-3 bg-white/10" />
+        <span>Open {daysOpen} day{daysOpen === 1 ? "" : "s"}</span>
+      </div>
+    </div>
+  );
+}
+
+// Collapses Call / Message / Chat into one split affordance.
+function ContactMenu({ onChat }: { onChat: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-white/6 hover:bg-white/10 text-white/85 text-[12px] font-medium transition"
+      >
+        <Phone size={12} strokeWidth={2} />
+        Contact
+        <ChevronRight size={11} className={`transition ${open ? "rotate-90" : "rotate-90"}`} style={{ transform: open ? "rotate(270deg)" : "rotate(90deg)" }} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-40 w-40 bg-[var(--surface-2,#16242f)] border border-white/10 rounded-lg p-1 shadow-xl">
+          <button onMouseDown={() => toast.info("Coming soon")} className="w-full flex items-center gap-2 h-8 px-2 rounded-md text-[12.5px] text-white/80 hover:bg-white/8 transition">
+            <Phone size={12.5} /> Call
+          </button>
+          <button onMouseDown={() => toast.info("Coming soon")} className="w-full flex items-center gap-2 h-8 px-2 rounded-md text-[12.5px] text-white/80 hover:bg-white/8 transition">
+            <MessageSquare size={12.5} /> Text message
+          </button>
+          <button onMouseDown={onChat} className="w-full flex items-center gap-2 h-8 px-2 rounded-md text-[12.5px] text-white/80 hover:bg-white/8 transition">
+            <Sparkles size={12.5} /> Open chat
+          </button>
+        </div>
+      )}
     </div>
   );
 }
