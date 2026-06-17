@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Partner Waitlist — SOS | Connect',
+  title: 'Partner with SOS Connect — Join the Waitlist',
   description:
-    'Join the SOS partner waitlist. Coordinate disaster response before the storm hits — early access, onboarding support, and a dedicated agent in the tools your team already uses.',
+    'SOS Connect is the operating system for humanitarian response. Join the partner waitlist to bring it to your community.',
   openGraph: {
-    title: 'Partner Waitlist — SOS | Connect',
+    title: 'Partner with SOS Connect',
     description:
-      'Coordinate disaster response before the storm hits. Join the SOS partner waitlist for early access.',
+      'Community coordination — request early access for your organization.',
     url: 'https://sosconnect.org/partners',
-    siteName: 'SOS | Connect',
+    siteName: 'SOS Connect',
     type: 'website',
   },
   robots: { index: true, follow: true },

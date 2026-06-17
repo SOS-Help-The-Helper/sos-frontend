@@ -5,10 +5,10 @@ import { createHash } from 'crypto';
 /**
  * Public partner-waitlist write endpoint.
  *
- * The /partners landing page posts here. We validate, lightly rate-/abuse-check,
- * and insert into `partner_waitlist` with the service role key (server-side only;
+ * The /partners landing page posts here. We validate, lightly abuse-check, and
+ * insert into `partner_waitlist` with the service role key (server-side only;
  * never exposed to the browser). RLS on the table denies anon, so this is the
- * single sanctioned write path. No EF needed for a simple public lead capture.
+ * single sanctioned write path. Field shape matches the Lovable design.
  */
 
 export const runtime = 'nodejs';
@@ -33,21 +33,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const org_name = MAX(body.org_name, 200);
-  const contact_name = MAX(body.contact_name, 160);
-  const email = MAX(body.email, 254).toLowerCase();
-  const phone = MAX(body.phone, 40) || null;
-  const website = MAX(body.website, 300) || null;
-  const org_type = MAX(body.org_type, 60) || null;
-  const state = MAX(body.state, 60) || null;
-  const coverage_area = MAX(body.coverage_area, 500) || null;
-  const disaster_focus = MAX(body.disaster_focus, 300) || null;
-  const message = MAX(body.message, 2000) || null;
+  const first_name = MAX(body.first_name, 80);
+  const last_name = MAX(body.last_name, 80);
+  const email = MAX(body.email, 255).toLowerCase();
+  const organization_name = MAX(body.organization_name, 160);
+  const organization_website = MAX(body.organization_website, 255) || null;
+  const use_case = MAX(body.use_case, 1000);
   const utm = body.utm && typeof body.utm === 'object' ? body.utm : null;
 
-  if (!org_name || !contact_name || !email) {
+  if (!first_name || !last_name || !email || !organization_name || !use_case) {
     return NextResponse.json(
-      { error: 'Organization name, contact name, and email are required.' },
+      { error: 'Please fill in all required fields.' },
       { status: 400 },
     );
   }
@@ -67,16 +63,12 @@ export async function POST(req: NextRequest) {
   const ip = fwd.split(',')[0].trim() || '0.0.0.0';
 
   const row = {
-    org_name,
-    contact_name,
+    first_name,
+    last_name,
     email,
-    phone,
-    website,
-    org_type,
-    state,
-    coverage_area,
-    disaster_focus,
-    message,
+    organization_name,
+    organization_website,
+    use_case,
     utm,
     user_agent: MAX(req.headers.get('user-agent') || '', 400) || null,
     ip_hash: hashIp(ip),

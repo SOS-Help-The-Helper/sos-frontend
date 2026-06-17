@@ -1,20 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowRight, CheckCircle2, Loader2, Map, Heart, Layers } from 'lucide-react';
+import { z } from 'zod';
 
-const ORG_TYPES = [
-  'Nonprofit / NGO',
-  'Government / Emergency Mgmt',
-  'Faith-based organization',
-  'Mutual aid / Community group',
-  'Business / Corporate',
-  'Foundation / Funder',
-  'Other',
-];
+const schema = z.object({
+  first_name: z.string().trim().min(1, 'Required').max(80),
+  last_name: z.string().trim().min(1, 'Required').max(80),
+  email: z.string().trim().email('Enter a valid email').max(255),
+  organization_name: z.string().trim().min(1, 'Required').max(160),
+  organization_website: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .or(z.literal(''))
+    .refine((v) => !v || /^(https?:\/\/)?[^\s.]+\.[^\s]+$/.test(v), 'Enter a valid URL'),
+  use_case: z.string().trim().min(10, 'Tell us a bit more (10+ chars)').max(1000),
+});
 
-export default function PartnersWaitlistPage() {
+type FormState = z.infer<typeof schema>;
+
+const empty: FormState = {
+  first_name: '',
+  last_name: '',
+  email: '',
+  organization_name: '',
+  organization_website: '',
+  use_case: '',
+};
+
+export default function PartnersPage() {
+  const [form, setForm] = useState<FormState>(empty);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [errMsg, setErrMsg] = useState('');
   const [utm, setUtm] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -27,232 +48,237 @@ export default function PartnersWaitlistPage() {
     setUtm(captured);
   }, []);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const update =
+    (k: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      const fieldErrors: Partial<Record<keyof FormState, string>> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FormState;
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
     setStatus('submitting');
-    setError(null);
-    const fd = new FormData(e.currentTarget);
-    const payload = {
-      org_name: fd.get('org_name'),
-      contact_name: fd.get('contact_name'),
-      email: fd.get('email'),
-      phone: fd.get('phone'),
-      website: fd.get('website'),
-      org_type: fd.get('org_type'),
-      state: fd.get('state'),
-      coverage_area: fd.get('coverage_area'),
-      disaster_focus: fd.get('disaster_focus'),
-      message: fd.get('message'),
-      company_url_hp: fd.get('company_url_hp'), // honeypot
-      utm: Object.keys(utm).length ? utm : undefined,
-    };
     try {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...parsed.data,
+          organization_website: parsed.data.organization_website || null,
+          utm: Object.keys(utm).length ? utm : undefined,
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error || 'Something went wrong. Please try again.');
         setStatus('error');
+        setErrMsg(json.error || 'Something went wrong.');
         return;
       }
       setStatus('done');
+      setForm(empty);
     } catch {
-      setError('Network error. Please try again.');
       setStatus('error');
+      setErrMsg('Network error. Please try again.');
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1E2B] text-white font-sans flex flex-col">
-      {/* Header */}
-      <header className="w-full px-6 py-5 flex items-center justify-between max-w-6xl mx-auto">
-        <a href="https://sosconnect.org" className="flex items-center gap-2.5">
-          <img src="/logomark-white.svg" alt="SOS" className="w-8 h-8" />
-          <span className="font-serif text-lg tracking-tight">SOS&nbsp;|&nbsp;Connect</span>
-        </a>
-        <a
-          href="https://sosconnect.org"
-          className="text-sm text-white/60 hover:text-white transition"
-        >
-          sosconnect.org
+    <div className="min-h-dvh bg-[var(--sos-navy)] on-dark text-white">
+      <header className="h-14 px-5 md:px-10 flex items-center justify-between border-b border-white/10">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition">
+          <img src="/logomark-white.svg" alt="SOS Connect" width={24} height={24} />
+          <span className="text-[13px] font-semibold tracking-tight">SOS Connect</span>
+        </Link>
+        <a href="#waitlist" className="text-[12px] text-white/70 hover:text-white transition">
+          Join waitlist →
         </a>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-10 lg:py-16 grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+      <main className="max-w-6xl mx-auto px-5 md:px-10 py-12 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-start">
         {/* Left: pitch */}
-        <div className="lg:pt-8">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#89CFF0]/12 border border-[#89CFF0]/25 px-3 py-1 text-[12px] font-medium text-[#89CFF0] mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#89CFF0]" /> Partner Waitlist
+        <section>
+          <span className="inline-block font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
+            For partner organizations
           </span>
-          <h1 className="font-serif text-4xl lg:text-[3.25rem] leading-[1.05] tracking-tight">
-            Coordinate disaster response{' '}
-            <span className="text-[#89CFF0]">before</span> the storm hits.
+          <h1 className="font-serif text-[44px] md:text-[60px] leading-[1.02] tracking-tight mt-4">
+            Community
+            <br />
+            Coordination
           </h1>
-          <p className="mt-5 text-base lg:text-lg text-white/70 leading-relaxed max-w-md">
-            SOS connects survivors, helpers, and responding organizations on one always-on
-            platform. Join the partner waitlist to get early access, onboarding support, and a
-            dedicated agent in the tools your team already uses.
+          <p className="text-white/65 mt-5 text-[16px] md:text-[17px] leading-relaxed max-w-md">
+            SOS Connect is the operating system for humanitarian response — one shared workspace for
+            coordinators, responders, and the people they serve.
           </p>
 
-          <ul className="mt-8 space-y-3.5 max-w-md">
-            {[
-              ['Early access', 'Be first onto the platform as we onboard partners region by region.'],
-              ['Your tools, not ours', 'An SOS agent inside Slack, WhatsApp, or iMessage — no new dashboard to learn.'],
-              ['Built for Hour Zero', 'Designed for the first 48–72 hours, when coordination matters most.'],
-            ].map(([t, d]) => (
-              <li key={t} className="flex gap-3">
-                <svg className="w-5 h-5 mt-0.5 shrink-0 text-[#34D399]" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.3 3.3 6.8-6.8a1 1 0 011.4 0z" clipRule="evenodd" />
-                </svg>
-                <div>
-                  <p className="font-semibold text-[15px]">{t}</p>
-                  <p className="text-[13.5px] text-white/55 leading-snug">{d}</p>
-                </div>
-              </li>
-            ))}
+          <ul className="mt-10 space-y-4">
+            <Feature icon={Map} color="#89CFF0" title="See the whole picture" body="Live map of requests, resources, facilities, and events across your region." />
+            <Feature icon={Heart} color="#EF4E4B" title="Match faster" body="Pair needs to nearby organizations and volunteers — without spreadsheets." />
+            <Feature icon={Layers} color="#34D399" title="Manage one system" body="Directory, cases, intake, and reporting — connected, not duplicated." />
           </ul>
-        </div>
+        </section>
 
-        {/* Right: form / success */}
-        <div className="w-full">
-          {status === 'done' ? (
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-8 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-[#34D399]/15 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-[#34D399]" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.3 3.3 6.8-6.8a1 1 0 011.4 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h2 className="font-serif text-2xl">You&apos;re on the list.</h2>
-              <p className="mt-2 text-white/65 text-sm leading-relaxed">
-                Thanks for joining the SOS partner waitlist. We&apos;ll reach out as we onboard
-                organizations in your region.
-              </p>
-              <a
-                href="https://sosconnect.org"
-                className="inline-block mt-6 text-sm text-[#89CFF0] hover:text-white transition"
-              >
-                Back to sosconnect.org →
-              </a>
-            </div>
-          ) : (
-            <form
-              onSubmit={onSubmit}
-              className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 lg:p-7 space-y-4"
-            >
-              <div>
-                <h2 className="font-serif text-xl">Join the partner waitlist</h2>
-                <p className="text-[13px] text-white/50 mt-1">Takes about a minute.</p>
-              </div>
-
-              {/* honeypot (hidden from humans) */}
-              <input
-                type="text"
-                name="company_url_hp"
-                tabIndex={-1}
-                autoComplete="off"
-                className="hidden"
-                aria-hidden="true"
-              />
-
-              <Field label="Organization name" name="org_name" required placeholder="Open Source Medical Supplies" />
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Your name" name="contact_name" required placeholder="Jane Doe" />
-                <Field label="Email" name="email" type="email" required placeholder="jane@org.org" />
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Phone" name="phone" type="tel" placeholder="(555) 123-4567" optional />
-                <Field label="Website" name="website" placeholder="org.org" optional />
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Organization type</Label>
-                  <select
-                    name="org_type"
-                    defaultValue=""
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-[14px] text-white outline-none focus:border-[#89CFF0]/60 transition appearance-none"
-                  >
-                    <option value="" disabled className="text-black">Select…</option>
-                    {ORG_TYPES.map((t) => (
-                      <option key={t} value={t} className="text-black">{t}</option>
-                    ))}
-                  </select>
+        {/* Right: form */}
+        <section id="waitlist" className="md:sticky md:top-10">
+          <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 md:p-8 backdrop-blur">
+            {status === 'done' ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 mx-auto rounded-full bg-[#34D399]/15 flex items-center justify-center">
+                  <CheckCircle2 size={24} className="text-[#34D399]" />
                 </div>
-                <Field label="State / region" name="state" placeholder="NC" optional />
-              </div>
-
-              <Field label="Areas you serve" name="coverage_area" placeholder="Western NC — Buncombe, Henderson, Madison" optional />
-              <Field label="Disasters you respond to" name="disaster_focus" placeholder="Hurricanes, flooding, wildfire" optional />
-
-              <div>
-                <Label optional>Anything else?</Label>
-                <textarea
-                  name="message"
-                  rows={3}
-                  placeholder="Tell us about your organization and how you respond."
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-[14px] text-white outline-none focus:border-[#89CFF0]/60 transition placeholder:text-white/30 resize-none"
-                />
-              </div>
-
-              {status === 'error' && error && (
-                <p className="text-[13px] text-[#EF4E4B] bg-[#EF4E4B]/10 border border-[#EF4E4B]/20 rounded-lg px-3 py-2">
-                  {error}
+                <h2 className="font-serif text-[24px] mt-5">You&apos;re on the list</h2>
+                <p className="text-white/65 text-[14px] mt-3 leading-relaxed">
+                  Thanks for your interest. We&apos;ll reach out as we open access to new partner
+                  organizations.
                 </p>
-              )}
+                <button
+                  onClick={() => setStatus('idle')}
+                  className="mt-6 text-[13px] text-white/60 hover:text-white transition underline underline-offset-4"
+                >
+                  Submit another response
+                </button>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-serif text-[24px] md:text-[28px] leading-tight">
+                  Join the partner waitlist
+                </h2>
+                <p className="text-white/60 text-[13px] mt-2">
+                  Takes under a minute. We&apos;ll be in touch.
+                </p>
 
-              <button
-                type="submit"
-                disabled={status === 'submitting'}
-                className="w-full bg-[#EF4E4B] hover:bg-[#d94340] disabled:opacity-60 rounded-lg py-3 font-semibold text-[15px] transition-colors"
-              >
-                {status === 'submitting' ? 'Joining…' : 'Join the waitlist'}
-              </button>
-              <p className="text-[11.5px] text-white/35 text-center leading-snug">
-                We&apos;ll only use your details to contact you about partnering with SOS.
-              </p>
-            </form>
-          )}
-        </div>
+                <form onSubmit={onSubmit} className="mt-6 space-y-4">
+                  {/* honeypot */}
+                  <input
+                    type="text"
+                    name="company_url_hp"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className="hidden"
+                    aria-hidden="true"
+                    value={''}
+                    onChange={() => {}}
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FieldWrap label="First name" error={errors.first_name}>
+                      <input className={inputCls} value={form.first_name} onChange={update('first_name')} autoComplete="given-name" />
+                    </FieldWrap>
+                    <FieldWrap label="Last name" error={errors.last_name}>
+                      <input className={inputCls} value={form.last_name} onChange={update('last_name')} autoComplete="family-name" />
+                    </FieldWrap>
+                  </div>
+                  <FieldWrap label="Work email" error={errors.email}>
+                    <input type="email" className={inputCls} value={form.email} onChange={update('email')} autoComplete="email" />
+                  </FieldWrap>
+                  <FieldWrap label="Organization" error={errors.organization_name}>
+                    <input className={inputCls} value={form.organization_name} onChange={update('organization_name')} autoComplete="organization" />
+                  </FieldWrap>
+                  <FieldWrap label="Organization website" hint="Optional" error={errors.organization_website}>
+                    <input className={inputCls} placeholder="https://" value={form.organization_website} onChange={update('organization_website')} autoComplete="url" />
+                  </FieldWrap>
+                  <FieldWrap label="What would you like to use SOS for?" error={errors.use_case}>
+                    <textarea rows={4} className={inputCls + ' resize-none'} value={form.use_case} onChange={update('use_case')} placeholder="e.g. Coordinating mutual-aid response across our county" />
+                  </FieldWrap>
+
+                  {status === 'error' && (
+                    <p className="text-[12px] text-[#EF4E4B]">Something went wrong: {errMsg}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={status === 'submitting'}
+                    className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-[#EF4E4B] text-white text-[14px] font-semibold hover:bg-[#d94340] transition disabled:opacity-60"
+                  >
+                    {status === 'submitting' ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Submitting…
+                      </>
+                    ) : (
+                      <>
+                        Request access <ArrowRight size={14} />
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-white/40 text-center">
+                    By submitting you agree to our{' '}
+                    <a className="underline">terms</a> and <a className="underline">privacy</a>.
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </section>
       </main>
 
-      <footer className="w-full max-w-6xl mx-auto px-6 py-6 text-[12.5px] text-white/35 border-t border-white/8 flex flex-wrap items-center justify-between gap-2">
-        <span>© {new Date().getFullYear()} SOS Global, Inc.</span>
-        <a href="https://sosconnect.org" className="hover:text-white/60 transition">sosconnect.org</a>
+      <footer className="border-t border-white/10 mt-10">
+        <div className="max-w-6xl mx-auto px-5 md:px-10 py-6 flex items-center justify-between text-[12px] text-white/45">
+          <span>© {new Date().getFullYear()} SOS Connect</span>
+          <Link href="/" className="hover:text-white/70 transition">
+            Home
+          </Link>
+        </div>
       </footer>
     </div>
   );
 }
 
-function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
+const inputCls =
+  'w-full h-10 px-3 rounded-lg bg-white/[0.04] border border-white/10 text-[14px] text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/[0.06] transition';
+
+function FieldWrap({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <label className="block text-[12.5px] font-medium text-white/70 mb-1.5">
+    <label className="block">
+      <span className="flex items-center justify-between text-[12px] text-white/70 mb-1.5">
+        <span>{label}</span>
+        {hint && <span className="text-white/35">{hint}</span>}
+      </span>
       {children}
-      {optional && <span className="text-white/30 font-normal"> (optional)</span>}
+      {error && <span className="block mt-1 text-[11.5px] text-[#EF4E4B]">{error}</span>}
     </label>
   );
 }
 
-function Field({
-  label, name, type = 'text', required, optional, placeholder,
+function Feature({
+  icon: Icon,
+  color,
+  title,
+  body,
 }: {
-  label: string; name: string; type?: string; required?: boolean; optional?: boolean; placeholder?: string;
+  icon: typeof Map;
+  color: string;
+  title: string;
+  body: string;
 }) {
   return (
-    <div>
-      <Label optional={optional}>
-        {label}
-        {required && <span className="text-[#EF4E4B]"> *</span>}
-      </Label>
-      <input
-        type={type}
-        name={name}
-        required={required}
-        placeholder={placeholder}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-[14px] text-white outline-none focus:border-[#89CFF0]/60 transition placeholder:text-white/30"
-      />
-    </div>
+    <li className="flex gap-4">
+      <div
+        className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
+        style={{ background: `${color}22`, color }}
+      >
+        <Icon size={16} strokeWidth={1.75} />
+      </div>
+      <div>
+        <p className="font-medium text-[15px]">{title}</p>
+        <p className="text-[13.5px] text-white/55 leading-relaxed mt-0.5">{body}</p>
+      </div>
+    </li>
   );
 }
