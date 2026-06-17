@@ -11,6 +11,7 @@ const PUBLIC_PATHS = new Set([
   '/login',
   '/vote',
   '/join',
+  '/partners',
   '/app',
   '/deck',
 ]);
