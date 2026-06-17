@@ -113,11 +113,34 @@ export default function CitizenAuthGate({ children }: { children: React.ReactNod
   };
 
   const onCodeDigit = (idx: number, val: string) => {
-    const digit = val.replace(/\D/g, "").slice(-1);
+    const digits = val.replace(/\D/g, "");
+    // Multi-digit input (SMS autofill / paste): fill from this box onward.
+    if (digits.length > 1) {
+      const arr = code.padEnd(6, " ").split("");
+      for (let k = 0; k < digits.length && idx + k < 6; k++) {
+        arr[idx + k] = digits[k];
+      }
+      const next = arr.join("").trimEnd();
+      setCode(next);
+      const filled = next.replace(/\s/g, "").length;
+      codeRefs.current[Math.min(filled, 5)]?.focus();
+      if (filled === 6) verifyCode(next.replace(/\s/g, ""));
+      return;
+    }
+    // Single digit
+    const digit = digits.slice(-1);
     const next = (code.padEnd(6, " ").substring(0, idx) + (digit || " ") + code.padEnd(6, " ").substring(idx + 1)).trimEnd();
     setCode(next);
     if (digit && idx < 5) codeRefs.current[idx + 1]?.focus();
     if (next.replace(/\s/g, "").length === 6) verifyCode(next.replace(/\s/g, ""));
+  };
+
+  const onCodePaste = (idx: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const digits = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (digits.length > 1) {
+      e.preventDefault();
+      onCodeDigit(idx, digits);
+    }
   };
 
   if (token && personId) {
@@ -176,9 +199,11 @@ export default function CitizenAuthGate({ children }: { children: React.ReactNod
                   ref={(el) => { codeRefs.current[i] = el; }}
                   type="tel"
                   inputMode="numeric"
-                  maxLength={1}
+                  maxLength={6}
+                  autoComplete={i === 0 ? "one-time-code" : "off"}
                   value={code[i] ?? ""}
                   onChange={(e) => onCodeDigit(i, e.target.value)}
+                  onPaste={(e) => onCodePaste(i, e)}
                   onKeyDown={(e) => {
                     if (e.key === "Backspace" && !code[i] && i > 0) codeRefs.current[i - 1]?.focus();
                   }}
