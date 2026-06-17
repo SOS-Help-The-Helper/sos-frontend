@@ -10,7 +10,11 @@ import type { NextRequest } from 'next/server';
  *
  * Env required (Vercel, Production):
  *   WAITLIST_NOTIFY_SECRET   - shared secret, also set as the webhook's header
- *   SLACK_BOT_TOKEN          - xoxb token for a bot that is a member of the channel
+ *
+ * Slack delivery: EITHER an Incoming Webhook URL (preferred, no bot membership)
+ *   SLACK_WAITLIST_WEBHOOK_URL  - https://hooks.slack.com/services/...
+ * OR a bot token + channel (bot must be a member of the channel):
+ *   SLACK_BOT_TOKEN          - xoxb token
  *   SLACK_WAITLIST_CHANNEL   - channel id (e.g. C0AV7E24QBA)
  */
 
@@ -45,9 +49,10 @@ export async function POST(req: NextRequest) {
   }
 
   const r = payload.record || {};
+  const webhookUrl = process.env.SLACK_WAITLIST_WEBHOOK_URL || '';
   const token = process.env.SLACK_BOT_TOKEN || '';
   const channel = process.env.SLACK_WAITLIST_CHANNEL || '';
-  if (!token || !channel) {
+  if (!webhookUrl && !(token && channel)) {
     return NextResponse.json({ error: 'not configured' }, { status: 500 });
   }
 
@@ -90,14 +95,28 @@ export async function POST(req: NextRequest) {
       : []),
   ];
 
+  const text = `New partner waitlist signup: ${name} — ${r.organization_name ?? ''}`;
+
+  // Preferred path: Incoming Webhook URL (channel is bound to the URL).
+  if (webhookUrl) {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, blocks }),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      console.error('slack webhook post failed', res.status, detail);
+      return NextResponse.json({ error: 'slack failed', detail }, { status: 502 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Fallback: bot token + channel (bot must be a channel member).
   const slackRes = await fetch('https://slack.com/api/chat.postMessage', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      channel,
-      text: `New partner waitlist signup: ${name} — ${r.organization_name ?? ''}`,
-      blocks,
-    }),
+    body: JSON.stringify({ channel, text, blocks }),
   });
   const slackJson = await slackRes.json().catch(() => ({}));
   if (!slackJson.ok) {
