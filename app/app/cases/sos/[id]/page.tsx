@@ -966,17 +966,6 @@ function ActionBtn({ icon: Icon, label, primary, onClick }: { icon: typeof Phone
   );
 }
 
-function Kpi({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
-  return (
-    <div className="bg-[var(--surface-1)] px-4 py-3">
-      <p className="font-mono text-[9.5px] uppercase tracking-wider text-white/45">{label}</p>
-      <p className="text-[20px] font-semibold tabular-nums mt-0.5" style={{ color: accent ?? "var(--cream)" }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 // Single prominent fulfillment indicator — replaces the 4-tile KPI band.
 function FulfillmentBar({ resolved, total, daysOpen, orgs }: { resolved: number; total: number; daysOpen: number; orgs: number }) {
   const pct = total ? Math.round((resolved / total) * 100) : 0;
