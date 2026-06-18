@@ -18,6 +18,44 @@
 html,body{overflow-x:hidden}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
 
+/* ── Nav (matches homepage site chrome) ── */
+nav#siteNav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  transition:background 0.4s,border-color 0.4s,box-shadow 0.4s;
+  background:transparent;
+  border-bottom:1px solid transparent;
+}
+nav#siteNav.scrolled{
+  background:rgba(15,30,43,0.97);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom-color:rgba(255,255,255,0.08);
+  box-shadow:0 4px 24px rgba(0,0,0,0.15);
+}
+.nav-inner{
+  max-width:1080px;margin:0 auto;padding:18px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-brand{
+  display:flex;align-items:center;gap:10px;
+  font-weight:700;font-size:12px;letter-spacing:0.15em;
+  text-transform:uppercase;color:#fff;text-decoration:none;
+}
+.nav-brand img{height:24px;}
+.nav-links{display:flex;flex-wrap:wrap;gap:28px;justify-content:flex-end;}
+.nav-links a{
+  position:relative;
+  font-size:12px;font-weight:600;letter-spacing:0.04em;
+  color:rgba(255,255,255,0.5);text-decoration:none;transition:color 0.2s;
+  padding-bottom:4px;
+}
+.nav-links a:hover{color:#fff;}
+.nav-links a.active{color:#EF4E4B;font-weight:700;}
+.nav-links a.active::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:1.5px;background:#EF4E4B;border-radius:1px;
+}
+
 /* ── Hero / intro ── */
 .hero{max-width:760px;margin:0 auto;padding:118px 32px 8px;text-align:center}
 .logo{height:40px;opacity:0.95;margin-bottom:34px}
@@ -46,9 +84,26 @@ givebutter-giving-form{display:block;width:100%}
 /* ── Candid seal under form ── */
 .seal-wrap{margin-top:24px;text-align:center}
 
-/* ── Giving-options sections (DAF / QCD / Check) ── */
+/* ── Giving-options tabs (DAF / QCD / Check) ── */
 .options{max-width:760px;margin:72px auto 0;padding:0 32px}
-.opt{border-top:1px solid rgba(255,255,255,0.1);padding:40px 0}
+.tablist{
+  display:flex;gap:4px;flex-wrap:wrap;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  margin-bottom:8px;
+}
+.tab{
+  appearance:none;background:transparent;border:none;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;letter-spacing:0.01em;
+  color:rgba(255,255,255,0.55);
+  padding:14px 16px;margin-bottom:-1px;
+  border-bottom:2px solid transparent;
+  transition:color 0.2s,border-color 0.2s;
+}
+.tab:hover{color:rgba(255,255,255,0.85);}
+.tab[aria-selected="true"]{color:#fff;border-bottom-color:#EF4E4B;}
+.tab:focus-visible{outline:2px solid #89CFF0;outline-offset:2px;border-radius:4px;}
+.opt{padding:32px 0 8px}
+.opt[hidden]{display:none}
 .opt h2{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3.4vw,28px);font-weight:400;line-height:1.2;color:#fff;margin-bottom:8px}
 .opt .blurb{font-size:16px;font-weight:300;color:rgba(255,255,255,0.9);line-height:1.65;margin-bottom:18px}
 .opt .sub-label{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#89CFF0;margin:18px 0 10px}
@@ -75,10 +130,31 @@ a.mail{color:#89CFF0;text-decoration:none}
   .give-wrap{padding:0 20px}
   .options{padding:0 20px}
   .trust{padding:0 20px}
+  .nav-inner{padding:14px 20px}
+  .nav-links{gap:18px}
+  .tablist{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{flex:0 0 auto;white-space:nowrap;padding:14px 12px;font-size:13px}
 }
 </style>
 </head>
 <body>
+
+<nav id="siteNav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">
+      <img src="/logomark-red.svg" alt="SOS" decoding="async">
+      SOS
+    </a>
+    <div class="nav-links">
+      <a href="/#crisis">Crisis</a>
+      <a href="/#ecosystem">Ecosystem</a>
+      <a href="/#solution">Solution</a>
+      <a href="/what-is-sos">What Is SOS</a>
+      <a href="/join">Join</a>
+      <a href="/donate" class="active">Donate</a>
+    </div>
+  </div>
+</nav>
 
 <section class="hero">
   <img class="logo" src="/logomark-red.svg" alt="SOS">
@@ -131,8 +207,14 @@ a.mail{color:#89CFF0;text-decoration:none}
 <!-- ── Other ways to give ── -->
 <div class="options">
 
+  <div class="tablist" role="tablist" aria-label="Other ways to give">
+    <button class="tab" id="tab-daf" role="tab" aria-selected="true" aria-controls="panel-daf">Donor-Advised Fund</button>
+    <button class="tab" id="tab-qcd" role="tab" aria-selected="false" aria-controls="panel-qcd" tabindex="-1">QCD (IRA)</button>
+    <button class="tab" id="tab-check" role="tab" aria-selected="false" aria-controls="panel-check" tabindex="-1">By Check</button>
+  </div>
+
   <!-- Donor Advised Funds -->
-  <section class="opt">
+  <section class="opt" id="panel-daf" role="tabpanel" aria-labelledby="tab-daf" tabindex="0">
     <h2>SOS welcomes Donor Advised Funds (DAF)</h2>
     <p class="blurb">If you&rsquo;ve contributed to a Donor Advised Fund (DAF), you can recommend a grant to SOS.</p>
     <p class="sub-label">How to grant from your DAF</p>
@@ -150,7 +232,7 @@ a.mail{color:#89CFF0;text-decoration:none}
   </section>
 
   <!-- Qualified Charitable Distribution -->
-  <section class="opt">
+  <section class="opt" id="panel-qcd" role="tabpanel" aria-labelledby="tab-qcd" tabindex="0" hidden>
     <h2>SOS welcomes Qualified Charitable Distributions (QCD)</h2>
     <p class="blurb">If you&rsquo;re 70&frac12; or older, a Qualified Charitable Distribution (QCD) lets you give directly from your IRA to SOS with zero tax.</p>
     <p class="sub-label">Why a QCD</p>
@@ -175,7 +257,7 @@ a.mail{color:#89CFF0;text-decoration:none}
   </section>
 
   <!-- Check -->
-  <section class="opt">
+  <section class="opt" id="panel-check" role="tabpanel" aria-labelledby="tab-check" tabindex="0" hidden>
     <h2>SOS welcomes donations by check</h2>
     <p class="blurb">Make your check payable to SOS Global Inc. and mail to:</p>
     <div class="detail">
@@ -206,5 +288,49 @@ a.mail{color:#89CFF0;text-decoration:none}
   <div style="margin-bottom: 20px;"><a href="/" style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #EF4E4B; text-decoration: none; border-bottom: 1.5px solid rgba(239,78,75,0.4); padding-bottom: 3px;">&larr; Back to home</a></div>
   <p style="font-size: 11px; color: rgba(255,255,255,0.2);"><a href="https://sosconnect.org" style="color: inherit; text-decoration: none;">sosconnect.org</a> &middot; &copy; 2026 SOS Global &middot; 501(c)(3) nonprofit &middot; EIN 33-2797387</p>
 </footer>
+
+<script>
+(function () {
+  /* ── Tab interface (DAF / QCD / Check) ── */
+  var tablist = document.querySelector('.tablist[role="tablist"]');
+  if (tablist) {
+    var tabs = Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+
+    function selectTab(tab, setFocus) {
+      tabs.forEach(function (t) {
+        var selected = t === tab;
+        t.setAttribute('aria-selected', selected ? 'true' : 'false');
+        t.tabIndex = selected ? 0 : -1;
+        var panel = document.getElementById(t.getAttribute('aria-controls'));
+        if (panel) { panel.hidden = !selected; }
+      });
+      if (setFocus) { tab.focus(); }
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { selectTab(tab, false); });
+      tab.addEventListener('keydown', function (e) {
+        var next;
+        if (e.key === 'ArrowRight') { next = tabs[(i + 1) % tabs.length]; }
+        else if (e.key === 'ArrowLeft') { next = tabs[(i - 1 + tabs.length) % tabs.length]; }
+        else if (e.key === 'Home') { next = tabs[0]; }
+        else if (e.key === 'End') { next = tabs[tabs.length - 1]; }
+        if (next) { e.preventDefault(); selectTab(next, true); }
+      });
+    });
+  }
+
+  /* ── Nav scroll state (glassmorphism on scroll) ── */
+  var siteNav = document.getElementById('siteNav');
+  if (siteNav) {
+    var onScroll = function () {
+      if (window.scrollY > 40) { siteNav.classList.add('scrolled'); }
+      else { siteNav.classList.remove('scrolled'); }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
+</script>
 
 </body></html>
