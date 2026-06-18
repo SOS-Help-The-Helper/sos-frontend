@@ -67,11 +67,20 @@ h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,46px);f
 .give-wrap{max-width:1100px;margin:48px auto 0;padding:0 32px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
 .give-info .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#89CFF0;margin-bottom:16px}
 .give-info p.intro{font-size:17px;font-weight:300;color:rgba(255,255,255,0.92);line-height:1.65;margin-bottom:28px}
-.org-block{font-size:15px;font-weight:300;color:rgba(255,255,255,0.82);line-height:1.85}
-.org-block .org-name{font-weight:700;color:#fff}
-.org-block .row-label{color:rgba(255,255,255,0.55);font-weight:600;letter-spacing:0.02em}
-.org-block a{color:#89CFF0;text-decoration:none}
-.org-block hr{border:none;border-top:1px solid rgba(255,255,255,0.1);margin:20px 0}
+.org-block{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px 26px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.82)}
+.org-block .org-head{display:flex;align-items:center;gap:14px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.org-block .org-mark{height:34px;width:34px;flex:0 0 auto;opacity:0.95}
+.org-block .org-name{font-family:'DM Serif Display',Georgia,serif;font-size:20px;font-weight:400;color:#fff;line-height:1.15;margin-bottom:4px}
+.org-block .org-addr{font-size:13.5px;color:rgba(255,255,255,0.62);line-height:1.45}
+.org-block .org-rows{display:flex;flex-direction:column;gap:12px;margin:0}
+.org-block .org-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.org-block .org-row dt{font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.5)}
+.org-block .org-row dd{margin:0;font-size:15px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;text-align:right}
+.org-block .badge-pending{display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#89CFF0;background:rgba(137,207,240,0.12);border:1px solid rgba(137,207,240,0.3);border-radius:99px;padding:3px 12px}
+.org-block .org-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);font-size:14px}
+.org-block .org-dot{color:rgba(255,255,255,0.3)}
+.org-block a{color:#89CFF0;text-decoration:none;border-bottom:1px solid rgba(137,207,240,0.35);padding-bottom:1px;transition:color 0.2s,border-color 0.2s}
+.org-block a:hover{color:#fff;border-color:rgba(255,255,255,0.6)}
 
 /* ── Embedded form card (right column) ── */
 .give-card{background:#ffffff;border-radius:20px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2)}
@@ -120,7 +129,7 @@ a.mail{color:#89CFF0;text-decoration:none}
 @media (max-width:900px){
   .give-wrap{grid-template-columns:1fr;gap:36px;max-width:600px}
   .give-info{text-align:center}
-  .org-block{display:inline-block;text-align:left}
+  .org-block{display:block;text-align:left;max-width:420px;margin:0 auto}
 }
 @media (max-width:640px){
   .hero{padding:104px 20px 8px}
@@ -167,13 +176,28 @@ a.mail{color:#89CFF0;text-decoration:none}
     <p class="eyebrow">Support this work</p>
     <p class="intro">SOS is a registered 501(c)(3) providing a shared coordination workspace to communities and nonprofits at no cost to the user. Your generous donation helps us achieve this mission.</p>
     <div class="org-block">
-      <div class="org-name">SOS Global Inc.</div>
-      <div>149 Weaver Blvd #127</div>
-      <div>Weaverville, NC 28787</div>
-      <hr>
-      <div><span class="row-label">EIN:</span> 33-2797387</div>
-      <div><span class="row-label">NC Solicitor License:</span> pending</div>
-      <div><a href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer">Candid</a> &nbsp;|&nbsp; <a href="mailto:team@sosconnect.org">team@sosconnect.org</a></div>
+      <div class="org-head">
+        <img src="/logomark-red.svg" alt="" aria-hidden="true" class="org-mark">
+        <div>
+          <div class="org-name">SOS Global Inc.</div>
+          <div class="org-addr">149 Weaver Blvd #127, Weaverville, NC 28787</div>
+        </div>
+      </div>
+      <dl class="org-rows">
+        <div class="org-row">
+          <dt>EIN</dt>
+          <dd>33-2797387</dd>
+        </div>
+        <div class="org-row">
+          <dt>NC Solicitor License</dt>
+          <dd><span class="badge-pending">Pending</span></dd>
+        </div>
+      </dl>
+      <div class="org-links">
+        <a href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer">Candid profile</a>
+        <span class="org-dot" aria-hidden="true">&middot;</span>
+        <a href="mailto:team@sosconnect.org">team@sosconnect.org</a>
+      </div>
     </div>
   </div>
 
