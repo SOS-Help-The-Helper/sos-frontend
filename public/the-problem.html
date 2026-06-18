@@ -4,31 +4,114 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOS | The Problem</title>
-<meta name="description" content="The coordination gap in disaster response — why help scatters when systems fail. SOS is the coordination layer that was never built.">
+<meta name="description" content="The disaster within the disaster — why help scatters when systems fail. SOS is the coordination layer that was never built.">
+<link rel="canonical" href="https://sosconnect.org/the-problem">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
-.wrap{max-width:720px;margin:0 auto;padding:140px 32px 120px;text-align:center}
-.logo{height:40px;opacity:0.9;margin-bottom:40px}
-.label{font-size:11px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#89CFF0;margin-bottom:20px}
-h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,44px);font-weight:400;line-height:1.15;letter-spacing:-0.015em;margin-bottom:24px}
-.accent{width:48px;height:2px;background:#89CFF0;margin:0 auto 32px}
-p.body{font-size:17px;font-weight:300;color:rgba(255,255,255,0.75);margin-bottom:20px}
-.soon{margin-top:48px;display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:99px;padding:10px 20px}
-a.back{display:inline-block;margin-top:40px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
-</style></head><body>
-<div class="wrap">
+.section{max-width:760px;margin:0 auto;padding:0 32px}
+.hero{text-align:center;padding:128px 32px 56px}
+.logo{height:40px;opacity:0.95;margin-bottom:36px}
+.label{font-size:11px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#89CFF0;margin-bottom:18px}
+h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(34px,6.5vw,52px);font-weight:400;line-height:1.1;letter-spacing:-0.015em;margin-bottom:22px}
+.accent{width:48px;height:2px;background:#EF4E4B;margin:0 auto 30px}
+.lede{font-size:19px;font-weight:300;color:rgba(255,255,255,0.82);max-width:620px;margin:0 auto;line-height:1.6}
+h2{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(26px,4vw,36px);font-weight:400;line-height:1.18;letter-spacing:-0.01em;margin-bottom:20px}
+.block{padding:52px 32px}
+.block.alt{background:#13283A}
+.block .inner{max-width:696px;margin:0 auto}
+.block .label{text-align:left}
+p.body{font-size:17px;font-weight:300;color:rgba(255,255,255,0.78);margin-bottom:18px;line-height:1.7}
+.stat-row{display:flex;flex-wrap:wrap;gap:20px;margin:36px 0 8px}
+.stat{flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:26px}
+.stat .num{font-family:'DM Serif Display',Georgia,serif;font-size:34px;color:#89CFF0;line-height:1;margin-bottom:10px}
+.stat .desc{font-size:14px;font-weight:300;color:rgba(255,255,255,0.6);line-height:1.5}
+.pull{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(24px,3.6vw,32px);font-weight:400;line-height:1.3;color:#fff;text-align:center;max-width:640px;margin:8px auto}
+.pull em{color:#EF4E4B;font-style:normal}
+.cta-band{text-align:center;padding:72px 32px 40px}
+a.cta{display:inline-block;background:#EF4E4B;color:#fff;font-weight:700;font-size:15px;letter-spacing:0.02em;text-decoration:none;padding:16px 38px;border-radius:99px;box-shadow:0 12px 30px rgba(239,78,75,0.32);transition:transform 0.15s}
+a.cta:hover{transform:translateY(-2px)}
+.links{margin-top:28px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+a.link{font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#89CFF0;text-decoration:none;border-bottom:1.5px solid rgba(137,207,240,0.4);padding-bottom:3px}
+.footer{text-align:center;padding:48px 32px 90px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px}
+a.back{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
+.copyright{margin-top:22px;font-size:12px;color:rgba(255,255,255,0.35)}
+.cite{font-size:12px;color:rgba(255,255,255,0.35);margin-top:14px}
+.cite a{color:rgba(137,207,240,0.6);text-decoration:none}
+</style>
+</head>
+<body>
+
+<section class="hero">
   <img class="logo" src="/logomark-white.svg" alt="SOS">
   <p class="label">The Problem</p>
-  <h1>The infrastructure never existed.</h1>
+  <h1>The disaster within the disaster.</h1>
   <div class="accent"></div>
-  <p class="body">In 1986, Congress passed Goldwater-Nichols to force the military branches to coordinate. It worked. Nobody ever passed the equivalent for civilian disaster response.</p>
-  <p class="body">The organizations doing this work are extraordinary &mdash; they just can't see each other. Search and rescue teams duplicate efforts while entire communities go unseen, and information blasts on social media become stale and confusing.</p>
-  <p class="body">The technology to close this gap didn't exist two years ago. It does now.</p>
-  <div><span class="soon">Full page coming soon</span></div>
-  <div><a class="back" href="/">&larr; Back to home</a></div>
+  <p class="lede">The help always shows up. What fails is the system that&rsquo;s supposed to coordinate it &mdash; and it fails the same way in every disaster.</p>
+</section>
+
+<div class="block">
+  <div class="inner">
+    <p class="label">What breaks</p>
+    <h2>The tools break. The data fragments.</h2>
+    <p class="body">After Hurricane Helene hit western North Carolina in September 2024, FEMA&rsquo;s resource tracking system crashed under ten times its normal volume. Search and rescue teams checked the same homes three and four times because two platforms didn&rsquo;t talk to each other. The 211 system was overwhelmed. Families couldn&rsquo;t find each other. Facebook became the missing-persons database &mdash; not by design, but because nothing else worked.</p>
+    <p class="body">Volunteers drove supplies from across the country and were turned away at the edge of the damage zone &mdash; a phenomenon researchers call &ldquo;volunteer convergence,&rdquo; the secondary disaster within the disaster. Not because help wasn&rsquo;t needed. Because nobody could tell them where to bring it.</p>
+    <p class="body">This pattern isn&rsquo;t new. From Katrina to Sandy, Harvey to Maria, the same coordination failures surface every time a disaster overwhelms the systems built to manage it.</p>
+    <p class="cite">NC DPS Hurricane Helene After-Action Review &middot; <a href="https://www.ncdps.gov/tropical-storm-helene-after-action-review" target="_blank" rel="noopener">ncdps.gov</a></p>
+  </div>
 </div>
+
+<div class="block alt">
+  <div class="inner">
+    <p class="label">What&rsquo;s changing</p>
+    <h2>The systems are contracting.</h2>
+    <p class="body">The federal safety net is not expanding to meet the moment &mdash; it&rsquo;s contracting. FEMA has scaled back funding for non-lifesaving disaster recovery. Twenty states sued to restart the largest federal preparedness grant program. The GAO added disaster assistance to its high-risk list for the first time.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num">305M</div><div class="desc">people needed humanitarian assistance in 2025</div></div>
+      <div class="stat"><div class="num">207M</div><div class="desc">didn&rsquo;t receive it</div></div>
+      <div class="stat"><div class="num">$24.4B</div><div class="desc">global humanitarian funding shortfall</div></div>
+    </div>
+    <p class="body">Humanitarian funding dropped 40 percent in a single year &mdash; what the Council on Foreign Relations calls &ldquo;The Great Aid Recession.&rdquo; The disasters are accelerating. The gap between people who need help and people who receive it is widening every year.</p>
+    <p class="cite">OCHA Global Humanitarian Overview 2026 &middot; Carnegie Endowment &middot; CFR</p>
+  </div>
+</div>
+
+<div class="block">
+  <div class="inner">
+    <p class="label">The cost of no coordination</p>
+    <h2>One family. Nine hotlines. Fifteen applications.</h2>
+    <p class="body">A family needs shelter, food, and medical transport. Three organizations can help. Without coordination, two never hear about the need &mdash; and the third shows up a week late. The family called nine hotlines and filled out fifteen applications, to organizations that have no way of knowing what the others have already done.</p>
+    <p class="body">No one tracks what was spent, who delivered what, or whether the help arrived. After Katrina, that absence of accountability cost over a billion dollars in documented fraud, with broader estimates reaching $6&ndash;8 billion. Without a coordination layer, every disaster repeats the same blind spots &mdash; and the system never learns from it.</p>
+    <p class="cite">GAO-06-844t (Katrina fraud) &middot; <a href="https://www.gao.gov/products/gao-06-844t" target="_blank" rel="noopener">gao.gov</a></p>
+  </div>
+</div>
+
+<div class="block alt">
+  <div class="inner">
+    <p class="label">Why it was never solved</p>
+    <h2>The infrastructure never existed.</h2>
+    <p class="body">In 1986, Congress passed the Goldwater-Nichols Act to force the military branches to coordinate. It worked. Nobody ever passed the equivalent for civilian disaster response.</p>
+    <p class="body">The organizations doing this work are extraordinary &mdash; they just can&rsquo;t see each other. Search and rescue teams duplicate efforts while entire communities go unseen. Information blasts on social media go stale and turn to noise. The willingness is there. The money is there. The people are there.</p>
+    <p class="pull">They just <em>can&rsquo;t see each other.</em></p>
+    <p class="body" style="margin-top:28px;">The technology to close this gap didn&rsquo;t exist two years ago. It does now.</p>
+  </div>
+</div>
+
+<div class="cta-band">
+  <a class="cta" href="/">See how SOS closes the gap &rarr;</a>
+  <div class="links">
+    <a class="link" href="/the-sos-story">The SOS Story</a>
+    <a class="link" href="/what-is-sos">What is SOS</a>
+    <a class="link" href="/donate">Donate</a>
+  </div>
+</div>
+
+<footer class="footer">
+  <a class="back" href="/">&larr; Back to home</a>
+  <div class="copyright">&copy; 2026 SOS Global &middot; 501(c)(3) nonprofit &middot; EIN 33-2797387</div>
+</footer>
+
 </body></html>

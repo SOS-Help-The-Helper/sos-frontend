@@ -5,30 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOS | The SOS Story</title>
 <meta name="description" content="Born in Hurricane Helene. How firsthand experience of a broken disaster response became coordination infrastructure for everyone.">
+<link rel="canonical" href="https://sosconnect.org/the-sos-story">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
-.wrap{max-width:720px;margin:0 auto;padding:140px 32px 120px;text-align:center}
-.logo{height:40px;opacity:0.9;margin-bottom:40px}
-.label{font-size:11px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#89CFF0;margin-bottom:20px}
-h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,44px);font-weight:400;line-height:1.15;letter-spacing:-0.015em;margin-bottom:24px}
-.accent{width:48px;height:2px;background:#89CFF0;margin:0 auto 32px}
-p.body{font-size:17px;font-weight:300;color:rgba(255,255,255,0.75);margin-bottom:20px}
-.soon{margin-top:48px;display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.12);border-radius:99px;padding:10px 20px}
-a.back{display:inline-block;margin-top:40px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
-</style></head><body>
-<div class="wrap">
+.hero{text-align:center;padding:128px 32px 56px}
+.logo{height:40px;opacity:0.95;margin-bottom:36px}
+.label{font-size:11px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#89CFF0;margin-bottom:18px}
+h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(34px,6.5vw,52px);font-weight:400;line-height:1.1;letter-spacing:-0.015em;margin-bottom:22px}
+.accent{width:48px;height:2px;background:#EF4E4B;margin:0 auto 30px}
+.lede{font-size:19px;font-weight:300;color:rgba(255,255,255,0.82);max-width:620px;margin:0 auto;line-height:1.6}
+h2{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(26px,4vw,36px);font-weight:400;line-height:1.18;letter-spacing:-0.01em;margin-bottom:20px}
+.block{padding:52px 32px}
+.block.alt{background:#13283A}
+.block .inner{max-width:696px;margin:0 auto}
+.block .label{text-align:left}
+p.body{font-size:17px;font-weight:300;color:rgba(255,255,255,0.78);margin-bottom:18px;line-height:1.7}
+.pull{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(24px,3.8vw,34px);font-weight:400;line-height:1.3;color:#fff;text-align:center;max-width:640px;margin:8px auto}
+.pull em{color:#EF4E4B;font-style:normal}
+/* photo placeholder — drop real <img> in by replacing the .photo div */
+.photo{max-width:760px;margin:8px auto;padding:0 32px}
+.photo .frame{width:100%;aspect-ratio:16/9;border-radius:16px;background:linear-gradient(135deg,#13283A,#1A3850);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center}
+.photo .cap{font-size:12px;letter-spacing:0.04em;color:rgba(255,255,255,0.35);text-align:center;margin-top:12px}
+.photo .ph{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+.timeline{max-width:696px;margin:24px auto 0}
+.tl-item{display:flex;gap:20px;padding:18px 0;border-top:1px solid rgba(255,255,255,0.08)}
+.tl-item .yr{font-family:'DM Serif Display',Georgia,serif;font-size:18px;color:#89CFF0;min-width:120px}
+.tl-item .txt{font-size:15px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.6}
+.cta-band{text-align:center;padding:72px 32px 40px}
+a.cta{display:inline-block;background:#EF4E4B;color:#fff;font-weight:700;font-size:15px;letter-spacing:0.02em;text-decoration:none;padding:16px 38px;border-radius:99px;box-shadow:0 12px 30px rgba(239,78,75,0.32);transition:transform 0.15s}
+a.cta:hover{transform:translateY(-2px)}
+.links{margin-top:28px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+a.link{font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#89CFF0;text-decoration:none;border-bottom:1.5px solid rgba(137,207,240,0.4);padding-bottom:3px}
+.footer{text-align:center;padding:48px 32px 90px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px}
+a.back{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
+.copyright{margin-top:22px;font-size:12px;color:rgba(255,255,255,0.35)}
+</style>
+</head>
+<body>
+
+<section class="hero">
   <img class="logo" src="/logomark-white.svg" alt="SOS">
   <p class="label">The SOS Story</p>
-  <h1>Born in a hurricane.<br>Built on research.</h1>
+  <h1>Born in a hurricane.</h1>
   <div class="accent"></div>
-  <p class="body">When Hurricane Helene hit Western North Carolina, comms went down, missing-person reports scattered across insecure spreadsheets, and supplies piled up in the wrong places while neighbors went without.</p>
-  <p class="body">We watched people help each other instinctively &mdash; clearing roads, delivering Starlink, triaging on front porches. We discovered that the instinct to help is always there. What's missing is infrastructure.</p>
-  <p class="body">SOS grew out of that firsthand experience, the work of Open Source Medical Supplies, and lessons drawn from every major disaster since Katrina.</p>
-  <div><span class="soon">Full story &amp; photo timeline coming soon</span></div>
-  <div><a class="back" href="/">&larr; Back to home</a></div>
+  <p class="lede">SOS didn&rsquo;t start in an office. It started in the mud, in the dark, in a mountain town the systems couldn&rsquo;t reach.</p>
+</section>
+
+<!-- PHOTO SLOT 1 — replace .frame with <img src="/story/helene-1.jpg" ...> when photos are ready -->
+<div class="photo">
+  <div class="frame"><span class="ph">Photo &mdash; Helene aftermath</span></div>
+  <div class="cap">Western North Carolina, September 2024</div>
 </div>
+
+<div class="block">
+  <div class="inner">
+    <p class="label">September 2024</p>
+    <h2>When the systems went dark, the neighbors didn&rsquo;t.</h2>
+    <p class="body">When Hurricane Helene hit western North Carolina, comms went down and missing-person reports scattered across spreadsheets and Facebook posts. Supplies piled up in the wrong places while neighbors went without. Our team scraped 4,000 missing-persons posts off Facebook because no system existed to track them.</p>
+    <p class="body">Our founder&rsquo;s farmhouse in Burnsville was damaged. He lived in a donated RV for three months. When roads washed out and isolated mountain communities from supplies, neighbors carved access trails through the terrain themselves. The team delivered RVs, brought Starlink terminals to people who&rsquo;d been cut off for weeks, and started building the coordination tools that should have existed before the storm hit.</p>
+    <p class="pull">We discovered the instinct to help is always there. <em>What&rsquo;s missing is infrastructure.</em></p>
+  </div>
+</div>
+
+<div class="block alt">
+  <div class="inner">
+    <p class="label">Built on research</p>
+    <h2>18 months studying how help fails.</h2>
+    <p class="body">After Helene, we spent eighteen months studying the history of disaster coordination and the science of coordination itself &mdash; from Katrina to Maria, from volunteer convergence to the $45 billion disaster-restoration economy that moves through communities and out again.</p>
+    <p class="body">The founding team brings together experience in enterprise technology, humanitarian work, and field research. SOS lives at the intersection: the technology to coordinate at scale, and the conviction that coordination should serve people, not extract from them.</p>
+    <p class="body">The values that came out of that work are structural, not aspirational. Partners keep their data &mdash; if they leave, it goes with them. Citizens control their privacy. No profile required. Location data expires. SOS doesn&rsquo;t sell data, build profiles, or optimize for engagement.</p>
+  </div>
+</div>
+
+<!-- PHOTO SLOT 2 — replace with field/Starlink/RV delivery photo -->
+<div class="photo">
+  <div class="frame"><span class="ph">Photo &mdash; Field response</span></div>
+  <div class="cap">Delivering Starlink and RVs to cut-off communities</div>
+</div>
+
+<div class="block">
+  <div class="inner">
+    <p class="label">Since Helene</p>
+    <h2>Activated for every major disaster since.</h2>
+    <div class="timeline">
+      <div class="tl-item"><div class="yr">Sept 2024</div><div class="txt">Hurricane Helene. SOS born in the field &mdash; 4,000 missing-persons posts tracked, RVs and Starlink delivered to Burnsville and surrounding communities.</div></div>
+      <div class="tl-item"><div class="yr">2025</div><div class="txt">18 months of research into disaster-coordination history and coordination science. Architecture and the &ldquo;everyone is a helper&rdquo; model take shape.</div></div>
+      <div class="tl-item"><div class="yr">Blizzard 2026</div><div class="txt">Coordinated hundreds of resources across 12 states &mdash; warming shelters, power-outage tracking, emergency supply distribution. Featured by Fox Weather during the storm.</div></div>
+      <div class="tl-item"><div class="yr">Today</div><div class="txt">Production software. AI coordination agents live with partner organizations across housing, food, medical, supplies, and transport. The citizen portal is live. The coordination loop is running.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="block alt">
+  <div class="inner">
+    <p class="label">Where this goes</p>
+    <h2>Disaster relief is where SOS starts.</h2>
+    <p class="body">The same coordination infrastructure could connect a citizen&rsquo;s skills to a community need beyond disasters. The same trust layer could hold institutions accountable year-round. The same feedback loop could give communities a real-time voice in how resources are allocated &mdash; not every four years, but continuously.</p>
+    <p class="body">Communities that have watched extraction happen for generations deserve infrastructure that works for them, not on them. That principle is in the architecture. It begins with coordination. It begins with disasters. It begins with earning the right to expand by proving it works where the need is most acute.</p>
+    <p class="pull"><em>Everyone is a helper.</em> We help the helpers.</p>
+  </div>
+</div>
+
+<div class="cta-band">
+  <a class="cta" href="/donate">Help us help the helpers &rarr;</a>
+  <div class="links">
+    <a class="link" href="/the-problem">The Problem</a>
+    <a class="link" href="/what-is-sos">What is SOS</a>
+    <a class="link" href="/">Home</a>
+  </div>
+</div>
+
+<footer class="footer">
+  <a class="back" href="/">&larr; Back to home</a>
+  <div class="copyright">&copy; 2026 SOS Global &middot; 501(c)(3) nonprofit &middot; EIN 33-2797387</div>
+</footer>
+
 </body></html>
