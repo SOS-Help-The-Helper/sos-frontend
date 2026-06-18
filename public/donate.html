@@ -26,7 +26,11 @@ h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,46px);f
 p.lede{font-size:18px;font-weight:300;color:rgba(255,255,255,0.78);max-width:600px;margin:0 auto 12px}
 
 /* ── Embedded form card ── */
-.give-wrap{max-width:600px;margin:48px auto 0;padding:0 24px}
+.give-wrap{max-width:600px;margin:40px auto 0;padding:0 24px}
+.give-header{text-align:center;margin-bottom:28px}
+.give-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#89CFF0;margin-bottom:12px}
+.give-title{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(26px,4.5vw,34px);font-weight:400;line-height:1.15;letter-spacing:-0.01em;color:#fff;margin-bottom:14px}
+.give-sub{font-size:15px;font-weight:300;color:rgba(255,255,255,0.7);max-width:520px;margin:0 auto;line-height:1.6}
 .give-card{background:#ffffff;border-radius:20px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2)}
 givebutter-giving-form{display:block;width:100%}
 /* graceful fallback shown until the widget script hydrates / if not configured */
@@ -35,10 +39,8 @@ givebutter-giving-form{display:block;width:100%}
 .give-fallback p{font-size:15px;font-weight:300;color:#3d4852;margin-bottom:24px}
 .give-fallback a.cta{display:inline-block;background:#EF4E4B;color:#fff;font-weight:700;font-size:15px;letter-spacing:0.02em;text-decoration:none;padding:15px 34px;border-radius:99px;box-shadow:0 8px 24px rgba(239,78,75,0.35)}
 
-/* ── Trust + giving methods ── */
+/* ── Trust ── */
 .trust{max-width:640px;margin:48px auto 0;padding:0 32px;text-align:center}
-.methods{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:28px}
-.method{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.14);border-radius:99px;padding:9px 16px}
 p.fine{font-size:14px;font-weight:300;color:rgba(255,255,255,0.55);margin-bottom:10px}
 a.mail{color:#89CFF0;text-decoration:none}
 .footer{max-width:720px;margin:64px auto 0;padding:32px 32px 80px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)}
@@ -61,6 +63,11 @@ a.back{display:inline-block;font-size:13px;font-weight:700;letter-spacing:0.08em
      show-goal-bar shows a progress bar; theme-color tints it to SOS coral.
      Form colors/fonts/branding are set in the Givebutter campaign design settings. -->
 <div class="give-wrap">
+  <div class="give-header">
+    <p class="give-eyebrow">Make a donation</p>
+    <h2 class="give-title">Give securely below</h2>
+    <p class="give-sub">Choose a one-time or monthly gift. Card, bank transfer, Apple&nbsp;&amp; Google&nbsp;Pay, and Donor&nbsp;Advised&nbsp;Funds all accepted &mdash; processed securely through Givebutter.</p>
+  </div>
   <div class="give-card">
     <givebutter-giving-form
       campaign="IgzWSH"
@@ -78,14 +85,6 @@ a.back{display:inline-block;font-size:13px;font-weight:700;letter-spacing:0.08em
 </div>
 
 <div class="trust">
-  <div class="methods">
-    <span class="method">Card</span>
-    <span class="method">Bank / ACH</span>
-    <span class="method">Apple &amp; Google Pay</span>
-    <span class="method">Donor Advised Fund</span>
-    <span class="method">QCD</span>
-    <span class="method">Check</span>
-  </div>
   <p class="fine">SOS Global Inc. is a registered 501(c)(3) nonprofit. Your contribution is tax-deductible to the extent allowed by law. EIN 33-2797387.</p>
   <p class="fine">Prefer to give another way, or giving on behalf of a foundation? Email <a class="mail" href="mailto:team@sosconnect.org">team@sosconnect.org</a>.</p>
 </div>
