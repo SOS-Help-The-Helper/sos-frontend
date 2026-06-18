@@ -64,7 +64,7 @@ h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,46px);f
 .accent{width:48px;height:2px;background:#EF4E4B;margin:0 auto 0}
 
 /* ── Two-column give layout ── */
-.give-wrap{max-width:1080px;margin:48px auto 0;padding:0 32px;display:grid;grid-template-columns:0.85fr 1fr;gap:48px;align-items:start}
+.give-wrap{max-width:1100px;margin:48px auto 0;padding:0 32px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
 .give-info .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#89CFF0;margin-bottom:16px}
 .give-info p.intro{font-size:17px;font-weight:300;color:rgba(255,255,255,0.92);line-height:1.65;margin-bottom:28px}
 .org-block{font-size:15px;font-weight:300;color:rgba(255,255,255,0.82);line-height:1.85}
@@ -80,9 +80,6 @@ givebutter-giving-form{display:block;width:100%}
 .give-fallback h2{font-family:'DM Serif Display',Georgia,serif;font-size:26px;font-weight:400;margin-bottom:10px;color:#0F1E2B}
 .give-fallback p{font-size:15px;font-weight:300;color:#3d4852;margin-bottom:24px}
 .give-fallback a.cta{display:inline-block;background:#EF4E4B;color:#fff;font-weight:700;font-size:15px;letter-spacing:0.02em;text-decoration:none;padding:15px 34px;border-radius:99px;box-shadow:0 8px 24px rgba(239,78,75,0.35)}
-
-/* ── Candid seal under form ── */
-.seal-wrap{margin-top:24px;text-align:center}
 
 /* ── Giving-options tabs (DAF / QCD / Check) ── */
 .options{max-width:760px;margin:72px auto 0;padding:0 32px}
@@ -120,8 +117,8 @@ givebutter-giving-form{display:block;width:100%}
 p.fine{font-size:14px;font-weight:300;color:rgba(255,255,255,0.72);margin-bottom:10px}
 a.mail{color:#89CFF0;text-decoration:none}
 
-@media (max-width:820px){
-  .give-wrap{grid-template-columns:1fr;gap:32px;max-width:600px}
+@media (max-width:900px){
+  .give-wrap{grid-template-columns:1fr;gap:36px;max-width:600px}
   .give-info{text-align:center}
   .org-block{display:inline-block;text-align:left}
 }
@@ -195,11 +192,7 @@ a.mail{color:#89CFF0;text-decoration:none}
         </div>
       </givebutter-giving-form>
     </div>
-    <div class="seal-wrap">
-      <a aria-label="SOS Global Inc on GuideStar" href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer" style="display:inline-block;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
-        <img alt="GuideStar Transparency Seal" src="https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/16026335/svg" loading="lazy" decoding="async" width="80" height="80" style="height:80px;" />
-      </a>
-    </div>
+    <!-- Candid/GuideStar transparency seal lives in the footer only (consistent with homepage) -->
   </div>
 
 </div>
