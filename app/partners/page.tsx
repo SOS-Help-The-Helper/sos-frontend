@@ -146,9 +146,6 @@ export default function PartnersPage() {
                 <h2 className="font-serif text-[24px] md:text-[28px] leading-tight">
                   Join the partner waitlist
                 </h2>
-                <p className="text-white/60 text-[13px] mt-2">
-                  Takes under a minute. We&apos;ll be in touch.
-                </p>
 
                 <form onSubmit={onSubmit} className="mt-6 space-y-4">
                   {/* honeypot */}
