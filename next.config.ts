@@ -17,6 +17,28 @@ const nextConfig: NextConfig = {
         destination: '/app?org=erv',
         permanent: true,
       },
+      // TEMP: the-problem + the-sos-story taken offline while we rework them
+      // (files remain in /public; remove these redirects to relaunch)
+      {
+        source: '/the-problem',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/the-problem.html',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/the-sos-story',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/the-sos-story.html',
+        destination: '/',
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
@@ -28,14 +50,6 @@ const nextConfig: NextConfig = {
       {
         source: '/what-is-sos',
         destination: '/what-is-sos.html',
-      },
-      {
-        source: '/the-problem',
-        destination: '/the-problem.html',
-      },
-      {
-        source: '/the-sos-story',
-        destination: '/the-sos-story.html',
       },
       {
         source: '/donate',
