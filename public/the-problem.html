@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow-x:hidden}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
 .section{max-width:760px;margin:0 auto;padding:0 32px}
 .hero{text-align:center;padding:128px 32px 56px}
@@ -41,6 +42,12 @@ a.back{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:upper
 .copyright{margin-top:22px;font-size:12px;color:rgba(255,255,255,0.5)}
 .cite{font-size:12px;color:rgba(255,255,255,0.55);margin-top:14px}
 .cite a{color:#89CFF0;text-decoration:none}
+@media (max-width:640px){
+  .hero{padding:104px 20px 48px}
+  .block{padding:44px 20px}
+  .cta-band{padding:60px 20px 36px}
+  .stat{min-width:100%}
+}
 </style>
 </head>
 <body>

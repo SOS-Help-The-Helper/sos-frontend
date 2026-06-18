@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow-x:hidden}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
 .hero{text-align:center;padding:128px 32px 56px}
 .logo{height:40px;opacity:0.95;margin-bottom:36px}
@@ -38,6 +39,13 @@ p.body{font-size:17px;font-weight:300;color:rgba(255,255,255,0.92);margin-bottom
 .footer{text-align:center;padding:48px 32px 90px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px}
 a.back{font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
 .copyright{margin-top:22px;font-size:12px;color:rgba(255,255,255,0.5)}
+@media (max-width:640px){
+  .hero{padding:104px 20px 48px}
+  .block{padding:44px 20px}
+  .photo{padding:0 20px}
+  .tl-item{flex-direction:column;gap:4px}
+  .tl-item .yr{min-width:0}
+}
 </style>
 </head>
 <body>

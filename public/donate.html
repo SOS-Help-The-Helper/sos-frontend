@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOS | Donate</title>
-<meta name="description" content="SOS is a registered 501(c)(3) providing disaster coordination infrastructure to communities and nonprofits at no cost. Your donation makes it possible.">
+<meta name="description" content="SOS is a registered 501(c)(3) providing a shared coordination workspace to communities and nonprofits at no cost. Your donation makes it possible.">
 <link rel="canonical" href="https://sosconnect.org/donate">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,37 +15,67 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{overflow-x:hidden}
 body{font-family:'Nunito Sans',-apple-system,sans-serif;background:#0F1E2B;color:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;line-height:1.7}
 
 /* ── Hero / intro ── */
-.hero{max-width:720px;margin:0 auto;padding:120px 32px 8px;text-align:center}
-.logo{height:40px;opacity:0.95;margin-bottom:36px}
+.hero{max-width:760px;margin:0 auto;padding:118px 32px 8px;text-align:center}
+.logo{height:40px;opacity:0.95;margin-bottom:34px}
 .label{font-size:11px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#89CFF0;margin-bottom:18px}
 h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(32px,6vw,46px);font-weight:400;line-height:1.12;letter-spacing:-0.015em;margin-bottom:22px}
-.accent{width:48px;height:2px;background:#EF4E4B;margin:0 auto 30px}
-p.lede{font-size:18px;font-weight:300;color:rgba(255,255,255,0.78);max-width:600px;margin:0 auto 12px}
+.accent{width:48px;height:2px;background:#EF4E4B;margin:0 auto 0}
 
-/* ── Embedded form card ── */
-.give-wrap{max-width:600px;margin:40px auto 0;padding:0 24px}
-.give-header{text-align:center;margin-bottom:28px}
-.give-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#89CFF0;margin-bottom:12px}
-.give-title{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(26px,4.5vw,34px);font-weight:400;line-height:1.15;letter-spacing:-0.01em;color:#fff;margin-bottom:14px}
-.give-sub{font-size:15px;font-weight:300;color:rgba(255,255,255,0.85);max-width:520px;margin:0 auto;line-height:1.6}
+/* ── Two-column give layout ── */
+.give-wrap{max-width:1080px;margin:48px auto 0;padding:0 32px;display:grid;grid-template-columns:0.85fr 1fr;gap:48px;align-items:start}
+.give-info .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#89CFF0;margin-bottom:16px}
+.give-info p.intro{font-size:17px;font-weight:300;color:rgba(255,255,255,0.92);line-height:1.65;margin-bottom:28px}
+.org-block{font-size:15px;font-weight:300;color:rgba(255,255,255,0.82);line-height:1.85}
+.org-block .org-name{font-weight:700;color:#fff}
+.org-block .row-label{color:rgba(255,255,255,0.55);font-weight:600;letter-spacing:0.02em}
+.org-block a{color:#89CFF0;text-decoration:none}
+.org-block hr{border:none;border-top:1px solid rgba(255,255,255,0.1);margin:20px 0}
+
+/* ── Embedded form card (right column) ── */
 .give-card{background:#ffffff;border-radius:20px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2)}
 givebutter-giving-form{display:block;width:100%}
-/* graceful fallback shown until the widget script hydrates / if not configured */
 .give-fallback{padding:44px 32px;text-align:center;color:#0F1E2B}
 .give-fallback h2{font-family:'DM Serif Display',Georgia,serif;font-size:26px;font-weight:400;margin-bottom:10px;color:#0F1E2B}
 .give-fallback p{font-size:15px;font-weight:300;color:#3d4852;margin-bottom:24px}
 .give-fallback a.cta{display:inline-block;background:#EF4E4B;color:#fff;font-weight:700;font-size:15px;letter-spacing:0.02em;text-decoration:none;padding:15px 34px;border-radius:99px;box-shadow:0 8px 24px rgba(239,78,75,0.35)}
 
-/* ── Trust ── */
-.trust{max-width:640px;margin:48px auto 0;padding:0 32px;text-align:center}
+/* ── Candid seal under form ── */
+.seal-wrap{margin-top:24px;text-align:center}
+
+/* ── Giving-options sections (DAF / QCD / Check) ── */
+.options{max-width:760px;margin:72px auto 0;padding:0 32px}
+.opt{border-top:1px solid rgba(255,255,255,0.1);padding:40px 0}
+.opt h2{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3.4vw,28px);font-weight:400;line-height:1.2;color:#fff;margin-bottom:8px}
+.opt .blurb{font-size:16px;font-weight:300;color:rgba(255,255,255,0.9);line-height:1.65;margin-bottom:18px}
+.opt .sub-label{font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#89CFF0;margin:18px 0 10px}
+.opt p,.opt li{font-size:15px;font-weight:300;color:rgba(255,255,255,0.86);line-height:1.7}
+.opt ol,.opt ul{margin:0 0 10px 22px}
+.opt li{margin-bottom:8px}
+.opt .detail{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 18px;margin:12px 0;font-size:14px;line-height:1.7}
+.opt .detail .k{color:rgba(255,255,255,0.55);font-weight:600}
+.opt .closing{font-size:14px;color:rgba(255,255,255,0.7);margin-top:16px}
+.opt a{color:#89CFF0;text-decoration:none}
+
+/* ── Trust fine print ── */
+.trust{max-width:760px;margin:48px auto 0;padding:0 32px;text-align:center}
 p.fine{font-size:14px;font-weight:300;color:rgba(255,255,255,0.72);margin-bottom:10px}
 a.mail{color:#89CFF0;text-decoration:none}
-.footer{max-width:720px;margin:64px auto 0;padding:32px 32px 80px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)}
-a.back{display:inline-block;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EF4E4B;text-decoration:none;border-bottom:1.5px solid rgba(239,78,75,0.4);padding-bottom:3px}
-.copyright{margin-top:24px;font-size:12px;color:rgba(255,255,255,0.35)}
+
+@media (max-width:820px){
+  .give-wrap{grid-template-columns:1fr;gap:32px;max-width:600px}
+  .give-info{text-align:center}
+  .org-block{display:inline-block;text-align:left}
+}
+@media (max-width:640px){
+  .hero{padding:104px 20px 8px}
+  .give-wrap{padding:0 20px}
+  .options{padding:0 20px}
+  .trust{padding:0 20px}
+}
 </style>
 </head>
 <body>
@@ -55,41 +85,116 @@ a.back{display:inline-block;font-size:13px;font-weight:700;letter-spacing:0.08em
   <p class="label">Donate</p>
   <h1>Help us help the helpers.</h1>
   <div class="accent"></div>
-  <p class="lede">SOS is a registered 501(c)(3) building coordination infrastructure that communities and nonprofits use at no cost. When disaster strikes, your gift is what lets help actually reach people.</p>
 </section>
 
-<!-- ── Embedded Givebutter giving form ──
-     Embedded Givebutter giving form (campaign IgzWSH).
-     show-goal-bar shows a progress bar; theme-color tints it to SOS coral.
-     Form colors/fonts/branding are set in the Givebutter campaign design settings. -->
+<!-- ── Two-column: info (left) + Givebutter form (right) ── -->
 <div class="give-wrap">
-  <div class="give-header">
-    <p class="give-eyebrow">Make a donation</p>
-    <h2 class="give-title">Give securely below</h2>
-    <p class="give-sub">Choose a one-time or monthly gift. Pay by Google&nbsp;Pay, credit or debit card, PayPal, Cash&nbsp;App&nbsp;Pay, or U.S.&nbsp;bank&nbsp;transfer (ACH) &mdash; processed securely through Givebutter.</p>
+
+  <div class="give-info">
+    <p class="eyebrow">Support this work</p>
+    <p class="intro">SOS is a registered 501(c)(3) providing a shared coordination workspace to communities and nonprofits at no cost to the user. Your generous donation helps us achieve this mission.</p>
+    <div class="org-block">
+      <div class="org-name">SOS Global Inc.</div>
+      <div>149 Weaver Blvd #127</div>
+      <div>Weaverville, NC 28787</div>
+      <hr>
+      <div><span class="row-label">EIN:</span> 33-2797387</div>
+      <div><span class="row-label">NC Solicitor License:</span> pending</div>
+      <div><a href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer">Candid</a> &nbsp;|&nbsp; <a href="mailto:team@sosconnect.org">team@sosconnect.org</a></div>
+    </div>
   </div>
-  <div class="give-card">
-    <givebutter-giving-form
-      campaign="IgzWSH"
-      show-goal-bar="true"
-      theme-color="#EF4E4B"
-      max-width="100%">
-      <!-- Fallback shown if the widget hasn't been configured/loaded yet -->
-      <div class="give-fallback">
-        <h2>Make a gift</h2>
-        <p>Secure giving powered by Givebutter. If the form doesn&rsquo;t load, you can give directly below.</p>
-        <a class="cta" href="https://givebutter.com/IgzWSH" target="_blank" rel="noopener">Donate now</a>
-      </div>
-    </givebutter-giving-form>
+
+  <!-- Embedded Givebutter giving form (campaign IgzWSH). Form colors/fonts/branding are set in the Givebutter campaign design settings. -->
+  <div>
+    <div class="give-card">
+      <givebutter-giving-form
+        campaign="IgzWSH"
+        show-goal-bar="true"
+        theme-color="#EF4E4B"
+        max-width="100%">
+        <div class="give-fallback">
+          <h2>Make a gift</h2>
+          <p>Secure giving powered by Givebutter. If the form doesn&rsquo;t load, you can give directly below.</p>
+          <a class="cta" href="https://givebutter.com/IgzWSH" target="_blank" rel="noopener">Donate now</a>
+        </div>
+      </givebutter-giving-form>
+    </div>
+    <div class="seal-wrap">
+      <a aria-label="SOS Global Inc on GuideStar" href="https://app.candid.org/profile/16026335/sos-global-inc-33-2797387/?pkId=8f89c5cf-167d-4c93-942b-c6e8e2f0ac48" target="_blank" rel="noopener noreferrer" style="display:inline-block;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+        <img alt="GuideStar Transparency Seal" src="https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/16026335/svg" loading="lazy" decoding="async" width="80" height="80" style="height:80px;" />
+      </a>
+    </div>
   </div>
+
+</div>
+
+<!-- ── Other ways to give ── -->
+<div class="options">
+
+  <!-- Donor Advised Funds -->
+  <section class="opt">
+    <h2>SOS welcomes Donor Advised Funds (DAF)</h2>
+    <p class="blurb">If you&rsquo;ve contributed to a Donor Advised Fund (DAF), you can recommend a grant to SOS.</p>
+    <p class="sub-label">How to grant from your DAF</p>
+    <ol>
+      <li>Log into your DAF account at your sponsoring organization.</li>
+      <li>Search for SOS Global Inc., or enter our details directly.</li>
+      <li>Recommend your grant, one-time or recurring.</li>
+      <li>We&rsquo;ll receive the funds directly and send you an acknowledgment.</li>
+    </ol>
+    <div class="detail">
+      <div><span class="k">Legal name:</span> SOS Global Inc.</div>
+      <div><span class="k">EIN:</span> 33-2797387</div>
+    </div>
+    <p class="closing">SOS can be added to most DAF platforms. Need help granting from your DAF, or want to confirm we&rsquo;re set up on yours? <a href="/join">Contact us for information</a> and our team will walk you through it.</p>
+  </section>
+
+  <!-- Qualified Charitable Distribution -->
+  <section class="opt">
+    <h2>SOS welcomes Qualified Charitable Distributions (QCD)</h2>
+    <p class="blurb">If you&rsquo;re 70&frac12; or older, a Qualified Charitable Distribution (QCD) lets you give directly from your IRA to SOS with zero tax.</p>
+    <p class="sub-label">Why a QCD</p>
+    <p>Unlike a regular donation, a QCD:</p>
+    <ul>
+      <li>Doesn&rsquo;t count as taxable income, even if you don&rsquo;t itemize.</li>
+      <li>Counts toward your Required Minimum Distribution (RMD).</li>
+      <li>Is not affected by 2026&rsquo;s new limits on charitable deductions.</li>
+      <li>Goes directly to SOS.</li>
+    </ul>
+    <p class="sub-label">How to make a QCD</p>
+    <ol>
+      <li>Contact your IRA custodian. Call them or log into your account and request a Qualified Charitable Distribution.</li>
+      <li>Designate SOS Global Inc. as the recipient.</li>
+      <li>You&rsquo;ll receive a written acknowledgment for your records.</li>
+    </ol>
+    <div class="detail">
+      <div><span class="k">Legal name:</span> SOS Global Inc.</div>
+      <div><span class="k">EIN:</span> 33-2797387</div>
+    </div>
+    <p class="closing">Questions? Email us at <a href="mailto:team@sosconnect.org">team@sosconnect.org</a>.</p>
+  </section>
+
+  <!-- Check -->
+  <section class="opt">
+    <h2>SOS welcomes donations by check</h2>
+    <p class="blurb">Make your check payable to SOS Global Inc. and mail to:</p>
+    <div class="detail">
+      <div class="org-name" style="font-weight:700;color:#fff;">SOS Global Inc.</div>
+      <div>149 Weaver Blvd #127</div>
+      <div>Weaverville, NC 28787</div>
+      <div style="margin-top:8px;"><span class="k">EIN:</span> 33-2797387</div>
+    </div>
+    <p>Once we receive your gift, we&rsquo;ll mail you a written acknowledgment letter within 7 business days as an official tax receipt.</p>
+    <p class="closing">Want to confirm we received your check? Email <a href="mailto:team@sosconnect.org">team@sosconnect.org</a> with the approximate amount, mail date, and check number. We&rsquo;ll look it up and confirm with you.</p>
+  </section>
+
 </div>
 
 <div class="trust">
   <p class="fine">SOS Global Inc. is a registered 501(c)(3) nonprofit. Your contribution is tax-deductible to the extent allowed by law. EIN 33-2797387.</p>
-  <p class="fine">Prefer to give another way, or giving on behalf of a foundation? Email <a class="mail" href="mailto:team@sosconnect.org">team@sosconnect.org</a>.</p>
 </div>
 
-<footer style="background: #0F1E2B; padding: 80px 32px 48px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 40px;">
+<footer style="background: #0F1E2B; padding: 80px 32px 48px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 64px;">
   <img src="/logomark-red.svg" alt="SOS" loading="lazy" decoding="async" style="height: 32px; opacity: 0.8; margin-bottom: 32px;">
   <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; color: #fff; font-weight: 400; line-height: 1.2; margin-bottom: 12px;">Everyone is a helper.</p>
   <p style="font-size: 18px; color: #89CFF0; font-weight: 300; margin-bottom: 36px;">We help the helpers.</p>

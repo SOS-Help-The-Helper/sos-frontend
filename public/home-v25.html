@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SOS | Community Coordination</title>
-<meta name="description" content="Community coordination infrastructure. When disasters strike, people respond — they just can't see each other. SOS connects citizens, nonprofits, and emergency services so help actually reaches people.">
+<meta name="description" content="Community coordination infrastructure. When disasters strike, people respond. They just can't see each other. SOS connects citizens, nonprofits, and emergency services so help actually reaches people.">
 <link rel="canonical" href="https://sosconnect.org/">
 
 <!-- Preconnect to font hosts so the blocking stylesheet on line below resolves faster -->
@@ -17,7 +17,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sosconnect.org">
 <meta property="og:title" content="SOS | Community Coordination">
-<meta property="og:description" content="When disasters strike, people respond — they just can't see each other. SOS is coordination infrastructure that connects help with the people who need it.">
+<meta property="og:description" content="When disasters strike, people respond. They just can't see each other. SOS is coordination infrastructure that connects help with the people who need it.">
 <meta property="og:image" content="https://sosconnect.org/og-image.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -26,7 +26,7 @@
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOS | Community Coordination">
-<meta name="twitter:description" content="When disasters strike, people respond — they just can't see each other. SOS connects help with the people who need it.">
+<meta name="twitter:description" content="When disasters strike, people respond. They just can't see each other. SOS connects help with the people who need it.">
 <meta name="twitter:image" content="https://sosconnect.org/og-image.png?v=2">
 <link rel="icon" type="image/png" href="/logomark.png">
 <link rel="apple-touch-icon" href="/logomark.png">
@@ -35,6 +35,7 @@
   /* ── Reset ── */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  html, body { overflow-x: hidden; }
   body {
     font-family: 'Nunito Sans', -apple-system, sans-serif;
     color: #0F1E2B;
@@ -313,14 +314,31 @@
   /* ══════════════════════════════════
      SOLUTION — Flywheel
      ══════════════════════════════════ */
+  .solution-panel {
+    background: #0F1E2B;
+    border-radius: 24px;
+    padding: 40px 24px 28px;
+    margin: 48px auto 0;
+    max-width: 480px;
+    overflow: hidden;
+    box-shadow: 0 18px 48px rgba(15,30,43,0.18);
+  }
   .flywheel-svg {
-    max-width: 380px; margin: 48px auto 0; display: block;
+    max-width: 380px; margin: 0 auto; display: block;
+  }
+  .solution-caption {
+    margin-top: 12px; text-align: center;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #89CFF0;
   }
   .flywheel-node { opacity: 0; }
-  .flywheel-arc { opacity: 0; }
   .flywheel-center { opacity: 0; }
+  .fw-spark { filter: drop-shadow(0 0 6px rgba(239,78,75,0.6)); }
   .flywheel-ring-anim {
     transform-origin: 200px 200px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fw-spark { display: none; }
   }
 
   .result-card {
@@ -482,7 +500,9 @@
     .scenario-card { padding: 24px; }
     .scenario-card::before { left: -28px; width: 10px; height: 10px; }
     .scenario-timeline-line { left: 12px; }
-    .flywheel-svg { max-width: 300px; }
+    .flywheel-svg { max-width: 280px; }
+    .solution-panel { padding: 24px 12px 20px; border-radius: 18px; }
+    #crisisCards { padding: 0 !important; }
     .invitation-section { padding: 80px 20px; }
     .scenario-header h2 { font-size: 28px; }
     .are-you-heading { font-size: 32px; }
@@ -665,14 +685,13 @@
 <!-- Beat 1: White background — domestic disaster failures -->
 <section id="crisis" class="bg-light">
   <div class="narrow">
-    <p class="label gs-fade">The Crisis</p>
-    <h2 class="gs-fade">When systems fail,<br>people fall through.</h2>
+    <h2 class="gs-fade">The Crisis</h2>
     <div class="accent-line gs-fade"></div>
 
     <div style="margin-top: 32px;" class="gs-fade">
       <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Over the last twenty years, every major disaster has shown the same failure. The systems built to coordinate responders are inadequate.</p>
       <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300; margin-bottom: 12px;">Search and rescue teams duplicate efforts while entire communities go unseen. Information blasts on social media become stale and confusing.</p>
-      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Without a coordination layer, volunteers, nonprofits, and responding agencies are hindered from doing what they do best &mdash; helping.</p>
+      <p style="font-size: 17px; color: #3d4852; line-height: 1.8; font-weight: 300;">Without a coordination layer, volunteers, nonprofits, and responding agencies are hindered from doing what they do best.</p>
     </div>
 
   </div>
@@ -749,63 +768,91 @@
 <section id="solution" class="bg-light-alt">
   <div class="narrow" style="text-align: center;">
     <p class="label gs-fade">The Solution</p>
-    <h2 class="gs-fade">Relief infrastructure.</h2>
+    <h2 class="gs-fade">A Full Lifecycle Humanitarian Platform</h2>
     <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
 
-    <div style="margin: 48px auto; max-width: 420px;">
+    <div class="solution-panel gs-fade">
       <svg viewBox="0 0 400 420" class="flywheel-svg" id="flywheelSvg" style="max-width: 100%;">
-          <defs>
-            <marker id="fw-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#0F1E2B" opacity="0.5"/>
-            </marker>
-          </defs>
+          <!-- Background ring (static guide on navy) -->
+          <circle cx="200" cy="200" r="140" fill="none" stroke="#89CFF0" stroke-width="1.5" opacity="0.18" class="flywheel-ring-anim"/>
 
-          <!-- Background ring -->
-          <circle cx="200" cy="200" r="140" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0.2" class="flywheel-ring-anim"/>
-
-          <!-- Directional arcs with arrows -->
-          <path class="flywheel-arc" d="M 224 62 A 140 140 0 0 1 324 134" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-          <path class="flywheel-arc" d="M 339 181 A 140 140 0 0 1 301 297" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-          <path class="flywheel-arc" d="M 261 326 A 140 140 0 0 1 139 326" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-          <path class="flywheel-arc" d="M 99 297 A 140 140 0 0 1 61 181" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-          <path class="flywheel-arc" d="M 76 134 A 140 140 0 0 1 176 62" fill="none" stroke="#0F1E2B" stroke-width="1.5" opacity="0" marker-end="url(#fw-arrow)"/>
-
-          <!-- Node 1: Intake (top) -->
-          <g class="flywheel-node">
-            <circle cx="200" cy="60" r="28" fill="#ffffff" stroke="#0F1E2B" stroke-width="1.5"/>
-            <text x="200" y="56" text-anchor="middle" fill="#0F1E2B" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">01</text>
-            <text x="200" y="70" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Intake</text>
+          <!-- Chain-reaction spark: travels clockwise from Intake (top) around the loop -->
+          <g class="fw-spark">
+            <circle r="13" fill="#EF4E4B" opacity="0.22"/>
+            <circle r="6" fill="#EF4E4B"/>
+            <circle r="3" fill="#ffffff" opacity="0.9"/>
+            <animateMotion dur="10s" repeatCount="indefinite" rotate="auto"
+              path="M 200 60 A 140 140 0 0 1 200 340 A 140 140 0 0 1 200 60"
+              calcMode="linear"/>
           </g>
 
-          <!-- Node 2: Match (top-right) -->
+          <!-- Node 1: Intake (top). Origin node, gets the extra pop ring -->
           <g class="flywheel-node">
-            <circle cx="333" cy="157" r="28" fill="#ffffff" stroke="#0F1E2B" stroke-width="1.5"/>
-            <text x="333" y="153" text-anchor="middle" fill="#0F1E2B" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">02</text>
-            <text x="333" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Map</text>
+            <circle cx="200" cy="60" r="28" fill="none" stroke="#89CFF0" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" begin="0s" dur="10s" repeatCount="indefinite"
+                values="1;0.35;0.25;0.25;0.25;1" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+              <animate attributeName="r" begin="0s" dur="10s" repeatCount="indefinite"
+                values="28;34;28;28;28;28" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+            </circle>
+            <circle cx="200" cy="60" r="28" fill="none" stroke="#EF4E4B" stroke-width="2" opacity="0">
+              <animate attributeName="r" begin="0s" dur="10s" repeatCount="indefinite"
+                values="28;28;46;46;28;28" keyTimes="0;0.01;0.14;0.15;0.16;1"/>
+              <animate attributeName="opacity" begin="0s" dur="10s" repeatCount="indefinite"
+                values="0;0.8;0;0;0;0" keyTimes="0;0.01;0.14;0.15;0.16;1"/>
+            </circle>
+            <circle cx="200" cy="60" r="28" fill="#0F1E2B" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="200" y="64" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Nunito Sans', sans-serif">Intake</text>
+          </g>
+
+          <!-- Node 2: Map (top-right) -->
+          <g class="flywheel-node">
+            <circle cx="333" cy="157" r="28" fill="none" stroke="#89CFF0" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" begin="2s" dur="10s" repeatCount="indefinite"
+                values="1;0.35;0.25;0.25;0.25;1" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+              <animate attributeName="r" begin="2s" dur="10s" repeatCount="indefinite"
+                values="28;34;28;28;28;28" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+            </circle>
+            <circle cx="333" cy="157" r="28" fill="#0F1E2B" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="333" y="161" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Nunito Sans', sans-serif">Map</text>
           </g>
 
           <!-- Node 3: Match (bottom-right) -->
           <g class="flywheel-node">
-            <circle cx="282" cy="313" r="28" fill="#ffffff" stroke="#0F1E2B" stroke-width="1.5"/>
-            <text x="282" y="309" text-anchor="middle" fill="#0F1E2B" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">03</text>
-            <text x="282" y="323" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Match</text>
+            <circle cx="282" cy="313" r="28" fill="none" stroke="#89CFF0" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" begin="4s" dur="10s" repeatCount="indefinite"
+                values="1;0.35;0.25;0.25;0.25;1" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+              <animate attributeName="r" begin="4s" dur="10s" repeatCount="indefinite"
+                values="28;34;28;28;28;28" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+            </circle>
+            <circle cx="282" cy="313" r="28" fill="#0F1E2B" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="282" y="317" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Nunito Sans', sans-serif">Match</text>
           </g>
 
           <!-- Node 4: Fulfill (bottom-left) -->
           <g class="flywheel-node">
-            <circle cx="118" cy="313" r="28" fill="#ffffff" stroke="#0F1E2B" stroke-width="1.5"/>
-            <text x="118" y="309" text-anchor="middle" fill="#0F1E2B" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">04</text>
-            <text x="118" y="323" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Fulfill</text>
+            <circle cx="118" cy="313" r="28" fill="none" stroke="#89CFF0" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" begin="6s" dur="10s" repeatCount="indefinite"
+                values="1;0.35;0.25;0.25;0.25;1" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+              <animate attributeName="r" begin="6s" dur="10s" repeatCount="indefinite"
+                values="28;34;28;28;28;28" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+            </circle>
+            <circle cx="118" cy="313" r="28" fill="#0F1E2B" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="118" y="317" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Nunito Sans', sans-serif">Fulfill</text>
           </g>
 
           <!-- Node 5: Learn (top-left) -->
           <g class="flywheel-node">
-            <circle cx="67" cy="157" r="28" fill="#ffffff" stroke="#0F1E2B" stroke-width="1.5"/>
-            <text x="67" y="153" text-anchor="middle" fill="#0F1E2B" font-size="10" font-weight="700" font-family="'Nunito Sans', sans-serif" letter-spacing="0.05em">05</text>
-            <text x="67" y="167" text-anchor="middle" fill="#0F1E2B" font-size="11" font-weight="600" font-family="'Nunito Sans', sans-serif">Learn</text>
+            <circle cx="67" cy="157" r="28" fill="none" stroke="#89CFF0" stroke-width="2" opacity="0">
+              <animate attributeName="opacity" begin="8s" dur="10s" repeatCount="indefinite"
+                values="1;0.35;0.25;0.25;0.25;1" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+              <animate attributeName="r" begin="8s" dur="10s" repeatCount="indefinite"
+                values="28;34;28;28;28;28" keyTimes="0;0.05;0.12;0.5;0.9;1"/>
+            </circle>
+            <circle cx="67" cy="157" r="28" fill="#0F1E2B" stroke="#89CFF0" stroke-width="1.5"/>
+            <text x="67" y="161" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Nunito Sans', sans-serif">Learn</text>
           </g>
 
-          <!-- Center: SOS logo + radar pulse rings -->
+          <!-- Center: SOS logomark + radar pulse rings -->
           <circle cx="200" cy="200" r="30" fill="none" stroke="#EF4E4B" stroke-width="0.5" opacity="0" class="fw-radar-ring">
             <animate attributeName="r" values="30;80" dur="3s" repeatCount="indefinite" begin="2s"/>
             <animate attributeName="opacity" values="0.4;0" dur="3s" repeatCount="indefinite" begin="2s"/>
@@ -816,7 +863,7 @@
           </circle>
           <image href="/logomark-red.svg" x="172" y="172" width="56" height="56" class="flywheel-center"/>
         </svg>
-      <p style="margin-top: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #0F1E2B;">The Coordination Loop</p>
+      <p class="solution-caption">The Coordination Loop</p>
     </div>
 
     <p class="body-lg gs-fade" style="margin-top: 24px; text-align: left;">
@@ -844,13 +891,12 @@
      ════════════════════════════════════════════ -->
 <section id="about" class="bg-white" style="padding: 100px 32px;">
   <div style="max-width: 720px; margin: 0 auto; text-align: center;">
-    <p class="label gs-fade">SOS</p>
-    <h2 class="gs-fade">Born in a hurricane.<br>Built on research.</h2>
+    <h2 class="gs-fade">Born in a hurricane. Built on research.</h2>
     <div class="accent-line gs-fade" style="margin: 24px auto 0;"></div>
   </div>
   <div style="max-width: 1080px; margin: 48px auto 0; padding: 0 32px;" id="aboutGrid">
     <div class="gs-fade" style="text-align: center; padding: 56px 48px; background: #0F1E2B; border-radius: 16px;">
-      <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 32px; color: #fff; font-weight: 400; line-height: 1.35;">We discovered that the instinct to help is always there. What's missing &mdash; <span style="color: #EF4E4B;">is infrastructure.</span></p>
+      <p style="font-family: 'DM Serif Display', Georgia, serif; font-size: 32px; color: #fff; font-weight: 400; line-height: 1.35;">We discovered that the instinct to help is always there. What's missing <span style="color: #EF4E4B;">is a system.</span></p>
       <div style="margin-top: 32px;">
         <a href="/the-sos-story" style="font-family: 'Nunito Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #89CFF0; text-decoration: none; border-bottom: 1.5px solid rgba(137,207,240,0.4); padding-bottom: 3px;">Read the SOS story &rarr;</a>
       </div>
@@ -1330,17 +1376,11 @@
       flywheelTriggered = true;
 
       var nodes = document.querySelectorAll('.flywheel-node');
-      var arcs = document.querySelectorAll('.flywheel-arc');
       var center = document.querySelector('.flywheel-center');
 
       // Fade in nodes sequentially
       gsap.to(nodes, {
         opacity: 1, duration: 0.5, stagger: 0.25, ease: 'power2.out'
-      });
-
-      // Fade in arcs sequentially (slightly delayed)
-      gsap.to(arcs, {
-        opacity: 0.4, duration: 0.4, stagger: 0.25, delay: 0.15, ease: 'power2.out'
       });
 
       // Center logo pulse after nodes appear
@@ -1357,6 +1397,16 @@
 
     }
   });
+
+  /* Respect reduced-motion: halt the flywheel SMIL chain animation */
+  (function() {
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var fw = document.getElementById('flywheelSvg');
+        if (fw && typeof fw.pauseAnimations === 'function') fw.pauseAnimations();
+      }
+    } catch (e) {}
+  })();
 
   /* ═══════════════════════════════════════════
      Scenario — smooth staggered reveal (no pinning)
