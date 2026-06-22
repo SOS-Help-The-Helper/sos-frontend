@@ -56,10 +56,6 @@ const nextConfig: NextConfig = {
         destination: '/donate.html',
       },
       {
-        source: '/coordination',
-        destination: '/coordination.html',
-      },
-      {
         source: '/case-studies/garden-grove-hazmat',
         destination: '/case-studies/garden-grove-hazmat.html',
       },
