@@ -42,6 +42,45 @@ export const STAGE_META: Record<CaseStage, { label: string; tone: StatusTone }> 
   closed:        { label: "Closed",       tone: "neutral" },
 };
 
+/** Urgency → status-dot tone (board urgency borders, chips). */
+export const URGENCY_TONE: Record<string, StatusTone> = {
+  critical: "new",
+  high: "matching",
+  medium: "contacted",
+  low: "reserved",
+};
+
+/**
+ * Best-effort resolve of an arbitrary status string onto a known CaseStage.
+ * Used to bucket board cards when the EF emits aliases (open/new/resolved…).
+ */
+export function resolveStage(status?: string | null): CaseStage {
+  const s = (status || "").toLowerCase().trim();
+  if (s in STAGE_META) return s as CaseStage;
+  const alias: Record<string, CaseStage> = {
+    new: "pending",
+    open: "active",
+    review: "under_review",
+    matching: "matched",
+    resolved: "fulfilled",
+    complete: "fulfilled",
+    completed: "fulfilled",
+    done: "closed",
+  };
+  return alias[s] ?? "active";
+}
+
+/** Human label for a stage key, falling back to a Title-cased raw key. */
+export function stageLabel(key: string): string {
+  if (key in STAGE_META) return STAGE_META[key as CaseStage].label;
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Tone for a stage key, falling back to neutral for unknown keys. */
+export function stageTone(key: string): StatusTone {
+  return key in STAGE_META ? STAGE_META[key as CaseStage].tone : "neutral";
+}
+
 export const ENTITY_TONE: Record<EntityType, Tone> = {
   person:   "neutral",
   org:      "neutral",
