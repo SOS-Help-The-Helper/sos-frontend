@@ -1,111 +1,124 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from "react";
-import { CrmShell } from "@/components/crm-shell";
-import { PageHeader } from "@/components/crm/manage-tabs";
-const cases: any[] = [];
-import { Filter, Plus, Calendar, Layers } from "lucide-react";
+/**
+ * Map — operating picture. Phase 5 (redesign 2026-06, SOS Connect System).
+ * Full-height interactive Mapbox dark map wrapped in the console shell.
+ * Legend chips double as layer toggles; clicking a pin opens a console-styled
+ * detail card that links to the entity. Composed entirely from
+ * @/components/console. Data via lib/api (EFs) only.
+ *
+ * No hardcoded hex lives outside MAP_STYLE — the Mapbox style/paint config is
+ * its own concern (Mapbox needs literal colors). Everything else uses tokens.
+ */
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowUpRight, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { type PinLayer, type MapPin } from "@/components/map/map-pin-card";
-import { PinDetailCard, type PinType } from "@/components/citizen/pin-detail-card";
+import {
+  ConsoleShell,
+  AgentPanel,
+  Surface,
+  SectionLabel,
+  Chip,
+  Tag,
+  Button,
+  Spinner,
+  EmptyState,
+  StatusDot,
+  useDemoMode,
+  URGENCY_TONE,
+  type DisasterOption,
+  type AgentMessage,
+  type AgentSuggestion,
+  type EntityType,
+  type StatusTone,
+} from "@/components/console";
 
-const LAYER_COLORS: Record<string, string> = {
-  case: "#EF4E4B", resource: "#89CFF0", facility: "#4ADE80", event: "#A855F7",
-};
+/* ------------------------------------------------------------------ */
+/* Mapbox style config — the ONE place literal colors are allowed.     */
+/* (Mapbox paint expressions require concrete color strings.) These    */
+/* mirror the console tokens: coral / blue / amber + the navy bg.      */
+/* ------------------------------------------------------------------ */
+const MAP_STYLE = {
+  url: "mapbox://styles/mapbox/dark-v11",
+  center: [-95, 37] as [number, number],
+  zoom: 3.6,
+  stroke: "#0A131C", // --cn-bg
+  layers: [
+    { kind: "request", label: "Requests", tone: "new" as StatusTone, entity: "request" as EntityType, color: "#FF5A57" },
+    { kind: "resource", label: "Resources", tone: "reserved" as StatusTone, entity: "resource" as EntityType, color: "#6BB8F0" },
+    { kind: "report", label: "Reports", tone: "report" as StatusTone, entity: "report" as EntityType, color: "#F5B544" },
+  ],
+} as const;
 
-const LAYERS = ["case", "resource", "facility", "event"] as const;
+type Kind = (typeof MAP_STYLE.layers)[number]["kind"];
+const KINDS = MAP_STYLE.layers.map((l) => l.kind) as Kind[];
+const LAYER_META = Object.fromEntries(MAP_STYLE.layers.map((l) => [l.kind, l])) as Record<
+  Kind,
+  (typeof MAP_STYLE.layers)[number]
+>;
 
-// CRM layer name → vector-tile `type` property value (single 'sos' source-layer).
-// Cases are stored as requests in the tiles; resources/facilities/events map 1:1.
-const TYPE_FILTER: Record<(typeof LAYERS)[number], string> = {
-  case: "request",
-  resource: "resource",
-  facility: "facility",
-  event: "event",
-};
+const SOURCE_ID = "sos-map";
+const EMPTY_FC = { type: "FeatureCollection", features: [] as unknown[] };
+const pointsLayer = (k: Kind) => `${k}-points`;
+const glowLayer = (k: Kind) => `${k}-glow`;
 
-// Mapbox layer id suffixes managed per CRM layer (points, glow, heatmap).
-const LAYER_SUFFIXES = ["-glow", "-points", "-heatmap"] as const;
-
-function tilesUrlFor(orgId: string): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  // 'sos' is the synthetic all-partners view → public tiles. Empty/null → public.
-  // All tiles served from /api/map/tiles/{z}/{x}/{y} — org_id passed as query param.
-  if (orgId && orgId !== "sos") {
-    return `${origin}/api/map/tiles/{z}/{x}/{y}?org_id=${encodeURIComponent(orgId)}`;
-  }
-  return `${origin}/api/map/tiles/{z}/{x}/{y}`;
+interface PinSelection {
+  id: string;
+  kind: Kind;
+  category: string;
+  urgency: string;
 }
 
-const WNC_COUNTY_CENTROIDS: Record<string, [number, number]> = {
-  buncombe:     [-82.55, 35.55],
-  henderson:    [-82.47, 35.33],
-  madison:      [-82.73, 35.84],
-  mcdowell:     [-82.03, 35.69],
-  burke:        [-81.72, 35.76],
-  catawba:      [-81.38, 35.66],
-  haywood:      [-83.00, 35.55],
-  transylvania: [-82.83, 35.20],
-  yancey:       [-82.33, 35.90],
-  mitchell:     [-82.17, 36.00],
-  avery:        [-81.90, 36.05],
-  watauga:      [-81.70, 36.20],
-  caldwell:     [-81.57, 35.97],
-  rutherford:   [-81.87, 35.40],
-  polk:         [-82.07, 35.30],
-  cherokee:     [-83.92, 35.12],
-  graham:       [-83.83, 35.35],
-  swain:        [-83.50, 35.49],
-  jackson:      [-83.13, 35.30],
-  macon:        [-83.42, 35.16],
-  clay:         [-83.76, 35.05],
-};
-
-interface SelectedPin {
-  pin: MapPin;
-  x: number;
-  y: number;
+interface Disaster {
+  id: string;
+  name: string;
+  day?: number;
 }
 
-// CRM layer → PinDetailCard type (request/resource/report)
-const PIN_TYPE_FOR_LAYER: Record<PinLayer, PinType> = {
-  case: "request",
-  resource: "resource",
-  facility: "resource",
-  event: "report",
-};
-
-function hrefForPin(layer: PinLayer, id: string): string {
-  if (layer === 'case') return `/app/cases/${id}`;
-  if (layer === 'resource') return `/app/directory/resource/${id}`;
-  if (layer === 'facility') return `/app/inventory#${id}`;
-  return `/app/calendar#${id}`;
+function hrefForPin(kind: Kind, id: string): string {
+  if (kind === "resource") return `/app/directory/resource/${id}`;
+  // requests + reports both resolve to their case workspace
+  return `/app/cases/${id}`;
 }
 
-function MapboxEmbed({
-  orgId,
-  onPinSelect,
-  onPinClear,
-  onMapReady,
+/* ------------------------------------------------------------------ */
+/* MapCanvas — interactive Mapbox GL canvas (loads the real dep).      */
+/* Presentational: parent owns features, visibility + selection.       */
+/* ------------------------------------------------------------------ */
+function MapCanvas({
+  features,
+  visible,
+  onSelect,
+  onClear,
 }: {
-  orgId: string;
-  onPinSelect: (s: SelectedPin) => void;
-  onPinClear: () => void;
-  onMapReady?: (map: any) => void;
+  features: typeof EMPTY_FC;
+  visible: Record<Kind, boolean>;
+  onSelect: (pin: PinSelection) => void;
+  onClear: () => void;
 }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const onPinSelectRef = useRef(onPinSelect);
-  onPinSelectRef.current = onPinSelect;
-  const onPinClearRef = useRef(onPinClear);
-  onPinClearRef.current = onPinClear;
+  const elRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const mapboxRef = useRef<any>(null);
+  const didFit = useRef(false);
+  const [ready, setReady] = useState(false);
 
+  // Keep latest handlers without re-initialising the map.
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  const onClearRef = useRef(onClear);
+  onClearRef.current = onClear;
+
+  // One-time map init.
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
+    if (!elRef.current || mapRef.current) return;
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    if (!token) return; // parent renders the fallback
+
     let cancelled = false;
 
-    // Inject Mapbox CSS
     if (!document.getElementById("mapbox-css")) {
       const link = document.createElement("link");
       link.id = "mapbox-css";
@@ -116,345 +129,450 @@ function MapboxEmbed({
 
     (async () => {
       const mapboxgl = (await import("mapbox-gl")).default;
-      if (cancelled || !mapRef.current) return;
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+      if (cancelled || !elRef.current) return;
+      mapboxRef.current = mapboxgl;
+      mapboxgl.accessToken = token;
 
       const map = new mapboxgl.Map({
-        container: mapRef.current,
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: [-82.5, 35.5],
-        zoom: 8,
+        container: elRef.current,
+        style: MAP_STYLE.url,
+        center: MAP_STYLE.center,
+        zoom: MAP_STYLE.zoom,
+        attributionControl: false,
       });
       map.dragRotate.disable();
       map.touchZoomRotate.disableRotation();
-      mapInstance.current = map;
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
+      mapRef.current = map;
 
       map.on("load", () => {
-        try {
-          // === SOS POSTGIS VECTOR TILES SOURCE ===
-          // Org-scoped tiles for a real org; public tiles for the 'sos' all-partners view.
-          map.addSource("sos-tiles", {
-            type: "vector",
-            tiles: [tilesUrlFor(orgId)],
-            minzoom: 2,
-            maxzoom: 14,
+        map.addSource(SOURCE_ID, { type: "geojson", data: EMPTY_FC as any });
+
+        for (const layer of MAP_STYLE.layers) {
+          const filter = ["==", ["get", "kind"], layer.kind] as any;
+
+          map.addLayer({
+            id: glowLayer(layer.kind),
+            type: "circle",
+            source: SOURCE_ID,
+            filter,
+            paint: {
+              "circle-color": layer.color,
+              "circle-radius": 13,
+              "circle-opacity": 0.18,
+              "circle-blur": 1,
+            },
+          });
+          map.addLayer({
+            id: pointsLayer(layer.kind),
+            type: "circle",
+            source: SOURCE_ID,
+            filter,
+            paint: {
+              "circle-color": layer.color,
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 12, 8],
+              "circle-stroke-width": 2,
+              "circle-stroke-color": MAP_STYLE.stroke,
+            },
           });
 
-          for (const layer of LAYERS) {
-            const color = LAYER_COLORS[layer];
-            const filter = ["==", ["get", "type"], TYPE_FILTER[layer]] as any;
-
-            // Glow ring
-            map.addLayer({
-              id: `${layer}-glow`,
-              type: "circle",
-              source: "sos-tiles",
-              "source-layer": "sos",
-              filter,
-              paint: {
-                "circle-color": color,
-                "circle-radius": 12,
-                "circle-opacity": 0.2,
-                "circle-blur": 1,
-              },
+          map.on("click", pointsLayer(layer.kind), (e: any) => {
+            const f = e.features?.[0];
+            if (!f) return;
+            const p = f.properties || {};
+            onSelectRef.current({
+              id: String(p.id ?? ""),
+              kind: layer.kind,
+              category: String(p.category ?? ""),
+              urgency: String(p.urgency ?? ""),
             });
-
-            // Points
-            map.addLayer({
-              id: `${layer}-points`,
-              type: "circle",
-              source: "sos-tiles",
-              "source-layer": "sos",
-              filter,
-              paint: {
-                "circle-color": color,
-                "circle-radius": 6,
-                "circle-stroke-width": 2,
-                "circle-stroke-color": "#0F1E2B",
-              },
-            });
-
-            // Heatmap layer (hidden by default — toggled via mapMode command)
-            map.addLayer({
-              id: `${layer}-heatmap`,
-              type: "heatmap",
-              source: "sos-tiles",
-              "source-layer": "sos",
-              filter,
-              layout: { visibility: "none" },
-              paint: {
-                "heatmap-weight": ["match", ["get", "urgency"], "critical", 1, "high", 0.7, "medium", 0.4, 0.2],
-                "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 6, 0.7, 12, 2.2],
-                "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], 0, "transparent", 0.2, "#1a3850", 0.4, "#89CFF0", 0.6, "#EF4E4B", 0.8, "#FCD34D", 1, "#ffffff"],
-                "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 6, 14, 12, 42],
-                "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 11, 0.9, 13, 0],
-              },
-            });
-
-            // Click point → show MapPinCard overlay
-            map.on("click", `${layer}-points`, (e: any) => {
-              const feat = e.features?.[0];
-              if (!feat) return;
-              const p = feat.properties || {};
-              const id = String(p.id || p.uuid || '');
-              const title = p.title || p.name || (id ? id.slice(0, 8) : layer);
-              const subtitle = p.subtitle || p.county || p.location || p.owner_name || undefined;
-              const status = p.status || undefined;
-              onPinSelectRef.current({
-                pin: {
-                  layer: layer as PinLayer,
-                  id,
-                  title,
-                  subtitle,
-                  status,
-                  href: hrefForPin(layer as PinLayer, id),
-                  urgency: p.urgency || undefined,
-                  county: p.county || undefined,
-                  taxonomy: p.taxonomy_code || p.taxonomy || undefined,
-                  capacity: p.capacity || p.capacity_available || undefined,
-                  matchedTo: p.matched_to || undefined,
-                  verifiedBy: p.verified_by || undefined,
-                  date: p.date || p.event_date || undefined,
-                  time: p.time || p.event_time || undefined,
-                  filled: p.filled != null ? Number(p.filled) : p.current_count != null ? Number(p.current_count) : undefined,
-                  slots: p.slots != null ? Number(p.slots) : p.capacity != null ? Number(p.capacity) : undefined,
-                  type: p.type || p.facility_type || undefined,
-                  description: p.description || undefined,
-                  location_text: p.location_text || p.location || undefined,
-                  public_display_text: p.public_display_text || p.description || undefined,
-                  household_size: p.household_size || undefined,
-                  org_name: p.org_name || undefined,
-                  created_at: p.created_at || undefined,
-                  capacity_remaining: p.capacity_remaining || undefined,
-                  corroboration_count: p.corroboration_count || undefined,
-                  category: p.category || undefined,
-                  taxonomy_code: p.taxonomy_code || p.taxonomy || undefined,
-                },
-                x: e.point.x,
-                y: e.point.y,
-              });
-            });
-
-            // Hover cursor
-            map.on("mouseenter", `${layer}-points`, () => { map.getCanvas().style.cursor = "pointer"; });
-            map.on("mouseleave", `${layer}-points`, () => { map.getCanvas().style.cursor = ""; });
-          }
-
-          // Click on empty map → clear selected pin
-          map.on("click", (e: any) => {
-            const pointLayers = LAYERS.map((l) => `${l}-points`).filter((id) => map.getLayer(id));
-            const hits = map.queryRenderedFeatures(e.point, { layers: pointLayers });
-            if (hits.length === 0) onPinClearRef.current();
           });
-
-          // Expose map instance to parent
-          onMapReady?.(map);
-        } catch (e) {
-          console.warn("Map data load failed:", e);
+          map.on("mouseenter", pointsLayer(layer.kind), () => {
+            map.getCanvas().style.cursor = "pointer";
+          });
+          map.on("mouseleave", pointsLayer(layer.kind), () => {
+            map.getCanvas().style.cursor = "";
+          });
         }
+
+        // Click on empty map → dismiss the detail card.
+        map.on("click", (e: any) => {
+          const ids = KINDS.map(pointsLayer).filter((id) => map.getLayer(id));
+          const hits = map.queryRenderedFeatures(e.point, { layers: ids });
+          if (hits.length === 0) onClearRef.current();
+        });
+
+        setReady(true);
       });
     })();
 
     return () => {
       cancelled = true;
-      mapInstance.current?.remove();
-      mapInstance.current = null;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      setReady(false);
+      didFit.current = false;
     };
-  }, [orgId]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const map = mapInstance.current;
-      if (!map) return;
-      const cmd = (e as CustomEvent).detail;
-      if (!cmd) return;
-
-      if (cmd.action === "flyTo") {
-        map.flyTo({ center: [cmd.lng, cmd.lat], zoom: cmd.zoom || 12 });
-      } else if (cmd.action === "filter") {
-        for (const layer of LAYERS) {
-          const vis = Array.isArray(cmd.layers) && cmd.layers.includes(layer) ? "visible" : "none";
-          for (const suffix of LAYER_SUFFIXES) {
-            const layerId = `${layer}${suffix}`;
-            if (map.getLayer(layerId)) {
-              map.setLayoutProperty(layerId, "visibility", vis);
-            }
-          }
-        }
-      } else if (cmd.action === "mapMode") {
-        for (const layer of LAYERS) {
-          const isPins = cmd.mode === 'pins';
-          for (const suffix of ["-glow", "-points"]) {
-            const layerId = `${layer}${suffix}`;
-            if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", isPins ? "visible" : "none");
-          }
-          const heatmapId = `${layer}-heatmap`;
-          if (map.getLayer(heatmapId)) map.setLayoutProperty(heatmapId, "visibility", isPins ? "none" : "visible");
-        }
-      }
-      if (cmd.action === "filter" && cmd.county) {
-        const centroid = WNC_COUNTY_CENTROIDS[cmd.county.toLowerCase()];
-        if (centroid) map.flyTo({ center: centroid, zoom: 10 });
-      }
-    };
-
-    window.addEventListener("sos-map-cmd", handler);
-    return () => window.removeEventListener("sos-map-cmd", handler);
   }, []);
 
-  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
+  // Sync feature data + fit to bounds once.
+  useEffect(() => {
+    const map = mapRef.current;
+    const mapboxgl = mapboxRef.current;
+    if (!map || !ready) return;
+    const src = map.getSource(SOURCE_ID);
+    if (src) src.setData(features as any);
+
+    if (!didFit.current && mapboxgl && features.features.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      let any = false;
+      for (const f of features.features as any[]) {
+        const c = f?.geometry?.coordinates;
+        if (Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1])) {
+          bounds.extend(c as [number, number]);
+          any = true;
+        }
+      }
+      if (any) {
+        map.fitBounds(bounds, { padding: 64, maxZoom: 11, duration: 0 });
+        didFit.current = true;
+      }
+    }
+  }, [features, ready]);
+
+  // Sync layer visibility.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const k of KINDS) {
+      const vis = visible[k] ? "visible" : "none";
+      for (const id of [pointsLayer(k), glowLayer(k)]) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis);
+      }
+    }
+  }, [visible, ready]);
+
+  return <div ref={elRef} style={{ position: "absolute", inset: 0 }} />;
 }
 
-const MAP_VIEWS = [
-  { key: "admin", label: "Admin", src: "/maps/admin.html" },
-  { key: "deployment", label: "Deployment", src: null },
-  { key: "ems", label: "EMS", src: "/maps/ems.html" },
-  { key: "county", label: "County", src: "/maps/county.html" },
-  { key: "state", label: "State", src: "/maps/state.html" },
-  { key: "federal", label: "Federal", src: "/maps/federal.html" },
-] as const;
+/* ------------------------------------------------------------------ */
+/* PinDetail — console-styled detail card for a selected pin.          */
+/* ------------------------------------------------------------------ */
+function PinDetail({ pin, onClose }: { pin: PinSelection; onClose: () => void }) {
+  const router = useRouter();
+  const meta = LAYER_META[pin.kind];
+  const tone = URGENCY_TONE[(pin.urgency || "").toLowerCase()] || "neutral";
+  const title = pin.category || meta.label;
+  return (
+    <Surface
+      variant="card"
+      pad={4}
+      radius="lg"
+      style={{ width: "min(340px, calc(100vw - 32px))", boxShadow: "0 16px 40px rgba(0,0,0,0.45)" }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <Tag type={meta.entity} />
+        <button
+          aria-label="Close detail"
+          onClick={onClose}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "var(--cn-text-3)",
+            cursor: "pointer",
+            display: "inline-flex",
+            padding: 2,
+          }}
+        >
+          <X size={15} />
+        </button>
+      </div>
 
-type MapViewKey = (typeof MAP_VIEWS)[number]["key"];
+      <div
+        style={{
+          fontFamily: "var(--font-serif)",
+          fontSize: 19,
+          color: "var(--cn-text)",
+          marginTop: 6,
+          textTransform: "capitalize",
+        }}
+      >
+        {title}
+      </div>
 
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+        {pin.urgency && <Chip tone={tone}>{pin.urgency}</Chip>}
+        <Chip tone={meta.tone}>{meta.label.replace(/s$/, "")}</Chip>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => router.push(hrefForPin(pin.kind, pin.id))}
+          leading={<ArrowUpRight size={14} />}
+          disabled={!pin.id}
+          style={{ width: "100%" }}
+        >
+          Open {pin.kind === "resource" ? "in directory" : "case"}
+        </Button>
+      </div>
+    </Surface>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                */
+/* ------------------------------------------------------------------ */
 export default function MapPage() {
+  const router = useRouter();
   const { orgId } = useAuthContext();
-  const [mapView, setMapView] = useState<MapViewKey>("admin");
-  const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
-  const mapRef = useRef<any>(null);
+  const demo = useDemoMode();
+
+  const [disasters, setDisasters] = useState<DisasterOption[]>([]);
+  const [activeDisaster, setActiveDisaster] = useState<string | undefined>();
+  const [features, setFeatures] = useState<typeof EMPTY_FC | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [visible, setVisible] = useState<Record<Kind, boolean>>({ request: true, resource: true, report: true });
+  const [selected, setSelected] = useState<PinSelection | null>(null);
+
+  const tokenMissing = !process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+  // Load disasters once.
+  useEffect(() => {
+    let alive = true;
+    api
+      .crmDisastersList()
+      .then((d: any) => {
+        if (!alive) return;
+        const list: Disaster[] = (d?.disasters || d || []).map((x: any) => ({
+          id: x.id,
+          name: x.name,
+          day: x.day ?? x.day_count,
+        }));
+        setDisasters(list);
+      })
+      .catch(() => alive && setDisasters([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Load map features when org/disaster changes.
+  const loadFeatures = useMemo(
+    () => () => {
+      if (!orgId) return;
+      let alive = true;
+      setFeatures(null);
+      setError(null);
+      const filters = activeDisaster ? { disaster_id: activeDisaster } : undefined;
+      api
+        .crmMapFeatures(orgId, filters)
+        .then((f: any) => {
+          if (!alive) return;
+          const feats = Array.isArray(f?.features) ? f.features : [];
+          setFeatures({ type: "FeatureCollection", features: feats });
+        })
+        .catch(() => {
+          if (!alive) return;
+          setError("Couldn't load map data.");
+          setFeatures({ type: "FeatureCollection", features: [] });
+        });
+      return () => {
+        alive = false;
+      };
+    },
+    [orgId, activeDisaster],
+  );
+
+  useEffect(() => {
+    const cleanup = loadFeatures();
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadFeatures, demo]);
+
+  // Selected pin must clear if its layer is toggled off.
+  useEffect(() => {
+    if (selected && !visible[selected.kind]) setSelected(null);
+  }, [visible, selected]);
+
+  const counts = useMemo(() => {
+    const base: Record<Kind, number> = { request: 0, resource: 0, report: 0 };
+    for (const f of features?.features ?? []) {
+      const k = (f as any)?.properties?.kind as Kind | undefined;
+      if (k && k in base) base[k] += 1;
+    }
+    return base;
+  }, [features]);
+
+  const total = counts.request + counts.resource + counts.report;
+  const loading = features === null;
+
+  const agentMessages: AgentMessage[] = useMemo(
+    () => [
+      {
+        id: "m1",
+        role: "agent",
+        text: loading
+          ? "Pulling the latest operating picture…"
+          : `${total} markers on the map — ${counts.request} requests, ${counts.resource} resources, ${counts.report} reports.`,
+      },
+      { id: "m2", role: "agent", text: "Toggle a layer or tap a pin to drill in." },
+    ],
+    [loading, total, counts],
+  );
+
+  const agentSuggestions: AgentSuggestion[] = [
+    { id: "cases", label: "Open cases", tone: "new", onSelect: () => router.push("/app/cases") },
+    { id: "directory", label: "Directory", onSelect: () => router.push("/app/directory") },
+  ];
 
   return (
-    <CrmShell module="Map">
-      <PageHeader
-        title="Map"
-        subtitle="Western North Carolina · live"
-        actions={
-          <>
-            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-white/8">
-              {MAP_VIEWS.map((v) => {
-                const active = mapView === v.key;
-                return (
-                  <button
-                    key={v.key}
-                    onClick={() => setMapView(v.key)}
-                    className={`h-7 px-2.5 rounded-md text-[12px] font-medium transition border ${
-                      active
-                        ? "bg-white/15 border-white/40 text-white"
-                        : "border-transparent text-white/55 hover:text-white/85"
-                    }`}
-                  >
-                    {v.label}
-                  </button>
-                );
-              })}
-            </div>
-            {mapView === "deployment" && (
-              <>
-                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/8 hover:bg-white/12 text-[12px] font-medium transition">
-                  <Filter size={12} /> Filter
-                </button>
-                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#EF4E4B] hover:bg-[#d94340] text-[12px] font-medium transition">
-                  <Plus size={12} /> Drop pin
-                </button>
-              </>
-            )}
-          </>
-        }
-      />
-
-      {mapView !== "deployment" ? (
-        <div className="px-6 pt-6 pb-6">
-          <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
-            <iframe
-              key={mapView}
-              src={MAP_VIEWS.find((v) => v.key === mapView)?.src ?? ""}
-              title={MAP_VIEWS.find((v) => v.key === mapView)?.label}
-              className="w-full h-full border-0"
+    <ConsoleShell
+      bare
+      navCounts={{ map: counts.request }}
+      disasters={disasters}
+      activeDisasterId={activeDisaster}
+      onSelectDisaster={setActiveDisaster}
+      agent={
+        <AgentPanel
+          status={loading ? "Loading" : `Watching · ${total} markers`}
+          statusTone="active"
+          messages={agentMessages}
+          suggestions={agentSuggestions}
+          onSend={() => router.push("/app/cases")}
+        />
+      }
+    >
+      <div
+        className="cn-map-wrap"
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "calc(100dvh - 110px)",
+          minHeight: 360,
+          overflow: "hidden",
+          background: "var(--cn-sunken)",
+        }}
+      >
+        {tokenMissing ? (
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+            <EmptyState
+              title="Map unavailable"
+              hint="Set NEXT_PUBLIC_MAPBOX_TOKEN to render the operating picture."
             />
           </div>
-        </div>
-      ) : (
-      <div className="px-6 pt-6 pb-6 grid lg:grid-cols-[1fr_320px] gap-4">
-        <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] overflow-hidden relative h-[calc(100dvh-220px)] min-h-[500px]">
-          <MapboxEmbed
-            key={orgId ?? 'sos'}
-            orgId={orgId ?? 'sos'}
-            onPinSelect={setSelectedPin}
-            onPinClear={() => setSelectedPin(null)}
-            onMapReady={(map) => { mapRef.current = map; }}
-          />
-          {selectedPin && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex justify-center w-full px-4 pointer-events-none">
-              <PinDetailCard
-                type={PIN_TYPE_FOR_LAYER[selectedPin.pin.layer]}
-                properties={selectedPin.pin as Record<string, any>}
-                onClose={() => setSelectedPin(null)}
-              />
-            </div>
-          )}
+        ) : (
+          <MapCanvas features={features ?? EMPTY_FC} visible={visible} onSelect={setSelected} onClear={() => setSelected(null)} />
+        )}
 
-          <div className="absolute bottom-3 left-3 flex gap-1.5">
-            {["HOUSING", "FOOD", "MEDICAL", "CHILDCARE"].map((t) => (
-              <button key={t} className="font-mono text-[9px] uppercase tracking-wider px-2 py-1 rounded-full bg-black/40 backdrop-blur text-white/70 hover:text-white">
-                {t}
-              </button>
-            ))}
+        {/* Legend chips — double as layer toggles */}
+        {!tokenMissing && (
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              zIndex: 10,
+            }}
+          >
+            {MAP_STYLE.layers.map((l) => {
+              const on = visible[l.kind];
+              return (
+                <button
+                  key={l.kind}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setVisible((v) => ({ ...v, [l.kind]: !v[l.kind] }))}
+                  title={`${on ? "Hide" : "Show"} ${l.label.toLowerCase()}`}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    opacity: on ? 1 : 0.45,
+                    filter: on ? "none" : "grayscale(0.6)",
+                    transition: "opacity .15s",
+                  }}
+                >
+                  <Chip tone={l.tone} muted={!on}>
+                    {l.label} {counts[l.kind]}
+                  </Chip>
+                </button>
+              );
+            })}
           </div>
+        )}
 
-          {/* Legend */}
-          <div className="absolute bottom-3 right-3 flex flex-col gap-1 bg-black/50 backdrop-blur rounded-lg px-3 py-2">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#EF4E4B] inline-block" />
-              <span className="font-mono text-[9px] text-white/70">Cases</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#89CFF0] inline-block" />
-              <span className="font-mono text-[9px] text-white/70">Resources</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded bg-[#4ADE80] inline-block" />
-              <span className="font-mono text-[9px] text-white/70">Facilities</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#A855F7] inline-block" />
-              <span className="font-mono text-[9px] text-white/70">Events</span>
-            </div>
+        {/* Loading overlay */}
+        {!tokenMissing && loading && (
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Surface variant="card" pad={2} radius="md" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Spinner size={13} />
+              <SectionLabel>Loading map</SectionLabel>
+            </Surface>
           </div>
-        </div>
+        )}
 
-        <aside className="rounded-2xl bg-[var(--surface-1)] border border-[var(--hairline)] p-4 h-fit">
-          <p className="font-mono text-xs uppercase tracking-wider text-white/45 mb-4">Map Layers</p>
-          <div className="space-y-3">
-            {[
-              { label: "Cases", color: "#EF4E4B", layerKey: "case" },
-              { label: "Resources", color: "#89CFF0", layerKey: "resource" },
-              { label: "Facilities", color: "#4ADE80", layerKey: "facility" },
-              { label: "Events", color: "#A855F7", layerKey: "event" },
-            ].map((l) => (
-              <label key={l.label} className="flex items-center justify-between cursor-pointer group">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked className="sr-only peer" onChange={(e) => {
-                    const map = mapRef.current;
-                    if (!map) return;
-                    const visibility = e.target.checked ? 'visible' : 'none';
-                    [`${l.layerKey}-points`, `${l.layerKey}-glow`].forEach(id => {
-                      try {
-                        if (map.getLayer(id)) {
-                          map.setLayoutProperty(id, 'visibility', visibility);
-                        }
-                      } catch {}
-                    });
-                  }} />
-                  <span className="w-4 h-4 rounded border border-white/20 flex items-center justify-center peer-checked:bg-white/15 peer-checked:border-white/40 transition">
-                    <span className="w-2 h-2 rounded-full peer-checked:opacity-100" style={{ background: l.color }} />
-                  </span>
-                  <span className="text-[13px] text-white/70 group-hover:text-white/90 transition">{l.label}</span>
-                </div>
-              </label>
-            ))}
+        {/* Error / empty banners */}
+        {!tokenMissing && !loading && error && (
+          <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10, maxWidth: 260 }}>
+            <Surface variant="card" pad={3} radius="md">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <StatusDot tone="new" size={7} />
+                <SectionLabel tone="new">Map error</SectionLabel>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--cn-text-2)", marginBottom: 10 }}>{error}</div>
+              <Button size="sm" onClick={() => loadFeatures()}>
+                Retry
+              </Button>
+            </Surface>
           </div>
-        </aside>
+        )}
+        {!tokenMissing && !loading && !error && total === 0 && (
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: 16,
+              transform: "translateX(-50%)",
+              zIndex: 10,
+            }}
+          >
+            <Surface variant="card" pad={3} radius="md">
+              <SectionLabel>No markers in this view</SectionLabel>
+            </Surface>
+          </div>
+        )}
+
+        {/* Selected pin detail */}
+        {selected && (
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: 20,
+              transform: "translateX(-50%)",
+              zIndex: 20,
+            }}
+          >
+            <PinDetail pin={selected} onClose={() => setSelected(null)} />
+          </div>
+        )}
       </div>
-      )}
-    </CrmShell>
+    </ConsoleShell>
   );
 }
