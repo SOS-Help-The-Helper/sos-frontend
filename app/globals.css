@@ -86,6 +86,79 @@
   --success: var(--sos-green);
 }
 
+/* ============================================================
+   CONSOLE THEME — dark navy "mission control" for /app/*
+   Redesign 2026-06 (SOS Connect System). Tokens extracted from
+   the design bundle. Scoped to .console-theme so marketing +
+   citizen pages keep the light theme.
+   ============================================================ */
+.console-theme {
+  /* Surfaces (dark navy, ascending lightness) */
+  --cn-bg: #0A131C;          /* app background */
+  --cn-surface-1: #0F1E2B;   /* primary panel / brand navy */
+  --cn-surface-2: #16242F;   /* card surface */
+  --cn-surface-3: #182733;   /* raised card / hover */
+  --cn-sunken: #0C1A27;      /* inset / wells */
+  --cn-border: #20303D;      /* hairlines */
+  --cn-border-strong: #41505E;
+
+  /* Text */
+  --cn-text: #FFFFFF;
+  --cn-text-2: #C6CDD7;
+  --cn-text-3: #788694;      /* muted labels */
+  --cn-text-faint: #55636E;
+
+  /* Accents */
+  --cn-coral: #FF5A57;       /* primary action */
+  --cn-coral-deep: #E6443F;
+  --cn-blue: #6BB8F0;        /* resources / links */
+  --cn-blue-deep: #1E6FE0;
+  --cn-green: #36D399;       /* active / verified */
+  --cn-amber: #F5B544;       /* contacted / reports */
+
+  /* Status-dot semantics */
+  --cn-status-active: var(--cn-green);
+  --cn-status-new: var(--cn-coral);
+  --cn-status-matching: var(--cn-coral);
+  --cn-status-reserved: var(--cn-blue);
+  --cn-status-contacted: var(--cn-amber);
+  --cn-status-report: var(--cn-amber);
+
+  /* ---- Map console tokens onto the shared semantic vars ---- */
+  --background: var(--cn-bg);
+  --surface-app: var(--cn-bg);
+  --surface-1: var(--cn-surface-2);
+  --surface-2: var(--cn-surface-3);
+  --surface-sunken: var(--cn-sunken);
+  --foreground: var(--cn-text);
+  --card: var(--cn-surface-2);
+  --card-foreground: var(--cn-text);
+  --popover: var(--cn-surface-1);
+  --popover-foreground: var(--cn-text);
+  --primary: var(--cn-coral);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--cn-blue);
+  --secondary-foreground: var(--cn-surface-1);
+  --muted: var(--cn-surface-3);
+  --muted-foreground: var(--cn-text-3);
+  --accent: var(--cn-blue);
+  --accent-foreground: var(--cn-surface-1);
+  --destructive: var(--cn-coral-deep);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--cn-border);
+  --hairline: var(--cn-border);
+  --input: var(--cn-border);
+  --ring: var(--cn-blue);
+  --panel: var(--cn-surface-1);
+  --panel-border: var(--cn-border);
+  --text-secondary: var(--cn-text-2);
+  --text-tertiary: var(--cn-text-3);
+  --cream: var(--cn-text);
+  --cream-dim: var(--cn-text-3);
+  --warning: var(--cn-amber);
+  --success: var(--cn-green);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html, body {
