@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/coordination',
-        destination: '/coordination.html',
+        destination: '/platform-coordination.html',
       },
       {
         source: '/case-studies/garden-grove-hazmat',
