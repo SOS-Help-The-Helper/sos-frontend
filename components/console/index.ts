@@ -7,4 +7,5 @@ export * from "./types";
 export * from "./primitives";
 export * from "./data-viz";
 export * from "./demo-mode";
+export * from "./agent-panel";
 export * from "./console-shell";
