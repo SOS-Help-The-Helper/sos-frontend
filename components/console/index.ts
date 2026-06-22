@@ -12,3 +12,4 @@ export * from "./console-shell";
 export * from "./case-card";
 export * from "./entity-card";
 export * from "./score-breakdown";
+export * from "./match-candidate";
