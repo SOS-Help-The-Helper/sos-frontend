@@ -56,12 +56,15 @@ export function KpiStat({
   delta,
   trend,
   tone = "var(--cn-coral)",
+  accent,
 }: {
   value: ReactNode;
   label: string;
   delta?: number;
   trend?: number[];
   tone?: string;
+  /** optional token color for a left accent bar + label tint (e.g. "var(--cn-coral)") */
+  accent?: string;
 }) {
   const up = (delta ?? 0) >= 0;
   return (
@@ -69,6 +72,7 @@ export function KpiStat({
       style={{
         background: "var(--cn-surface-2)",
         border: "1px solid var(--cn-border)",
+        borderLeft: accent ? `3px solid ${accent}` : undefined,
         borderRadius: 14,
         padding: "16px 18px",
         display: "flex",
@@ -84,7 +88,7 @@ export function KpiStat({
           fontWeight: 600,
           letterSpacing: "0.13em",
           textTransform: "uppercase",
-          color: "var(--cn-text-3)",
+          color: accent ?? "var(--cn-text-3)",
         }}
       >
         {label}
